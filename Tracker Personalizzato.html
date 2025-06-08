@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Personale - Obiettivo Perdita Grasso</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #0d47a1;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.4em;
+            margin-top: 30px;
+        }
+        .sezione {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        button {
+            background-color: #1976d2;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        #riepilogo p {
+            font-size: 1.1em;
+            margin: 12px 0;
+        }
+        #riepilogo .valore-grande {
+            font-weight: 700;
+            font-size: 1.4em;
+            color: #d32f2f;
+        }
+        #riepilogo .valore-consumato {
+            font-weight: 600;
+            color: #1976d2;
+        }
+        progress {
+            width: 100%;
+            height: 25px;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+        progress::-webkit-progress-bar {
+            background-color: #e0e0e0;
+            border-radius: 6px;
+        }
+        progress::-webkit-progress-value {
+            background-color: #2e7d32;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        progress::-moz-progress-bar {
+            background-color: #2e7d32;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        /* --- NUOVO STILE PER IL PULSANTE DI CANCELLAZIONE --- */
+        .delete-btn {
+            background-color: transparent;
+            border: none;
+            color: #d32f2f;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 8px;
+            border-radius: 50%;
+            line-height: 1;
+        }
+        .delete-btn:hover {
+            background-color: #ffebee;
+            color: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Il Mio Tracker Giornaliero</h1>
+        
+        <div id="riepilogo" class="sezione">
+            <h2>Riepilogo di Oggi</h2>
+            <p>Proteine restanti: <span id="restanti-proteine" class="valore-grande"></span> g</p>
+            <progress id="progress-proteine" value="0"></progress>
+            <p>Consumate: <span id="totale-proteine" class="valore-consumato">0</span> g / <span id="obiettivo-proteine"></span> g</p>
+            <hr style="margin: 20px 0; border: 1px solid #eee;">
+            <p>Calorie restanti: <span id="restanti-calorie" class="valore-grande"></span> kcal</p>
+            <progress id="progress-calorie" value="0"></progress>
+            <p>Consumate: <span id="totale-calorie" class="valore-consumato">0</span> kcal / <span id="obiettivo-calorie"></span> kcal</p>
+        </div>
+
+        <div class="sezione">
+            <h2>Aggiungi Pasto</h2>
+            <form id="form-alimento">
+                <label for="descrizione">Descrizione (es. Pranzo, Cena, Spuntino)</label>
+                <input type="text" id="descrizione" required>
+                <label for="proteine">Proteine (grammi)</label>
+                <input type="number" id="proteine" min="0" step="0.1" required>
+                <label for="calorie">Calorie (kcal)</label>
+                <input type="number" id="calorie" min="0" required>
+                <button type="submit">Aggiungi al Giornale</button>
+            </form>
+        </div>
+
+        <div id="log" class="sezione">
+            <h2>Pasti Registrati Oggi</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descrizione</th>
+                        <th>Proteine (g)</th>
+                        <th>Calorie (kcal)</th>
+                        <th>Azione</th> </tr>
+                </thead>
+                <tbody id="log-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const OBIETTIVO_PROTEINE = 150; 
+        const OBIETTIVO_CALORIE = 1750;
+
+        const formAlimento = document.getElementById('form-alimento');
+        const inputDescrizione = document.getElementById('descrizione');
+        const inputProteine = document.getElementById('proteine');
+        const inputCalorie = document.getElementById('calorie');
+        
+        const spanTotaleProteine = document.getElementById('totale-proteine');
+        const spanTotaleCalorie = document.getElementById('totale-calorie');
+        const spanRestantiProteine = document.getElementById('restanti-proteine');
+        const spanRestantiCalorie = document.getElementById('restanti-calorie');
+        
+        const progressProteine = document.getElementById('progress-proteine');
+        const progressCalorie = document.getElementById('progress-calorie');
+        
+        const logBody = document.getElementById('log-body');
+
+        document.getElementById('obiettivo-proteine').textContent = OBIETTIVO_PROTEINE;
+        document.getElementById('obiettivo-calorie').textContent = OBIETTIVO_CALORIE;
+        progressProteine.max = OBIETTIVO_PROTEINE;
+        progressCalorie.max = OBIETTIVO_CALORIE;
+
+        let datiGiornalieri = {
+            proteine: 0,
+            calorie: 0,
+            log: []
+        };
+
+        const getTodayString = () => new Date().toISOString().split('T')[0];
+
+        const salvaDati = () => {
+            const datiDaSalvare = {
+                data: getTodayString(),
+                dati: datiGiornalieri
+            };
+            localStorage.setItem('trackerDati', JSON.stringify(datiDaSalvare));
+        };
+        
+        const caricaDati = () => {
+            const datiSalvati = JSON.parse(localStorage.getItem('trackerDati'));
+            if (datiSalvati && datiSalvati.data === getTodayString()) {
+                datiGiornalieri = datiSalvati.dati;
+            } else {
+                salvaDati(); 
+            }
+            aggiornaUI();
+        };
+
+        const aggiornaUI = () => {
+            spanTotaleProteine.textContent = datiGiornalieri.proteine.toFixed(1);
+            spanTotaleCalorie.textContent = datiGiornalieri.calorie;
+
+            const restantiProteine = OBIETTIVO_PROTEINE - datiGiornalieri.proteine;
+            const restantiCalorie = OBIETTIVO_CALORIE - datiGiornalieri.calorie;
+            
+            spanRestantiProteine.textContent = restantiProteine.toFixed(1);
+            spanRestantiCalorie.textContent = restantiCalorie;
+
+            spanRestantiProteine.style.color = restantiProteine < 0 ? '#b71c1c' : '#d32f2f';
+            spanRestantiCalorie.style.color = restantiCalorie < 0 ? '#b71c1c' : '#d32f2f';
+
+            progressProteine.value = datiGiornalieri.proteine;
+            progressCalorie.value = datiGiornalieri.calorie;
+
+            logBody.innerHTML = '';
+            datiGiornalieri.log.forEach((item, index) => {
+                const newRow = logBody.insertRow();
+                // --- MODIFICA: AGGIUNTO IL PULSANTE CON DATA-INDEX ---
+                newRow.innerHTML = `
+                    <td>${item.desc}</td>
+                    <td>${item.prot.toFixed(1)}</td>
+                    <td>${item.cal}</td>
+                    <td>
+                        <button class="delete-btn" data-index="${index}" title="Cancella voce">&times;</button>
+                    </td>
+                `;
+            });
+        };
+        
+        formAlimento.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const desc = inputDescrizione.value;
+            const prot = parseFloat(inputProteine.value);
+            const cal = parseInt(inputCalorie.value, 10);
+            if (!desc || isNaN(prot) || isNaN(cal) || prot < 0 || cal < 0) {
+                alert('Per favore, inserisci valori validi in tutti i campi.');
+                return;
+            }
+            datiGiornalieri.proteine += prot;
+            datiGiornalieri.calorie += cal;
+            datiGiornalieri.log.push({ desc, prot, cal });
+            salvaDati();
+            aggiornaUI();
+            formAlimento.reset();
+            inputDescrizione.focus();
+        });
+
+        // --- NUOVA FUNZIONE PER GESTIRE LA CANCELLAZIONE ---
+        logBody.addEventListener('click', (e) => {
+            // Controlla se l'elemento cliccato è un pulsante di cancellazione
+            if (e.target.classList.contains('delete-btn')) {
+                // Chiedi conferma per sicurezza
+                if (!confirm('Sei sicuro di voler cancellare questa voce?')) {
+                    return;
+                }
+
+                const index = parseInt(e.target.dataset.index, 10);
+                const itemDaCancellare = datiGiornalieri.log[index];
+
+                // Sottrai i valori dal totale
+                datiGiornalieri.proteine -= itemDaCancellare.prot;
+                datiGiornalieri.calorie -= itemDaCancellare.cal;
+
+                // Rimuovi l'elemento dall'array del log
+                datiGiornalieri.log.splice(index, 1);
+
+                // Salva i nuovi dati e aggiorna l'interfaccia
+                salvaDati();
+                aggiornaUI();
+            }
+        });
+
+        caricaDati();
+    });
+    </script>
+
+</body>
+</html>
