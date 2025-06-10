@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Adattivo - v7 Zone Muscolari</title>
+    <title>Tracker Definitivo e Stabile</title>
     <style>
-        /* CSS Invariato */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
@@ -45,103 +44,258 @@
 </head>
 <body>
     <div class="container">
+        <h1>Tracker Definitivo</h1>
+        <a href="storico.html" id="link-storico">📊 Vedi Storico</a>
+        <div id="proiezione" class="sezione proiezione-neutra"><h2>Proiezione del Trend</h2><p id="testo-proiezione">Inizia a registrare i dati per vedere un'analisi.</p></div>
+        <div id="riepilogo" class="sezione">
+            <h2>Riepilogo di Oggi</h2>
+            <p>Proteine restanti: <span id="restanti-proteine" class="valore-grande"></span> g</p><progress id="progress-proteine" value="0"></progress>
+            <p>Consumate: <span id="totale-proteine" class="valore-consumato">0</span> g / <span id="obiettivo-proteine"></span> g</p><hr style="margin: 20px 0; border: 1px solid #eee;">
+            <p>Calorie restanti: <span id="restanti-calorie" class="valore-grande"></span> kcal</p><progress id="progress-calorie" value="0"></progress>
+            <p>Consumate: <span id="totale-calorie" class="valore-consumato">0</span> kcal / <span id="obiettivo-calorie"></span> kcal</p>
+            <p style="margin-top:15px;">Calorie Bruciate (Workout): <span id="workout-calories-totali" class="valore-bruciato">0</span> kcal</p>
         </div>
+        <div id="meal-builder" class="sezione">
+            <h2>Costruttore e Registrazione Pasto</h2>
+            <label for="nome-pasto">Nome del Pasto (es. Pranzo, Cena)</label><input type="text" id="nome-pasto" placeholder="Pranzo di oggi">
+            <hr><h3>Aggiungi Ingrediente</h3>
+            <div id="builder-input-riga">
+                <div><label>Alimento</label><input type="text" id="builder-desc" placeholder="es. Pollo"></div>
+                <div><label>Prot/100g</label><input type="number" id="builder-prot" min="0" step="0.1"></div>
+                <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
+                <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
+            </div>
+            <button id="btn-aggiungi-ingrediente">Aggiungi Ingrediente al Pasto</button>
+            <div id="builder-riepilogo" style="margin-top:25px;">
+                <h3>Riepilogo Pasto Corrente</h3>
+                <table id="riepilogo-pasto-table">
+                    <thead><tr><th>Alimento</th><th>Proteine (g)</th><th>Calorie (kcal)</th><th>Azione</th></tr></thead>
+                    <tbody id="riepilogo-pasto-body"></tbody>
+                    <tfoot><tr><td><strong>TOTALE</strong></td><td><strong id="builder-totale-proteine">0.0</strong></td><td><strong id="builder-totale-calorie">0</strong></td><td></td></tr></tfoot>
+                </table>
+            </div>
+            <button id="btn-registra-pasto" style="margin-top: 20px;" disabled>Registra Pasto nel Diario</button>
+        </div>
+        <div class="sezione">
+            <h2>Registra Allenamento</h2>
+            <form id="form-allenamento"><input type="text" id="descrizione-allenamento" placeholder="Descrizione Allenamento"><input type="number" id="calorie-bruciate" min="0" required placeholder="Calorie Bruciate (kcal)"><button type="submit">Aggiungi Allenamento</button></form>
+            <table id="log-allenamenti"><thead><tr><th>Data</th><th>Descrizione</th><th>Calorie Bruciate</th><th>Azione</th></tr></thead><tbody id="log-allenamenti-body"></tbody></table>
+        </div>
+        <div class="sezione">
+            <h2>Diario Giornaliero</h2>
+            <table id="log-pasti"><thead><tr><th>Data</th><th>Descrizione</th><th>Proteine (g)</th><th>Calorie (kcal)</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
+        </div>
+    </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // === OBIETTIVI E COSTANTI ===
+    // === COSTANTI E STATO GLOBALE ===
     const OBIETTIVO_PROTEINE = 120; 
     const OBIETTIVO_CALORIE = 2200;
     const TDEE_BASE = 2311;
-    // Nuove soglie per il modello muscolare
     const PROTEINE_SOGLIA_MANTENIMENTO = 90;
     
-    // === STATO GLOBALE ===
     let datiGiornalieri = { proteine: 0, calorie: 0, log: [], workoutCalorie: 0, workoutLog: [] };
     let pastoCorrente = [];
 
     // === RIFERIMENTI DOM ===
-    const container = document.querySelector('.container');
-    container.innerHTML = `<h1>Tracker con Obiettivi Fissi</h1><a href="storico.html" id="link-storico">📊 Vedi Storico</a><div id="proiezione" class="sezione proiezione-neutra"><h2>Proiezione del Trend</h2><p id="testo-proiezione">Inizia a registrare i dati per vedere un'analisi.</p></div><div id="riepilogo" class="sezione"><h2>Riepilogo di Oggi</h2><p>Proteine restanti: <span id="restanti-proteine" class="valore-grande"></span> g</p><progress id="progress-proteine" value="0"></progress><p>Consumate: <span id="totale-proteine" class="valore-consumato">0</span> g / <span id="obiettivo-proteine"></span> g</p><hr style="margin: 20px 0; border: 1px solid #eee;"><p>Calorie restanti: <span id="restanti-calorie" class="valore-grande"></span> kcal</p><progress id="progress-calorie" value="0"></progress><p>Consumate: <span id="totale-calorie" class="valore-consumato">0</span> kcal / <span id="obiettivo-calorie"></span> kcal</p><p style="margin-top:15px;">Calorie Bruciate (Workout): <span id="workout-calories-totali" class="valore-bruciato">0</span> kcal</p></div><div id="meal-builder" class="sezione"><h2>Costruttore e Registrazione Pasto</h2><label for="nome-pasto">Nome del Pasto (es. Pranzo, Cena)</label><input type="text" id="nome-pasto" placeholder="Pranzo di oggi"><hr><h3>Aggiungi Ingrediente</h3><div id="builder-input-riga"><div><label>Alimento</label><input type="text" id="builder-desc" placeholder="es. Pollo"></div><div><label>Prot/100g</label><input type="number" id="builder-prot" min="0" step="0.1"></div><div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div><div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div></div><button id="btn-aggiungi-ingrediente">Aggiungi Ingrediente al Pasto</button><div id="builder-riepilogo" style="margin-top:25px;"><h3>Riepilogo Pasto Corrente</h3><table id="riepilogo-pasto-table"><thead><tr><th>Alimento</th><th>Proteine (g)</th><th>Calorie (kcal)</th><th>Azione</th></tr></thead><tbody id="riepilogo-pasto-body"></tbody><tfoot><tr><td><strong>TOTALE</strong></td><td><strong id="builder-totale-proteine">0.0</strong></td><td><strong id="builder-totale-calorie">0</strong></td><td></td></tr></tfoot></table></div><button id="btn-registra-pasto" style="margin-top: 20px;" disabled>Registra Pasto nel Diario</button></div><div class="sezione"><h2>Registra Allenamento</h2><form id="form-allenamento"><input type="text" id="descrizione-allenamento" placeholder="Descrizione Allenamento"><input type="number" id="calorie-bruciate" min="0" required placeholder="Calorie Bruciate (kcal)"><button type="submit">Aggiungi Allenamento</button></form><table id="log-allenamenti"><thead><tr><th>Data</th><th>Descrizione</th><th>Calorie Bruciate</th><th>Azione</th></tr></thead><tbody id="log-allenamenti-body"></tbody></table></div><div class="sezione"><h2>Diario Giornaliero</h2><table id="log-pasti"><thead><tr><th>Data</th><th>Descrizione</th><th>Proteine (g)</th><th>Calorie (kcal)</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table></div>`;
     const proiezioneDiv = document.getElementById('proiezione'), testoProiezione = document.getElementById('testo-proiezione');
     const formAllenamento = document.getElementById('form-allenamento');
+    const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
+    const spanRestantiProteine = document.getElementById('restanti-proteine'), spanRestantiCalorie = document.getElementById('restanti-calorie');
+    const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
+    const logBody = document.getElementById('log-body');
+    const logAllenamentiBody = document.getElementById('log-allenamenti-body'), tabellaAllenamenti = document.getElementById('log-allenamenti');
+    const spanWorkoutCalories = document.getElementById('workout-calories-totali');
     const btnAggiungiIngrediente = document.getElementById('btn-aggiungi-ingrediente');
     const btnRegistraPasto = document.getElementById('btn-registra-pasto');
     const inputNomePasto = document.getElementById('nome-pasto');
     const riepilogoPastoBody = document.getElementById('riepilogo-pasto-body');
     const builderDesc = document.getElementById('builder-desc'), builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal'), builderQta = document.getElementById('builder-qta');
+    const builderTotaleProteine = document.getElementById('builder-totale-proteine');
+    const builderTotaleCalorie = document.getElementById('builder-totale-calorie');
 
-    // === FUNZIONI DI GESTIONE DATI E STORICO ===
-    const getTodayString = (format = 'ymd') => { const today = new Date(); if (format === 'ymd') return today.toISOString().split('T')[0]; const day = String(today.getDate()).padStart(2, '0'); const month = String(today.getMonth() + 1).padStart(2, '0'); return `${day}/${month}`; };
-    const salvaGiornoCorrente = () => { localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: getTodayString('ymd'), dati: datiGiornalieri })); };
-    
-    const archiviaGiornoPrecedente = (datiDaArchiviare) => {
+    // === FUNZIONI ===
+
+    function getTodayString(format = 'ymd') {
+        const today = new Date();
+        if (format === 'ymd') return today.toISOString().split('T')[0];
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        return `${day}/${month}`;
+    }
+
+    function salvaGiornoCorrente() {
+        localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: getTodayString('ymd'), dati: datiGiornalieri }));
+    }
+
+    function archiviaGiornoPrecedente(datiDaArchiviare) {
         const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
         const calorieBruciateTotali = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie;
         const deficitCalorico = calorieBruciateTotali - datiDaArchiviare.dati.calorie;
         let trendFinale = 'ok';
-        if (deficitCalorico < -200) { // Surplus calorico
-            trendFinale = 'attenzione';
-        } else if (datiDaArchiviare.dati.proteine < PROTEINE_SOGLIA_MANTENIMENTO) { // Proteine insufficienti
+        if (deficitCalorico < -200) {
+            trendFinale = datiDaArchiviare.dati.proteine < OBIETTIVO_PROTEINE * 0.9 ? 'pericolo' : 'attenzione';
+        } else if (datiDaArchiviare.dati.proteine < PROTEINE_SOGLIA_MANTENIMENTO) {
             trendFinale = 'pericolo';
-        } else if (datiDaArchiviare.dati.proteine < OBIETTIVO_PROTEINE) { // Proteine in zona mantenimento
+        } else if (datiDaArchiviare.dati.proteine < OBIETTIVO_PROTEINE) {
             trendFinale = 'attenzione';
         }
         storico.push({ data: datiDaArchiviare.data, totali: { proteine: datiDaArchiviare.dati.proteine, calorie: datiDaArchiviare.dati.calorie, workoutCalorie: datiDaArchiviare.dati.workoutCalorie }, allenamenti: datiDaArchiviare.dati.workoutLog, trend: trendFinale });
         localStorage.setItem('trackerStorico', JSON.stringify(storico));
-    };
+    }
 
-    const gestisciAvvioApp = () => { /* Logica avvio invariata */ };
+    function gestisciAvvioApp() {
+        const giornoCorrenteRaw = localStorage.getItem('trackerGiornoCorrente');
+        if (giornoCorrenteRaw) {
+            const giornoCorrenteProvvisorio = JSON.parse(giornoCorrenteRaw);
+            if (giornoCorrenteProvvisorio.dati.log.length > 0 && typeof giornoCorrenteProvvisorio.dati.log[0].data === 'undefined') {
+                const dataDelGiorno = giornoCorrenteProvvisorio.data;
+                giornoCorrenteProvvisorio.dati.log.forEach(item => item.data = dataDelGiorno);
+                giornoCorrenteProvvisorio.dati.workoutLog.forEach(item => item.data = dataDelGiorno);
+                localStorage.setItem('trackerGiornoCorrente', JSON.stringify(giornoCorrenteProvvisorio));
+            }
+        }
+        const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
+        const oggi = getTodayString('ymd');
+        if (giornoCorrenteSalvataggio) {
+            if (giornoCorrenteSalvataggio.data !== oggi && (giornoCorrenteSalvataggio.dati.calorie > 0 || giornoCorrenteSalvataggio.dati.workoutCalorie > 0)) {
+                archiviaGiornoPrecedente(giornoCorrenteSalvataggio);
+                datiGiornalieri = { proteine: 0, calorie: 0, log: [], workoutCalorie: 0, workoutLog: [] };
+            } else {
+                datiGiornalieri = giornoCorrenteSalvataggio.dati;
+            }
+        }
+        aggiornaUI();
+        salvaGiornoCorrente();
+    }
+
+    function aggiornaUI() {
+        document.getElementById('obiettivo-proteine').textContent = OBIETTIVO_PROTEINE;
+        document.getElementById('obiettivo-calorie').textContent = OBIETTIVO_CALORIE;
+        progressProteine.max = OBIETTIVO_PROTEINE; progressCalorie.max = OBIETTIVO_CALORIE;
+        spanTotaleProteine.textContent = datiGiornalieri.proteine.toFixed(1);
+        spanTotaleCalorie.textContent = datiGiornalieri.calorie;
+        spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie;
+        const restantiProteine = OBIETTIVO_PROTEINE - datiGiornalieri.proteine;
+        const restantiCalorie = OBIETTIVO_CALORIE - datiGiornalieri.calorie;
+        spanRestantiProteine.textContent = restantiProteine.toFixed(1);
+        spanRestantiCalorie.textContent = restantiCalorie;
+        progressProteine.value = datiGiornalieri.proteine; progressCalorie.value = datiGiornalieri.calorie;
+        
+        logBody.innerHTML = '';
+        datiGiornalieri.log.forEach((item, index) => {
+            const dataFormattata = item.data ? `${item.data.split('-')[2]}/${item.data.split('-')[1]}` : getTodayString('gg/mm');
+            logBody.insertRow().innerHTML = `<td>${dataFormattata}</td><td>${item.desc}</td><td>${item.prot.toFixed(1)}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="pasto" data-index="${index}" title="Cancella pasto">&times;</button></td>`;
+        });
+        
+        tabellaAllenamenti.style.display = datiGiornalieri.workoutLog.length > 0 ? 'table' : 'none';
+        logAllenamentiBody.innerHTML = '';
+        datiGiornalieri.workoutLog.forEach((item, index) => {
+            const dataFormattata = item.data ? `${item.data.split('-')[2]}/${item.data.split('-')[1]}` : getTodayString('gg/mm');
+            logAllenamentiBody.insertRow().innerHTML = `<td>${dataFormattata}</td><td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="allenamento" data-index="${index}" title="Cancella allenamento">&times;</button></td>`;
+        });
+        aggiornaProiezione();
+    }
     
-    // === FUNZIONI DI AGGIORNAMENTO INTERFACCIA ===
-    const aggiornaUI = () => { /* Logica UI invariata */ };
-    
-    const aggiornaProiezione = () => {
+    function aggiornaProiezione() {
         const { calorie, proteine } = datiGiornalieri;
         const calorieBruciate = TDEE_BASE + datiGiornalieri.workoutCalorie;
         const deficit = calorieBruciate - calorie;
-        let testo = ''; let classeCss = 'sezione';
+        let testo = '', classeCss = 'sezione';
+        if (calorie === 0 && datiGiornalieri.workoutCalorie === 0) { testo = "Inizia a registrare i dati per vedere un'analisi."; classeCss += ' proiezione-neutra'; }
+        else if (proteine < PROTEINE_SOGLIA_MANTENIMENTO) { testo = "ATTENZIONE: L'apporto proteico è basso (< 90g). Rischio di perdita muscolare, specialmente se il deficit calorico è alto."; classeCss += ' proiezione-pericolo'; }
+        else if (proteine < OBIETTIVO_PROTEINE) { testo = "TREND DI MANTENIMENTO: Apporto proteico sufficiente per preservare la massa muscolare. Controlla le calorie per raggiungere il tuo obiettivo di peso."; classeCss += ' proiezione-attenzione'; }
+        else if (proteine >= OBIETTIVO_PROTEINE && deficit < 200) { testo = "TREND OTTIMALE: Eccellente! Hai superato l'obiettivo proteico con un bilancio calorico ideale per la ricomposizione corporea."; classeCss += ' proiezione-ok'; }
+        else { testo = "TREND POSITIVO: Apporto proteico ottimo! Assicurati solo che il deficit non sia troppo elevato per massimizzare i risultati."; classeCss += ' proiezione-ok'; }
+        proiezioneDiv.className = classeCss; testoProiezione.textContent = testo;
+    }
+    
+    function aggiornaRiepilogoPasto() {
+        let totalePastoProt = 0, totalePastoKcal = 0;
+        riepilogoPastoBody.innerHTML = '';
+        pastoCorrente.forEach(ingrediente => {
+            totalePastoProt += ingrediente.prot;
+            totalePastoKcal += ingrediente.cal;
+            const riga = riepilogoPastoBody.insertRow();
+            riga.innerHTML = `<td>${ingrediente.desc}</td><td>${ingrediente.prot.toFixed(1)}</td><td>${ingrediente.cal}</td><td><button class="delete-btn" data-ingrediente-id="${ingrediente.id}" title="Cancella ingrediente">&times;</button></td>`;
+        });
+        builderTotaleProteine.textContent = totalePastoProt.toFixed(1);
+        builderTotaleCalorie.textContent = Math.round(totalePastoKcal);
+        btnRegistraPasto.disabled = (pastoCorrente.length === 0);
+    }
 
-        if (calorie === 0 && datiGiornalieri.workoutCalorie === 0) {
-            testo = "Inizia a registrare i dati per vedere un'analisi.";
-            classeCss += ' proiezione-neutra';
-        } else if (proteine < PROTEINE_SOGLIA_MANTENIMENTO) {
-            testo = "ATTENZIONE: L'apporto proteico è basso (< 90g). Rischio di perdita muscolare, specialmente se il deficit calorico è alto.";
-            classeCss += ' proiezione-pericolo';
-        } else if (proteine < OBIETTIVO_PROTEINE) {
-            testo = "TREND DI MANTENIMENTO: Apporto proteico sufficiente per preservare la massa muscolare. Continua a controllare le calorie per raggiungere il tuo obiettivo di peso.";
-            classeCss += ' proiezione-attenzione';
-        } else if (proteine >= OBIETTIVO_PROTEINE && deficit < 200) {
-            testo = "TREND OTTIMALE: Eccellente! Hai superato l'obiettivo proteico con un bilancio calorico ideale per la ricomposizione corporea (crescita muscolare e perdita di grasso).";
-            classeCss += ' proiezione-ok';
-        } else {
-            testo = "TREND POSITIVO: Apporto proteico ottimo! Assicurati solo che il deficit calorico non sia troppo elevato per massimizzare il potenziale di crescita.";
-            classeCss += ' proiezione-ok';
+    function aggiungiIngrediente() {
+        const p100 = parseFloat(builderProt.value) || 0, k100 = parseFloat(builderKcal.value) || 0, qta = parseFloat(builderQta.value) || 0;
+        const desc = builderDesc.value.trim() || 'Ingrediente';
+        if (qta <= 0 || (p100 === 0 && k100 === 0)) { alert('Inserisci una quantità e almeno un valore per calorie o proteine.'); return; }
+        const protCalcolate = (p100 / 100) * qta, kcalCalcolate = Math.round((k100 / 100) * qta);
+        pastoCorrente.push({ id: Date.now(), desc: desc, prot: protCalcolate, cal: kcalCalcolate });
+        builderDesc.value = ''; builderProt.value = ''; builderKcal.value = ''; builderQta.value = '';
+        builderDesc.focus();
+        aggiornaRiepilogoPasto();
+    }
+
+    function rimuoviIngrediente(idToRemove) {
+        pastoCorrente = pastoCorrente.filter(ing => ing.id !== idToRemove);
+        aggiornaRiepilogoPasto();
+    }
+
+    // === EVENT LISTENERS ===
+    btnAggiungiIngrediente.addEventListener('click', aggiungiIngrediente);
+
+    btnRegistraPasto.addEventListener('click', () => {
+        const nomePasto = inputNomePasto.value.trim() || "Pasto da Builder";
+        const totali = pastoCorrente.reduce((acc, curr) => { acc.prot += curr.prot; acc.cal += curr.cal; return acc; }, { prot: 0, cal: 0 });
+        if (totali.cal > 0 || totali.prot > 0) {
+            datiGiornalieri.proteine += totali.prot;
+            datiGiornalieri.calorie += totali.cal;
+            datiGiornalieri.log.push({ data: getTodayString('ymd'), desc: nomePasto, prot: totali.prot, cal: totali.cal });
+            salvaGiornoCorrente();
+            aggiornaUI();
+            pastoCorrente = [];
+            inputNomePasto.value = '';
+            aggiornaRiepilogoPasto();
         }
-        proiezioneDiv.className = classeCss;
-        testoProiezione.textContent = testo;
-    };
-    
-    // === LOGICA DEL MEAL BUILDER (INVARIATA) ===
-    const aggiornaRiepilogoPasto = () => { /* Logica riepilogo pasto invariata */ };
-    const aggiungiIngrediente = () => { /* Logica aggiunta ingrediente invariata */ };
-    const rimuoviIngrediente = (idToRemove) => { /* Logica rimozione ingrediente invariata */ };
+    });
 
-    // === EVENT LISTENERS (INVARIATI) ===
+    formAllenamento.addEventListener('submit', e => {
+        e.preventDefault();
+        const desc = document.getElementById('descrizione-allenamento').value || 'Allenamento';
+        const cal = parseInt(document.getElementById('calorie-bruciate').value, 10);
+        if (isNaN(cal) || cal <= 0) return;
+        datiGiornalieri.workoutCalorie += cal;
+        datiGiornalieri.workoutLog.push({ data: getTodayString('ymd'), desc: desc, cal: cal });
+        salvaGiornoCorrente();
+        aggiornaUI();
+        e.target.reset();
+    });
+
+    document.body.addEventListener('click', (e) => {
+        const target = e.target;
+        if (target.hasAttribute('data-ingrediente-id')) {
+            rimuoviIngrediente(parseInt(target.dataset.ingredienteId, 10));
+        } else if (target.classList.contains('delete-btn') && target.hasAttribute('data-type')) {
+            if (!confirm('Sei sicuro di voler cancellare questa voce?')) return;
+            const type = target.dataset.type;
+            const index = parseInt(target.dataset.index, 10);
+            if (type === 'pasto' && datiGiornalieri.log[index]) {
+                const item = datiGiornalieri.log[index];
+                datiGiornalieri.proteine -= item.prot;
+                datiGiornalieri.calorie -= item.cal;
+                datiGiornalieri.log.splice(index, 1);
+            } else if (type === 'allenamento' && datiGiornalieri.workoutLog[index]) {
+                const item = datiGiornalieri.workoutLog[index];
+                datiGiornalieri.workoutCalorie -= item.cal;
+                datiGiornalieri.workoutLog.splice(index, 1);
+            }
+            salvaGiornoCorrente();
+            aggiornaUI();
+        }
+    });
     
-    // === CODICE COMPLETO PER GARANTIRE FUNZIONAMENTO ===
-    (function() {
-        window.gestisciAvvioApp = () => { const giornoCorrenteRaw = localStorage.getItem('trackerGiornoCorrente'); if (giornoCorrenteRaw) { const giornoCorrenteProvvisorio = JSON.parse(giornoCorrenteRaw); if (giornoCorrenteProvvisorio.dati.log.length > 0 && typeof giornoCorrenteProvvisorio.dati.log[0].data === 'undefined') { const dataDelGiorno = giornoCorrenteProvvisorio.data; giornoCorrenteProvvisorio.dati.log.forEach(item => item.data = dataDelGiorno); giornoCorrenteProvvisorio.dati.workoutLog.forEach(item => item.data = dataDelGiorno); localStorage.setItem('trackerGiornoCorrente', JSON.stringify(giornoCorrenteProvvisorio)); } } const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente')); const oggi = getTodayString('ymd'); if (giornoCorrenteSalvataggio) { if (giornoCorrenteSalvataggio.data !== oggi && (giornoCorrenteSalvataggio.dati.calorie > 0 || giornoCorrenteSalvataggio.dati.workoutCalorie > 0)) { archiviaGiornoPrecedente(giornoCorrenteSalvataggio); datiGiornalieri = { proteine: 0, calorie: 0, log: [], workoutCalorie: 0, workoutLog: [] }; } else { datiGiornalieri = giornoCorrenteSalvataggio.dati; } } aggiornaUI(); salvaGiornoCorrente(); };
-        window.aggiornaUI = () => { document.getElementById('obiettivo-proteine').textContent = OBIETTIVO_PROTEINE; document.getElementById('obiettivo-calorie').textContent = OBIETTIVO_CALORIE; document.getElementById('progress-proteine').max = OBIETTIVO_PROTEINE; document.getElementById('progress-calorie').max = OBIETTIVO_CALORIE; document.getElementById('totale-proteine').textContent = datiGiornalieri.proteine.toFixed(1); document.getElementById('totale-calorie').textContent = datiGiornalieri.calorie; document.getElementById('workout-calories-totali').textContent = datiGiornalieri.workoutCalorie; const restantiProteine = OBIETTIVO_PROTEINE - datiGiornalieri.proteine; const restantiCalorie = OBIETTIVO_CALORIE - datiGiornalieri.calorie; document.getElementById('restanti-proteine').textContent = restantiProteine.toFixed(1); document.getElementById('restanti-calorie').textContent = restantiCalorie; document.getElementById('progress-proteine').value = datiGiornalieri.proteine; document.getElementById('progress-calorie').value = datiGiornalieri.calorie; const dataFormattata = getTodayString('ggmm'); document.getElementById('log-body').innerHTML = datiGiornalieri.log.map((item, index) => `<tr><td>${item.data ? `${item.data.split('-')[2]}/${item.data.split('-')[1]}` : dataFormattata}</td><td>${item.desc}</td><td>${item.prot.toFixed(1)}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="pasto" data-index="${index}" title="Cancella pasto">&times;</button></td></tr>`).join(''); document.getElementById('log-allenamenti').style.display = datiGiornalieri.workoutLog.length > 0 ? 'table' : 'none'; document.getElementById('log-allenamenti-body').innerHTML = datiGiornalieri.workoutLog.map((item, index) => `<tr><td>${item.data ? `${item.data.split('-')[2]}/${item.data.split('-')[1]}` : dataFormattata}</td><td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="allenamento" data-index="${index}" title="Cancella allenamento">&times;</button></td></tr>`).join(''); aggiornaProiezione(); };
-        window.aggiornaRiepilogoPasto = () => { let totalePastoProt = 0, totalePastoKcal = 0; riepilogoPastoBody.innerHTML = ''; pastoCorrente.forEach(ingrediente => { totalePastoProt += ingrediente.prot; totalePastoKcal += ingrediente.cal; const riga = riepilogoPastoBody.insertRow(); riga.innerHTML = `<td>${ingrediente.desc}</td><td>${ingrediente.prot.toFixed(1)}</td><td>${ingrediente.cal}</td><td><button class="delete-btn" data-ingrediente-id="${ingrediente.id}" title="Cancella ingrediente">&times;</button></td>`; }); document.getElementById('builder-totale-proteine').textContent = totalePastoProt.toFixed(1); document.getElementById('builder-totale-calorie').textContent = Math.round(totalePastoKcal); btnRegistraPasto.disabled = (pastoCorrente.length === 0); };
-        window.aggiungiIngrediente = () => { const p100 = parseFloat(builderProt.value) || 0, k100 = parseFloat(builderKcal.value) || 0, qta = parseFloat(builderQta.value) || 0; const desc = builderDesc.value.trim() || 'Ingrediente'; if (qta <= 0 || (p100 === 0 && k100 === 0)) { alert('Inserisci una quantità e almeno un valore per calorie o proteine.'); return; } const protCalcolate = (p100 / 100) * qta, kcalCalcolate = Math.round((k100 / 100) * qta); pastoCorrente.push({ id: Date.now(), desc: desc, prot: protCalcolate, cal: kcalCalcolate }); builderDesc.value = ''; builderProt.value = ''; builderKcal.value = ''; builderQta.value = ''; builderDesc.focus(); aggiornaRiepilogoPasto(); };
-        window.rimuoviIngrediente = (idToRemove) => { pastoCorrente = pastoCorrente.filter(ing => ing.id !== idToRemove); aggiornaRiepilogoPasto(); };
-        btnAggiungiIngrediente.addEventListener('click', aggiungiIngrediente);
-        btnRegistraPasto.addEventListener('click', () => { const nomePasto = inputNomePasto.value.trim() || "Pasto da Builder"; const totali = pastoCorrente.reduce((acc, curr) => { acc.prot += curr.prot; acc.cal += curr.cal; return acc; }, { prot: 0, cal: 0 }); if (totali.cal > 0 || totali.prot > 0) { datiGiornalieri.proteine += totali.prot; datiGiornalieri.calorie += totali.cal; datiGiornalieri.log.push({ data: getTodayString('ymd'), desc: nomePasto, prot: totali.prot, cal: totali.cal }); salvaGiornoCorrente(); aggiornaUI(); pastoCorrente = []; inputNomePasto.value = ''; aggiornaRiepilogoPasto(); } });
-        formAllenamento.addEventListener('submit', e => { e.preventDefault(); const desc = document.getElementById('descrizione-allenamento').value || 'Allenamento'; const cal = parseInt(document.getElementById('calorie-bruciate').value, 10); if (isNaN(cal) || cal <= 0) return; datiGiornalieri.workoutCalorie += cal; datiGiornalieri.workoutLog.push({ data: getTodayString('ymd'), desc: desc, cal: cal }); salvaGiornoCorrente(); aggiornaUI(); e.target.reset(); });
-        document.body.addEventListener('click', (e) => { const target = e.target; if (target.hasAttribute('data-ingrediente-id')) { rimuoviIngrediente(parseInt(target.dataset.ingredienteId, 10)); } else if (target.classList.contains('delete-btn') && target.hasAttribute('data-type')) { if (!confirm('Sei sicuro di voler cancellare questa voce?')) return; const type = target.dataset.type; const index = parseInt(target.dataset.index, 10); if (type === 'pasto' && datiGiornalieri.log[index]) { const item = datiGiornalieri.log[index]; datiGiornalieri.proteine -= item.prot; datiGiornalieri.calorie -= item.cal; datiGiornalieri.log.splice(index, 1); } else if (type === 'allenamento' && datiGiornalieri.workoutLog[index]) { const item = datiGiornalieri.workoutLog[index]; datiGiornalieri.workoutCalorie -= item.cal; datiGiornalieri.workoutLog.splice(index, 1); } salvaGiornoCorrente(); aggiornaUI(); } });
-        gestisciAvvioApp();
-    })();
+    // === INIZIALIZZAZIONE APP ===
+    gestisciAvvioApp();
 });
 </script>
 </body>
