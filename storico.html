@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storico Dati</title>
+    <title>Storico Dati Analitico</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 900px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { width: 100%; max-width: 1200px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
         h2 { font-size: 1.4em; margin-top: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background-color: #f2f2f2; font-weight: 600; }
         #link-indietro { display: block; text-align: center; margin-bottom: 20px; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        /* Stili per il trend */
-        .trend-ok { background-color: #e8f5e9; }
-        .trend-attenzione { background-color: #fffde7; }
-        .trend-pericolo { background-color: #ffebee; }
+        .trend-ok { background-color: #e8f5e9; } .trend-attenzione { background-color: #fffde7; } .trend-pericolo { background-color: #ffebee; }
+        .positivo { color: #2e7d32; } .negativo { color: #c62828; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Storico Dati</h1>
+        <h1>Storico Dati Analitico</h1>
         <a href="index.html" id="link-indietro">⬅️ Torna al Tracker Giornaliero</a>
 
         <div class="sezione">
@@ -30,62 +28,82 @@
                 <thead>
                     <tr>
                         <th>Giorno</th>
-                        <th>Proteine Totali (g)</th>
-                        <th>Calorie Totali (kcal)</th>
-                        <th>Calorie Workout (kcal)</th>
+                        <th>Proteine (g)</th>
+                        <th>Calorie (kcal)</th>
+                        <th>Deficit Calorico (kcal)</th>
+                        <th>Variazione Grasso (g)</th>
+                        <th>Variazione Muscolo (g)</th>
+                        <th>Variazione Peso (g)</th>
                     </tr>
                 </thead>
-                <tbody id="storico-pasti-body">
-                    </tbody>
+                <tbody id="storico-pasti-body"></tbody>
             </table>
         </div>
 
         <div class="sezione">
             <h2>Storico Allenamenti</h2>
             <table id="storico-allenamenti">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Descrizione Allenamento</th>
-                        <th>Calorie Bruciate (kcal)</th>
-                    </tr>
-                </thead>
-                <tbody id="storico-allenamenti-body">
-                    </tbody>
+                <thead><tr><th>Data</th><th>Descrizione Allenamento</th><th>Calorie Bruciate (kcal)</th></tr></thead>
+                <tbody id="storico-allenamenti-body"></tbody>
             </table>
         </div>
     </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Costanti per i calcoli basate sui tuoi dati
+        const TDEE_BASE = 2311; // Stima del tuo TDEE senza contare l'allenamento specifico
+        const OBIETTIVO_PROTEINE_FISSO = 120; // Obiettivo proteico per stima muscoli
+
         const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
         const pastiBody = document.getElementById('storico-pasti-body');
         const allenamentiBody = document.getElementById('storico-allenamenti-body');
 
         if (storico.length === 0) {
-            pastiBody.innerHTML = `<tr><td colspan="4">Nessun dato storico trovato. Inizia a usare il tracker!</td></tr>`;
+            pastiBody.innerHTML = `<tr><td colspan="7">Nessun dato storico trovato.</td></tr>`;
             allenamentiBody.innerHTML = `<tr><td colspan="3">Nessun allenamento storico trovato.</td></tr>`;
             return;
         }
 
-        // Ordina lo storico dal più recente al più vecchio
         storico.reverse();
 
         storico.forEach(giorno => {
-            // Popola tabella riepiloghi giornalieri
             const [year, month, day] = giorno.data.split('-');
             const dataFormattata = `${day}/${month}/${year.slice(2)}`;
+
+            // --- ESECUZIONE CALCOLI ANALITICI ---
+            const calorieConsumate = giorno.totali.calorie;
+            const calorieWorkout = giorno.totali.workoutCalorie;
+            const proteineConsumate = giorno.totali.proteine;
+
+            const calorieBruciateTotali = TDEE_BASE + calorieWorkout;
+            const deficitCalorico = Math.round(calorieBruciateTotali - calorieConsumate);
             
+            const variazioneGrassoGrammi = -(deficitCalorico / 7700) * 1000;
+
+            let incrementoMuscolareGrammi = 0;
+            if (proteineConsumate > OBIETTIVO_PROTEINE_FISSO && deficitCalorico < 200) {
+                // Stima molto semplificata: 1g di proteine extra "costruisce" 4g di tessuto muscolare umido
+                incrementoMuscolareGrammi = (proteineConsumate - OBIETTIVO_PROTEINE_FISSO) * 4;
+                incrementoMuscolareGrammi = Math.min(incrementoMuscolareGrammi, 10); // Limite massimo giornaliero per realismo
+            }
+            
+            const variazionePesoGrammi = variazioneGrassoGrammi + incrementoMuscolareGrammi;
+
+            // --- POPOLAMENTO TABELLA PASTI ---
             const rigaPasto = pastiBody.insertRow();
-            rigaPasto.className = `trend-${giorno.trend}`; // Applica la classe per il colore
+            rigaPasto.className = `trend-${giorno.trend}`;
             rigaPasto.innerHTML = `
                 <td><strong>${dataFormattata}</strong></td>
-                <td>${giorno.totali.proteine.toFixed(1)}</td>
-                <td>${giorno.totali.calorie}</td>
-                <td>${giorno.totali.workoutCalorie}</td>
+                <td>${proteineConsumate.toFixed(1)}</td>
+                <td>${calorieConsumate}</td>
+                <td class="${deficitCalorico > 0 ? 'positivo' : 'negativo'}">${deficitCalorico > 0 ? '+' : ''}${deficitCalorico}</td>
+                <td class="${variazioneGrassoGrammi < 0 ? 'negativo' : 'positivo'}">${variazioneGrassoGrammi.toFixed(1)}</td>
+                <td class="positivo">${incrementoMuscolareGrammi.toFixed(1)}</td>
+                <td class="${variazionePesoGrammi < 0 ? 'positivo' : 'negativo'}">${variazionePesoGrammi.toFixed(1)}</td>
             `;
 
-            // Popola tabella allenamenti
+            // --- POPOLAMENTO TABELLA ALLENAMENTI ---
             if (giorno.allenamenti && giorno.allenamenti.length > 0) {
                 giorno.allenamenti.forEach(allenamento => {
                     const rigaAllenamento = allenamentiBody.insertRow();
