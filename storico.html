@@ -13,8 +13,12 @@
         th, td { padding: 10px; text-align: center; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background-color: #f2f2f2; font-weight: 600; }
         #link-indietro { display: block; text-align: center; margin-bottom: 20px; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        .trend-ok { background-color: #e8f5e9; } .trend-attenzione { background-color: #fffde7; } .trend-pericolo { background-color: #ffebee; }
-        .positivo { color: #2e7d32; } .negativo { color: #c62828; }
+        .trend-ok { background-color: #e8f5e9; }
+        .trend-attenzione { background-color: #fffde7; }
+        .trend-pericolo { background-color: #ffebee; }
+        .positivo { color: #2e7d32; }
+        .negativo { color: #c62828; }
+        .neutro { color: #546e7a; }
     </style>
 </head>
 <body>
@@ -25,17 +29,7 @@
         <div class="sezione">
             <h2>Storico Riepiloghi Giornalieri</h2>
             <table id="storico-pasti">
-                <thead>
-                    <tr>
-                        <th>Giorno</th>
-                        <th>Proteine (g)</th>
-                        <th>Calorie (kcal)</th>
-                        <th>Deficit Calorico (kcal)</th>
-                        <th>Variazione Grasso (g)</th>
-                        <th>Variazione Muscolo (g)</th>
-                        <th>Variazione Peso (g)</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Giorno</th><th>Proteine (g)</th><th>Calorie (kcal)</th><th>Deficit Calorico (kcal)</th><th>Variazione Grasso (g)</th><th>Variazione Muscolo (g)</th><th>Variazione Peso (g)</th></tr></thead>
                 <tbody id="storico-pasti-body"></tbody>
             </table>
         </div>
@@ -51,9 +45,10 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Costanti per i calcoli basate sui tuoi dati
-        const TDEE_BASE = 2311; // Stima del tuo TDEE senza contare l'allenamento specifico
-        const OBIETTIVO_PROTEINE_FISSO = 120; // Obiettivo proteico per stima muscoli
+        // Costanti per i calcoli
+        const TDEE_BASE = 2311;
+        const OBIETTIVO_PROTEINE = 120;
+        const PROTEINE_SOGLIA_MANTENIMENTO = 90;
 
         const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
         const pastiBody = document.getElementById('storico-pasti-body');
@@ -70,48 +65,44 @@
         storico.forEach(giorno => {
             const [year, month, day] = giorno.data.split('-');
             const dataFormattata = `${day}/${month}/${year.slice(2)}`;
-
-            // --- ESECUZIONE CALCOLI ANALITICI ---
+            
             const calorieConsumate = giorno.totali.calorie;
             const calorieWorkout = giorno.totali.workoutCalorie;
             const proteineConsumate = giorno.totali.proteine;
 
             const calorieBruciateTotali = TDEE_BASE + calorieWorkout;
             const deficitCalorico = Math.round(calorieBruciateTotali - calorieConsumate);
-            
             const variazioneGrassoGrammi = -(deficitCalorico / 7700) * 1000;
 
+            // NUOVA LOGICA A 3 ZONE PER I MUSCOLI
             let incrementoMuscolareGrammi = 0;
-            if (proteineConsumate > OBIETTIVO_PROTEINE_FISSO && deficitCalorico < 200) {
-                // Stima molto semplificata: 1g di proteine extra "costruisce" 4g di tessuto muscolare umido
-                incrementoMuscolareGrammi = (proteineConsumate - OBIETTIVO_PROTEINE_FISSO) * 4;
-                incrementoMuscolareGrammi = Math.min(incrementoMuscolareGrammi, 10); // Limite massimo giornaliero per realismo
+            if (proteineConsumate < PROTEINE_SOGLIA_MANTENIMENTO) {
+                // Zona di Rischio: stima una piccola perdita
+                incrementoMuscolareGrammi = -5;
+            } else if (proteineConsumate > OBIETTIVO_PROTEINE && deficitCalorico < 200) {
+                // Zona di Crescita
+                let guadagnoPotenziale = (proteineConsumate - OBIETTIVO_PROTEINE) * 4;
+                incrementoMuscolareGrammi = Math.min(guadagnoPotenziale, 10);
             }
+            // Altrimenti rimane 0 (Zona di Mantenimento)
             
             const variazionePesoGrammi = variazioneGrassoGrammi + incrementoMuscolareGrammi;
 
-            // --- POPOLAMENTO TABELLA PASTI ---
             const rigaPasto = pastiBody.insertRow();
             rigaPasto.className = `trend-${giorno.trend}`;
             rigaPasto.innerHTML = `
                 <td><strong>${dataFormattata}</strong></td>
                 <td>${proteineConsumate.toFixed(1)}</td>
                 <td>${calorieConsumate}</td>
-                <td class="${deficitCalorico > 0 ? 'positivo' : 'negativo'}">${deficitCalorico > 0 ? '+' : ''}${deficitCalorico}</td>
-                <td class="${variazioneGrassoGrammi < 0 ? 'negativo' : 'positivo'}">${variazioneGrassoGrammi.toFixed(1)}</td>
-                <td class="positivo">${incrementoMuscolareGrammi.toFixed(1)}</td>
-                <td class="${variazionePesoGrammi < 0 ? 'positivo' : 'negativo'}">${variazionePesoGrammi.toFixed(1)}</td>
+                <td class="${deficitCalorico >= 0 ? 'positivo' : 'negativo'}">${deficitCalorico >= 0 ? '+' : ''}${deficitCalorico}</td>
+                <td class="${variazioneGrassoGrammi > 0 ? 'positivo' : 'negativo'}">${variazioneGrassoGrammi > 0 ? '+' : ''}${variazioneGrassoGrammi.toFixed(1)}</td>
+                <td class="${incrementoMuscolareGrammi > 0 ? 'positivo' : (incrementoMuscolareGrammi < 0 ? 'negativo' : 'neutro')}">${incrementoMuscolareGrammi > 0 ? '+' : ''}${incrementoMuscolareGrammi.toFixed(1)}</td>
+                <td class="${variazionePesoGrammi > 0 ? 'positivo' : 'negativo'}">${variazionePesoGrammi > 0 ? '+' : ''}${variazionePesoGrammi.toFixed(1)}</td>
             `;
 
-            // --- POPOLAMENTO TABELLA ALLENAMENTI ---
             if (giorno.allenamenti && giorno.allenamenti.length > 0) {
                 giorno.allenamenti.forEach(allenamento => {
-                    const rigaAllenamento = allenamentiBody.insertRow();
-                    rigaAllenamento.innerHTML = `
-                        <td>${dataFormattata}</td>
-                        <td>${allenamento.desc}</td>
-                        <td>${allenamento.cal}</td>
-                    `;
+                    allenamentiBody.insertRow().innerHTML = `<td>${dataFormattata}</td><td>${allenamento.desc}</td><td>${allenamento.cal}</td>`;
                 });
             }
         });
