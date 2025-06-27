@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Nutrizionale - Definitivo</title>
+    <title>Tracker Nutrizionale - Layout Finale</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
         h2 { font-size: 1.4em; margin-top: 30px; }
+        h3 { font-size: 1.1em; color: #333; border-bottom: 1px solid #eee; margin-top: 20px; }
         #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
@@ -21,7 +22,7 @@
         #riepilogo .valore-consumato { font-weight: 600; color: #1976d2; }
         #riepilogo .valore-bruciato { font-weight: 600; color: #2e7d32; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
-        progress.macro-progress { height: 25px; } /* Barre più grandi per Proteine e Calorie */
+        progress.macro-progress { height: 25px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background-color: #f2f2f2; font-weight: 600; }
@@ -48,22 +49,28 @@
         <h2 id="titolo-giornata"></h2>
         <a href="storico.html" id="link-storico">📊 Vedi Storico</a>
         <div id="proiezione" class="sezione proiezione-neutra"><h2>Proiezione del Trend</h2><p id="testo-proiezione">Inizia a registrare i dati.</p></div>
+        
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi</h2>
+            <p>Proteine: <span id="totale-proteine" class="valore-consumato">0</span> / <span id="obiettivo-proteine">120</span> g</p>
+            <progress id="progress-proteine" class="macro-progress" value="0"></progress>
+            <p>Calorie: <span id="totale-calorie" class="valore-consumato">0</span> / <span id="obiettivo-calorie">2200</span> kcal</p>
+            <progress id="progress-calorie" class="macro-progress" value="0"></progress>
+            <p>Workout: <span id="workout-calories-totali" class="valore-bruciato">0</span> kcal</p>
+            <hr>
+            <h3>Micronutrienti</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
-                    <p>Proteine: <span id="totale-proteine" class="valore-consumato">0</span> / <span id="obiettivo-proteine">120</span> g</p><progress id="progress-proteine" class="macro-progress" value="0"></progress>
-                    <p>Calorie: <span id="totale-calorie" class="valore-consumato">0</span> / <span id="obiettivo-calorie">2200</span> kcal</p><progress id="progress-calorie" class="macro-progress" value="0"></progress>
-                    <p>Workout: <span id="workout-calories-totali" class="valore-bruciato">0</span> kcal</p>
+                    <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
+                    <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
                 </div>
                 <div>
-                    <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
                     <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
-                    <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
                     <p>Vitamina D: <span id="totale-vitd">0</span> / 15 µg</p><progress id="progress-vitd" value="0"></progress>
                 </div>
             </div>
         </div>
+
         <div id="meal-builder" class="sezione">
             <h2>Costruttore Pasto</h2>
             <label for="nome-pasto">Nome Pasto</label><input type="text" id="nome-pasto" placeholder="Pranzo di oggi">
@@ -100,31 +107,17 @@
     </div>
 
 <script>
+    // Lo script JavaScript rimane identico alla versione stabile precedente.
+    // La modifica è solo nella struttura HTML e nel CSS.
+    // Incolla qui l'intero blocco <script> dell'ultima versione funzionante.
 document.addEventListener('DOMContentLoaded', () => {
-    // === PIANO SETTIMANALE ===
-    const PIANO_SETTIMANALE = {
-        0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, 
-        1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 },
-        2: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 
-        3: { tipo: '🔥 HIIT/Core (Mantenimento)', cal: 2400, prot: 140 },
-        4: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 },
-        5: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 
-        6: { tipo: '💧 Cardio LISS (Deficit)', cal: 1700, prot: 110 }
-    };
-    
-    const oggi = new Date().getDay();
-    const pianoOggi = PIANO_SETTIMANALE[oggi];
-    
-    // === OBIETTIVI E COSTANTI ===
+    const PIANO_SETTIMANALE = { 0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, 1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 2: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 3: { tipo: '🔥 HIIT/Core (Mantenimento)', cal: 2400, prot: 140 }, 4: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 5: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 6: { tipo: '💧 Cardio LISS (Deficit)', cal: 1700, prot: 110 } };
+    const pianoOggi = PIANO_SETTIMANALE[new Date().getDay()];
     const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal, mg: 420, k: 3400, vitc: 90, vitd: 15 };
     const TDEE_BASE = 2311;
-    
-    // === STATO GLOBALE ===
     let datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, vitd: 0, log: [], workoutCalorie: 0, workoutLog: [] };
     let pastoCorrente = [];
     let foodDatabase = {};
-
-    // === RIFERIMENTI DOM ===
     const titoloGiornataEl = document.getElementById('titolo-giornata');
     const proiezioneDiv = document.getElementById('proiezione'), testoProiezione = document.getElementById('testo-proiezione');
     const formAllenamento = document.getElementById('form-allenamento');
@@ -146,8 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const builderTotaleCalorie = document.getElementById('builder-totale-calorie');
     const foodDatalist = document.getElementById('food-database-list');
     const btnExport = document.getElementById('btn-export'), fileImport = document.getElementById('import-file'), backupReminderDiv = document.getElementById('backup-reminder');
-
-    // === FUNZIONI ===
     function getTodayString(format = 'ymd') { const today = new Date(); if (format === 'ymd') return today.toISOString().split('T')[0]; const day = String(today.getDate()).padStart(2, '0'); const month = String(today.getMonth() + 1).padStart(2, '0'); return `${day}/${month}`; }
     function salvaGiornoCorrente() { localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: getTodayString('ymd'), dati: datiGiornalieri })); }
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
@@ -171,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inputNomePasto.addEventListener('input', salvaMealBuilder);
     builderDesc.addEventListener('input', (e) => { const foodName = e.target.value.toLowerCase(); if (foodDatabase[foodName]) { const foodData = foodDatabase[foodName]; builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || ''; builderMg.value = foodData.mg || ''; builderK.value = foodData.k || ''; builderVitC.value = foodData.vitc || ''; builderVitD.value = foodData.vitd || ''; } });
     btnRegistraPasto.addEventListener('click', () => { const nomePasto = inputNomePasto.value.trim() || "Pasto"; const totali = pastoCorrente.reduce((acc, curr) => { acc.prot += curr.prot; acc.cal += curr.cal; acc.mg += curr.mg; acc.k += curr.k; acc.vitc += curr.vitc; acc.vitd += curr.vitd; return acc; }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, vitd: 0 }); if (totali.cal > 0 || totali.prot > 0) { datiGiornalieri.proteine += totali.prot; datiGiornalieri.calorie += totali.cal; datiGiornalieri.mg += totali.mg; datiGiornalieri.k += totali.k; datiGiornalieri.vitc += totali.vitc; datiGiornalieri.vitd += totali.vitd; datiGiornalieri.log.push({ data: getTodayString('ymd'), desc: nomePasto, prot: totali.prot, cal: totali.cal }); salvaGiornoCorrente(); aggiornaUI(); pastoCorrente = []; inputNomePasto.value = ''; localStorage.removeItem('trackerMealBuilderState'); aggiornaRiepilogoPasto(); } });
-    formAllenamento.addEventListener('submit', e => { e.preventDefault(); const desc = document.getElementById('descrizione-allenamento').value || 'Allenamento'; const cal = parseInt(document.getElementById('calorie-bruciate').value, 10); if (isNaN(cal) || cal <= 0) return; datiGiornalieri.workoutCalorie += cal; datiGiornalieri.workoutLog.push({ data: getTodayString('ymd'), desc, cal }); salvaGiornoCorrente(); aggiornaUI(); e.target.reset(); });
+    formAllenamento.addEventListener('submit', (e) => { e.preventDefault(); const desc = document.getElementById('descrizione-allenamento').value || 'Allenamento'; const cal = parseInt(document.getElementById('calorie-bruciate').value, 10); if (isNaN(cal) || cal <= 0) return; datiGiornalieri.workoutCalorie += cal; datiGiornalieri.workoutLog.push({ data: getTodayString('ymd'), desc, cal }); salvaGiornoCorrente(); aggiornaUI(); e.target.reset(); });
     document.body.addEventListener('click', (e) => { const target = e.target; if (target.hasAttribute('data-ingrediente-id')) { rimuoviIngrediente(parseInt(target.dataset.ingredienteId, 10)); } else if (target.classList.contains('delete-btn') && target.hasAttribute('data-type')) { if (!confirm('Cancellare?')) return; const type = target.dataset.type; const index = parseInt(target.dataset.index, 10); if (type === 'pasto' && datiGiornalieri.log[index]) { const item = datiGiornalieri.log[index]; datiGiornalieri.proteine -= item.prot; datiGiornalieri.calorie -= item.cal; datiGiornalieri.mg -= item.mg || 0; datiGiornalieri.k -= item.k || 0; datiGiornalieri.vitc -= item.vitc || 0; datiGiornalieri.vitd -= item.vitd || 0; datiGiornalieri.log.splice(index, 1); } else if (type === 'allenamento' && datiGiornalieri.workoutLog[index]) { const item = datiGiornalieri.workoutLog[index]; datiGiornalieri.workoutCalorie -= item.cal; datiGiornalieri.workoutLog.splice(index, 1); } salvaGiornoCorrente(); aggiornaUI(); } });
     btnExport.addEventListener('click', esportaDati);
     fileImport.addEventListener('change', importaDati);
