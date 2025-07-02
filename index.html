@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Nutrizionale - Definitivo</title>
+    <title>Tracker Definitivo - Stabile</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -49,10 +49,13 @@
         <h1>Tracker Nutrizionale</h1>
         <h2 id="titolo-giornata"></h2>
         <div class="nav-links">
-            <a href="storico.html" id="link-storico">📊 Storico Giornaliero</a>
-            <a href="confronto.html" id="link-confronto">📈 Confronto Mensile</a>
+            <a href="storico.html">📊 Storico Giornaliero</a>
+            <a href="confronto.html">📈 Confronto Mensile</a>
         </div>
-        <div id="proiezione" class="sezione proiezione-neutra"><h2>Proiezione del Trend</h2><p id="testo-proiezione">Inizia a registrare i dati.</p></div>
+        <div id="proiezione" class="sezione proiezione-neutra">
+            <h2>Proiezione del Trend</h2>
+            <p id="testo-proiezione">Inizia a registrare i dati.</p>
+        </div>
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi</h2>
             <p>Proteine: <span id="totale-proteine" class="valore-consumato">0</span> / <span id="obiettivo-proteine"></span> g</p><progress id="progress-proteine" class="macro-progress" value="0"></progress>
@@ -168,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function importaDati(event) { const file = event.target.files[0]; if (!file) return; if (!confirm("Sei sicuro di voler sovrascrivere i dati?")) { event.target.value = null; return; } const reader = new FileReader(); reader.onload = function(e) { try { const backupData = JSON.parse(e.target.result); if(backupData.giornoCorrente) localStorage.setItem('trackerGiornoCorrente', JSON.stringify(backupData.giornoCorrente)); if(backupData.storico) localStorage.setItem('trackerStorico', JSON.stringify(backupData.storico)); if(backupData.databaseAlimenti) localStorage.setItem('trackerFoodDatabase', JSON.stringify(backupData.databaseAlimenti)); if(backupData.builderCorrente) localStorage.setItem('trackerMealBuilderState', JSON.stringify(backupData.builderCorrente)); alert("Dati importati con successo!"); location.reload(); } catch (error) { alert("Errore: file non valido."); } }; reader.readAsText(file); }
     function controllaNotificaBackup() { const reminder = document.getElementById('backup-reminder'); if (localStorage.getItem('backupNeeded') === 'true') { reminder.innerHTML = `<strong>Backup Consigliato!</strong> Clicca "Esporta Backup".`; reminder.style.display = 'block'; } else { reminder.style.display = 'none'; } }
     function registraPesataMensile() { alert("Stai per registrare una pesata ufficiale."); const peso = parseFloat(prompt("PESO attuale (es. 72.8):")); if (isNaN(peso) || peso <= 0) { alert("Annullato."); return; } const grasso = parseFloat(prompt("% di GRASSO CORPOREO (es. 21.8):")); if (isNaN(grasso) || grasso <= 0) { alert("Annullato."); return; } const muscolo = parseFloat(prompt("% di MUSCOLATURA (es. 47.8):")); if (isNaN(muscolo) || muscolo <= 0) { alert("Annullato."); return; } if (!confirm(`Confermi?\nPeso: ${peso} kg\nGrasso: ${grasso}%\nMuscolo: ${muscolo}%`)) { alert("Annullato."); return; } const storicoPesate = JSON.parse(localStorage.getItem('trackerPesate')) || []; const oggi = getTodayString('ymd'); const nuovoStorico = storicoPesate.filter(p => p.data !== oggi); nuovoStorico.push({ data: oggi, peso: peso, grasso: grasso, muscolo: muscolo }); localStorage.setItem('trackerPesate', JSON.stringify(nuovoStorico)); alert("Pesata registrata!"); }
-
+    
     // === EVENT LISTENERS ===
     btnAggiungiIngrediente.addEventListener('click', aggiungiIngrediente);
     inputNomePasto.addEventListener('input', salvaMealBuilder);
