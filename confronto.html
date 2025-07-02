@@ -15,6 +15,8 @@
         .positivo { color: #2e7d32; font-weight: bold; }
         .negativo { color: #c62828; font-weight: bold; }
         .neutro { color: #546e7a; }
+        .delete-btn { background-color: transparent; border: none; color: #d32f2f; font-size: 1.3em; font-weight: bold; cursor: pointer; padding: 0 8px; border-radius: 50%; line-height: 1; }
+        .delete-btn:hover { background-color: #ffebee; color: #b71c1c; }
     </style>
 </head>
 <body>
@@ -35,6 +37,7 @@
                         <th>Variazione Grasso</th>
                         <th>Massa Muscolare (kg)</th>
                         <th>Variazione Muscolo</th>
+                        <th>Azione</th>
                     </tr>
                 </thead>
                 <tbody id="confronto-body">
@@ -45,51 +48,79 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const storicoPesate = JSON.parse(localStorage.getItem('trackerPesate')) || [];
         const confrontoBody = document.getElementById('confronto-body');
 
-        if (storicoPesate.length === 0) {
-            confrontoBody.innerHTML = `<tr><td colspan="7">Nessuna pesata registrata. Registra la tua prima pesata dalla pagina principale.</td></tr>`;
-            return;
-        }
+        function caricaDati() {
+            const storicoPesate = JSON.parse(localStorage.getItem('trackerPesate')) || [];
+            confrontoBody.innerHTML = ''; // Pulisce la tabella prima di ricaricarla
 
-        // Ordina le pesate dalla più vecchia alla più recente
-        storicoPesate.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-        let pesataPrecedente = null;
-
-        storicoPesate.forEach(pesata => {
-            const [year, month, day] = pesata.data.split('-');
-            const dataFormattata = `${day}/${month}/${year.slice(2)}`;
-            const massaMuscolareKg = (pesata.peso * (pesata.muscolo / 100)).toFixed(2);
-
-            let varPesoHtml = '<span class="neutro">-</span>';
-            let varGrassoHtml = '<span class="neutro">-</span>';
-            let varMuscoloHtml = '<span class="neutro">-</span>';
-
-            if (pesataPrecedente) {
-                const varPeso = (pesata.peso - pesataPrecedente.peso).toFixed(2);
-                const varGrasso = (pesata.grasso - pesataPrecedente.grasso).toFixed(2);
-                const varMuscolo = (massaMuscolareKg - (pesataPrecedente.peso * (pesataPrecedente.muscolo / 100))).toFixed(2);
-
-                varPesoHtml = `<span class="${varPeso >= 0 ? 'negativo' : 'positivo'}">${varPeso > 0 ? '+' : ''}${varPeso} kg</span>`;
-                varGrassoHtml = `<span class="${varGrasso >= 0 ? 'negativo' : 'positivo'}">${varGrasso > 0 ? '+' : ''}${varGrasso}%</span>`;
-                varMuscoloHtml = `<span class="${varMuscolo >= 0 ? 'positivo' : 'negativo'}">${varMuscolo > 0 ? '+' : ''}${varMuscolo} kg</span>`;
+            if (storicoPesate.length === 0) {
+                confrontoBody.innerHTML = `<tr><td colspan="8">Nessuna pesata registrata.</td></tr>`;
+                return;
             }
 
-            const riga = confrontoBody.insertRow();
-            riga.innerHTML = `
-                <td><strong>${dataFormattata}</strong></td>
-                <td>${pesata.peso}</td>
-                <td>${varPesoHtml}</td>
-                <td>${pesata.grasso}%</td>
-                <td>${varGrassoHtml}</td>
-                <td>${massaMuscolareKg}</td>
-                <td>${varMuscoloHtml}</td>
-            `;
+            storicoPesate.sort((a, b) => new Date(a.data) - new Date(b.data));
 
-            pesataPrecedente = pesata;
+            let pesataPrecedente = null;
+
+            storicoPesate.forEach(pesata => {
+                const [year, month, day] = pesata.data.split('-');
+                const dataFormattata = `${day}/${month}/${year.slice(2)}`;
+                const massaMuscolareKg = (pesata.peso * (pesata.muscolo / 100)).toFixed(2);
+
+                let varPesoHtml = '<span class="neutro">-</span>';
+                let varGrassoHtml = '<span class="neutro">-</span>';
+                let varMuscoloHtml = '<span class="neutro">-</span>';
+
+                if (pesataPrecedente) {
+                    const varPeso = (pesata.peso - pesataPrecedente.peso).toFixed(2);
+                    const varGrasso = (pesata.grasso - pesataPrecedente.grasso).toFixed(2);
+                    const varMuscolo = (massaMuscolareKg - (pesataPrecedente.peso * (pesataPrecedente.muscolo / 100))).toFixed(2);
+
+                    varPesoHtml = `<span class="${varPeso >= 0 ? 'negativo' : 'positivo'}">${varPeso > 0 ? '+' : ''}${varPeso} kg</span>`;
+                    varGrassoHtml = `<span class="${varGrasso >= 0 ? 'negativo' : 'positivo'}">${varGrasso > 0 ? '+' : ''}${varGrasso}%</span>`;
+                    varMuscoloHtml = `<span class="${varMuscolo >= 0 ? 'positivo' : 'negativo'}">${varMuscolo > 0 ? '+' : ''}${varMuscolo} kg</span>`;
+                }
+
+                const riga = confrontoBody.insertRow();
+                riga.innerHTML = `
+                    <td><strong>${dataFormattata}</strong></td>
+                    <td>${pesata.peso}</td>
+                    <td>${varPesoHtml}</td>
+                    <td>${pesata.grasso}%</td>
+                    <td>${varGrassoHtml}</td>
+                    <td>${massaMuscolareKg}</td>
+                    <td>${varMuscoloHtml}</td>
+                    <td><button class="delete-btn" data-data-pesata="${pesata.data}" title="Cancella questa pesata">&times;</button></td>
+                `;
+
+                pesataPrecedente = pesata;
+            });
+        }
+
+        function cancellaPesata(dataDaCancellare) {
+            if (!confirm(`Sei sicuro di voler cancellare la pesata del ${dataDaCancellare}? L'operazione è irreversibile.`)) {
+                return;
+            }
+            let storicoPesate = JSON.parse(localStorage.getItem('trackerPesate')) || [];
+            const nuovoStorico = storicoPesate.filter(pesata => pesata.data !== dataDaCancellare);
+            localStorage.setItem('trackerPesate', JSON.stringify(nuovoStorico));
+            
+            // Ricarica la tabella per mostrare le modifiche
+            caricaDati();
+        }
+
+        confrontoBody.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const dataPesata = e.target.dataset.dataPesata;
+                if(dataPesata) {
+                    cancellaPesata(dataPesata);
+                }
+            }
         });
+
+        // Caricamento iniziale
+        caricaDati();
     });
 </script>
 </body>
