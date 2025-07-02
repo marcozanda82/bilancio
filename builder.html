@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Costruttore Pasto</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
+        .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input, select, button { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        button { background-color: #d84315; color: white; cursor: pointer; font-weight: 600; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #btn-aggiungi-ingrediente { background-color: #1976d2; margin-top: 15px; }
+        #link-indietro { display: inline-block; background-color: #607d8b; color: white; text-decoration: none; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em;}
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+        tfoot td { font-weight: bold; border-top: 2px solid #333; }
+        .delete-btn { background: none; border: none; color: #c62828; font-size: 1.2em; cursor: pointer; padding: 5px; }
+        .riepilogo-giornata { background-color: #e3f2fd; padding: 10px; border-radius: 8px; }
+        .riepilogo-giornata p, .budget-pasto p { margin: 5px 0; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Costruttore di Pasti</h1>
+        <a href="index.html" id="link-indietro"⬅️ Torna al Diario</a>
+
+        <div class="sezione riepilogo-giornata">
+            <h2>Residuo Giornaliero Totale</h2>
+            <p>Proteine: <span id="res-prot-giorno"></span> g</p>
+            <p>Calorie: <span id="res-cal-giorno"></span> kcal</p>
+        </div>
+
+        <div class="sezione">
+            <h2>1. Seleziona e Imposta Budget Pasto</h2>
+            <label for="pasto-select">Che pasto stai componendo?</label>
+            <select id="pasto-select">
+                <option value="">-- Seleziona un pasto --</option>
+                <option value="pranzo">Pranzo</option>
+                <option value="cena">Cena</option>
+                <option value="spuntino">Spuntino</option>
+            </select>
+            <div class="budget-pasto">
+                <h3>Budget per questo pasto:</h3>
+                <p>Proteine: <span id="budget-prot-pasto">0</span> g</p>
+                <p>Calorie: <span id="budget-cal-pasto">0</span> kcal</p>
+            </div>
+        </div>
+
+        <div id="food-adder" class="sezione">
+            <h2>2. Aggiungi Ingredienti</h2>
+            </div>
+        
+        <div id="builder-riepilogo" class="sezione">
+            <h3>3. Riepilogo Ingredienti Pasto</h3>
+            <table id="riepilogo-pasto-table">
+                <thead><tr><th>Alimento</th><th>Proteine (g)</th><th>Calorie (kcal)</th><th>Azione</th></tr></thead>
+                <tbody id="riepilogo-pasto-body"></tbody>
+                <tfoot><tr><td><strong>TOTALE PASTO</strong></td><td><strong id="builder-totale-proteine">0.0</strong></td><td><strong id="builder-totale-calorie">0</strong></td><td></td></tr></tfoot>
+            </table>
+        </div>
+
+        <button id="btn-registra-pasto" disabled>Registra Pasto e Torna al Diario</button>
+    </div>
+
+<script>
+   document.addEventListener('DOMContentLoaded', () => {
+    // === OBIETTIVI E STATO ===
+    const PIANO_SETTIMANALE = { 0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, 1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 2: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 3: { tipo: '🔥 HIIT/Core (Mantenimento)', cal: 2400, prot: 140 }, 4: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 5: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 6: { tipo: '💧 Cardio LISS (Deficit)', cal: 1700, prot: 110 } };
+    let datiGiornalieri, foodDatabase = {}, pastoCorrente = [];
+    let budgetPasto = { prot: 0, cal: 0 };
+    
+    // === RIFERIMENTI DOM ===
+    const resProtGiornoEl = document.getElementById('res-prot-giorno'), resCalGiornoEl = document.getElementById('res-cal-giorno');
+    const pastoSelect = document.getElementById('pasto-select');
+    const budgetProtPastoEl = document.getElementById('budget-prot-pasto'), budgetCalPastoEl = document.getElementById('budget-cal-pasto');
+    const foodAdderEl = document.getElementById('food-adder');
+    const riepilogoPastoBody = document.getElementById('riepilogo-pasto-body');
+    const builderTotaleProteine = document.getElementById('builder-totale-proteine'), builderTotaleCalorie = document.getElementById('builder-totale-calorie');
+    const btnRegistraPasto = document.getElementById('btn-registra-pasto');
+    let builderDesc, builderQta, builderProt, builderKcal, foodDatalist, btnAggiungiIngrediente;
+
+    // === FUNZIONI ===
+    function inizializzaPagina() {
+        const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
+        if (!giornoCorrenteSalvataggio) {
+            alert("Dati giornalieri non trovati. Torna al tracker principale per iniziare la giornata.");
+            window.location.href = 'index.html';
+            return;
+        }
+        datiGiornalieri = giornoCorrenteSalvataggio.dati;
+        const pianoOggi = PIANO_SETTIMANALE[new Date(giornoCorrenteSalvataggio.data).getDay()];
+        const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal };
+        const residuoProt = OBIETTIVI.prot - datiGiornalieri.proteine;
+        const residuoCal = OBIETTIVI.cal - datiGiornalieri.calorie;
+        resProtGiornoEl.textContent = residuoProt.toFixed(1);
+        resCalGiornoEl.textContent = residuoCal.toFixed(0);
+        
+        caricaFoodDatabase();
+        foodAdderEl.innerHTML = `<h2>2. Aggiungi Ingredienti</h2><div class="builder-grid"><div><label>Alimento</label><input type="text" id="builder-desc" placeholder="es. Pollo" list="food-database-list"></div><div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div><div><label>Proteine/100g</label><input type="number" id="builder-prot" min="0" step="0.1"></div><div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div></div><datalist id="food-database-list"></datalist><button id="btn-aggiungi-ingrediente">Aggiungi Ingrediente</button>`;
+        aggiornaRiferimentiBuilder();
+    }
+
+    function aggiornaRiferimentiBuilder() {
+        builderDesc = document.getElementById('builder-desc');
+        builderQta = document.getElementById('builder-qta');
+        builderProt = document.getElementById('builder-prot');
+        builderKcal = document.getElementById('builder-kcal');
+        foodDatalist = document.getElementById('food-database-list');
+        btnAggiungiIngrediente = document.getElementById('btn-aggiungi-ingrediente');
+        
+        btnAggiungiIngrediente.addEventListener('click', aggiungiIngrediente);
+        builderDesc.addEventListener('input', autocompletaAlimento);
+    }
+    
+    function caricaFoodDatabase() { const dbSalvato = localStorage.getItem('trackerFoodDatabase'); if (dbSalvato) foodDatabase = JSON.parse(dbSalvato); }
+    function aggiornaDatalist() { foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); foodDatalist.appendChild(option); } }
+    
+    function impostaBudgetPasto() {
+        const tipoPasto = pastoSelect.value;
+        const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
+        const pianoOggi = PIANO_SETTIMANALE[new Date(giornoCorrenteSalvataggio.data).getDay()];
+        const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal };
+        
+        const residuoProt = OBIETTIVI.prot - datiGiornalieri.proteine;
+        const residuoCal = OBIETTIVI.cal - datiGiornalieri.calorie;
+        
+        if (tipoPasto === 'pranzo' && datiGiornalieri.log.length === 0) {
+            budgetPasto.prot = residuoProt / 2;
+            budgetPasto.cal = residuoCal / 2;
+        } else if (tipoPasto) {
+            budgetPasto.prot = residuoProt;
+            budgetPasto.cal = residuoCal;
+        } else {
+            budgetPasto.prot = 0;
+            budgetPasto.cal = 0;
+        }
+        
+        budgetProtPastoEl.textContent = budgetPasto.prot.toFixed(1);
+        budgetCalPastoEl.textContent = budgetPasto.cal.toFixed(0);
+        aggiornaRiepilogoPasto();
+    }
+
+    function aggiornaRiepilogoPasto() {
+        let totalePastoProt = 0, totalePastoKcal = 0;
+        riepilogoPastoBody.innerHTML = '';
+        pastoCorrente.forEach(ingrediente => {
+            totalePastoProt += ingrediente.prot;
+            totalePastoKcal += ingrediente.cal;
+            const riga = riepilogoPastoBody.insertRow();
+            riga.innerHTML = `<td>${ingrediente.desc}</td><td>${ingrediente.prot.toFixed(1)}</td><td>${ingrediente.cal.toFixed(0)}</td><td><button class="delete-btn" data-ingrediente-id="${ingrediente.id}" title="Cancella">&times;</button></td>`;
+        });
+        builderTotaleProteine.textContent = totalePastoProt.toFixed(1);
+        builderTotaleCalorie.textContent = Math.round(totalePastoKcal);
+        
+        // Aggiorna il budget rimanente del pasto
+        const budgetRimanenteCal = budgetPasto.cal - totalePastoKcal;
+        const budgetRimanenteProt = budgetPasto.prot - totalePastoProt;
+        budgetProtPastoEl.textContent = budgetRimanenteProt.toFixed(1);
+        budgetCalPastoEl.textContent = budgetRimanenteCal.toFixed(0);
+
+        btnRegistraPasto.disabled = (pastoCorrente.length === 0);
+    }
+    
+    function aggiungiIngrediente() { /* Logica simile a index, ma senza micronutrienti */ }
+    function autocompletaAlimento(e) { /* ... */ }
+    function rimuoviIngrediente(idToRemove) { /* ... */ }
+    function registraPasto() { /* ... */ }
+
+    // === EVENT LISTENERS ===
+    pastoSelect.addEventListener('change', impostaBudgetPasto);
+    riepilogoPastoBody.addEventListener('click', e => { if (e.target.hasAttribute('data-ingrediente-id')) rimuoviIngrediente(parseInt(e.target.dataset.ingredienteId, 10)); });
+    btnRegistraPasto.addEventListener('click', registraPasto);
+    
+    // === INIZIALIZZAZIONE ===
+    inizializzaPagina();
+});
+</script>
+</body>
+</html>
