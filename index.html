@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Definitivo - Stabile con Deficit Reale</title>
+    <title>Tracker Definitivo - Stabile con Obiettivo Dinamico</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -37,7 +37,6 @@
         .builder-grid div { display: flex; flex-direction: column; }
         .builder-grid label { font-size: 0.8em; margin-bottom: 4px; }
         .builder-grid input { margin-bottom: 0; }
-        /* Stili per il Meal Builder */
         .button-group { display: flex; gap: 10px; margin-top: 15px; }
         .button-group button { flex-grow: 1; }
         #btn-costruisci-pasto { background-color: #ff8f00; } #btn-costruisci-pasto:hover { background-color: #e65100; }
@@ -49,7 +48,6 @@
         #btn-salva-pasto { background-color: #2e7d32; width: 100%; margin-top: 15px; }
         #btn-salva-pasto:hover { background-color: #1b5e20; }
         #backup-reminder { border: 2px dashed #ff9800; padding: 15px; margin-top: 15px; border-radius: 6px; background-color: #fffde7; text-align: center; }
-        /* NUOVI Stili per il Feedback Deficit */
         #feedback-deficit { padding: 10px; margin-top: 15px; border-radius: 6px; font-weight: 600; text-align: center; }
         .deficit-ok { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
         .deficit-alto { background-color: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
@@ -160,16 +158,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal, mg: 420, k: 3400, vitc: 90, ca: 1000 };
     const TDEE_BASE = 2311;
     
-    // === STATO GLOBALE ===
     let datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] };
     let foodDatabase = {};
     let pastoInCostruzione = []; 
 
-    // === RIFERIMENTI DOM ===
     const titoloGiornataEl = document.getElementById('titolo-giornata');
     const proiezioneDiv = document.getElementById('proiezione'), testoProiezione = document.getElementById('testo-proiezione');
     const formAllenamento = document.getElementById('form-allenamento');
     const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
+    const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
     const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
     const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
     const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
@@ -191,11 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const builderProgressCal = document.getElementById('builder-progress-cal');
     const logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
     const btnSalvaPasto = document.getElementById('btn-salva-pasto');
-    // NUOVI RIFERIMENTI DOM PER DEFICIT
     const spanDeficitAttuale = document.getElementById('deficit-attuale');
     const divFeedbackDeficit = document.getElementById('feedback-deficit');
 
-    // === FUNZIONI ===
     function getTodayString(format = 'ymd') { const today = new Date(); if (format === 'ymd') return today.toISOString().split('T')[0]; const day = String(today.getDate()).padStart(2, '0'); const month = String(today.getMonth() + 1).padStart(2, '0'); return `${day}/${month}`; }
     function salvaGiornoCorrente() { localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: getTodayString('ymd'), dati: datiGiornalieri })); }
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
@@ -204,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function archiviaGiornoPrecedente(datiDaArchiviare) { const storico = JSON.parse(localStorage.getItem('trackerStorico')) || []; const dataArchiviazione = new Date(datiDaArchiviare.data); const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()]; const obiettivoCalorieGiorno = pianoArchiviazione.cal; const obiettivoProteineGiorno = pianoArchiviazione.prot; let trendFinale = 'ok'; if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) { trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione'; } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) { trendFinale = 'attenzione'; } const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie; const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie; const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data); nuovoStorico.push({ data: datiDaArchiviare.data, totali: { proteine: datiDaArchiviare.dati.proteine, calorie: datiDaArchiviare.dati.calorie, workoutCalorie: datiDaArchiviare.dati.workoutCalorie }, allenamenti: datiDaArchiviare.dati.workoutLog, deficit: Math.round(deficit), trend: trendFinale }); localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico)); localStorage.setItem('backupNeeded', 'true'); }
     function gestisciAvvioApp() { const giornoCorrenteRaw = localStorage.getItem('trackerGiornoCorrente'); if (giornoCorrenteRaw) { let dati = JSON.parse(giornoCorrenteRaw); if (dati.dati.log && dati.dati.log.length > 0 && typeof dati.dati.log[0].data === 'undefined') { const dataDelGiorno = dati.data; dati.dati.log.forEach(item => item.data = dataDelGiorno); dati.dati.workoutLog.forEach(item => item.data = dataDelGiorno); localStorage.setItem('trackerGiornoCorrente', JSON.stringify(dati)); } if (typeof dati.dati.ca === 'undefined') { dati.dati.ca = 0; delete dati.dati.vitd; localStorage.setItem('trackerGiornoCorrente', JSON.stringify(dati));} } const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente')); const oggi = getTodayString('ymd'); if (giornoCorrenteSalvataggio) { if (giornoCorrenteSalvataggio.data !== oggi && (giornoCorrenteSalvataggio.dati.calorie > 0 || giornoCorrenteSalvataggio.dati.workoutCalorie > 0)) { archiviaGiornoPrecedente(giornoCorrenteSalvataggio); datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] }; } else { datiGiornalieri = giornoCorrenteSalvataggio.dati; } } aggiornaUI(); salvaGiornoCorrente(); controllaNotificaBackup(); renderMealBuilder(); }
     
-    // === NUOVA FUNZIONE PER DEFICIT IN TEMPO REALE ===
     function aggiornaDeficitInTempoReale() {
         const tdeeAttuale = TDEE_BASE + datiGiornalieri.workoutCalorie;
         const deficit = tdeeAttuale - datiGiornalieri.calorie;
@@ -223,178 +217,85 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // === FUNZIONE UI AGGIORNATA ===
     function aggiornaUI() { 
         titoloGiornataEl.textContent = pianoOggi.tipo; 
-        document.getElementById('obiettivo-proteine').textContent = OBIETTIVI.prot; 
-        document.getElementById('obiettivo-calorie').textContent = OBIETTIVI.cal; 
-        progressProteine.max = OBIETTIVI.prot; progressCalorie.max = OBIETTIVI.cal; 
-        progressMg.max = OBIETTIVI.mg; progressK.max = OBIETTIVI.k; progressVitC.max = OBIETTIVI.vitc; progressCa.max = OBIETTIVI.ca; 
+        
+        // Calcolo dell'obiettivo calorico dinamico
+        let obiettivoCaloricoDinamico;
+        if (pianoOggi.tipo.includes('Forza')) {
+            // Nei giorni di forza, l'obiettivo è il pareggio (TDEE totale)
+            obiettivoCaloricoDinamico = TDEE_BASE + datiGiornalieri.workoutCalorie;
+        } else {
+            // Negli altri giorni, l'obiettivo è fisso
+            obiettivoCaloricoDinamico = OBIETTIVI.cal;
+        }
+
+        spanObiettivoProteine.textContent = OBIETTIVI.prot; 
+        spanObiettivoCalorie.textContent = obiettivoCaloricoDinamico.toFixed(0);
+        
+        progressProteine.max = OBIETTIVI.prot; 
+        progressCalorie.max = obiettivoCaloricoDinamico; 
+        
+        progressMg.max = OBIETTIVI.mg; 
+        progressK.max = OBIETTIVI.k; 
+        progressVitC.max = OBIETTIVI.vitc; 
+        progressCa.max = OBIETTIVI.ca; 
+        
         spanTotaleProteine.textContent = datiGiornalieri.proteine.toFixed(1); 
         spanTotaleCalorie.textContent = datiGiornalieri.calorie.toFixed(0); 
         spanTotaleMg.textContent = datiGiornalieri.mg.toFixed(1); 
         spanTotaleK.textContent = datiGiornalieri.k.toFixed(0); 
         spanTotaleVitC.textContent = datiGiornalieri.vitc.toFixed(1); 
         spanTotaleCa.textContent = datiGiornalieri.ca.toFixed(1); 
+        
         progressProteine.value = datiGiornalieri.proteine; 
         progressCalorie.value = datiGiornalieri.calorie; 
         progressMg.value = datiGiornalieri.mg; 
         progressK.value = datiGiornalieri.k; 
         progressVitC.value = datiGiornalieri.vitc; 
         progressCa.value = datiGiornalieri.ca; 
+        
         spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie; 
+        
         logBody.innerHTML = ''; 
-        datiGiornalieri.log.forEach((item, index) => { const riga = logBody.insertRow(); riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td>${(item.mg || 0).toFixed(1)}</td><td>${(item.k || 0).toFixed(0)}</td><td>${(item.vitc || 0).toFixed(1)}</td><td>${(item.ca || 0).toFixed(1)}</td><td><button class="delete-btn" data-type="pasto" data-index="${index}">&times;</button></td>`; }); 
+        datiGiornalieri.log.forEach((item, index) => { 
+            const riga = logBody.insertRow(); 
+            riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td>${(item.mg || 0).toFixed(1)}</td><td>${(item.k || 0).toFixed(0)}</td><td>${(item.vitc || 0).toFixed(1)}</td><td>${(item.ca || 0).toFixed(1)}</td><td><button class="delete-btn" data-type="pasto" data-index="${index}">&times;</button></td>`; 
+        }); 
+        
         tabellaAllenamenti.style.display = datiGiornalieri.workoutLog.length > 0 ? 'table' : 'none'; 
         logAllenamentiBody.innerHTML = ''; 
-        datiGiornalieri.workoutLog.forEach((item, index) => { const dataFormattata = item.data ? `${item.data.split('-')[2]}/${item.data.split('-')[1]}` : getTodayString('gg/mm'); logAllenamentiBody.insertRow().innerHTML = `<td>${dataFormattata}</td><td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="allenamento" data-index="${index}">&times;</button></td>`; }); 
+        datiGiornalieri.workoutLog.forEach((item, index) => { 
+            const dataFormattata = item.data ? `${item.data.split('-')[2]}/${item.data.split('-')[1]}` : getTodayString('gg/mm'); 
+            logAllenamentiBody.insertRow().innerHTML = `<td>${dataFormattata}</td><td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="allenamento" data-index="${index}">&times;</button></td>`; 
+        }); 
         
         aggiornaProiezione(); 
-        aggiornaDeficitInTempoReale(); // Chiamata alla nuova funzione
+        aggiornaDeficitInTempoReale();
     }
 
-    function aggiornaProiezione() { const { calorie, proteine } = datiGiornalieri; let testo = '', classeCss = 'sezione proiezione-'; if (calorie === 0 && datiGiornalieri.workoutCalorie === 0) { testo = "Inizia a registrare i dati."; classeCss += 'neutra'; } else if (calorie > OBIETTIVI.cal) { if (pianoOggi.tipo.includes('Forza')) { testo = "TREND DI CARICA: Ottimo! Hai raggiunto l'obiettivo."; classeCss += 'ok'; } else { testo = "ATTENZIONE: Hai superato il tuo obiettivo calorico."; classeCss += 'attenzione'; } } else { if (proteine < OBIETTIVI.prot * 0.8) { testo = "ATTENZIONE: Le calorie sono sotto controllo, ma le proteine sono troppo basse."; classeCss += 'pericolo'; } else if (pianoOggi.tipo.includes('Deficit')) { testo = "TREND DI SCARICO: Perfetto! Stai mantenendo il deficit."; classeCss += 'ok'; } else { testo = `TREND DI CARICA: Stai per raggiungere i tuoi obiettivi.`; classeCss += 'ok'; } } proiezioneDiv.className = classeCss; testoProiezione.textContent = testo; }
+    function aggiornaProiezione() { const { calorie, proteine } = datiGiornalieri; let testo = '', classeCss = 'sezione proiezione-'; if (calorie === 0 && datiGiornalieri.workoutCalorie === 0) { testo = "Inizia a registrare i dati."; classeCss += 'neutra'; } else if (calorie > progressCalorie.max) { if (pianoOggi.tipo.includes('Forza')) { testo = "TREND DI CARICA: Sei in surplus. Ottimo per la massa."; classeCss += 'ok'; } else { testo = "ATTENZIONE: Hai superato il tuo obiettivo calorico."; classeCss += 'attenzione'; } } else { if (proteine < OBIETTIVI.prot * 0.8) { testo = "ATTENZIONE: Le calorie sono sotto controllo, ma le proteine sono troppo basse."; classeCss += 'pericolo'; } else if (pianoOggi.tipo.includes('Deficit')) { testo = "TREND DI SCARICO: Perfetto! Stai mantenendo il deficit."; classeCss += 'ok'; } else { testo = `TREND DI CARICA: Stai per raggiungere i tuoi obiettivi.`; classeCss += 'ok'; } } proiezioneDiv.className = classeCss; testoProiezione.textContent = testo; }
     
-    function renderMealBuilder() {
-        if (pastoInCostruzione.length === 0) {
-            mealBuilderSezione.dataset.visible = 'false';
-            return;
-        }
-        mealBuilderSezione.dataset.visible = 'true';
-        
-        const totaliPasto = pastoInCostruzione.reduce((acc, item) => {
-            acc.prot += item.prot;
-            acc.cal += item.cal;
-            return acc;
-        }, { prot: 0, cal: 0 });
-
-        const isPrimoPasto = datiGiornalieri.log.length === 0;
-        const budgetCalPasto = isPrimoPasto ? (OBIETTIVI.cal / 2) : (OBIETTIVI.cal - datiGiornalieri.calorie);
-        const budgetProtPasto = isPrimoPasto ? (OBIETTIVI.prot / 2) : (OBIETTIVI.prot - datiGiornalieri.proteine);
-
-        const calRestanti = budgetCalPasto - totaliPasto.cal;
-        const protRestanti = budgetProtPasto - totaliPasto.prot;
-
-        builderCalRestanti.textContent = `${calRestanti.toFixed(0)} kcal`;
-        builderProtRestanti.textContent = `${protRestanti.toFixed(1)} g`;
-
-        builderProgressCal.max = budgetCalPasto > 0 ? budgetCalPasto : 1;
-        builderProgressCal.value = totaliPasto.cal;
-        builderProgressProt.max = budgetProtPasto > 0 ? budgetProtPasto : 1;
-        builderProgressProt.value = totaliPasto.prot;
-
-        logPastoBuilderBody.innerHTML = '';
-        pastoInCostruzione.forEach((item, index) => {
-            const riga = logPastoBuilderBody.insertRow();
-            riga.innerHTML = `<td><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td>`;
-        });
-    }
-
+    function renderMealBuilder() { if (pastoInCostruzione.length === 0) { mealBuilderSezione.dataset.visible = 'false'; return; } mealBuilderSezione.dataset.visible = 'true'; const totaliPasto = pastoInCostruzione.reduce((acc, item) => { acc.prot += item.prot; acc.cal += item.cal; return acc; }, { prot: 0, cal: 0 }); const isPrimoPasto = datiGiornalieri.log.length === 0; const budgetCalPasto = isPrimoPasto ? (OBIETTIVI.cal / 2) : (OBIETTIVI.cal - datiGiornalieri.calorie); const budgetProtPasto = isPrimoPasto ? (OBIETTIVI.prot / 2) : (OBIETTIVI.prot - datiGiornalieri.proteine); const calRestanti = budgetCalPasto - totaliPasto.cal; const protRestanti = budgetProtPasto - totaliPasto.prot; builderCalRestanti.textContent = `${calRestanti.toFixed(0)} kcal`; builderProtRestanti.textContent = `${protRestanti.toFixed(1)} g`; builderProgressCal.max = budgetCalPasto > 0 ? budgetCalPasto : 1; builderProgressCal.value = totaliPasto.cal; builderProgressProt.max = budgetProtPasto > 0 ? budgetProtPasto : 1; builderProgressProt.value = totaliPasto.prot; logPastoBuilderBody.innerHTML = ''; pastoInCostruzione.forEach((item, index) => { const riga = logPastoBuilderBody.insertRow(); riga.innerHTML = `<td><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td>`; }); }
     function esportaDati() { alert("Verrà generato un file di backup."); const backupData = { giornoCorrente: JSON.parse(localStorage.getItem('trackerGiornoCorrente')), storico: JSON.parse(localStorage.getItem('trackerStorico')), databaseAlimenti: JSON.parse(localStorage.getItem('trackerFoodDatabase')) }; const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'tracker_backup.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); localStorage.removeItem('backupNeeded'); controllaNotificaBackup(); }
     function importaDati(event) { const file = event.target.files[0]; if (!file) return; if (!confirm("Sei sicuro di voler sovrascrivere i dati?")) { event.target.value = null; return; } const reader = new FileReader(); reader.onload = function(e) { try { const backupData = JSON.parse(e.target.result); if(backupData.giornoCorrente) localStorage.setItem('trackerGiornoCorrente', JSON.stringify(backupData.giornoCorrente)); if(backupData.storico) localStorage.setItem('trackerStorico', JSON.stringify(backupData.storico)); if(backupData.databaseAlimenti) localStorage.setItem('trackerFoodDatabase', JSON.stringify(backupData.databaseAlimenti)); alert("Dati importati con successo!"); location.reload(); } catch (error) { alert("Errore: file non valido."); } }; reader.readAsText(file); }
     function controllaNotificaBackup() { const reminder = document.getElementById('backup-reminder'); if (localStorage.getItem('backupNeeded') === 'true') { reminder.innerHTML = `<strong>Backup Consigliato!</strong> Clicca "Esporta Backup".`; reminder.style.display = 'block'; } else { reminder.style.display = 'none'; } }
     function registraPesataMensile() { const dataSelezionata = dataPesataInput.value || getTodayString('ymd'); const peso = parseFloat(prompt("PESO attuale (es. 72.8):")); if (isNaN(peso) || peso <= 0) { alert("Annullato."); return; } const grasso = parseFloat(prompt("% di GRASSO CORPOREO (es. 21.8):")); if (isNaN(grasso) || grasso <= 0) { alert("Annullato."); return; } const muscolo = parseFloat(prompt("% di MUSCOLATURA (es. 47.8):")); if (isNaN(muscolo) || muscolo <= 0) { alert("Annullato."); return; } if (!confirm(`Confermi questi dati per la data ${dataSelezionata}?\nPeso: ${peso} kg\nGrasso: ${grasso}%\nMuscolo: ${muscolo}%`)) { alert("Annullato."); return; } const storicoPesate = JSON.parse(localStorage.getItem('trackerPesate')) || []; const nuovoStorico = storicoPesate.filter(p => p.data !== dataSelezionata); nuovoStorico.push({ data: dataSelezionata, peso: peso, grasso: grasso, muscolo: muscolo }); localStorage.setItem('trackerPesate', JSON.stringify(nuovoStorico)); alert("Pesata registrata!"); }
+    function creaAlimentoDaInput() { const desc = builderDesc.value.trim(); const qta = parseFloat(builderQta.value) || 0; if (!desc || qta <= 0) { alert('Per favore, inserisci nome e quantità.'); return null; } const p100 = parseFloat(builderProt.value) || 0, k100 = parseFloat(builderKcal.value) || 0; const mg100 = parseFloat(builderMg.value) || 0, k100_mg = parseFloat(builderK.value) || 0; const vitc100 = parseFloat(builderVitC.value) || 0, ca100 = parseFloat(builderCa.value) || 0; if (p100 > 0 || k100 > 0) { foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 }; salvaFoodDatabase(); aggiornaDatalist(); } return { data: getTodayString('ymd'), desc, qta, prot: (p100 / 100) * qta, cal: Math.round((k100 / 100) * qta), mg: (mg100 / 100) * qta, k: (k100_mg / 100) * qta, vitc: (vitc100 / 100) * qta, ca: (ca100 / 100) * qta }; }
+    function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = ''); builderDesc.focus(); }
     
-    function creaAlimentoDaInput() {
-        const desc = builderDesc.value.trim(); const qta = parseFloat(builderQta.value) || 0;
-        if (!desc || qta <= 0) {
-            alert('Per favore, inserisci nome e quantità.'); 
-            return null;
-        }
-        const p100 = parseFloat(builderProt.value) || 0, k100 = parseFloat(builderKcal.value) || 0;
-        const mg100 = parseFloat(builderMg.value) || 0, k100_mg = parseFloat(builderK.value) || 0;
-        const vitc100 = parseFloat(builderVitC.value) || 0, ca100 = parseFloat(builderCa.value) || 0;
-
-        if (p100 > 0 || k100 > 0) { 
-            foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 }; 
-            salvaFoodDatabase(); 
-            aggiornaDatalist(); 
-        }
-        
-        return { data: getTodayString('ymd'), desc, qta, prot: (p100 / 100) * qta, cal: Math.round((k100 / 100) * qta), mg: (mg100 / 100) * qta, k: (k100_mg / 100) * qta, vitc: (vitc100 / 100) * qta, ca: (ca100 / 100) * qta };
-    }
-
-    function resetInputAlimento() {
-        [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = '');
-        builderDesc.focus();
-    }
-    
-    btnCostruisciPasto.addEventListener('click', () => {
-        const item = creaAlimentoDaInput();
-        if (!item) return;
-        pastoInCostruzione.push(item);
-        renderMealBuilder();
-        resetInputAlimento();
-    });
-
-    btnAggiungiSingolo.addEventListener('click', () => {
-        const item = creaAlimentoDaInput();
-        if (!item) return;
-        datiGiornalieri.log.push(item);
-        datiGiornalieri.proteine += item.prot; datiGiornalieri.calorie += item.cal;
-        datiGiornalieri.mg += item.mg; datiGiornalieri.k += item.k;
-        datiGiornalieri.vitc += item.vitc; datiGiornalieri.ca += item.ca;
-        salvaGiornoCorrente();
-        aggiornaUI();
-        renderMealBuilder(); 
-        resetInputAlimento();
-    });
-
-    btnSalvaPasto.addEventListener('click', () => {
-        if (pastoInCostruzione.length === 0) return;
-        if (!confirm('Aggiungere questo pasto al diario?')) return;
-
-        pastoInCostruzione.forEach(item => {
-            datiGiornalieri.log.push(item);
-            datiGiornalieri.proteine += item.prot; datiGiornalieri.calorie += item.cal;
-            datiGiornalieri.mg += item.mg; datiGiornalieri.k += item.k;
-            datiGiornalieri.vitc += item.vitc; datiGiornalieri.ca += item.ca;
-        });
-
-        pastoInCostruzione = []; 
-        
-        salvaGiornoCorrente();
-        aggiornaUI();
-        renderMealBuilder(); 
-    });
-    
+    btnCostruisciPasto.addEventListener('click', () => { const item = creaAlimentoDaInput(); if (!item) return; pastoInCostruzione.push(item); renderMealBuilder(); resetInputAlimento(); });
+    btnAggiungiSingolo.addEventListener('click', () => { const item = creaAlimentoDaInput(); if (!item) return; datiGiornalieri.log.push(item); datiGiornalieri.proteine += item.prot; datiGiornalieri.calorie += item.cal; datiGiornalieri.mg += item.mg; datiGiornalieri.k += item.k; datiGiornalieri.vitc += item.vitc; datiGiornalieri.ca += item.ca; salvaGiornoCorrente(); aggiornaUI(); renderMealBuilder(); resetInputAlimento(); });
+    btnSalvaPasto.addEventListener('click', () => { if (pastoInCostruzione.length === 0) return; if (!confirm('Aggiungere questo pasto al diario?')) return; pastoInCostruzione.forEach(item => { datiGiornalieri.log.push(item); datiGiornalieri.proteine += item.prot; datiGiornalieri.calorie += item.cal; datiGiornalieri.mg += item.mg; datiGiornalieri.k += item.k; datiGiornalieri.vitc += item.vitc; datiGiornalieri.ca += item.ca; }); pastoInCostruzione = []; salvaGiornoCorrente(); aggiornaUI(); renderMealBuilder(); });
     builderDesc.addEventListener('input', (e) => { const foodName = e.target.value.toLowerCase(); if (foodDatabase[foodName]) { const foodData = foodDatabase[foodName]; builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || ''; builderMg.value = foodData.mg || ''; builderK.value = foodData.k || ''; builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || ''; } });
-    
     formAllenamento.addEventListener('submit', (e) => { e.preventDefault(); const desc = document.getElementById('descrizione-allenamento').value || 'Allenamento'; const cal = parseInt(document.getElementById('calorie-bruciate').value, 10); if (isNaN(cal) || cal <= 0) return; datiGiornalieri.workoutCalorie += cal; datiGiornalieri.workoutLog.push({ data: getTodayString('ymd'), desc, cal }); salvaGiornoCorrente(); aggiornaUI(); e.target.reset(); });
+    document.body.addEventListener('click', (e) => { if (e.target.classList.contains('delete-btn') && e.target.hasAttribute('data-type')) { const type = e.target.dataset.type; const index = parseInt(e.target.dataset.index, 10); if (!confirm('Cancellare?')) return; if (type === 'pasto' && datiGiornalieri.log[index]) { const item = datiGiornalieri.log[index]; datiGiornalieri.proteine -= item.prot; datiGiornalieri.calorie -= item.cal; datiGiornalieri.mg -= (item.mg || 0); datiGiornalieri.k -= (item.k || 0); datiGiornalieri.vitc -= (item.vitc || 0); datiGiornalieri.ca -= (item.ca || 0); datiGiornalieri.log.splice(index, 1); salvaGiornoCorrente(); aggiornaUI(); renderMealBuilder(); } else if (type === 'allenamento' && datiGiornalieri.workoutLog[index]) { const item = datiGiornalieri.workoutLog[index]; datiGiornalieri.workoutCalorie -= item.cal; datiGiornalieri.workoutLog.splice(index, 1); salvaGiornoCorrente(); aggiornaUI(); } else if (type === 'builder' && pastoInCostruzione[index]) { pastoInCostruzione.splice(index, 1); renderMealBuilder(); } } });
     
-    document.body.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-btn') && e.target.hasAttribute('data-type')) {
-            const type = e.target.dataset.type;
-            const index = parseInt(e.target.dataset.index, 10);
-            
-            if (!confirm('Cancellare?')) return;
-
-            if (type === 'pasto' && datiGiornalieri.log[index]) {
-                const item = datiGiornalieri.log[index];
-                datiGiornalieri.proteine -= item.prot; datiGiornalieri.calorie -= item.cal;
-                datiGiornalieri.mg -= (item.mg || 0); datiGiornalieri.k -= (item.k || 0);
-                datiGiornalieri.vitc -= (item.vitc || 0); datiGiornalieri.ca -= (item.ca || 0);
-                datiGiornalieri.log.splice(index, 1);
-                salvaGiornoCorrente();
-                aggiornaUI();
-                renderMealBuilder(); 
-            } else if (type === 'allenamento' && datiGiornalieri.workoutLog[index]) {
-                const item = datiGiornalieri.workoutLog[index];
-                datiGiornalieri.workoutCalorie -= item.cal;
-                datiGiornalieri.workoutLog.splice(index, 1);
-                salvaGiornoCorrente();
-                aggiornaUI();
-            } else if (type === 'builder' && pastoInCostruzione[index]) { 
-                pastoInCostruzione.splice(index, 1);
-                renderMealBuilder();
-            }
-        }
-    });
-
     btnExport.addEventListener('click', esportaDati);
     fileImport.addEventListener('change', importaDati);
     btnRegistraPesata.addEventListener('click', registraPesataMensile);
     
-    // === INIZIALIZZAZIONE APP ===
     caricaFoodDatabase();
     gestisciAvvioApp();
 });
