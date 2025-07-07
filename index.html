@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Definitivo - Stabile con Builder Strutturato</title>
+    <title>Tracker Definitivo - Stabile con Cena Dinamica</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
     const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
     const mealBuilderSezione = document.getElementById('meal-builder-sezione');
-    const mealTypeSelector = document.getElementById('meal-type-selector'); // NUOVO
+    const mealTypeSelector = document.getElementById('meal-type-selector');
     const builderProtRestanti = document.getElementById('builder-prot-restanti');
     const builderCalRestanti = document.getElementById('builder-cal-restanti');
     const builderProgressProt = document.getElementById('builder-progress-prot');
@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function aggiornaProiezione() { const { calorie, proteine } = datiGiornalieri; let testo = '', classeCss = 'sezione proiezione-'; if (calorie === 0 && datiGiornalieri.workoutCalorie === 0) { testo = "Inizia a registrare i dati."; classeCss += 'neutra'; } else if (calorie > progressCalorie.max) { if (pianoOggi.tipo.includes('Forza')) { testo = "TREND DI CARICA: Sei in surplus. Ottimo per la massa."; classeCss += 'ok'; } else { testo = "ATTENZIONE: Hai superato il tuo obiettivo calorico."; classeCss += 'attenzione'; } } else { if (proteine < OBIETTIVI.prot * 0.8) { testo = "ATTENZIONE: Le calorie sono sotto controllo, ma le proteine sono troppo basse."; classeCss += 'pericolo'; } else if (pianoOggi.tipo.includes('Deficit')) { testo = "TREND DI SCARICO: Perfetto! Stai mantenendo il deficit."; classeCss += 'ok'; } else { testo = `TREND DI CARICA: Stai per raggiungere i tuoi obiettivi.`; classeCss += 'ok'; } } proiezioneDiv.className = classeCss; testoProiezione.textContent = testo; }
     
-    // === RENDER BUILDER MODIFICATO CON LA NUOVA LOGICA ===
+    // === RENDER BUILDER CON LOGICA CENA ===
     function renderMealBuilder() {
         if (pastoInCostruzione.length === 0) {
             mealBuilderSezione.dataset.visible = 'false';
@@ -272,11 +272,19 @@ document.addEventListener('DOMContentLoaded', () => {
         mealBuilderSezione.dataset.visible = 'true';
         
         const mealType = mealTypeSelector.value;
-        const proteinCap = (mealType === 'merenda') ? 30 : 40;
-        const calToProtRatio = OBIETTIVI.cal / OBIETTIVI.prot;
+        let budgetProtPasto, budgetCalPasto;
 
-        const budgetProtPasto = proteinCap;
-        const budgetCalPasto = proteinCap * calToProtRatio;
+        if (mealType === 'cena') {
+            // Per cena, il budget è il rimanente per raggiungere l'obiettivo giornaliero
+            budgetProtPasto = OBIETTIVI.prot - datiGiornalieri.proteine;
+            budgetCalPasto = progressCalorie.max - datiGiornalieri.calorie;
+        } else {
+            // Per pranzo e merenda, il budget è fisso
+            const proteinCap = (mealType === 'merenda') ? 30 : 40;
+            const calToProtRatio = OBIETTIVI.cal / OBIETTIVI.prot;
+            budgetProtPasto = proteinCap;
+            budgetCalPasto = proteinCap * calToProtRatio;
+        }
 
         const totaliPastoSelezionato = pastoInCostruzione.reduce((acc, item) => {
             if (item.selezionato) {
@@ -289,9 +297,9 @@ document.addEventListener('DOMContentLoaded', () => {
         builderProtRestanti.textContent = `${(budgetProtPasto - totaliPastoSelezionato.prot).toFixed(1)} g`;
         builderCalRestanti.textContent = `${(budgetCalPasto - totaliPastoSelezionato.cal).toFixed(0)} kcal`;
 
-        builderProgressProt.max = budgetProtPasto;
+        builderProgressProt.max = budgetProtPasto > 0 ? budgetProtPasto : 1;
         builderProgressProt.value = totaliPastoSelezionato.prot;
-        builderProgressCal.max = budgetCalPasto;
+        builderProgressCal.max = budgetCalPasto > 0 ? budgetCalPasto : 1;
         builderProgressCal.value = totaliPastoSelezionato.cal;
 
         logPastoBuilderBody.innerHTML = '';
@@ -402,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // NUOVO event listener per il dropdown
     mealTypeSelector.addEventListener('change', () => {
         localStorage.setItem('trackerMealType', mealTypeSelector.value);
         renderMealBuilder();
