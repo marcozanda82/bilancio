@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Definitivo - Stabile con Builder Avanzato</title>
+    <title>Tracker Definitivo - Stabile con Builder Persistente</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -191,13 +191,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const spanDeficitAttuale = document.getElementById('deficit-attuale');
     const divFeedbackDeficit = document.getElementById('feedback-deficit');
 
+    // === NUOVA FUNZIONE PER SALVARE IL BUILDER ===
+    function salvaPastoInCostruzione() {
+        localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione));
+    }
+
     function getTodayString(format = 'ymd') { const today = new Date(); if (format === 'ymd') return today.toISOString().split('T')[0]; const day = String(today.getDate()).padStart(2, '0'); const month = String(today.getMonth() + 1).padStart(2, '0'); return `${day}/${month}`; }
     function salvaGiornoCorrente() { localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: getTodayString('ymd'), dati: datiGiornalieri })); }
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
     function caricaFoodDatabase() { const dbSalvato = localStorage.getItem('trackerFoodDatabase'); if (dbSalvato) { foodDatabase = JSON.parse(dbSalvato); aggiornaDatalist(); } }
     function aggiornaDatalist() { foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); foodDatalist.appendChild(option); } }
     function archiviaGiornoPrecedente(datiDaArchiviare) { const storico = JSON.parse(localStorage.getItem('trackerStorico')) || []; const dataArchiviazione = new Date(datiDaArchiviare.data); const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()]; const obiettivoCalorieGiorno = pianoArchiviazione.cal; const obiettivoProteineGiorno = pianoArchiviazione.prot; let trendFinale = 'ok'; if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) { trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione'; } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) { trendFinale = 'attenzione'; } const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie; const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie; const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data); nuovoStorico.push({ data: datiDaArchiviare.data, totali: { proteine: datiDaArchiviare.dati.proteine, calorie: datiDaArchiviare.dati.calorie, workoutCalorie: datiDaArchiviare.dati.workoutCalorie }, allenamenti: datiDaArchiviare.dati.workoutLog, deficit: Math.round(deficit), trend: trendFinale }); localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico)); localStorage.setItem('backupNeeded', 'true'); }
-    function gestisciAvvioApp() { const giornoCorrenteRaw = localStorage.getItem('trackerGiornoCorrente'); if (giornoCorrenteRaw) { let dati = JSON.parse(giornoCorrenteRaw); if (dati.dati.log && dati.dati.log.length > 0 && typeof dati.dati.log[0].data === 'undefined') { const dataDelGiorno = dati.data; dati.dati.log.forEach(item => item.data = dataDelGiorno); dati.dati.workoutLog.forEach(item => item.data = dataDelGiorno); localStorage.setItem('trackerGiornoCorrente', JSON.stringify(dati)); } if (typeof dati.dati.ca === 'undefined') { dati.dati.ca = 0; delete dati.dati.vitd; localStorage.setItem('trackerGiornoCorrente', JSON.stringify(dati));} } const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente')); const oggi = getTodayString('ymd'); if (giornoCorrenteSalvataggio) { if (giornoCorrenteSalvataggio.data !== oggi && (giornoCorrenteSalvataggio.dati.calorie > 0 || giornoCorrenteSalvataggio.dati.workoutCalorie > 0)) { archiviaGiornoPrecedente(giornoCorrenteSalvataggio); datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] }; } else { datiGiornalieri = giornoCorrenteSalvataggio.dati; } } aggiornaUI(); salvaGiornoCorrente(); controllaNotificaBackup(); renderMealBuilder(); }
+    
+    // === FUNZIONE DI AVVIO MODIFICATA ===
+    function gestisciAvvioApp() {
+        // Carica il pasto in costruzione prima di tutto
+        const pastoSalvato = localStorage.getItem('trackerPastoInCostruzione');
+        if (pastoSalvato) {
+            pastoInCostruzione = JSON.parse(pastoSalvato);
+        }
+
+        const giornoCorrenteRaw = localStorage.getItem('trackerGiornoCorrente'); if (giornoCorrenteRaw) { let dati = JSON.parse(giornoCorrenteRaw); if (dati.dati.log && dati.dati.log.length > 0 && typeof dati.dati.log[0].data === 'undefined') { const dataDelGiorno = dati.data; dati.dati.log.forEach(item => item.data = dataDelGiorno); dati.dati.workoutLog.forEach(item => item.data = dataDelGiorno); localStorage.setItem('trackerGiornoCorrente', JSON.stringify(dati)); } if (typeof dati.dati.ca === 'undefined') { dati.dati.ca = 0; delete dati.dati.vitd; localStorage.setItem('trackerGiornoCorrente', JSON.stringify(dati));} } const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente')); const oggi = getTodayString('ymd'); if (giornoCorrenteSalvataggio) { if (giornoCorrenteSalvataggio.data !== oggi && (giornoCorrenteSalvataggio.dati.calorie > 0 || giornoCorrenteSalvataggio.dati.workoutCalorie > 0)) { archiviaGiornoPrecedente(giornoCorrenteSalvataggio); datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] }; } else { datiGiornalieri = giornoCorrenteSalvataggio.dati; } } 
+        aggiornaUI(); 
+        salvaGiornoCorrente(); 
+        controllaNotificaBackup(); 
+        renderMealBuilder(); 
+    }
+    
     function aggiornaDeficitInTempoReale() { const tdeeAttuale = TDEE_BASE + datiGiornalieri.workoutCalorie; const deficit = tdeeAttuale - datiGiornalieri.calorie; spanDeficitAttuale.textContent = deficit.toFixed(0); if (deficit < 0) { divFeedbackDeficit.className = 'surplus'; divFeedbackDeficit.textContent = `Sei in surplus di ${Math.abs(deficit).toFixed(0)} kcal.`; } else if (deficit <= 200) { divFeedbackDeficit.className = 'deficit-ok'; divFeedbackDeficit.textContent = 'Obiettivo raggiunto! Deficit controllato.'; } else { divFeedbackDeficit.className = 'deficit-alto'; divFeedbackDeficit.textContent = 'Deficit elevato. Ottimo per la fase di scarico.'; } }
     
     function aggiornaUI() { 
@@ -240,7 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function aggiornaProiezione() { const { calorie, proteine } = datiGiornalieri; let testo = '', classeCss = 'sezione proiezione-'; if (calorie === 0 && datiGiornalieri.workoutCalorie === 0) { testo = "Inizia a registrare i dati."; classeCss += 'neutra'; } else if (calorie > progressCalorie.max) { if (pianoOggi.tipo.includes('Forza')) { testo = "TREND DI CARICA: Sei in surplus. Ottimo per la massa."; classeCss += 'ok'; } else { testo = "ATTENZIONE: Hai superato il tuo obiettivo calorico."; classeCss += 'attenzione'; } } else { if (proteine < OBIETTIVI.prot * 0.8) { testo = "ATTENZIONE: Le calorie sono sotto controllo, ma le proteine sono troppo basse."; classeCss += 'pericolo'; } else if (pianoOggi.tipo.includes('Deficit')) { testo = "TREND DI SCARICO: Perfetto! Stai mantenendo il deficit."; classeCss += 'ok'; } else { testo = `TREND DI CARICA: Stai per raggiungere i tuoi obiettivi.`; classeCss += 'ok'; } } proiezioneDiv.className = classeCss; testoProiezione.textContent = testo; }
     
-    // === FUNZIONE RENDER BUILDER MODIFICATA ===
     function renderMealBuilder() {
         if (pastoInCostruzione.length === 0) {
             mealBuilderSezione.dataset.visible = 'false';
@@ -297,21 +316,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const mg100 = parseFloat(builderMg.value) || 0, k100_mg = parseFloat(builderK.value) || 0;
         const vitc100 = parseFloat(builderVitC.value) || 0, ca100 = parseFloat(builderCa.value) || 0;
         if (p100 > 0 || k100 > 0) { foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 }; salvaFoodDatabase(); aggiornaDatalist(); }
-        // Aggiunge la proprietà 'selezionato'
         return { data: getTodayString('ymd'), desc, qta, prot: (p100 / 100) * qta, cal: Math.round((k100 / 100) * qta), mg: (mg100 / 100) * qta, k: (k100_mg / 100) * qta, vitc: (vitc100 / 100) * qta, ca: (ca100 / 100) * qta, selezionato: true };
     }
 
     function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = ''); builderDesc.focus(); }
     
-    btnCostruisciPasto.addEventListener('click', () => { const item = creaAlimentoDaInput(); if (!item) return; pastoInCostruzione.push(item); renderMealBuilder(); resetInputAlimento(); });
+    btnCostruisciPasto.addEventListener('click', () => { const item = creaAlimentoDaInput(); if (!item) return; pastoInCostruzione.push(item); salvaPastoInCostruzione(); renderMealBuilder(); resetInputAlimento(); });
     btnAggiungiSingolo.addEventListener('click', () => { const item = creaAlimentoDaInput(); if (!item) return; datiGiornalieri.log.push(item); datiGiornalieri.proteine += item.prot; datiGiornalieri.calorie += item.cal; datiGiornalieri.mg += item.mg; datiGiornalieri.k += item.k; datiGiornalieri.vitc += item.vitc; datiGiornalieri.ca += item.ca; salvaGiornoCorrente(); aggiornaUI(); renderMealBuilder(); resetInputAlimento(); });
     
-    // === LISTENER SALVA PASTO MODIFICATO ===
     btnSalvaPasto.addEventListener('click', () => {
         const alimentiSelezionati = pastoInCostruzione.filter(item => item.selezionato);
         if (alimentiSelezionati.length === 0) {
             alert("Nessun alimento selezionato da aggiungere.");
-            pastoInCostruzione = []; // Svuota comunque il builder
+            pastoInCostruzione = [];
+            salvaPastoInCostruzione();
             renderMealBuilder();
             return;
         }
@@ -327,7 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
             datiGiornalieri.ca += item.ca;
         });
 
-        pastoInCostruzione = []; // Svuota il builder da tutti gli elementi
+        pastoInCostruzione = [];
+        salvaPastoInCostruzione();
         salvaGiornoCorrente();
         aggiornaUI();
         renderMealBuilder(); 
@@ -336,17 +355,17 @@ document.addEventListener('DOMContentLoaded', () => {
     builderDesc.addEventListener('input', (e) => { const foodName = e.target.value.toLowerCase(); if (foodDatabase[foodName]) { const foodData = foodDatabase[foodName]; builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || ''; builderMg.value = foodData.mg || ''; builderK.value = foodData.k || ''; builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || ''; } });
     formAllenamento.addEventListener('submit', (e) => { e.preventDefault(); const desc = document.getElementById('descrizione-allenamento').value || 'Allenamento'; const cal = parseInt(document.getElementById('calorie-bruciate').value, 10); if (isNaN(cal) || cal <= 0) return; datiGiornalieri.workoutCalorie += cal; datiGiornalieri.workoutLog.push({ data: getTodayString('ymd'), desc, cal }); salvaGiornoCorrente(); aggiornaUI(); e.target.reset(); });
     
-    // === LISTENER BODY MODIFICATO PER GESTIRE LE CHECKBOX ===
     document.body.addEventListener('click', (e) => {
         if (e.target.classList.contains('delete-btn') && e.target.hasAttribute('data-type')) {
             const type = e.target.dataset.type;
             const index = parseInt(e.target.dataset.index, 10);
             
-            if (type === 'builder') { // La conferma per il delete del builder è a parte
+            if (type === 'builder') {
                 if (!confirm('Rimuovere questo alimento dal costruttore?')) return;
                 pastoInCostruzione.splice(index, 1);
+                salvaPastoInCostruzione();
                 renderMealBuilder();
-                return; // Esce per non eseguire l'altra parte
+                return;
             }
             
             if (!confirm('Cancellare?')) return;
@@ -373,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const index = parseInt(e.target.dataset.index, 10);
             if (pastoInCostruzione[index]) {
                 pastoInCostruzione[index].selezionato = e.target.checked;
+                salvaPastoInCostruzione();
                 renderMealBuilder();
             }
         }
