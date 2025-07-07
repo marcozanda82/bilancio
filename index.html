@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Definitivo - Stabile con Builder Persistente</title>
+    <title>Tracker Definitivo - Stabile con Builder Strutturato</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -13,7 +13,7 @@
         #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input[type="text"], input[type="number"], input[type="date"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
         input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
         button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
         button:hover { background-color: #1565c0; }
@@ -114,13 +114,21 @@
 
         <div id="meal-builder-sezione" class="sezione" data-visible="false">
             <h2>Costruttore Pasto</h2>
+            <div>
+                <label for="meal-type-selector">Tipo di Pasto:</label>
+                <select id="meal-type-selector">
+                    <option value="merenda">Merenda</option>
+                    <option value="pranzo" selected>Pranzo</option>
+                    <option value="cena">Cena</option>
+                </select>
+            </div>
             <div class="builder-stats">
                 <div>
-                    <p>Proteine restanti: <span id="builder-prot-restanti">0</span> g</p>
+                    <p>Budget Proteine: <span id="builder-prot-restanti">0</span> g</p>
                     <progress id="builder-progress-prot" value="0"></progress>
                 </div>
                 <div>
-                    <p>Calorie restanti: <span id="builder-cal-restanti">0</span> kcal</p>
+                    <p>Budget Calorie: <span id="builder-cal-restanti">0</span> kcal</p>
                     <progress id="builder-progress-cal" value="0"></progress>
                 </div>
             </div>
@@ -182,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
     const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
     const mealBuilderSezione = document.getElementById('meal-builder-sezione');
+    const mealTypeSelector = document.getElementById('meal-type-selector'); // NUOVO
     const builderProtRestanti = document.getElementById('builder-prot-restanti');
     const builderCalRestanti = document.getElementById('builder-cal-restanti');
     const builderProgressProt = document.getElementById('builder-progress-prot');
@@ -191,11 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const spanDeficitAttuale = document.getElementById('deficit-attuale');
     const divFeedbackDeficit = document.getElementById('feedback-deficit');
 
-    // === NUOVA FUNZIONE PER SALVARE IL BUILDER ===
-    function salvaPastoInCostruzione() {
-        localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione));
-    }
-
+    function salvaPastoInCostruzione() { localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); }
     function getTodayString(format = 'ymd') { const today = new Date(); if (format === 'ymd') return today.toISOString().split('T')[0]; const day = String(today.getDate()).padStart(2, '0'); const month = String(today.getMonth() + 1).padStart(2, '0'); return `${day}/${month}`; }
     function salvaGiornoCorrente() { localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: getTodayString('ymd'), dati: datiGiornalieri })); }
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
@@ -203,13 +208,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function aggiornaDatalist() { foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); foodDatalist.appendChild(option); } }
     function archiviaGiornoPrecedente(datiDaArchiviare) { const storico = JSON.parse(localStorage.getItem('trackerStorico')) || []; const dataArchiviazione = new Date(datiDaArchiviare.data); const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()]; const obiettivoCalorieGiorno = pianoArchiviazione.cal; const obiettivoProteineGiorno = pianoArchiviazione.prot; let trendFinale = 'ok'; if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) { trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione'; } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) { trendFinale = 'attenzione'; } const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie; const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie; const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data); nuovoStorico.push({ data: datiDaArchiviare.data, totali: { proteine: datiDaArchiviare.dati.proteine, calorie: datiDaArchiviare.dati.calorie, workoutCalorie: datiDaArchiviare.dati.workoutCalorie }, allenamenti: datiDaArchiviare.dati.workoutLog, deficit: Math.round(deficit), trend: trendFinale }); localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico)); localStorage.setItem('backupNeeded', 'true'); }
     
-    // === FUNZIONE DI AVVIO MODIFICATA ===
     function gestisciAvvioApp() {
-        // Carica il pasto in costruzione prima di tutto
         const pastoSalvato = localStorage.getItem('trackerPastoInCostruzione');
-        if (pastoSalvato) {
-            pastoInCostruzione = JSON.parse(pastoSalvato);
-        }
+        if (pastoSalvato) { pastoInCostruzione = JSON.parse(pastoSalvato); }
+        const savedMealType = localStorage.getItem('trackerMealType');
+        if (savedMealType) { mealTypeSelector.value = savedMealType; }
 
         const giornoCorrenteRaw = localStorage.getItem('trackerGiornoCorrente'); if (giornoCorrenteRaw) { let dati = JSON.parse(giornoCorrenteRaw); if (dati.dati.log && dati.dati.log.length > 0 && typeof dati.dati.log[0].data === 'undefined') { const dataDelGiorno = dati.data; dati.dati.log.forEach(item => item.data = dataDelGiorno); dati.dati.workoutLog.forEach(item => item.data = dataDelGiorno); localStorage.setItem('trackerGiornoCorrente', JSON.stringify(dati)); } if (typeof dati.dati.ca === 'undefined') { dati.dati.ca = 0; delete dati.dati.vitd; localStorage.setItem('trackerGiornoCorrente', JSON.stringify(dati));} } const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente')); const oggi = getTodayString('ymd'); if (giornoCorrenteSalvataggio) { if (giornoCorrenteSalvataggio.data !== oggi && (giornoCorrenteSalvataggio.dati.calorie > 0 || giornoCorrenteSalvataggio.dati.workoutCalorie > 0)) { archiviaGiornoPrecedente(giornoCorrenteSalvataggio); datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] }; } else { datiGiornalieri = giornoCorrenteSalvataggio.dati; } } 
         aggiornaUI(); 
@@ -260,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function aggiornaProiezione() { const { calorie, proteine } = datiGiornalieri; let testo = '', classeCss = 'sezione proiezione-'; if (calorie === 0 && datiGiornalieri.workoutCalorie === 0) { testo = "Inizia a registrare i dati."; classeCss += 'neutra'; } else if (calorie > progressCalorie.max) { if (pianoOggi.tipo.includes('Forza')) { testo = "TREND DI CARICA: Sei in surplus. Ottimo per la massa."; classeCss += 'ok'; } else { testo = "ATTENZIONE: Hai superato il tuo obiettivo calorico."; classeCss += 'attenzione'; } } else { if (proteine < OBIETTIVI.prot * 0.8) { testo = "ATTENZIONE: Le calorie sono sotto controllo, ma le proteine sono troppo basse."; classeCss += 'pericolo'; } else if (pianoOggi.tipo.includes('Deficit')) { testo = "TREND DI SCARICO: Perfetto! Stai mantenendo il deficit."; classeCss += 'ok'; } else { testo = `TREND DI CARICA: Stai per raggiungere i tuoi obiettivi.`; classeCss += 'ok'; } } proiezioneDiv.className = classeCss; testoProiezione.textContent = testo; }
     
+    // === RENDER BUILDER MODIFICATO CON LA NUOVA LOGICA ===
     function renderMealBuilder() {
         if (pastoInCostruzione.length === 0) {
             mealBuilderSezione.dataset.visible = 'false';
@@ -267,6 +271,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         mealBuilderSezione.dataset.visible = 'true';
         
+        const mealType = mealTypeSelector.value;
+        const proteinCap = (mealType === 'merenda') ? 30 : 40;
+        const calToProtRatio = OBIETTIVI.cal / OBIETTIVI.prot;
+
+        const budgetProtPasto = proteinCap;
+        const budgetCalPasto = proteinCap * calToProtRatio;
+
         const totaliPastoSelezionato = pastoInCostruzione.reduce((acc, item) => {
             if (item.selezionato) {
                 acc.prot += item.prot;
@@ -274,21 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return acc;
         }, { prot: 0, cal: 0 });
+        
+        builderProtRestanti.textContent = `${(budgetProtPasto - totaliPastoSelezionato.prot).toFixed(1)} g`;
+        builderCalRestanti.textContent = `${(budgetCalPasto - totaliPastoSelezionato.cal).toFixed(0)} kcal`;
 
-        const isPrimoPasto = datiGiornalieri.log.length === 0;
-        const budgetCalPasto = isPrimoPasto ? (OBIETTIVI.cal / 2) : (OBIETTIVI.cal - datiGiornalieri.calorie);
-        const budgetProtPasto = isPrimoPasto ? (OBIETTIVI.prot / 2) : (OBIETTIVI.prot - datiGiornalieri.proteine);
-
-        const calRestanti = budgetCalPasto - totaliPastoSelezionato.cal;
-        const protRestanti = budgetProtPasto - totaliPastoSelezionato.prot;
-
-        builderCalRestanti.textContent = `${calRestanti.toFixed(0)} kcal`;
-        builderProtRestanti.textContent = `${protRestanti.toFixed(1)} g`;
-
-        builderProgressCal.max = budgetCalPasto > 0 ? budgetCalPasto : 1;
-        builderProgressCal.value = totaliPastoSelezionato.cal;
-        builderProgressProt.max = budgetProtPasto > 0 ? budgetProtPasto : 1;
+        builderProgressProt.max = budgetProtPasto;
         builderProgressProt.value = totaliPastoSelezionato.prot;
+        builderProgressCal.max = budgetCalPasto;
+        builderProgressCal.value = totaliPastoSelezionato.cal;
 
         logPastoBuilderBody.innerHTML = '';
         pastoInCostruzione.forEach((item, index) => {
@@ -396,6 +400,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderMealBuilder();
             }
         }
+    });
+
+    // NUOVO event listener per il dropdown
+    mealTypeSelector.addEventListener('change', () => {
+        localStorage.setItem('trackerMealType', mealTypeSelector.value);
+        renderMealBuilder();
     });
 
     btnExport.addEventListener('click', esportaDati);
