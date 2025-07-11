@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Definitivo - Con Pasti Raggruppati</title>
+    <title>Tracker Definitivo - Con Auto-Progressione Pasti</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -121,8 +121,9 @@
             <div>
                 <label for="meal-type-selector">Tipo di Pasto:</label>
                 <select id="meal-type-selector">
-                    <option value="merenda">Merenda</option>
-                    <option value="pranzo" selected>Pranzo</option>
+                    <option value="merenda1">Merenda AM</option>
+                    <option value="pranzo">Pranzo</option>
+                    <option value="merenda2">Merenda PM</option>
                     <option value="cena">Cena</option>
                 </select>
             </div>
@@ -169,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pianoOggi = PIANO_SETTIMANALE[new Date().getDay()];
     const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal, mg: 420, k: 3400, vitc: 90, ca: 1000 };
     const TDEE_BASE = 2311;
+    const mealSequence = ['merenda1', 'pranzo', 'merenda2', 'cena'];
     
     let datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] };
     let foodDatabase = {};
@@ -210,43 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
     function caricaFoodDatabase() { const dbSalvato = localStorage.getItem('trackerFoodDatabase'); if (dbSalvato) { foodDatabase = JSON.parse(dbSalvato); aggiornaDatalist(); } }
     function aggiornaDatalist() { foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); foodDatalist.appendChild(option); } }
-    
-    function archiviaGiornoPrecedente(datiDaArchiviare) {
-        const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
-        const dataArchiviazione = new Date(datiDaArchiviare.data);
-        const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()];
-        const obiettivoCalorieGiorno = pianoArchiviazione.cal;
-        const obiettivoProteineGiorno = pianoArchiviazione.prot;
-        let trendFinale = 'ok';
-        if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) {
-            trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione';
-        } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) {
-            trendFinale = 'attenzione';
-        }
-        const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie;
-        const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie;
-        const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data);
-        
-        nuovoStorico.push({
-            data: datiDaArchiviare.data,
-            log: datiDaArchiviare.dati.log, 
-            isLogExpanded: false, // <-- MODIFICA CHIAVE
-            totali: {
-                proteine: datiDaArchiviare.dati.proteine,
-                calorie: datiDaArchiviare.dati.calorie,
-                workoutCalorie: datiDaArchiviare.dati.workoutCalorie,
-                mg: datiDaArchiviare.dati.mg,
-                k: datiDaArchiviare.dati.k,
-                vitc: datiDaArchiviare.dati.vitc,
-                ca: datiDaArchiviare.dati.ca
-            },
-            allenamenti: datiDaArchiviare.dati.workoutLog,
-            deficit: Math.round(deficit),
-            trend: trendFinale
-        });
-        localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico));
-        localStorage.setItem('backupNeeded', 'true');
-    }
+    function archiviaGiornoPrecedente(datiDaArchiviare) { const storico = JSON.parse(localStorage.getItem('trackerStorico')) || []; const dataArchiviazione = new Date(datiDaArchiviare.data); const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()]; const obiettivoCalorieGiorno = pianoArchiviazione.cal; const obiettivoProteineGiorno = pianoArchiviazione.prot; let trendFinale = 'ok'; if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) { trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione'; } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) { trendFinale = 'attenzione'; } const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie; const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie; const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data); nuovoStorico.push({ data: datiDaArchiviare.data, log: datiDaArchiviare.dati.log, isLogExpanded: false, totali: { proteine: datiDaArchiviare.dati.proteine, calorie: datiDaArchiviare.dati.calorie, workoutCalorie: datiDaArchiviare.dati.workoutCalorie, mg: datiDaArchiviare.dati.mg, k: datiDaArchiviare.dati.k, vitc: datiDaArchiviare.dati.vitc, ca: datiDaArchiviare.dati.ca }, allenamenti: datiDaArchiviare.dati.workoutLog, deficit: Math.round(deficit), trend: trendFinale }); localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico)); localStorage.setItem('backupNeeded', 'true'); }
     
     function gestisciAvvioApp() {
         const pastoSalvato = localStorage.getItem('trackerPastoInCostruzione');
@@ -350,7 +316,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function aggiornaProiezione() { const { calorie, proteine } = datiGiornalieri; let testo = '', classeCss = 'sezione proiezione-'; if (calorie === 0 && datiGiornalieri.workoutCalorie === 0) { testo = "Inizia a registrare i dati."; classeCss += 'neutra'; } else if (calorie > progressCalorie.max) { if (pianoOggi.tipo.includes('Forza')) { testo = "TREND DI CARICA: Sei in surplus. Ottimo per la massa."; classeCss += 'ok'; } else { testo = "ATTENZIONE: Hai superato il tuo obiettivo calorico."; classeCss += 'attenzione'; } } else { if (proteine < OBIETTIVI.prot * 0.8) { testo = "ATTENZIONE: Le calorie sono sotto controllo, ma le proteine sono troppo basse."; classeCss += 'pericolo'; } else if (pianoOggi.tipo.includes('Deficit')) { testo = "TREND DI SCARICO: Perfetto! Stai mantenendo il deficit."; classeCss += 'ok'; } else { testo = `TREND DI CARICA: Stai per raggiungere i tuoi obiettivi.`; classeCss += 'ok'; } } proiezioneDiv.className = classeCss; testoProiezione.textContent = testo; }
     
-    function renderMealBuilder() { if (pastoInCostruzione.length === 0) { mealBuilderSezione.dataset.visible = 'false'; return; } mealBuilderSezione.dataset.visible = 'true'; const mealType = mealTypeSelector.value; let budgetProtPasto, budgetCalPasto; if (mealType === 'cena') { budgetProtPasto = OBIETTIVI.prot - datiGiornalieri.proteine; budgetCalPasto = progressCalorie.max - datiGiornalieri.calorie; } else { const proteinCap = (mealType === 'merenda') ? 30 : 40; const calToProtRatio = OBIETTIVI.cal / OBIETTIVI.prot; budgetProtPasto = proteinCap; budgetCalPasto = proteinCap * calToProtRatio; } const totaliPastoSelezionato = pastoInCostruzione.reduce((acc, item) => { if (item.selezionato) { acc.prot += item.prot; acc.cal += item.cal; } return acc; }, { prot: 0, cal: 0 }); builderProtRestanti.textContent = `${(budgetProtPasto - totaliPastoSelezionato.prot).toFixed(1)} g`; builderCalRestanti.textContent = `${(budgetCalPasto - totaliPastoSelezionato.cal).toFixed(0)} kcal`; builderProgressProt.max = budgetProtPasto > 0 ? budgetProtPasto : 1; builderProgressProt.value = totaliPastoSelezionato.prot; builderProgressCal.max = budgetCalPasto > 0 ? budgetCalPasto : 1; builderProgressCal.value = totaliPastoSelezionato.cal; logPastoBuilderBody.innerHTML = ''; pastoInCostruzione.forEach((item, index) => { const riga = logPastoBuilderBody.insertRow(); const checkedAttr = item.selezionato ? 'checked' : ''; riga.innerHTML = `<td><input type="checkbox" class="builder-item-checkbox" data-index="${index}" ${checkedAttr}></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; }); }
+    function renderMealBuilder() { 
+        if (pastoInCostruzione.length === 0) { mealBuilderSezione.dataset.visible = 'false'; return; } 
+        mealBuilderSezione.dataset.visible = 'true'; 
+        const mealType = mealTypeSelector.value; 
+        let budgetProtPasto, budgetCalPasto; 
+        if (mealType === 'cena') { 
+            budgetProtPasto = OBIETTIVI.prot - datiGiornalieri.proteine; 
+            budgetCalPasto = progressCalorie.max - datiGiornalieri.calorie; 
+        } else { 
+            let proteinCap;
+            if (mealType === 'merenda1' || mealType === 'merenda2') {
+                proteinCap = 30;
+            } else { // Pranzo
+                proteinCap = 40;
+            }
+            const calToProtRatio = OBIETTIVI.cal / OBIETTIVI.prot; 
+            budgetProtPasto = proteinCap; 
+            budgetCalPasto = proteinCap * calToProtRatio; 
+        } 
+        const totaliPastoSelezionato = pastoInCostruzione.reduce((acc, item) => { if (item.selezionato) { acc.prot += item.prot; acc.cal += item.cal; } return acc; }, { prot: 0, cal: 0 }); 
+        builderProtRestanti.textContent = `${(budgetProtPasto - totaliPastoSelezionato.prot).toFixed(1)} g`; 
+        builderCalRestanti.textContent = `${(budgetCalPasto - totaliPastoSelezionato.cal).toFixed(0)} kcal`; 
+        builderProgressProt.max = budgetProtPasto > 0 ? budgetProtPasto : 1; 
+        builderProgressProt.value = totaliPastoSelezionato.prot; 
+        builderProgressCal.max = budgetCalPasto > 0 ? budgetCalPasto : 1; 
+        builderProgressCal.value = totaliPastoSelezionato.cal; 
+        logPastoBuilderBody.innerHTML = ''; 
+        pastoInCostruzione.forEach((item, index) => { const riga = logPastoBuilderBody.insertRow(); const checkedAttr = item.selezionato ? 'checked' : ''; riga.innerHTML = `<td><input type="checkbox" class="builder-item-checkbox" data-index="${index}" ${checkedAttr}></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; }); 
+    }
 
     function esportaDati() { alert("Verrà generato un file di backup."); const backupData = { giornoCorrente: JSON.parse(localStorage.getItem('trackerGiornoCorrente')), storico: JSON.parse(localStorage.getItem('trackerStorico')), databaseAlimenti: JSON.parse(localStorage.getItem('trackerFoodDatabase')) }; const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'tracker_backup.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); localStorage.removeItem('backupNeeded'); controllaNotificaBackup(); }
     function importaDati(event) { const file = event.target.files[0]; if (!file) return; if (!confirm("Sei sicuro di voler sovrascrivere i dati?")) { event.target.value = null; return; } const reader = new FileReader(); reader.onload = function(e) { try { const backupData = JSON.parse(e.target.result); if(backupData.giornoCorrente) localStorage.setItem('trackerGiornoCorrente', JSON.stringify(backupData.giornoCorrente)); if(backupData.storico) localStorage.setItem('trackerStorico', JSON.stringify(backupData.storico)); if(backupData.databaseAlimenti) localStorage.setItem('trackerFoodDatabase', JSON.stringify(backupData.databaseAlimenti)); alert("Dati importati con successo!"); location.reload(); } catch (error) { alert("Errore: file non valido."); } }; reader.readAsText(file); }
@@ -386,6 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (!confirm(`Aggiungere ${alimentiSelezionati.length} alimenti selezionati al diario?`)) return;
 
+        const currentMealValue = mealTypeSelector.value;
         const mealName = mealTypeSelector.options[mealTypeSelector.selectedIndex].text;
         const totaliPasto = alimentiSelezionati.reduce((acc, item) => {
             acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0;
@@ -404,6 +399,12 @@ document.addEventListener('DOMContentLoaded', () => {
         salvaGiornoCorrente();
         aggiornaUI();
         renderMealBuilder(); 
+        
+        const currentIndex = mealSequence.indexOf(currentMealValue);
+        const nextIndex = (currentIndex + 1) % mealSequence.length;
+        const nextMealValue = mealSequence[nextIndex];
+        mealTypeSelector.value = nextMealValue;
+        localStorage.setItem('trackerMealType', nextMealValue);
     });
     
     builderDesc.addEventListener('input', (e) => { const foodName = e.target.value.toLowerCase(); if (foodDatabase[foodName]) { const foodData = foodDatabase[foodName]; builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || ''; builderMg.value = foodData.mg || ''; builderK.value = foodData.k || ''; builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || ''; } });
