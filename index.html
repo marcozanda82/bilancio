@@ -53,7 +53,6 @@
         .deficit-ok { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
         .deficit-alto { background-color: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
         .surplus { background-color: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
-        /* NUOVI Stili per raggruppamento */
         .meal-group-row { background-color: #f0f4f8; font-weight: bold; }
         .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; }
         .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
@@ -211,7 +210,44 @@ document.addEventListener('DOMContentLoaded', () => {
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
     function caricaFoodDatabase() { const dbSalvato = localStorage.getItem('trackerFoodDatabase'); if (dbSalvato) { foodDatabase = JSON.parse(dbSalvato); aggiornaDatalist(); } }
     function aggiornaDatalist() { foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); foodDatalist.appendChild(option); } }
-    function archiviaGiornoPrecedente(datiDaArchiviare) { const storico = JSON.parse(localStorage.getItem('trackerStorico')) || []; const dataArchiviazione = new Date(datiDaArchiviare.data); const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()]; const obiettivoCalorieGiorno = pianoArchiviazione.cal; const obiettivoProteineGiorno = pianoArchiviazione.prot; let trendFinale = 'ok'; if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) { trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione'; } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) { trendFinale = 'attenzione'; } const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie; const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie; const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data); nuovoStorico.push({ data: datiDaArchiviare.data, totali: datiDaArchiviare.dati, allenamenti: datiDaArchiviare.dati.workoutLog, deficit: Math.round(deficit), trend: trendFinale }); localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico)); localStorage.setItem('backupNeeded', 'true'); }
+
+    // === FUNZIONE DI ARCHIVIAZIONE MODIFICATA ===
+    function archiviaGiornoPrecedente(datiDaArchiviare) {
+        const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
+        const dataArchiviazione = new Date(datiDaArchiviare.data);
+        const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()];
+        const obiettivoCalorieGiorno = pianoArchiviazione.cal;
+        const obiettivoProteineGiorno = pianoArchiviazione.prot;
+        let trendFinale = 'ok';
+        if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) {
+            trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione';
+        } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) {
+            trendFinale = 'attenzione';
+        }
+        const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie;
+        const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie;
+        const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data);
+        
+        // Aggiungo il log dettagliato all'oggetto dello storico
+        nuovoStorico.push({
+            data: datiDaArchiviare.data,
+            log: datiDaArchiviare.dati.log, // <-- MODIFICA CHIAVE
+            totali: {
+                proteine: datiDaArchiviare.dati.proteine,
+                calorie: datiDaArchiviare.dati.calorie,
+                workoutCalorie: datiDaArchiviare.dati.workoutCalorie,
+                mg: datiDaArchiviare.dati.mg,
+                k: datiDaArchiviare.dati.k,
+                vitc: datiDaArchiviare.dati.vitc,
+                ca: datiDaArchiviare.dati.ca
+            },
+            allenamenti: datiDaArchiviare.dati.workoutLog,
+            deficit: Math.round(deficit),
+            trend: trendFinale
+        });
+        localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico));
+        localStorage.setItem('backupNeeded', 'true');
+    }
     
     function gestisciAvvioApp() {
         const pastoSalvato = localStorage.getItem('trackerPastoInCostruzione');
@@ -241,13 +277,12 @@ document.addEventListener('DOMContentLoaded', () => {
         progressProteine.max = OBIETTIVI.prot; 
         progressCalorie.max = obiettivoCaloricoDinamico; 
         
-        // Calcolo totali da log
         let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
-        datiGiornalieri.log.forEach(entry => {
+        (datiGiornalieri.log || []).forEach(entry => {
             if (entry.type === 'meal') {
-                totali.proteine += entry.prot; totali.calorie += entry.cal; totali.mg += entry.mg;
-                totali.k += entry.k; totali.vitc += entry.vitc; totali.ca += entry.ca;
-            } else { // single item
+                totali.proteine += entry.prot; totali.calorie += entry.cal; totali.mg += entry.mg || 0;
+                totali.k += entry.k || 0; totali.vitc += entry.vitc || 0; totali.ca += entry.ca || 0;
+            } else { 
                 totali.proteine += entry.prot; totali.calorie += entry.cal; totali.mg += entry.mg || 0;
                 totali.k += entry.k || 0; totali.vitc += entry.vitc || 0; totali.ca += entry.ca || 0;
             }
@@ -273,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie; 
         
         logBody.innerHTML = ''; 
-        datiGiornalieri.log.forEach((entry, index) => {
+        (datiGiornalieri.log || []).forEach((entry, index) => {
             if (entry.type === 'meal') {
                 const riga = logBody.insertRow();
                 riga.className = 'meal-group-row';
@@ -282,8 +317,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="text-align:left; padding-left:5px;"><span class="expand-arrow" data-index="${index}">${arrow}</span> ${entry.desc}</td>
                     <td>${entry.items.reduce((sum, i) => sum + i.qta, 0)}g</td>
                     <td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td>
-                    <td>${entry.mg.toFixed(1)}</td><td>${entry.k.toFixed(0)}</td>
-                    <td>${entry.vitc.toFixed(1)}</td><td>${entry.ca.toFixed(1)}</td>
+                    <td>${(entry.mg || 0).toFixed(1)}</td><td>${(entry.k || 0).toFixed(0)}</td>
+                    <td>${(entry.vitc || 0).toFixed(1)}</td><td>${(entry.ca || 0).toFixed(1)}</td>
                     <td><button class="delete-btn" data-type="pasto" data-index="${index}">&times;</button></td>`;
                 if (entry.isExpanded) {
                     entry.items.forEach(item => {
@@ -354,7 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mealName = mealTypeSelector.options[mealTypeSelector.selectedIndex].text;
         const totaliPasto = alimentiSelezionati.reduce((acc, item) => {
-            Object.keys(acc).forEach(key => acc[key] += item[key] || 0);
+            acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0;
+            acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
             return acc;
         }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0});
 
@@ -378,9 +414,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target;
         if (target.classList.contains('expand-arrow')) {
             const index = parseInt(target.dataset.index, 10);
-            const meal = datiGiornalieri.log[index];
-            if (meal && meal.type === 'meal') {
-                meal.isExpanded = !meal.isExpanded;
+            const entry = datiGiornalieri.log[index];
+            if (entry && entry.type === 'meal') {
+                entry.isExpanded = !entry.isExpanded;
                 salvaGiornoCorrente();
                 aggiornaUI();
             }
