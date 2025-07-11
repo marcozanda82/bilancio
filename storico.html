@@ -19,9 +19,10 @@
         .riepilogo-giorno p { margin: 0; font-size: 1em; }
         .riepilogo-giorno span { font-weight: 600; }
         /* Stili per raggruppamento */
+        .day-log-header { background-color: #e8eaf6; margin-top: 20px; padding: 10px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .meal-group-row { background-color: #f0f4f8; font-weight: bold; }
-        .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; }
-        .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
+        .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; font-weight: bold; }
+        .sub-item-row td { padding-left: 30px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
         .sub-item-row td:first-child { border-left: 3px solid #1976d2; }
     </style>
 </head>
@@ -48,8 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         storicoContainer.innerHTML = '';
-        
-        // Ordina i giorni dal più recente al più vecchio
         storico.sort((a, b) => new Date(b.data) - new Date(a.data));
 
         storico.forEach((giorno, giornoIndex) => {
@@ -59,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataFormatted = new Date(giorno.data).toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             let html = `<h2>${dataFormatted}</h2>`;
             
-            // Riepilogo
             html += `
                 <div class="riepilogo-giorno">
                     <p>Calorie: <span>${giorno.totali.calorie.toFixed(0)} kcal</span></p>
@@ -68,9 +66,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p>Deficit: <span>${giorno.deficit} kcal</span></p>
                 </div>`;
             
-            // Tabella Diario
-            html += `<h3>Diario Alimentare</h3>`;
-            if (giorno.log && giorno.log.length > 0) {
+            // NUOVA INTESTAZIONE DIARIO GIORNALIERO
+            const dayArrow = giorno.isLogExpanded ? '&#9652;' : '&#9662;';
+            html += `
+                <div class="day-log-header" data-type="expand-day" data-giorno-index="${giornoIndex}">
+                    <h3>Diario Alimentare</h3>
+                    <span class="expand-arrow">${dayArrow}</span>
+                </div>`;
+            
+            // La tabella viene mostrata solo se il log del giorno è espanso
+            if (giorno.isLogExpanded && giorno.log && giorno.log.length > 0) {
                 html += `
                     <table>
                         <thead>
@@ -83,11 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 giorno.log.forEach((entry, pastoIndex) => {
                     if (entry.type === 'meal') {
-                        const arrow = entry.isExpanded ? '&#9652;' : '&#9662;';
+                        const mealArrow = entry.isExpanded ? '&#9652;' : '&#9662;';
                         html += `
                             <tr class="meal-group-row">
                                 <td style="text-align:left; padding-left:5px;">
-                                    <span class="expand-arrow" data-giorno-index="${giornoIndex}" data-pasto-index="${pastoIndex}">${arrow}</span> ${entry.desc}
+                                    <span class="expand-arrow" data-type="expand-meal" data-giorno-index="${giornoIndex}" data-pasto-index="${pastoIndex}">${mealArrow}</span> ${entry.desc}
                                 </td>
                                 <td>${entry.items.reduce((sum, i) => sum + i.qta, 0)}g</td>
                                 <td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td>
@@ -106,18 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                         }
                     } else { // Voce singola
-                        html += `
-                            <tr>
-                                <td>${entry.desc}</td><td>${entry.qta}g</td>
-                                <td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td>
-                                <td>${(entry.mg || 0).toFixed(1)}</td><td>${(entry.k || 0).toFixed(0)}</td>
-                                <td>${(entry.vitc || 0).toFixed(1)}</td><td>${(entry.ca || 0).toFixed(1)}</td>
-                            </tr>`;
+                        html += `<tr><td>${entry.desc}</td><td>${entry.qta}g</td><td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td><td>${(entry.mg || 0).toFixed(1)}</td><td>${(entry.k || 0).toFixed(0)}</td><td>${(entry.vitc || 0).toFixed(1)}</td><td>${(entry.ca || 0).toFixed(1)}</td></tr>`;
                     }
                 });
                 html += `</tbody></table>`;
-            } else {
-                html += `<p>Nessun dato alimentare registrato per questo giorno.</p>`;
+            } else if (giorno.isLogExpanded) {
+                 html += `<p style="padding:10px;">Nessun dato alimentare registrato per questo giorno.</p>`;
             }
             giornoDiv.innerHTML = html;
             storicoContainer.appendChild(giornoDiv);
@@ -125,22 +124,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     storicoContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('expand-arrow')) {
-            const giornoIndex = parseInt(e.target.dataset.giornoIndex, 10);
-            const pastoIndex = parseInt(e.target.dataset.pastoIndex, 10);
-            
+        const target = e.target.closest('[data-type]');
+        if (!target) return;
+
+        const type = target.dataset.type;
+        const giornoIndex = parseInt(target.dataset.giornoIndex, 10);
+        const pastoIndex = parseInt(target.dataset.pastoIndex, 10);
+
+        if (type === 'expand-day') {
+            const giorno = storico[giornoIndex];
+            if (giorno) {
+                giorno.isLogExpanded = !giorno.isLogExpanded;
+            }
+        } else if (type === 'expand-meal') {
             const pasto = storico[giornoIndex]?.log[pastoIndex];
             if (pasto && pasto.type === 'meal') {
                 pasto.isExpanded = !pasto.isExpanded;
-                // Salva lo stato espanso/compresso nello storico
-                localStorage.setItem('trackerStorico', JSON.stringify(storico));
-                // Ridisegna l'interfaccia
-                renderStorico();
             }
         }
+        
+        localStorage.setItem('trackerStorico', JSON.stringify(storico));
+        renderStorico();
     });
 
-    // Prima visualizzazione
     renderStorico();
 });
 </script>
