@@ -210,8 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
     function caricaFoodDatabase() { const dbSalvato = localStorage.getItem('trackerFoodDatabase'); if (dbSalvato) { foodDatabase = JSON.parse(dbSalvato); aggiornaDatalist(); } }
     function aggiornaDatalist() { foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); foodDatalist.appendChild(option); } }
-
-    // === FUNZIONE DI ARCHIVIAZIONE MODIFICATA ===
+    
     function archiviaGiornoPrecedente(datiDaArchiviare) {
         const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
         const dataArchiviazione = new Date(datiDaArchiviare.data);
@@ -228,10 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie;
         const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data);
         
-        // Aggiungo il log dettagliato all'oggetto dello storico
         nuovoStorico.push({
             data: datiDaArchiviare.data,
-            log: datiDaArchiviare.dati.log, // <-- MODIFICA CHIAVE
+            log: datiDaArchiviare.dati.log, 
+            isLogExpanded: false, // <-- MODIFICA CHIAVE
             totali: {
                 proteine: datiDaArchiviare.dati.proteine,
                 calorie: datiDaArchiviare.dati.calorie,
