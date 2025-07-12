@@ -11,7 +11,7 @@
         .nav-links a { display: inline-block; margin-bottom: 25px; padding: 10px 15px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
 
         .storico-table { width: 100%; border-collapse: collapse; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;}
-        th, td { padding: 12px 15px; text-align: left; }
+        th, td { padding: 12px 15px; text-align: left; vertical-align: middle; }
         th { background-color: #e8eaf6; font-weight: 600; color: #3f51b5; }
         .day-summary-row { border-bottom: 2px solid #e0e0e0; cursor: pointer; transition: background-color 0.2s; }
         .day-summary-row:hover { background-color: #f9f9fc; }
@@ -20,7 +20,8 @@
         .day-detail-row { display: none; }
         .day-detail-row.expanded { display: table-row; }
         .detail-cell { padding: 20px !important; background-color: #fafafa; }
-        .detail-cell table { width: 100%; box-shadow: none; border-radius: 0; }
+        .detail-cell h4 { margin-top: 0; }
+        .detail-cell table { width: 100%; box-shadow: none; border-radius: 0; font-size: 0.9em; }
         
         .expand-arrow { display: inline-block; transition: transform 0.2s; font-size: 0.8em; }
         .day-summary-row.expanded .expand-arrow { transform: rotate(90deg); }
@@ -78,33 +79,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     storico.forEach((giorno, giornoIndex) => {
         // --- CALCOLO STIME ---
-        // Grasso: circa 7700 kcal per 1 kg di grasso
-        const stimaGrasso = giorno.deficit > 0 ? (giorno.deficit / 7700) * 1000 : 0;
+        const deficit = giorno.deficit || 0;
+        const stimaGrasso = deficit > 0 ? (deficit / 7700) * 1000 : 0;
         
-        // Trend Muscolare:
-        let scoreMuscolo = 0;
-        if(giorno.totali.proteine >= (giorno.obiettivi.prot * 0.95)) {
-            scoreMuscolo += 1; // Obiettivo proteico raggiunto
-        } else {
-            scoreMuscolo -= 1;
-        }
-
-        if(giorno.tipoGiornata && giorno.tipoGiornata.includes('Forza')) {
-            scoreMuscolo += 1; // Allenamento di forza
-        }
-        if(giorno.deficit > 500 && giorno.tipoGiornata.includes('Forza')) {
-            scoreMuscolo -= 1; // Allenamento di forza con deficit troppo alto
-        }
-
         let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
-        if(scoreMuscolo > 0) trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
-        if(scoreMuscolo < 0) trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
+        // Calcola il trend muscolare solo se i dati necessari esistono (per retrocompatibilità)
+        if (giorno.obiettivi && giorno.tipoGiornata) {
+            let scoreMuscolo = 0;
+            if(giorno.totali.proteine >= (giorno.obiettivi.prot * 0.95)) {
+                scoreMuscolo += 1;
+            } else {
+                scoreMuscolo -= 1;
+            }
+            if(giorno.tipoGiornata.includes('Forza')) {
+                scoreMuscolo += 1;
+            }
+            if(deficit > 500 && giorno.tipoGiornata.includes('Forza')) {
+                scoreMuscolo -= 1;
+            }
+            if(scoreMuscolo > 0) trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
+            if(scoreMuscolo < 0) trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
+        }
 
 
-        // Riga Riassuntiva del Giorno
         const summaryRow = document.createElement('tr');
         summaryRow.className = 'day-summary-row';
-        summaryRow.dataset.index = giornoIndex;
+        summaryRow.dataset.giornoIndex = giornoIndex;
         const dataFormatted = new Date(giorno.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
         
         summaryRow.innerHTML = `
@@ -112,29 +112,29 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${giorno.totali.proteine.toFixed(1)} g</td>
             <td>${giorno.totali.calorie.toFixed(0)}</td>
             <td>${(giorno.totali.workoutCalorie || 0)} kcal</td>
-            <td>${giorno.deficit} kcal</td>
+            <td>${deficit} kcal</td>
             <td>-${stimaGrasso.toFixed(1)} g</td>
             <td>${trendMuscoloHtml}</td>
         `;
         storicoBody.appendChild(summaryRow);
 
-        // Riga Dettaglio del Giorno (nascosta)
         const detailRow = document.createElement('tr');
         detailRow.className = 'day-detail-row';
         const detailCell = document.createElement('td');
         detailCell.colSpan = 7;
         detailCell.className = 'detail-cell';
         
-        let detailHtml = `
-            <h4>Dettaglio Pasti</h4>
-            <table>
-                <tbody>`;
+        let detailHtml = `<h4>Dettaglio Pasti</h4>`;
 
         if (giorno.log && giorno.log.length > 0) {
+            detailHtml += `
+                <table>
+                    <tbody>`;
+
             giorno.log.forEach((entry, pastoIndex) => {
                 if (entry.type === 'meal') {
                     detailHtml += `
-                        <tr class="meal-group-row" data-giorno="${giornoIndex}" data-pasto="${pastoIndex}">
+                        <tr class="meal-group-row" data-giorno-index="${giornoIndex}" data-pasto-index="${pastoIndex}">
                             <td colspan="4"><span class="meal-expand-arrow">▶</span> <strong>${entry.desc}</strong> (Tot: ${entry.prot.toFixed(1)}g Prot, ${entry.cal.toFixed(0)} Kcal)</td>
                         </tr>`;
                     entry.items.forEach(item => {
@@ -150,10 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${entry.prot.toFixed(1)} g</td><td>${entry.cal.toFixed(0)} Kcal</td></tr>`;
                 }
             });
+            detailHtml += `</tbody></table>`;
         } else {
-            detailHtml += '<tr><td colspan="4">Nessun dettaglio alimentare.</td></tr>';
+            detailHtml += '<p>Nessun dettaglio alimentare disponibile per questo giorno.</p>';
         }
-        detailHtml += `</tbody></table>`;
 
         detailCell.innerHTML = detailHtml;
         detailRow.appendChild(detailCell);
@@ -161,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     storicoBody.addEventListener('click', (e) => {
-        // Espandi/Comprimi Giorno
         const summaryRow = e.target.closest('.day-summary-row');
         if (summaryRow) {
             summaryRow.classList.toggle('expanded');
@@ -169,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Espandi/Comprimi Pasto
         const mealRow = e.target.closest('.meal-group-row');
         if (mealRow) {
             mealRow.classList.toggle('expanded');
