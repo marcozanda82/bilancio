@@ -3,148 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storico Dettagliato - Nuovo Layout</title>
+    <title>Storico Dettagliato - Tabella Trend</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 800px; }
+        .container { width: 100%; max-width: 950px; }
         h1 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px;}
         .nav-links a { display: inline-block; margin-bottom: 25px; padding: 10px 15px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
 
-        .giorno-storico { background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; }
-        .giorno-header { padding: 20px 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid transparent; transition: background-color 0.2s; }
-        .giorno-header:hover { background-color: #f7f9fc; }
-        .giorno-header h2 { margin: 0; font-size: 1.2em; color: #333; border: none; }
-        .giorno-header .trend-icon { font-size: 1.5em; }
+        .storico-table { width: 100%; border-collapse: collapse; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;}
+        th, td { padding: 12px 15px; text-align: left; }
+        th { background-color: #e8eaf6; font-weight: 600; color: #3f51b5; }
+        .day-summary-row { border-bottom: 2px solid #e0e0e0; cursor: pointer; transition: background-color 0.2s; }
+        .day-summary-row:hover { background-color: #f9f9fc; }
+        .day-summary-row.expanded { background-color: #f1f3f9; }
         
-        /* Stili per i trend */
-        .trend-ok { border-left-color: #4caf50; }
-        .trend-attenzione { border-left-color: #ff9800; }
-        .trend-pericolo { border-left-color: #f44336; }
+        .day-detail-row { display: none; }
+        .day-detail-row.expanded { display: table-row; }
+        .detail-cell { padding: 20px !important; background-color: #fafafa; }
+        .detail-cell table { width: 100%; box-shadow: none; border-radius: 0; }
         
-        .giorno-content { max-height: 0; transition: max-height 0.5s ease-out, padding 0.5s ease-out; padding: 0 25px; }
-        .giorno-content.expanded { max-height: 2000px; /* Valore alto per contenere tutto */ padding: 20px 25px; border-top: 1px solid #e0e0e0;}
+        .expand-arrow { display: inline-block; transition: transform 0.2s; font-size: 0.8em; }
+        .day-summary-row.expanded .expand-arrow { transform: rotate(90deg); }
 
-        .riepilogo-giorno { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .riepilogo-giorno p { margin: 0; font-size: 1em; background-color: #fafafa; padding: 10px; border-radius: 6px; }
-        .riepilogo-giorno span { font-weight: 600; color: #1976d2; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f2f2f2; }
-        
         .meal-group-row { background-color: #f5f5f5; font-weight: bold; cursor: pointer; }
-        .expand-arrow { display: inline-block; width: 20px; text-align: center; transition: transform 0.2s; }
-        .meal-group-row.expanded .expand-arrow { transform: rotate(90deg); }
+        .meal-expand-arrow { display: inline-block; width: 20px; transition: transform 0.2s; }
+        .meal-group-row.expanded .meal-expand-arrow { transform: rotate(90deg); }
         .sub-item-row { display: none; }
         .meal-group-row.expanded + .sub-item-row { display: table-row; }
-        .sub-item-row > td { padding-left: 30px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc;}
+        .sub-item-row > td { padding-left: 30px !important; background-color: #fff; font-style: italic; color: #555;}
+
+        .trend-muscle { font-size: 1.5em; font-weight: bold; }
+        .trend-up { color: #4caf50; }
+        .trend-down { color: #f44336; }
+        .trend-neutral { color: #9e9e9e; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Storico Giornaliero</h1>
+        <h1>📊 Storico e Trend Giornalieri</h1>
         <div class="nav-links">
             <a href="index.html">⬅️ Torna al Tracker</a>
         </div>
-        <div id="storico-container">
-            <p>Nessun dato storico trovato.</p>
+        <div class="storico-table-container">
+            <table class="storico-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Proteine</th>
+                        <th>Calorie</th>
+                        <th>Workout</th>
+                        <th>Deficit</th>
+                        <th>Grasso (g)</th>
+                        <th>Massa Musc.</th>
+                    </tr>
+                </thead>
+                <tbody id="storico-body">
+                    </tbody>
+            </table>
         </div>
     </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const storicoContainer = document.getElementById('storico-container');
+    const storicoBody = document.getElementById('storico-body');
     const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
 
     if (storico.length === 0) {
-        storicoContainer.innerHTML = '<p>Nessun dato storico trovato.</p>';
+        storicoBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Nessun dato storico trovato.</td></tr>';
         return;
     }
 
-    storicoContainer.innerHTML = '';
+    storicoBody.innerHTML = '';
     storico.sort((a, b) => new Date(b.data) - new Date(a.data));
 
     storico.forEach((giorno, giornoIndex) => {
-        const giornoDiv = document.createElement('div');
-        giornoDiv.className = 'giorno-storico';
-
-        const dataFormatted = new Date(giorno.data).toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        // --- CALCOLO STIME ---
+        // Grasso: circa 7700 kcal per 1 kg di grasso
+        const stimaGrasso = giorno.deficit > 0 ? (giorno.deficit / 7700) * 1000 : 0;
         
-        // Header del Giorno
-        const headerDiv = document.createElement('div');
-        headerDiv.className = `giorno-header trend-${giorno.trend || 'ok'}`;
-        headerDiv.dataset.index = giornoIndex;
-        
-        let trendIcon = '🔥';
-        if (giorno.trend === 'pericolo' || giorno.trend === 'attenzione') trendIcon = '⚠️';
-        if (new Date(giorno.data).getDay() === 0 || new Date(giorno.data).getDay() === 6) trendIcon = '💧';
+        // Trend Muscolare:
+        let scoreMuscolo = 0;
+        if(giorno.totali.proteine >= (giorno.obiettivi.prot * 0.95)) {
+            scoreMuscolo += 1; // Obiettivo proteico raggiunto
+        } else {
+            scoreMuscolo -= 1;
+        }
 
-        headerDiv.innerHTML = `
-            <h2>${dataFormatted}</h2>
-            <span class="trend-icon">${trendIcon}</span>
+        if(giorno.tipoGiornata && giorno.tipoGiornata.includes('Forza')) {
+            scoreMuscolo += 1; // Allenamento di forza
+        }
+        if(giorno.deficit > 500 && giorno.tipoGiornata.includes('Forza')) {
+            scoreMuscolo -= 1; // Allenamento di forza con deficit troppo alto
+        }
+
+        let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
+        if(scoreMuscolo > 0) trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
+        if(scoreMuscolo < 0) trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
+
+
+        // Riga Riassuntiva del Giorno
+        const summaryRow = document.createElement('tr');
+        summaryRow.className = 'day-summary-row';
+        summaryRow.dataset.index = giornoIndex;
+        const dataFormatted = new Date(giorno.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        
+        summaryRow.innerHTML = `
+            <td><span class="expand-arrow">▶</span> ${dataFormatted}</td>
+            <td>${giorno.totali.proteine.toFixed(1)} g</td>
+            <td>${giorno.totali.calorie.toFixed(0)}</td>
+            <td>${(giorno.totali.workoutCalorie || 0)} kcal</td>
+            <td>${giorno.deficit} kcal</td>
+            <td>-${stimaGrasso.toFixed(1)} g</td>
+            <td>${trendMuscoloHtml}</td>
         `;
-        giornoDiv.appendChild(headerDiv);
+        storicoBody.appendChild(summaryRow);
 
-        // Contenuto espandibile del Giorno
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'giorno-content';
+        // Riga Dettaglio del Giorno (nascosta)
+        const detailRow = document.createElement('tr');
+        detailRow.className = 'day-detail-row';
+        const detailCell = document.createElement('td');
+        detailCell.colSpan = 7;
+        detailCell.className = 'detail-cell';
         
-        let contentHtml = `
-            <div class="riepilogo-giorno">
-                <p>Calorie: <span>${giorno.totali.calorie.toFixed(0)} kcal</span></p>
-                <p>Proteine: <span>${giorno.totali.proteine.toFixed(1)} g</span></p>
-                <p>Workout: <span>${(giorno.totali.workoutCalorie || 0)} kcal</span></p>
-                <p>Deficit: <span>${giorno.deficit} kcal</span></p>
-            </div>
+        let detailHtml = `
+            <h4>Dettaglio Pasti</h4>
             <table>
-                <thead>
-                    <tr><th>Descrizione</th><th>Quantità</th><th>Proteine</th><th>Kcal</th></tr>
-                </thead>
                 <tbody>`;
 
         if (giorno.log && giorno.log.length > 0) {
             giorno.log.forEach((entry, pastoIndex) => {
                 if (entry.type === 'meal') {
-                    contentHtml += `
+                    detailHtml += `
                         <tr class="meal-group-row" data-giorno="${giornoIndex}" data-pasto="${pastoIndex}">
-                            <td><span class="expand-arrow">▶</span> ${entry.desc}</td>
-                            <td>${entry.items.reduce((s, i) => s + i.qta, 0)} g</td>
-                            <td>${entry.prot.toFixed(1)} g</td>
-                            <td>${entry.cal.toFixed(0)}</td>
+                            <td colspan="4"><span class="meal-expand-arrow">▶</span> <strong>${entry.desc}</strong> (Tot: ${entry.prot.toFixed(1)}g Prot, ${entry.cal.toFixed(0)} Kcal)</td>
                         </tr>`;
                     entry.items.forEach(item => {
-                        contentHtml += `
+                        detailHtml += `
                             <tr class="sub-item-row">
                                 <td style="padding-left: 40px;">${item.desc}</td>
                                 <td>${item.qta} g</td>
                                 <td>${item.prot.toFixed(1)} g</td>
-                                <td>${item.cal.toFixed(0)}</td>
+                                <td>${item.cal.toFixed(0)} Kcal</td>
                             </tr>`;
                     });
                 } else {
-                    contentHtml += `
-                        <tr>
-                            <td>${entry.desc}</td>
-                            <td>${entry.qta} g</td>
-                            <td>${entry.prot.toFixed(1)} g</td>
-                            <td>${entry.cal.toFixed(0)}</td>
-                        </tr>`;
+                    detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${entry.prot.toFixed(1)} g</td><td>${entry.cal.toFixed(0)} Kcal</td></tr>`;
                 }
             });
         } else {
-            contentHtml += `<tr><td colspan="4">Nessun dato alimentare registrato.</td></tr>`;
+            detailHtml += '<tr><td colspan="4">Nessun dettaglio alimentare.</td></tr>';
         }
-        contentHtml += `</tbody></table>`;
-        contentDiv.innerHTML = contentHtml;
-        giornoDiv.appendChild(contentDiv);
-        storicoContainer.appendChild(giornoDiv);
+        detailHtml += `</tbody></table>`;
+
+        detailCell.innerHTML = detailHtml;
+        detailRow.appendChild(detailCell);
+        storicoBody.appendChild(detailRow);
     });
 
-    storicoContainer.addEventListener('click', (e) => {
+    storicoBody.addEventListener('click', (e) => {
         // Espandi/Comprimi Giorno
-        const header = e.target.closest('.giorno-header');
-        if (header) {
-            header.nextElementSibling.classList.toggle('expanded');
+        const summaryRow = e.target.closest('.day-summary-row');
+        if (summaryRow) {
+            summaryRow.classList.toggle('expanded');
+            summaryRow.nextElementSibling.classList.toggle('expanded');
             return;
         }
 
