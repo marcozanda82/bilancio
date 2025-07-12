@@ -3,27 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storico Dettagliato</title>
+    <title>Storico Dettagliato - Nuovo Layout</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; }
-        .giorno-storico { background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px; }
-        h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
-        h2 { font-size: 1.6em; }
-        h3 { font-size: 1.2em; border-bottom: none; margin-top: 20px; }
-        .nav-links a { display: inline-block; margin-top: 10px; padding: 10px 15px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8em; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
-        th { background-color: #f2f2f2; font-weight: 600; }
-        .riepilogo-giorno { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; background-color: #fafafa; padding: 15px; border-radius: 8px; margin-top: 15px; }
-        .riepilogo-giorno p { margin: 0; font-size: 1em; }
-        .riepilogo-giorno span { font-weight: 600; }
-        /* Stili per raggruppamento */
-        .day-log-header { background-color: #e8eaf6; margin-top: 20px; padding: 10px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .meal-group-row { background-color: #f0f4f8; font-weight: bold; }
-        .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; font-weight: bold; }
-        .sub-item-row td { padding-left: 30px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
-        .sub-item-row td:first-child { border-left: 3px solid #1976d2; }
+        h1 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px;}
+        .nav-links a { display: inline-block; margin-bottom: 25px; padding: 10px 15px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+
+        .giorno-storico { background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; }
+        .giorno-header { padding: 20px 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid transparent; transition: background-color 0.2s; }
+        .giorno-header:hover { background-color: #f7f9fc; }
+        .giorno-header h2 { margin: 0; font-size: 1.2em; color: #333; border: none; }
+        .giorno-header .trend-icon { font-size: 1.5em; }
+        
+        /* Stili per i trend */
+        .trend-ok { border-left-color: #4caf50; }
+        .trend-attenzione { border-left-color: #ff9800; }
+        .trend-pericolo { border-left-color: #f44336; }
+        
+        .giorno-content { max-height: 0; transition: max-height 0.5s ease-out, padding 0.5s ease-out; padding: 0 25px; }
+        .giorno-content.expanded { max-height: 2000px; /* Valore alto per contenere tutto */ padding: 20px 25px; border-top: 1px solid #e0e0e0;}
+
+        .riepilogo-giorno { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .riepilogo-giorno p { margin: 0; font-size: 1em; background-color: #fafafa; padding: 10px; border-radius: 6px; }
+        .riepilogo-giorno span { font-weight: 600; color: #1976d2; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+        
+        .meal-group-row { background-color: #f5f5f5; font-weight: bold; cursor: pointer; }
+        .expand-arrow { display: inline-block; width: 20px; text-align: center; transition: transform 0.2s; }
+        .meal-group-row.expanded .expand-arrow { transform: rotate(90deg); }
+        .sub-item-row { display: none; }
+        .meal-group-row.expanded + .sub-item-row { display: table-row; }
+        .sub-item-row > td { padding-left: 30px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc;}
     </style>
 </head>
 <body>
@@ -40,114 +54,111 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const storicoContainer = document.getElementById('storico-container');
-    let storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
+    const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
 
-    function renderStorico() {
-        if (storico.length === 0) {
-            storicoContainer.innerHTML = '<p>Nessun dato storico trovato.</p>';
+    if (storico.length === 0) {
+        storicoContainer.innerHTML = '<p>Nessun dato storico trovato.</p>';
+        return;
+    }
+
+    storicoContainer.innerHTML = '';
+    storico.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+    storico.forEach((giorno, giornoIndex) => {
+        const giornoDiv = document.createElement('div');
+        giornoDiv.className = 'giorno-storico';
+
+        const dataFormatted = new Date(giorno.data).toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        // Header del Giorno
+        const headerDiv = document.createElement('div');
+        headerDiv.className = `giorno-header trend-${giorno.trend || 'ok'}`;
+        headerDiv.dataset.index = giornoIndex;
+        
+        let trendIcon = '🔥';
+        if (giorno.trend === 'pericolo' || giorno.trend === 'attenzione') trendIcon = '⚠️';
+        if (new Date(giorno.data).getDay() === 0 || new Date(giorno.data).getDay() === 6) trendIcon = '💧';
+
+        headerDiv.innerHTML = `
+            <h2>${dataFormatted}</h2>
+            <span class="trend-icon">${trendIcon}</span>
+        `;
+        giornoDiv.appendChild(headerDiv);
+
+        // Contenuto espandibile del Giorno
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'giorno-content';
+        
+        let contentHtml = `
+            <div class="riepilogo-giorno">
+                <p>Calorie: <span>${giorno.totali.calorie.toFixed(0)} kcal</span></p>
+                <p>Proteine: <span>${giorno.totali.proteine.toFixed(1)} g</span></p>
+                <p>Workout: <span>${(giorno.totali.workoutCalorie || 0)} kcal</span></p>
+                <p>Deficit: <span>${giorno.deficit} kcal</span></p>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Descrizione</th><th>Quantità</th><th>Proteine</th><th>Kcal</th></tr>
+                </thead>
+                <tbody>`;
+
+        if (giorno.log && giorno.log.length > 0) {
+            giorno.log.forEach((entry, pastoIndex) => {
+                if (entry.type === 'meal') {
+                    contentHtml += `
+                        <tr class="meal-group-row" data-giorno="${giornoIndex}" data-pasto="${pastoIndex}">
+                            <td><span class="expand-arrow">▶</span> ${entry.desc}</td>
+                            <td>${entry.items.reduce((s, i) => s + i.qta, 0)} g</td>
+                            <td>${entry.prot.toFixed(1)} g</td>
+                            <td>${entry.cal.toFixed(0)}</td>
+                        </tr>`;
+                    entry.items.forEach(item => {
+                        contentHtml += `
+                            <tr class="sub-item-row">
+                                <td style="padding-left: 40px;">${item.desc}</td>
+                                <td>${item.qta} g</td>
+                                <td>${item.prot.toFixed(1)} g</td>
+                                <td>${item.cal.toFixed(0)}</td>
+                            </tr>`;
+                    });
+                } else {
+                    contentHtml += `
+                        <tr>
+                            <td>${entry.desc}</td>
+                            <td>${entry.qta} g</td>
+                            <td>${entry.prot.toFixed(1)} g</td>
+                            <td>${entry.cal.toFixed(0)}</td>
+                        </tr>`;
+                }
+            });
+        } else {
+            contentHtml += `<tr><td colspan="4">Nessun dato alimentare registrato.</td></tr>`;
+        }
+        contentHtml += `</tbody></table>`;
+        contentDiv.innerHTML = contentHtml;
+        giornoDiv.appendChild(contentDiv);
+        storicoContainer.appendChild(giornoDiv);
+    });
+
+    storicoContainer.addEventListener('click', (e) => {
+        // Espandi/Comprimi Giorno
+        const header = e.target.closest('.giorno-header');
+        if (header) {
+            header.nextElementSibling.classList.toggle('expanded');
             return;
         }
 
-        storicoContainer.innerHTML = '';
-        storico.sort((a, b) => new Date(b.data) - new Date(a.data));
-
-        storico.forEach((giorno, giornoIndex) => {
-            const giornoDiv = document.createElement('div');
-            giornoDiv.className = 'giorno-storico';
-
-            const dataFormatted = new Date(giorno.data).toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            let html = `<h2>${dataFormatted}</h2>`;
-            
-            html += `
-                <div class="riepilogo-giorno">
-                    <p>Calorie: <span>${giorno.totali.calorie.toFixed(0)} kcal</span></p>
-                    <p>Proteine: <span>${giorno.totali.proteine.toFixed(1)} g</span></p>
-                    <p>Workout: <span>${giorno.totali.workoutCalorie} kcal</span></p>
-                    <p>Deficit: <span>${giorno.deficit} kcal</span></p>
-                </div>`;
-            
-            // NUOVA INTESTAZIONE DIARIO GIORNALIERO
-            const dayArrow = giorno.isLogExpanded ? '&#9652;' : '&#9662;';
-            html += `
-                <div class="day-log-header" data-type="expand-day" data-giorno-index="${giornoIndex}">
-                    <h3>Diario Alimentare</h3>
-                    <span class="expand-arrow">${dayArrow}</span>
-                </div>`;
-            
-            // La tabella viene mostrata solo se il log del giorno è espanso
-            if (giorno.isLogExpanded && giorno.log && giorno.log.length > 0) {
-                html += `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Descrizione</th><th>(g)</th><th>Prot</th>
-                                <th>Kcal</th><th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-                
-                giorno.log.forEach((entry, pastoIndex) => {
-                    if (entry.type === 'meal') {
-                        const mealArrow = entry.isExpanded ? '&#9652;' : '&#9662;';
-                        html += `
-                            <tr class="meal-group-row">
-                                <td style="text-align:left; padding-left:5px;">
-                                    <span class="expand-arrow" data-type="expand-meal" data-giorno-index="${giornoIndex}" data-pasto-index="${pastoIndex}">${mealArrow}</span> ${entry.desc}
-                                </td>
-                                <td>${entry.items.reduce((sum, i) => sum + i.qta, 0)}g</td>
-                                <td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td>
-                                <td>${(entry.mg || 0).toFixed(1)}</td><td>${(entry.k || 0).toFixed(0)}</td>
-                                <td>${(entry.vitc || 0).toFixed(1)}</td><td>${(entry.ca || 0).toFixed(1)}</td>
-                            </tr>`;
-                        if (entry.isExpanded) {
-                            entry.items.forEach(item => {
-                                html += `
-                                    <tr class="sub-item-row">
-                                        <td>${item.desc}</td><td>${item.qta}g</td>
-                                        <td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td>
-                                        <td>${(item.mg || 0).toFixed(1)}</td><td>${(item.k || 0).toFixed(0)}</td>
-                                        <td>${(item.vitc || 0).toFixed(1)}</td><td>${(item.ca || 0).toFixed(1)}</td>
-                                    </tr>`;
-                            });
-                        }
-                    } else { // Voce singola
-                        html += `<tr><td>${entry.desc}</td><td>${entry.qta}g</td><td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td><td>${(entry.mg || 0).toFixed(1)}</td><td>${(entry.k || 0).toFixed(0)}</td><td>${(entry.vitc || 0).toFixed(1)}</td><td>${(entry.ca || 0).toFixed(1)}</td></tr>`;
-                    }
-                });
-                html += `</tbody></table>`;
-            } else if (giorno.isLogExpanded) {
-                 html += `<p style="padding:10px;">Nessun dato alimentare registrato per questo giorno.</p>`;
-            }
-            giornoDiv.innerHTML = html;
-            storicoContainer.appendChild(giornoDiv);
-        });
-    }
-
-    storicoContainer.addEventListener('click', (e) => {
-        const target = e.target.closest('[data-type]');
-        if (!target) return;
-
-        const type = target.dataset.type;
-        const giornoIndex = parseInt(target.dataset.giornoIndex, 10);
-        const pastoIndex = parseInt(target.dataset.pastoIndex, 10);
-
-        if (type === 'expand-day') {
-            const giorno = storico[giornoIndex];
-            if (giorno) {
-                giorno.isLogExpanded = !giorno.isLogExpanded;
-            }
-        } else if (type === 'expand-meal') {
-            const pasto = storico[giornoIndex]?.log[pastoIndex];
-            if (pasto && pasto.type === 'meal') {
-                pasto.isExpanded = !pasto.isExpanded;
+        // Espandi/Comprimi Pasto
+        const mealRow = e.target.closest('.meal-group-row');
+        if (mealRow) {
+            mealRow.classList.toggle('expanded');
+            let sibling = mealRow.nextElementSibling;
+            while(sibling && sibling.classList.contains('sub-item-row')) {
+                sibling.style.display = mealRow.classList.contains('expanded') ? 'table-row' : 'none';
+                sibling = sibling.nextElementSibling;
             }
         }
-        
-        localStorage.setItem('trackerStorico', JSON.stringify(storico));
-        renderStorico();
     });
-
-    renderStorico();
 });
 </script>
 </body>
