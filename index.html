@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Definitivo - Con Auto-Progressione Pasti</title>
+    <title>Tracker Definitivo - Con Sincronizzazione</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -13,7 +13,8 @@
         #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        input[type="text"], input[type="number"], input[type="date"], select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        textarea { min-height: 100px; resize: vertical; }
         input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
         button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
         button:hover { background-color: #1565c0; }
@@ -33,7 +34,6 @@
         td:first-child, th:first-child { text-align: center; }
         .delete-btn { background-color: transparent; border: none; color: #d32f2f; font-size: 1.3em; font-weight: bold; cursor: pointer; padding: 0 8px; border-radius: 50%; line-height: 1; }
         .delete-btn:hover { background-color: #ffebee; color: #b71c1c; }
-        .proiezione-ok { border-left-color: #4caf50; } .proiezione-attenzione { border-left-color: #ff9800; } .proiezione-pericolo { border-left-color: #f44336; } .proiezione-neutra { border-left-color: #9e9e9e; }
         .builder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
         .builder-grid div { display: flex; flex-direction: column; }
         .builder-grid label { font-size: 0.8em; margin-bottom: 4px; }
@@ -48,7 +48,6 @@
         .builder-stats p { margin: 0 0 5px 0; font-weight: 600; }
         #btn-salva-pasto { background-color: #2e7d32; width: 100%; margin-top: 15px; }
         #btn-salva-pasto:hover { background-color: #1b5e20; }
-        #backup-reminder { border: 2px dashed #ff9800; padding: 15px; margin-top: 15px; border-radius: 6px; background-color: #fffde7; text-align: center; }
         #feedback-deficit { padding: 10px; margin-top: 15px; border-radius: 6px; font-weight: 600; text-align: center; }
         .deficit-ok { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
         .deficit-alto { background-color: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
@@ -57,6 +56,7 @@
         .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; }
         .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
         .sub-item-row td:first-child { border-left: 3px solid #1976d2; }
+        #backup-reminder { border: 2px dashed #ff9800; padding: 15px; margin-top: 15px; border-radius: 6px; background-color: #fffde7; text-align: center; }
     </style>
 </head>
 <body>
@@ -153,9 +153,24 @@
             <h2>Diario Giornaliero</h2>
             <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
         </div>
+        
         <div id="backup-sezione" class="sezione">
-            <h2>Backup e Ripristino Dati</h2><p>Salva i tuoi dati in un file per sicurezza.</p><button id="btn-export">Esporta Backup</button><hr><label for="import-file">Importa da un file di backup:</label><input type="file" id="import-file" accept=".json,.txt"><div id="backup-reminder" style="display:none;"></div>
+            <h2>Sincronizzazione Dati / Backup</h2>
+            <p>Usa questi strumenti per sincronizzare i dati tra dispositivi (es. Telefono e PC) o per creare un file di backup di sicurezza.</p>
+            <hr>
+            <h3>Sincronizzazione Veloce (Consigliata)</h3>
+            <button id="btn-copy-data">1. Copia Dati</button>
+            <p>Dopo aver copiato, incolla il testo in un'app condivisa (WhatsApp, Note, Keep) per trasferirlo sull'altro dispositivo.</p>
+            <textarea id="import-textarea" placeholder="Incolla qui i dati dall'altro dispositivo..."></textarea>
+            <button id="btn-import-from-text">2. Importa da Testo</button>
+            <hr style="margin-top: 25px;">
+            <h3>Backup su File (Sicurezza)</h3>
+            <button id="btn-export">Esporta Backup su File</button>
+            <label for="import-file" style="margin-top:15px;">Importa da un file di backup:</label>
+            <input type="file" id="import-file" accept=".json,.txt">
+            <div id="backup-reminder" style="display:none;"></div>
         </div>
+
         <div id="confronto-sezione" class="sezione">
             <h2>Controllo Mensile</h2>
             <p>Registra qui le tue pesate per monitorare i progressi.</p>
@@ -205,6 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSalvaPasto = document.getElementById('btn-salva-pasto');
     const spanDeficitAttuale = document.getElementById('deficit-attuale');
     const divFeedbackDeficit = document.getElementById('feedback-deficit');
+    // Riferimenti per la nuova sincronizzazione
+    const btnCopyData = document.getElementById('btn-copy-data');
+    const importTextarea = document.getElementById('import-textarea');
+    const btnImportFromText = document.getElementById('btn-import-from-text');
 
     function salvaPastoInCostruzione() { localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); }
     function getTodayString(format = 'ymd') { const today = new Date(); if (format === 'ymd') return today.toISOString().split('T')[0]; const day = String(today.getDate()).padStart(2, '0'); const month = String(today.getMonth() + 1).padStart(2, '0'); return `${day}/${month}`; }
@@ -212,45 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
     function caricaFoodDatabase() { const dbSalvato = localStorage.getItem('trackerFoodDatabase'); if (dbSalvato) { foodDatabase = JSON.parse(dbSalvato); aggiornaDatalist(); } }
     function aggiornaDatalist() { foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); foodDatalist.appendChild(option); } }
-    
-    function archiviaGiornoPrecedente(datiDaArchiviare) {
-        const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
-        const dataArchiviazione = new Date(datiDaArchiviare.data);
-        const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()];
-        const obiettivoCalorieGiorno = pianoArchiviazione.cal;
-        const obiettivoProteineGiorno = pianoArchiviazione.prot;
-        let trendFinale = 'ok';
-        if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) {
-            trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione';
-        } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) {
-            trendFinale = 'attenzione';
-        }
-        const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie;
-        const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie;
-        const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data);
-        
-        nuovoStorico.push({
-            data: datiDaArchiviare.data,
-            tipoGiornata: pianoArchiviazione.tipo, // <-- MODIFICA CHIAVE
-            log: datiDaArchiviare.dati.log,
-            isLogExpanded: false,
-            totali: {
-                proteine: datiDaArchiviare.dati.proteine,
-                calorie: datiDaArchiviare.dati.calorie,
-                workoutCalorie: datiDaArchiviare.dati.workoutCalorie,
-                mg: datiDaArchiviare.dati.mg,
-                k: datiDaArchiviare.dati.k,
-                vitc: datiDaArchiviare.dati.vitc,
-                ca: datiDaArchiviare.dati.ca
-            },
-            obiettivi: { prot: obiettivoProteineGiorno, cal: obiettivoCalorieGiorno },
-            allenamenti: datiDaArchiviare.dati.workoutLog,
-            deficit: Math.round(deficit),
-            trend: trendFinale
-        });
-        localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico));
-        localStorage.setItem('backupNeeded', 'true');
-    }
+    function archiviaGiornoPrecedente(datiDaArchiviare) { const storico = JSON.parse(localStorage.getItem('trackerStorico')) || []; const dataArchiviazione = new Date(datiDaArchiviare.data); const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()]; const obiettivoCalorieGiorno = pianoArchiviazione.cal; const obiettivoProteineGiorno = pianoArchiviazione.prot; let trendFinale = 'ok'; if (datiDaArchiviare.dati.calorie > obiettivoCalorieGiorno * 1.05) { trendFinale = datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.9 ? 'pericolo' : 'attenzione'; } else if (datiDaArchiviare.dati.proteine < obiettivoProteineGiorno * 0.8) { trendFinale = 'attenzione'; } const TDEE_giorno = TDEE_BASE + datiDaArchiviare.dati.workoutCalorie; const deficit = TDEE_giorno - datiDaArchiviare.dati.calorie; const nuovoStorico = storico.filter(item => item.data !== datiDaArchiviare.data); nuovoStorico.push({ data: datiDaArchiviare.data, tipoGiornata: pianoArchiviazione.tipo, log: datiDaArchiviare.dati.log, isLogExpanded: false, totali: { proteine: datiDaArchiviare.dati.proteine, calorie: datiDaArchiviare.dati.calorie, workoutCalorie: datiDaArchiviare.dati.workoutCalorie, mg: datiDaArchiviare.dati.mg, k: datiDaArchiviare.dati.k, vitc: datiDaArchiviare.dati.vitc, ca: datiDaArchiviare.dati.ca }, obiettivi: { prot: obiettivoProteineGiorno, cal: obiettivoCalorieGiorno }, allenamenti: datiDaArchiviare.dati.workoutLog, deficit: Math.round(deficit), trend: trendFinale }); localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico)); localStorage.setItem('backupNeeded', 'true'); }
     
     function gestisciAvvioApp() {
         const pastoSalvato = localStorage.getItem('trackerPastoInCostruzione');
@@ -499,6 +480,43 @@ document.addEventListener('DOMContentLoaded', () => {
     mealTypeSelector.addEventListener('change', () => {
         localStorage.setItem('trackerMealType', mealTypeSelector.value);
         renderMealBuilder();
+    });
+
+    // === NUOVI LISTENER PER SINCRONIZZAZIONE ===
+    btnCopyData.addEventListener('click', () => {
+        const backupData = {
+            giornoCorrente: JSON.parse(localStorage.getItem('trackerGiornoCorrente')),
+            storico: JSON.parse(localStorage.getItem('trackerStorico')),
+            databaseAlimenti: JSON.parse(localStorage.getItem('trackerFoodDatabase')),
+            pastoInCostruzione: JSON.parse(localStorage.getItem('trackerPastoInCostruzione')),
+            mealType: localStorage.getItem('trackerMealType')
+        };
+        navigator.clipboard.writeText(JSON.stringify(backupData, null, 2))
+            .then(() => alert('Dati copiati negli appunti!\n\nOra incollali in WhatsApp o nella tua app di note per trasferirli.'))
+            .catch(err => alert('Errore: impossibile copiare i dati. Prova a usare il backup su file.'));
+    });
+
+    btnImportFromText.addEventListener('click', () => {
+        const textToImport = importTextarea.value;
+        if (!textToImport) {
+            alert('L_area di testo è vuota. Incolla i dati prima di importare.');
+            return;
+        }
+        if (!confirm("Sei sicuro di voler sovrascrivere i dati attuali con quelli incollati?")) return;
+
+        try {
+            const backupData = JSON.parse(textToImport);
+            if (backupData.giornoCorrente) localStorage.setItem('trackerGiornoCorrente', JSON.stringify(backupData.giornoCorrente));
+            if (backupData.storico) localStorage.setItem('trackerStorico', JSON.stringify(backupData.storico));
+            if (backupData.databaseAlimenti) localStorage.setItem('trackerFoodDatabase', JSON.stringify(backupData.databaseAlimenti));
+            if (backupData.pastoInCostruzione) localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(backupData.pastoInCostruzione));
+            if (backupData.mealType) localStorage.setItem('trackerMealType', backupData.mealType);
+
+            alert("Dati importati con successo! La pagina verrà ricaricata.");
+            location.reload();
+        } catch (error) {
+            alert("Errore: il testo incollato non è valido. Assicurati di aver copiato l_intera stringa.");
+        }
     });
 
     btnExport.addEventListener('click', esportaDati);
