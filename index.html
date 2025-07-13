@@ -518,6 +518,49 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
     // Assicurati che l'input data sia impostato al giorno corrente all'avvio
     dataCaricamentoInput.value = getTodayString('ymd');
 
+// --- FUNZIONE DI MIGRAZIONE VECCHIO STORICO A NUOVO FORMATO ---
+    function eseguiMigrazioneStorico() {
+        const vecchioStoricoRaw = localStorage.getItem('trackerStorico');
+        
+        if (vecchioStoricoRaw) { // Se la vecchia chiave 'trackerStorico' esiste
+            try {
+                const vecchioStorico = JSON.parse(vecchioStoricoRaw);
+
+                if (Array.isArray(vecchioStorico)) { // Assicurati che sia un array
+                    console.log("Trovato vecchio formato storico. Avvio migrazione...");
+
+                    vecchioStorico.forEach(giorno => {
+                        if (giorno.data && giorno.log) { // Assicurati che l'oggetto giorno sia valido
+                            // Salva ogni giorno nel nuovo formato trackerStorico_YYYY-MM-DD
+                            localStorage.setItem(`trackerStorico_${giorno.data}`, JSON.stringify(giorno));
+                            console.log(`Migrato giorno: ${giorno.data}`);
+                        }
+                    });
+
+                    // Una volta migrato, rimuovi la vecchia chiave per evitare future migrazioni e confusione
+                    localStorage.removeItem('trackerStorico');
+                    console.log("Migrazione completata. Vecchia chiave 'trackerStorico' rimossa.");
+                    alert("Lo storico è stato aggiornato al nuovo formato! Ricarica la pagina per visualizzare tutti i dati.");
+                } else {
+                    console.warn("La chiave 'trackerStorico' esiste ma non contiene un array valido. Nessuna migrazione necessaria.");
+                }
+            } catch (e) {
+                console.error("Errore durante il parsing del vecchio storico per la migrazione:", e);
+                // Potresti voler rimuovere la chiave corrotta qui, ma fallo con cautela
+                // localStorage.removeItem('trackerStorico');
+            }
+        } else {
+            console.log("Nessun vecchio formato storico da migrare trovato.");
+        }
+    }
+
+    // --- Chiamata alla funzione di migrazione all'avvio dell'app ---
+    // Eseguila PRIMA di caricare il giorno corrente o qualsiasi altra operazione che legga lo storico
+    eseguiMigrazioneStorico();
+
+    gestisciAvvioApp(); // Questa rimane come ultima riga di inizializzazione
+
+    
     // Inizializza l'applicazione
     gestisciAvvioApp();
 });
