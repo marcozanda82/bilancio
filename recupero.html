@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recupero Dati Giornalieri</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
+        h2 { font-size: 1.4em; margin-top: 30px; }
+        #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
+        .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input[type="text"], input[type="number"], input[type="date"], select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
+        button:hover { background-color: #1565c0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        th { background-color: #f2f2f2; }
+        .delete-btn { background-color: transparent; border: none; color: #d32f2f; font-size: 1.4em; cursor: pointer; }
+        #btn-archivia { width: 100%; margin-top: 20px; background-color: #c62828; font-weight: bold; }
+        #btn-archivia:hover { background-color: #b71c1c; }
+        .warning-box { background-color: #fff3e0; border: 2px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="warning-box">
+            ATTENZIONE: Stai usando la pagina di recupero per la data del 12/07/2025.
+            Usa il pulsante "Archivia" qui sotto quando hai finito, poi torna al file index.html
+        </div>
+        <h1>Tracker Nutrizionale - Modalità Recupero</h1>
+        <h2 id="titolo-giornata"></h2>
+        
+        <div id="riepilogo" class="sezione">
+            <h2>Riepilogo del <span id="data-corrente-display"></span></h2>
+            <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
+            <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+            <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
+        </div>
+
+        <div id="food-adder" class="sezione">
+            <h2>Aggiungi Alimento</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
+                <div><label>Quantità (g)</label><input type="number" id="builder-qta"></div>
+                <div><label>Proteine/100g</label><input type="number" id="builder-prot"></div>
+                <div><label>Kcal/100g</label><input type="number" id="builder-kcal"></div>
+            </div>
+            <datalist id="food-database-list"></datalist>
+            <button id="btn-aggiungi-singolo" style="width:100%; margin-top:15px;">Aggiungi al Diario</button>
+        </div>
+
+        <div class="sezione">
+            <h2>Diario Giornaliero</h2>
+            <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
+            <button id="btn-archivia">Archivia e Chiudi Giornata del 12/07</button>
+        </div>
+        
+        <div class="sezione">
+            <h2>Registra Allenamento</h2>
+            <form id="form-allenamento"><input type="text" id="descrizione-allenamento" placeholder="Descrizione"><input type="number" id="calorie-bruciate" placeholder="Calorie Bruciate"><button type="submit">Aggiungi</button></form>
+            <table id="log-allenamenti" style="display:none;"><thead><tr><th>Descrizione</th><th>Calorie</th><th>Azione</th></tr></thead><tbody id="log-allenamenti-body"></tbody></table>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const PIANO_SETTIMANALE = {0:{t:'💧 R',c:1700,p:110},1:{t:'🔥 F',c:2400,p:140},2:{t:'🔥 F',c:2400,p:140},3:{t:'🔥 H',c:2400,p:140},4:{t:'🔥 F',c:2400,p:140},5:{t:'🔥 F',c:2400,p:140},6:{t:'💧 C',c:1700,p:110}};
+    const TDEE_BASE = 2311;
+    const DATA_RECUPERO = "2025-07-12"; // DATA BLOCCATA
+
+    let datiGiornalieri, foodDatabase;
+    
+    function initApp() {
+        foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
+        const giornoSalvato = JSON.parse(localStorage.getItem('recuperoGiorno'));
+        
+        if (giornoSalvato && giornoSalvato.data === DATA_RECUPERO) {
+            datiGiornalieri = giornoSalvato.dati;
+        } else {
+            datiGiornalieri = { log: [], workoutLog: [] };
+        }
+        aggiornaUI();
+    }
+
+    function salvaStato() {
+        localStorage.setItem('recuperoGiorno', JSON.stringify({ data: DATA_RECUPERO, dati: datiGiornalieri }));
+        localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase));
+    }
+
+    function aggiornaUI() {
+        const dataFissa = new Date(DATA_RECUPERO);
+        const pianoOggi = PIANO_SETTIMANALE[dataFissa.getDay()];
+        document.getElementById('titolo-giornata').textContent = pianoOggi.t;
+        document.getElementById('data-corrente-display').textContent = dataFissa.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+        
+        const totali = datiGiornalieri.log.reduce((acc, item) => { acc.proteine += item.prot; acc.calorie += item.cal; return acc; }, { proteine: 0, calorie: 0 });
+        const workoutCal = datiGiornalieri.workoutLog.reduce((acc, item) => acc + item.cal, 0);
+
+        document.getElementById('obiettivo-proteine').textContent = pianoOggi.p;
+        document.getElementById('obiettivo-calorie').textContent = pianoOggi.c;
+        document.getElementById('totale-proteine').textContent = totali.proteine.toFixed(1);
+        document.getElementById('totale-calorie').textContent = totali.calorie.toFixed(0);
+        document.getElementById('workout-calories-totali').textContent = workoutCal;
+        
+        const logBody = document.getElementById('log-body');
+        logBody.innerHTML = '';
+        datiGiornalieri.log.forEach((item, index) => { logBody.innerHTML += `<tr><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td><button class="delete-btn" data-type="log" data-index="${index}">&times;</button></td></tr>`; });
+
+        const logAllenamentiBody = document.getElementById('log-allenamenti-body');
+        document.getElementById('log-allenamenti').style.display = datiGiornalieri.workoutLog.length > 0 ? 'table' : 'none';
+        logAllenamentiBody.innerHTML = '';
+        datiGiornalieri.workoutLog.forEach((item, index) => { logAllenamentiBody.innerHTML += `<tr><td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="workout" data-index="${index}">&times;</button></td></tr>`; });
+        
+        const datalist = document.getElementById('food-database-list');
+        datalist.innerHTML = '';
+        Object.keys(foodDatabase).forEach(key => datalist.innerHTML += `<option value="${key.charAt(0).toUpperCase() + key.slice(1)}">`);
+    }
+
+    document.getElementById('btn-aggiungi-singolo').addEventListener('click', () => {
+        const desc = document.getElementById('builder-desc').value.trim();
+        const qta = parseFloat(document.getElementById('builder-qta').value) || 0;
+        if (!desc || qta <= 0) return alert('Inserisci nome e quantità.');
+
+        const p100 = parseFloat(document.getElementById('builder-prot').value) || 0;
+        const k100 = parseFloat(document.getElementById('builder-kcal').value) || 0;
+        
+        datiGiornalieri.log.push({ desc, qta, prot: (p100/100)*qta, cal: (k100/100)*qta });
+        if (p100 > 0 || k100 > 0) foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100 };
+        
+        salvaStato();
+        aggiornaUI();
+        ['builder-desc', 'builder-qta', 'builder-prot', 'builder-kcal'].forEach(id => document.getElementById(id).value = '');
+    });
+    
+    document.getElementById('builder-desc').addEventListener('input', (e) => {
+        const foodData = foodDatabase[e.target.value.toLowerCase()];
+        if (foodData) {
+            document.getElementById('builder-prot').value = foodData.prot || '';
+            document.getElementById('builder-kcal').value = foodData.kcal || '';
+        }
+    });
+
+    document.getElementById('form-allenamento').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const desc = document.getElementById('descrizione-allenamento').value || 'Allenamento';
+        const cal = parseInt(document.getElementById('calorie-bruciate').value, 10);
+        if (cal > 0) { datiGiornalieri.workoutLog.push({ desc, cal }); salvaStato(); aggiornaUI(); e.target.reset(); }
+    });
+
+    document.querySelector('.container').addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-btn')) {
+            const type = e.target.dataset.type;
+            const index = parseInt(e.target.dataset.index, 10);
+            if(type === 'log') datiGiornalieri.log.splice(index, 1);
+            if(type === 'workout') datiGiornalieri.workoutLog.splice(index, 1);
+            salvaStato();
+            aggiornaUI();
+        }
+    });
+    
+    document.getElementById('btn-archivia').addEventListener('click', () => {
+        if (datiGiornalieri.log.length === 0) return alert("Nessun dato da archiviare.");
+        if (!confirm("Sei sicuro di voler archiviare i dati del 12/07? L'operazione è irreversibile.")) return;
+
+        const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
+        const totali = datiGiornalieri.log.reduce((acc, item) => { acc.proteine += item.prot; acc.calorie += item.cal; return acc; }, { proteine: 0, calorie: 0 });
+        const workoutCal = datiGiornalieri.workoutLog.reduce((acc, item) => acc + item.cal, 0);
+        const pianoDelGiorno = PIANO_SETTIMANALE[new Date(DATA_RECUPERO).getDay()];
+        const deficit = (TDEE_BASE + workoutCal) - totali.calorie;
+
+        storico.push({
+            data: DATA_RECUPERO,
+            tipoGiornata: pianoDelGiorno.t,
+            log: datiGiornalieri.log,
+            totali: { proteine: totali.proteine, calorie: totali.calorie, workoutCalorie: workoutCal },
+            obiettivi: { prot: pianoDelGiorno.p, cal: pianoDelGiorno.c },
+            deficit: Math.round(deficit)
+        });
+        
+        localStorage.setItem('trackerStorico', JSON.stringify(storico));
+        localStorage.removeItem('recuperoGiorno'); // Pulisce i dati temporanei del recupero
+        alert("Dati del 12/07 archiviati con successo! Ora puoi chiudere questa pagina e tornare a index.html");
+    });
+
+    initApp();
+});
+</script>
+</body>
+</html>
