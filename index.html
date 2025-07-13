@@ -575,7 +575,13 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
     // --- Chiamata alla funzione di migrazione all'avvio dell'app ---
     // Eseguila PRIMA di caricare il giorno corrente o qualsiasi altra operazione che legga lo storico
     eseguiMigrazioneStorico();
-
+ // --- Salva i dati prima che la pagina venga scaricata ---
+    window.addEventListener('beforeunload', () => {
+        salvaGiorno(giornoVisualizzato, datiGiornalieri);
+        salvaPastoInCostruzione(); // Assicurati di salvare anche il pasto in costruzione
+        salvaFoodDatabase(); // Salva anche il database degli alimenti
+    });
+    // --- Fine salvataggio automatico ---
     gestisciAvvioApp(); // Questa rimane come ultima riga di inizializzazione
 
     
