@@ -26,6 +26,7 @@
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         .action-btn { background:0; border:0; font-size:1.3em; cursor:pointer; padding: 0 5px; }
         .delete-btn { color:#d32f2f; }
+        .edit-btn { color: #1976d2; }
         .builder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .button-group { display: flex; gap: 10px; margin-top: 15px; }
         #btn-costruisci-pasto { background-color: #ff8f00; }
@@ -145,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pEl = dom[`progress_${key}`];
             if (pEl) pEl.value = totali[key];
         });
-        
+
         const workoutCal = (datiGiornalieri.workoutLog || []).reduce((acc, w) => acc + w.cal, 0);
         dom.workout_calories_totali.textContent = workoutCal;
 
@@ -158,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.log_allenamenti.style.display = (datiGiornalieri.workoutLog || []).length > 0 ? 'table' : 'none';
         dom.log_allenamenti_body.innerHTML = '';
         (datiGiornalieri.workoutLog || []).forEach((item, index) => {
-            dom.log_allenamenti_body.insertRow().innerHTML = `<td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="workout" data-index="${index}">&times;</button></td>`;
+            dom.log_allenamenti_body.insertRow().innerHTML = `<td>${item.desc}</td><td>${item.cal}</td><td><button class="action-btn delete-btn" data-type="workout" data-index="${index}">&times;</button></td>`;
         });
 
         dom.food_database_list.innerHTML = Object.keys(foodDatabase).map(key => `<option value="${key.charAt(0).toUpperCase() + key.slice(1)}">`).join('');
