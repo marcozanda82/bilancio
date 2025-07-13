@@ -163,15 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('btn-archivia').addEventListener('click', () => {
         if (datiGiornalieri.log.length === 0) return alert("Nessun dato da archiviare.");
-        if (!confirm("Sei sicuro di voler archiviare i dati del 12/07? L'operazione è irreversibile.")) return;
+        if (!confirm(`Sei sicuro di voler archiviare i dati del 12/07? L'operazione è irreversibile.`)) return;
 
         const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
+        // --- LOGICA DI SOVRASCRITTURA CORRETTA ---
+        const nuovoStorico = storico.filter(item => item.data !== DATA_RECUPERO);
+
         const totali = datiGiornalieri.log.reduce((acc, item) => { acc.proteine += item.prot; acc.calorie += item.cal; return acc; }, { proteine: 0, calorie: 0 });
         const workoutCal = datiGiornalieri.workoutLog.reduce((acc, item) => acc + item.cal, 0);
         const pianoDelGiorno = PIANO_SETTIMANALE[new Date(DATA_RECUPERO).getDay()];
         const deficit = (TDEE_BASE + workoutCal) - totali.calorie;
 
-        storico.push({
+        nuovoStorico.push({
             data: DATA_RECUPERO,
             tipoGiornata: pianoDelGiorno.t,
             log: datiGiornalieri.log,
@@ -180,9 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
             deficit: Math.round(deficit)
         });
         
-        localStorage.setItem('trackerStorico', JSON.stringify(storico));
-        localStorage.removeItem('recuperoGiorno'); // Pulisce i dati temporanei del recupero
+        localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico));
+        localStorage.removeItem('recuperoGiorno'); 
         alert("Dati del 12/07 archiviati con successo! Ora puoi chiudere questa pagina e tornare a index.html");
+        // Disabilita il pulsante per evitare salvataggi multipli accidentali
+        document.getElementById('btn-archivia').disabled = true;
+        document.getElementById('btn-archivia').textContent = "Archiviato!";
     });
 
     initApp();
