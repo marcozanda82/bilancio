@@ -10,41 +10,21 @@
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
         h2 { font-size: 1.4em; margin-top: 30px; }
         h3 { font-size: 1.1em; color: #333; border-bottom: 1px solid #eee; margin-top: 20px; }
-        #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input[type="text"], input[type="number"], input[type="date"], select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
-        input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+        input[type="text"], input[type="number"], input[type="date"], input[type="url"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
         button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
         button:hover { background-color: #1565c0; }
-        #form-allenamento button { background-color: #2e7d32; }
-        #form-allenamento button:hover { background-color: #1b5e20; }
-        .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
-        .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        #riepilogo p { font-size: 1.1em; margin: 8px 0; }
-        #riepilogo .valore-consumato { font-weight: 600; color: #1976d2; }
-        #riepilogo .valore-bruciato { font-weight: 600; color: #2e7d32; }
-        #riepilogo .valore-deficit { font-weight: 600; color: #0d47a1; }
-        progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
-        progress.macro-progress { height: 25px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
-        th { background-color: #f2f2f2; font-weight: 600; }
-        .delete-btn { background-color: transparent; border: none; color: #d32f2f; font-size: 1.3em; font-weight: bold; cursor: pointer; padding: 0 8px; border-radius: 50%; line-height: 1; }
-        .delete-btn:hover { background-color: #ffebee; color: #b71c1c; }
-        .proiezione-ok { border-left-color: #4caf50; } .proiezione-attenzione { border-left-color: #ff9800; } .proiezione-pericolo { border-left-color: #f44336; } .proiezione-neutra { border-left-color: #9e9e9e; }
-        .builder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-        .button-group { display: flex; gap: 10px; margin-top: 15px; }
-        #btn-costruisci-pasto { background-color: #ff8f00; } #btn-costruisci-pasto:hover { background-color: #e65100; }
-        #btn-aggiungi-singolo { background-color: #5c6bc0; } #btn-aggiungi-singolo:hover { background-color: #3949ab; }
-        #meal-builder-sezione[data-visible="false"] { display: none; }
-        #meal-builder-sezione { border-left-color: #ff8f00; }
-        #btn-salva-pasto { background-color: #2e7d32; } #btn-salva-pasto:hover { background-color: #1b5e20; }
         #firebase-sezione { border-left-color: #f57c00; }
         #firebase-status { padding: 10px; margin-top: 10px; border-radius: 6px; text-align: center; font-weight: 600; }
         .status-connected { background-color: #e8f5e9; color: #2e7d32; }
         .status-disconnected { background-color: #ffebee; color: #c62828; }
         .app-content.disabled { opacity: 0.4; pointer-events: none; }
+        .config-grid { display: grid; grid-template-columns: 1fr; gap: 5px 15px; }
+        .config-grid label { margin-bottom: 2px; font-size: 0.9em; }
+        .config-grid input { margin-bottom: 5px; }
+        .config-help { font-size: 0.8em; color: #666; margin: 0 0 10px 0; }
+        /* Aggiungi qui il resto del tuo CSS originale */
     </style>
 </head>
 <body>
@@ -52,67 +32,29 @@
         <h1>Tracker Nutrizionale 🌩️ Cloud</h1>
         <div id="firebase-sezione" class="sezione">
             <h2>Sincronizzazione Cloud</h2>
-            <div id="firebase-status" class="status-disconnected">Inserisci la configurazione per iniziare.</div>
-            <details style="margin-top: 15px;">
-                <summary style="cursor: pointer; color: #555;">Configurazione Firebase</summary>
-                <div style="margin-top: 10px;">
-                    <p style="font-size: 0.9em; color: #777;">Incolla qui l'oggetto di configurazione del tuo progetto Firebase.</p>
-                    <textarea id="firebase-config-json" rows="8" style="font-family: monospace; font-size: 0.9em;"></textarea>
-                    <button id="btn-save-config">Connetti</button>
+            <div id="firebase-status" class="status-disconnected">Inserisci i dati di connessione.</div>
+            
+            <div class="config-grid">
+                <div>
+                    <label for="fb-api-key">API Key</label>
+                    <input type="text" id="fb-api-key" placeholder="La tua API Key">
                 </div>
-            </details>
+                <div>
+                    <label for="fb-project-id">Project ID</label>
+                    <input type="text" id="fb-project-id" placeholder="Il tuo ID Progetto">
+                </div>
+                <div>
+                    <label for="fb-database-url">Database URL</label>
+                    <input type="url" id="fb-database-url" placeholder="https://nome-db.firebaseio.com">
+                </div>
+            </div>
+            <p class="config-help">Trovi questi valori nelle impostazioni del tuo progetto Firebase (icona ⚙️) e nella sezione Realtime Database.</p>
+            <button id="btn-save-config">Connetti</button>
         </div>
 
         <div id="app-content" class="app-content disabled">
             <h2 id="titolo-giornata"></h2>
-            <div class="nav-links">
-                <a href="storico.html">📊 Storico Giornaliero</a>
-                <a href="confronto.html">📈 Confronto Mensile</a>
             </div>
-            <div id="proiezione" class="sezione proiezione-neutra">
-                 <h2>Proiezione del Trend</h2>
-                 <p id="testo-proiezione">Inizia a registrare i dati.</p>
-            </div>
-            <div id="riepilogo" class="sezione">
-                 <h2>Riepilogo di Oggi</h2>
-                 <p>Proteine: <span id="totale-proteine" class="valore-consumato">0</span> / <span id="obiettivo-proteine"></span> g</p>
-                 <progress id="progress-proteine" class="macro-progress" value="0"></progress>
-                 <p>Calorie: <span id="totale-calorie" class="valore-consumato">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
-                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
-                 <p>Workout: <span id="workout-calories-totali" class="valore-bruciato">0</span> kcal</p>
-            </div>
-            <div id="food-adder" class="sezione">
-                 <h2>Aggiungi Alimento</h2>
-                 <div class="builder-grid">
-                    <div><label>Alimento</label><input type="text" id="builder-desc" placeholder="es. Pollo" list="food-database-list"></div>
-                    <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
-                    <div><label>Proteine/100g</label><input type="number" id="builder-prot" min="0" step="0.1"></div>
-                    <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
-                 </div>
-                 <datalist id="food-database-list"></datalist>
-                 <div class="button-group">
-                    <button id="btn-costruisci-pasto">Costruisci Pasto</button>
-                    <button id="btn-aggiungi-singolo">Aggiungi al Diario</button>
-                 </div>
-            </div>
-            <div id="meal-builder-sezione" class="sezione" data-visible="false">
-                 <h2>Costruttore Pasto</h2>
-                 <table id="log-pasto-builder">
-                    <thead><tr><th>Sel.</th><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
-                    <tbody id="log-pasto-builder-body"></tbody>
-                 </table>
-                 <button id="btn-salva-pasto">Aggiungi Pasto al Diario</button>
-            </div>
-            <div class="sezione">
-                 <h2>Registra Allenamento</h2>
-                 <form id="form-allenamento"><input type="text" id="descrizione-allenamento" placeholder="Descrizione Allenamento"><input type="number" id="calorie-bruciate" min="0" required placeholder="Calorie Bruciate (kcal)"><button type="submit">Aggiungi Allenamento</button></form>
-                 <table id="log-allenamenti"><thead><tr><th>Data</th><th>Descrizione</th><th>Calorie Bruciate</th><th>Azione</th></tr></thead><tbody id="log-allenamenti-body"></tbody></table>
-            </div>
-            <div class="sezione">
-                 <h2>Diario Giornaliero</h2>
-                 <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
-            </div>
-        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
@@ -121,68 +63,73 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // STATO GLOBALE E COSTANTI
+        // --- STATO GLOBALE ---
         let db, isFirebaseReady = false, listeners = {};
-        const PIANO_SETTIMANALE = { 0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, 1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 2: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 3: { tipo: '🔥 HIIT/Core (Mantenimento)', cal: 2400, prot: 140 }, 4: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 5: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 6: { tipo: '💧 Cardio LISS (Deficit)', cal: 1700, prot: 110 } };
-        const pianoOggi = PIANO_SETTIMANALE[new Date().getDay()];
-        const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal };
         
-        // Variabili di stato popolate da Firebase
-        let datiGiornalieri = { proteine: 0, calorie: 0, log: [], workoutCalorie: 0, workoutLog: [] };
-        let foodDatabase = {};
-        let pastoInCostruzione = [];
-
-        // ELEMENTI DEL DOM
-        const firebaseConfigTextarea = document.getElementById('firebase-config-json');
+        // --- ELEMENTI DEL DOM ---
+        const fbApiKeyInput = document.getElementById('fb-api-key');
+        const fbProjectIdInput = document.getElementById('fb-project-id');
+        const fbDatabaseUrlInput = document.getElementById('fb-database-url');
         const btnSaveConfig = document.getElementById('btn-save-config');
         const firebaseStatusDiv = document.getElementById('firebase-status');
         const appContentDiv = document.getElementById('app-content');
-        const titoloGiornataEl = document.getElementById('titolo-giornata');
-        const proiezioneDiv = document.getElementById('proiezione'), testoProiezione = document.getElementById('testo-proiezione');
-        const formAllenamento = document.getElementById('form-allenamento');
-        const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
-        const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
-        const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
-        const spanWorkoutCalories = document.getElementById('workout-calories-totali');
-        const logBody = document.getElementById('log-body');
-        const logAllenamentiBody = document.getElementById('log-allenamenti-body');
-        const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
-        const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
-        const foodDatalist = document.getElementById('food-database-list');
-        const btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
-        const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
-        const mealBuilderSezione = document.getElementById('meal-builder-sezione');
-        const logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
-        const btnSalvaPasto = document.getElementById('btn-salva-pasto');
+        // ... (tutti gli altri elementi del DOM della tua app)
 
-        // LOGICA DI INIZIALIZZAZIONE
+        // --- LOGICA DI INIZIALIZZAZIONE ---
         document.addEventListener('DOMContentLoaded', () => {
             const savedConfig = localStorage.getItem('firebaseConfig');
             if (savedConfig) {
                 try {
-                    initFirebase(JSON.parse(savedConfig));
-                } catch (e) { localStorage.removeItem('firebaseConfig'); }
+                    const config = JSON.parse(savedConfig);
+                    // Popola i campi di input con i valori salvati
+                    fbApiKeyInput.value = config.apiKey || '';
+                    fbProjectIdInput.value = config.projectId || '';
+                    fbDatabaseUrlInput.value = config.databaseURL || '';
+                    initFirebase(config);
+                } catch (e) {
+                    localStorage.removeItem('firebaseConfig');
+                }
             }
             btnSaveConfig.addEventListener('click', handleConnectClick);
         });
 
         function handleConnectClick() {
-            try {
-                const config = JSON.parse(firebaseConfigTextarea.value);
-                initFirebase(config);
-                localStorage.setItem('firebaseConfig', JSON.stringify(config));
-            } catch (e) { updateFirebaseStatus(false, "Configurazione non valida."); }
+            const apiKey = fbApiKeyInput.value.trim();
+            const projectId = fbProjectIdInput.value.trim();
+            const databaseURL = fbDatabaseUrlInput.value.trim();
+
+            if (!apiKey || !projectId || !databaseURL) {
+                alert("Per favore, compila tutti e tre i campi di configurazione.");
+                return;
+            }
+
+            const config = { apiKey, projectId, databaseURL };
+            
+            initFirebase(config);
+            localStorage.setItem('firebaseConfig', JSON.stringify(config));
         }
 
         function initFirebase(config) {
             try {
+                // Pulisci eventuali app precedenti per evitare errori di reinizializzazione
+                // Nelle versioni più recenti questo non è strettamente necessario ma è una buona pratica
                 const app = initializeApp(config);
                 db = getDatabase(app);
                 isFirebaseReady = true;
                 updateFirebaseStatus(true, "Connesso a Firebase.");
-                loadAllData();
-                wireUpEventListeners();
-            } catch (error) { updateFirebaseStatus(false, `Errore: ${error.code}`); }
+                // CHIAMATE PER CARICARE I DATI E ATTIVARE L'APP
+                // loadAllData(); 
+                // wireUpEventListeners();
+            } catch (error) {
+                isFirebaseReady = false;
+                // Fornisce un errore più specifico se possibile
+                if (error.code === 'auth/invalid-api-key') {
+                    updateFirebaseStatus(false, "API Key non valida.");
+                } else {
+                    updateFirebaseStatus(false, `Errore: ${error.code}`);
+                }
+                console.error("Errore Inizializzazione Firebase:", error);
+            }
         }
         
         function updateFirebaseStatus(isConnected, message) {
@@ -191,186 +138,10 @@
             appContentDiv.classList.toggle('disabled', !isConnected);
         }
 
-        // GESTIONE DATI FIREBASE
-        function loadAllData() {
-            listenToData('foodDatabase', data => { foodDatabase = data || {}; aggiornaDatalist(); });
-            listenToData('pastoInCostruzione', data => { pastoInCostruzione = data || []; renderMealBuilder(); });
-            const oggi = getTodayString('ymd');
-            listenToData(`giorni/${oggi}`, data => {
-                datiGiornalieri = data || { proteine: 0, calorie: 0, log: [], workoutCalorie: 0, workoutLog: [] };
-                aggiornaUI();
-            });
-        }
+        // --- INSERISCI QUI IL RESTO DEL TUO SCRIPT ---
+        // (Le funzioni wireUpEventListeners, loadAllData, aggiornaUI, etc.
+        // non cambiano e vanno inserite qui per intero)
 
-        function listenToData(path, callback) {
-            if (!isFirebaseReady) return;
-            if (listeners[path]) listeners[path]();
-            listeners[path] = onValue(ref(db, path), snapshot => callback(snapshot.val()));
-        }
-
-        function saveData(path, data) {
-            if (!isFirebaseReady) return Promise.reject("Not connected");
-            return set(ref(db, path), data);
-        }
-
-        // COLLEGAMENTO EVENTI DELL'APP
-        function wireUpEventListeners() {
-            btnAggiungiSingolo.addEventListener('click', handleAggiungiSingolo);
-            btnCostruisciPasto.addEventListener('click', handleCostruisciPasto);
-            btnSalvaPasto.addEventListener('click', handleSalvaPasto);
-            formAllenamento.addEventListener('submit', handleAllenamento);
-            builderDesc.addEventListener('input', e => {
-                const foodData = foodDatabase[e.target.value.toLowerCase()];
-                if (foodData) {
-                    builderProt.value = foodData.prot || '';
-                    builderKcal.value = foodData.kcal || '';
-                }
-            });
-            document.body.addEventListener('click', e => {
-                if (e.target.classList.contains('delete-btn')) {
-                    handleDelete(e.target.dataset.type, parseInt(e.target.dataset.index));
-                }
-            });
-            logPastoBuilderBody.addEventListener('change', e => {
-                if (e.target.classList.contains('builder-item-checkbox')) {
-                    const index = parseInt(e.target.dataset.index);
-                    if (pastoInCostruzione[index]) {
-                        pastoInCostruzione[index].selezionato = e.target.checked;
-                        saveData('pastoInCostruzione', pastoInCostruzione);
-                    }
-                }
-            });
-        }
-
-        // GESTORI EVENTI (ACTIONS)
-        function handleAggiungiSingolo() {
-            const item = creaAlimentoDaInput(true);
-            if (!item) return;
-            const oggi = getTodayString('ymd');
-            datiGiornalieri.log.push(item);
-            saveData(`giorni/${oggi}`, datiGiornalieri);
-            resetInputAlimento();
-        }
-        
-        function handleCostruisciPasto() {
-            const item = creaAlimentoDaInput(false);
-            if (!item) return;
-            pastoInCostruzione.push(item);
-            saveData('pastoInCostruzione', pastoInCostruzione);
-            resetInputAlimento();
-        }
-
-        function handleSalvaPasto() {
-            const alimentiSelezionati = pastoInCostruzione.filter(item => item.selezionato);
-            if (alimentiSelezionati.length === 0) return alert("Nessun alimento selezionato.");
-            
-            datiGiornalieri.log.push(...alimentiSelezionati);
-            const oggi = getTodayString('ymd');
-            saveData(`giorni/${oggi}`, datiGiornalieri).then(() => {
-                saveData('pastoInCostruzione', []);
-            });
-        }
-
-        function handleAllenamento(e) {
-            e.preventDefault();
-            const cal = parseInt(document.getElementById('calorie-bruciate').value, 10);
-            if (!isNaN(cal) && cal > 0) {
-                datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + cal;
-                const oggi = getTodayString('ymd');
-                saveData(`giorni/${oggi}`, datiGiornalieri);
-            }
-            e.target.reset();
-        }
-
-        function handleDelete(type, index) {
-            if (!confirm('Cancellare la voce?')) return;
-            if (type === 'builder' && pastoInCostruzione[index]) {
-                pastoInCostruzione.splice(index, 1);
-                saveData('pastoInCostruzione', pastoInCostruzione);
-            } else if (type === 'pasto' && datiGiornalieri.log[index]) {
-                datiGiornalieri.log.splice(index, 1);
-                const oggi = getTodayString('ymd');
-                saveData(`giorni/${oggi}`, datiGiornalieri);
-            }
-        }
-        
-        // FUNZIONI DI UTILITY E RENDERING
-        function creaAlimentoDaInput(isSingle) {
-            const desc = builderDesc.value.trim();
-            const qta = parseFloat(builderQta.value) || 0;
-            if (!desc || qta <= 0) { alert('Inserisci nome e quantità.'); return null; }
-            const p100 = parseFloat(builderProt.value) || 0;
-            const k100 = parseFloat(builderKcal.value) || 0;
-            if (p100 > 0 || k100 > 0) {
-                foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100 };
-                saveData('foodDatabase', foodDatabase);
-            }
-            const foodItem = { desc, qta, prot: (p100 / 100) * qta, cal: (k100 / 100) * qta };
-            if (!isSingle) foodItem.selezionato = true;
-            return foodItem;
-        }
-
-        function resetInputAlimento() {
-            [builderDesc, builderQta, builderProt, builderKcal].forEach(el => el.value = '');
-            builderDesc.focus();
-        }
-
-        function getTodayString(format = 'ymd') {
-            return new Date().toISOString().split('T')[0];
-        }
-
-        function aggiornaDatalist() {
-            foodDatalist.innerHTML = '';
-            for (const foodName in foodDatabase) {
-                const option = document.createElement('option');
-                option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1);
-                foodDatalist.appendChild(option);
-            }
-        }
-        
-        function aggiornaUI() {
-            if (!isFirebaseReady) return;
-            
-            // Calcola totali
-            let totali = (datiGiornalieri.log || []).reduce((acc, item) => {
-                acc.proteine += item.prot;
-                acc.calorie += item.cal;
-                return acc;
-            }, { proteine: 0, calorie: 0 });
-            
-            // Aggiorna Riepilogo
-            titoloGiornataEl.textContent = pianoOggi.tipo;
-            spanObiettivoProteine.textContent = OBIETTIVI.prot;
-            spanObiettivoCalorie.textContent = OBIETTIVI.cal;
-            spanTotaleProteine.textContent = totali.proteine.toFixed(1);
-            spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
-            progressProteine.max = OBIETTIVI.prot;
-            progressProteine.value = totali.proteine;
-            progressCalorie.max = OBIETTIVI.cal;
-            progressCalorie.value = totali.calorie;
-            spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie || 0;
-
-            // Aggiorna Diario
-            logBody.innerHTML = '';
-            (datiGiornalieri.log || []).forEach((entry, index) => {
-                const riga = logBody.insertRow();
-                riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td><td><button class="delete-btn" data-type="pasto" data-index="${index}">&times;</button></td>`;
-            });
-        }
-
-        function renderMealBuilder() {
-            if (pastoInCostruzione.length === 0) {
-                mealBuilderSezione.dataset.visible = 'false';
-                return;
-            }
-            mealBuilderSezione.dataset.visible = 'true';
-            logPastoBuilderBody.innerHTML = '';
-            pastoInCostruzione.forEach((item, index) => {
-                const riga = logPastoBuilderBody.insertRow();
-                const checkedAttr = item.selezionato ? 'checked' : '';
-                riga.innerHTML = `<td><input type="checkbox" class="builder-item-checkbox" data-index="${index}" ${checkedAttr}></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`;
-            });
-        }
     </script>
 </body>
 </html>
