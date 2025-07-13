@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let testoVariazioneGrasso = '';
 
             // 7.7 kcal per 1g di grasso (1kg = 7700 kcal, 1g = 7.7 kcal)
-            if (deficitArroronndato < 0) { // Se il deficit è negativo (hai consumato meno calorie del bisogno), stai perdendo grasso
+            if (deficitArrotondato < 0) { // Se il deficit è negativo (hai consumato meno calorie del bisogno), stai perdendo grasso
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
                 testoVariazioneGrasso = '-' + variazioneGrasso.toFixed(1) + ' g';
             } else if (deficitArrotondato > 0) { // Se il deficit è positivo (hai consumato più calorie del bisogno), stai guadagnando grasso
