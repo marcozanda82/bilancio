@@ -77,24 +77,24 @@ document.addEventListener('DOMContentLoaded', () => {
     storico.sort((a, b) => new Date(b.data) - new Date(a.data));
 
     storico.forEach((giorno, giornoIndex) => {
-        // --- CALCOLO STIME ---
+        // --- LOGICA DIFENSIVA PER COMPATIBILITÀ ---
+        const totali = giorno.totali || {};
+        const proteine = totali.proteine || 0;
+        const calorie = totali.calorie || 0;
+        const workout = totali.workoutCalorie || 0;
         const deficit = giorno.deficit || 0;
+        const logDelGiorno = giorno.log || [];
+        
         const stimaGrasso = deficit > 0 ? (deficit / 7700) * 1000 : 0;
         
         let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
         if (giorno.obiettivi && giorno.tipoGiornata) {
             let scoreMuscolo = 0;
-            if(giorno.totali.proteine >= (giorno.obiettivi.prot * 0.95)) {
-                scoreMuscolo += 1;
-            } else {
-                scoreMuscolo -= 1;
-            }
-            if(giorno.tipoGiornata.includes('Forza')) {
-                scoreMuscolo += 1;
-            }
-            if(deficit > 500 && giorno.tipoGiornata.includes('Forza')) {
-                scoreMuscolo -= 1;
-            }
+            if(proteine >= (giorno.obiettivi.prot * 0.95)) scoreMuscolo++;
+            else scoreMuscolo--;
+            if(giorno.tipoGiornata.includes('Forza')) scoreMuscolo++;
+            if(deficit > 500 && giorno.tipoGiornata.includes('Forza')) scoreMuscolo--;
+            
             if(scoreMuscolo > 0) trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
             if(scoreMuscolo < 0) trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
         }
@@ -106,9 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         summaryRow.innerHTML = `
             <td><span class="expand-arrow">▶</span> ${dataFormatted}</td>
-            <td>${giorno.totali.proteine.toFixed(1)} g</td>
-            <td>${giorno.totali.calorie.toFixed(0)}</td>
-            <td>${(giorno.totali.workoutCalorie || 0)} kcal</td>
+            <td>${proteine.toFixed(1)} g</td>
+            <td>${calorie.toFixed(0)}</td>
+            <td>${workout} kcal</td>
             <td>${deficit} kcal</td>
             <td>-${stimaGrasso.toFixed(1)} g</td>
             <td>${trendMuscoloHtml}</td>
@@ -122,27 +122,26 @@ document.addEventListener('DOMContentLoaded', () => {
         detailCell.className = 'detail-cell';
         
         let detailHtml = `<h4>Dettaglio Pasti</h4>`;
-        const logDelGiorno = giorno.log || (giorno.dati ? giorno.dati.log : []);
 
-        if (logDelGiorno && logDelGiorno.length > 0) {
+        if (logDelGiorno.length > 0) {
             detailHtml += `<table><tbody>`;
 
             logDelGiorno.forEach((entry, pastoIndex) => {
                 if (entry.type === 'meal') {
                     detailHtml += `
                         <tr class="meal-group-row" data-giorno-index="${giornoIndex}" data-pasto-index="${pastoIndex}">
-                            <td colspan="4"><span class="meal-expand-arrow">▶</span> <strong>${entry.desc}</strong> (Tot: ${entry.prot.toFixed(1)}g Prot, ${entry.cal.toFixed(0)} Kcal)</td>
+                            <td colspan="4"><span class="meal-expand-arrow">▶</span> <strong>${entry.desc}</strong> (Tot: ${(entry.prot || 0).toFixed(1)}g Prot, ${(entry.cal || 0).toFixed(0)} Kcal)</td>
                         </tr>`;
                     (entry.items || []).forEach(item => {
                         detailHtml += `<tr class="sub-item-row" style="display: none;">
                                         <td style="padding-left: 40px;">${item.desc}</td>
                                         <td>${item.qta} g</td>
-                                        <td>${item.prot.toFixed(1)} g</td>
-                                        <td>${item.cal.toFixed(0)} Kcal</td>
+                                        <td>${(item.prot || 0).toFixed(1)} g</td>
+                                        <td>${(item.cal || 0).toFixed(0)} Kcal</td>
                                       </tr>`;
                     });
                 } else {
-                    detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${entry.prot.toFixed(1)} g</td><td>${entry.cal.toFixed(0)} Kcal</td></tr>`;
+                    detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${(entry.cal || 0).toFixed(0)} Kcal</td></tr>`;
                 }
             });
             detailHtml += `</tbody></table>`;
