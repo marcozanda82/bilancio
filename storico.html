@@ -30,8 +30,10 @@
         .meal-expand-arrow { display: inline-block; width: 20px; transition: transform 0.2s; }
         .meal-group-row.expanded .meal-expand-arrow { transform: rotate(90deg); }
         .sub-item-row { display: none; }
-        .meal-group-row.expanded + .sub-item-row { display: table-row; }
-        .sub-item-row > td { padding-left: 30px !important; background-color: #fff; font-style: italic; color: #555;}
+        /* Modificato per mostrare solo i sub-item successivi al pasto espanso */
+        .meal-group-row.expanded + .sub-item-row { display: table-row; } 
+        /* Regola per mostrare tutti i sub-item di un pasto espanso */
+        .meal-group-row.expanded ~ .sub-item-row.meal-active { display: table-row; }
 
         .trend-muscle { font-size: 1.5em; font-weight: bold; }
         .trend-up { color: #4caf50; }
@@ -66,94 +68,168 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const storicoBody = document.getElementById('storico-body');
-    const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
 
-    if (storico.length === 0) {
-        storicoBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Nessun dato storico trovato.</td></tr>';
-        return;
+    // Funzione per recuperare tutti i dati dallo storico LocalStorage
+    function caricaTuttoLoStorico() {
+        const storicoDati = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            // Filtra le chiavi che iniziano con 'trackerStorico_' o 'trackerGiornoCorrente'
+            if (key.startsWith('trackerStorico_')) {
+                try {
+                    const dataString = key.replace('trackerStorico_', '');
+                    const datiGiorno = JSON.parse(localStorage.getItem(key));
+                    storicoDati.push({ data: dataString, ...datiGiorno });
+                } catch (e) {
+                    console.error("Errore nel parsing dei dati storici per la chiave:", key, e);
+                }
+            } else if (key === 'trackerGiornoCorrente') {
+                try {
+                    const salvataggioCorrente = JSON.parse(localStorage.getItem(key));
+                    // Assicurati che non sia già stato salvato come trackerStorico_
+                    // o che non sia una data duplicata se già presente
+                    if (salvataggioCorrente && salvataggioCorrente.data) {
+                        // Controlla se la data è già presente nello storicoDati per evitare duplicati
+                        const isDuplicate = storicoDati.some(item => item.data === salvataggioCorrente.data);
+                        if (!isDuplicate) {
+                           storicoDati.push({ data: salvataggioCorrente.data, ...salvataggioCorrente.dati });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Errore nel parsing del giorno corrente:", key, e);
+                }
+            }
+        }
+        // Ordina i dati dal più recente al più vecchio
+        storicoDati.sort((a, b) => new Date(b.data) - new Date(a.data));
+        return storicoDati;
     }
 
-    storicoBody.innerHTML = '';
-    storico.sort((a, b) => new Date(b.data) - new Date(a.data));
+    // Costanti per il piano settimanale (copiate da index.html per coerenza)
+    const PIANO_SETTIMANALE = {
+        0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, // Domenica
+        1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, // Lunedì
+        2: { tipo: '💪 Forza (Mantenimento)', cal: 2400, prot: 140 }, // Martedì
+        3: { tipo: '🏃 Cardio (Deficit)', cal: 1900, prot: 120 }, // Mercoledì
+        4: { tipo: '🏋️ Forza (Mantenimento)', cal: 2400, prot: 140 }, // Giovedì
+        5: { tipo: '🏃 Cardio (Deficit)', cal: 1900, prot: 120 }, // Venerdì
+        6: { tipo: '🥗 Mantenimento (Free)', cal: 2200, prot: 130 }  // Sabato
+    };
 
-    storico.forEach((giorno, giornoIndex) => {
-        // --- LOGICA DIFENSIVA PER COMPATIBILITÀ ---
-        const totali = giorno.totali || {};
-        const proteine = totali.proteine || 0;
-        const calorie = totali.calorie || 0;
-        const workout = totali.workoutCalorie || 0;
-        const deficit = giorno.deficit || 0;
-        const logDelGiorno = giorno.log || [];
-        
-        const stimaGrasso = deficit > 0 ? (deficit / 7700) * 1000 : 0;
-        
-        let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
-        if (giorno.obiettivi && giorno.tipoGiornata) {
+    function renderStorico() {
+        const storico = caricaTuttoLoStorico();
+
+        if (storico.length === 0) {
+            storicoBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Nessun dato storico trovato.</td></tr>';
+            return;
+        }
+
+        storicoBody.innerHTML = ''; // Pulisci la tabella prima di ripopolarla
+
+        storico.forEach((giorno, giornoIndex) => {
+            // Calcola i totali per il giorno se non già presenti (retrocompatibilità)
+            let totaliGiorno = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, workoutCalorie: giorno.workoutCalorie || 0 };
+            (giorno.log || []).forEach(entry => {
+                if (entry.type === 'meal' && entry.items) {
+                    entry.items.forEach(item => {
+                        totaliGiorno.proteine += item.prot || 0;
+                        totaliGiorno.calorie += item.cal || 0;
+                        // Assicurati di sommare anche i micronutrienti se li vuoi mostrare in futuro
+                        // totaliGiorno.mg += item.mg || 0;
+                        // ...
+                    });
+                } else {
+                    totaliGiorno.proteine += entry.prot || 0;
+                    totaliGiorno.calorie += entry.cal || 0;
+                    // totaliGiorno.mg += entry.mg || 0;
+                    // ...
+                }
+            });
+
+            // Recupera gli obiettivi dal PIANO_SETTIMANALE
+            const dataDelGiorno = new Date(giorno.data);
+            const pianoDelGiorno = PIANO_SETTIMANALE[dataDelGiorno.getDay()] || PIANO_SETTIMANALE[1];
+            const obiettiviCalorici = pianoDelGiorno.cal;
+
+            // Calcolo del deficit
+            const deficit = totaliGiorno.calorie - obiettiviCalorici;
+            const stimaGrasso = deficit > 0 ? (deficit / 7700) * 1000 : 0; // 7700 kcal per 1kg di grasso
+            
+            // Logica per il trend muscolare (come già presente)
+            let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
             let scoreMuscolo = 0;
-            if(proteine >= (giorno.obiettivi.prot * 0.95)) scoreMuscolo++;
+            if(totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) scoreMuscolo++;
             else scoreMuscolo--;
-            if(giorno.tipoGiornata.includes('Forza')) scoreMuscolo++;
-            if(deficit > 500 && giorno.tipoGiornata.includes('Forza')) scoreMuscolo--;
+            if(pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo++; // Usa pianoDelGiorno.tipo
+            if(deficit > 500 && pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo--; // Usa pianoDelGiorno.tipo
             
             if(scoreMuscolo > 0) trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
             if(scoreMuscolo < 0) trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
-        }
 
-        const summaryRow = document.createElement('tr');
-        summaryRow.className = 'day-summary-row';
-        summaryRow.dataset.giornoIndex = giornoIndex;
-        const dataFormatted = new Date(giorno.data).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        
-        summaryRow.innerHTML = `
-            <td><span class="expand-arrow">▶</span> ${dataFormatted}</td>
-            <td>${proteine.toFixed(1)} g</td>
-            <td>${calorie.toFixed(0)}</td>
-            <td>${workout} kcal</td>
-            <td>${deficit} kcal</td>
-            <td>-${stimaGrasso.toFixed(1)} g</td>
-            <td>${trendMuscoloHtml}</td>
-        `;
-        storicoBody.appendChild(summaryRow);
+            const summaryRow = document.createElement('tr');
+            summaryRow.className = 'day-summary-row';
+            summaryRow.dataset.giornoIndex = giornoIndex;
+            const dataFormatted = dataDelGiorno.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            
+            summaryRow.innerHTML = `
+                <td><span class="expand-arrow">▶</span> ${dataFormatted}</td>
+                <td>${totaliGiorno.proteine.toFixed(1)} g</td>
+                <td>${totaliGiorno.calorie.toFixed(0)}</td>
+                <td>${totaliGiorno.workoutCalorie} kcal</td>
+                <td>${deficit} kcal</td>
+                <td>${stimaGrasso.toFixed(1) < 0.1 && stimaGrasso.toFixed(1) > -0.1 ? '0.0' : stimaGrasso.toFixed(1)} g</td>
+                <td>${trendMuscoloHtml}</td>
+            `;
+            storicoBody.appendChild(summaryRow);
 
-        const detailRow = document.createElement('tr');
-        detailRow.className = 'day-detail-row';
-        const detailCell = document.createElement('td');
-        detailCell.colSpan = 7;
-        detailCell.className = 'detail-cell';
-        
-        let detailHtml = `<h4>Dettaglio Pasti</h4>`;
+            const detailRow = document.createElement('tr');
+            detailRow.className = 'day-detail-row';
+            const detailCell = document.createElement('td');
+            detailCell.colSpan = 7;
+            detailCell.className = 'detail-cell';
+            
+            let detailHtml = `<h4>Dettaglio Pasti e Alimenti</h4>`;
 
-        if (logDelGiorno.length > 0) {
-            detailHtml += `<table><tbody>`;
+            if ((giorno.log || []).length > 0) {
+                detailHtml += `<table><tbody>`;
 
-            logDelGiorno.forEach((entry, pastoIndex) => {
-                if (entry.type === 'meal') {
-                    detailHtml += `
-                        <tr class="meal-group-row" data-giorno-index="${giornoIndex}" data-pasto-index="${pastoIndex}">
-                            <td colspan="4"><span class="meal-expand-arrow">▶</span> <strong>${entry.desc}</strong> (Tot: ${(entry.prot || 0).toFixed(1)}g Prot, ${(entry.cal || 0).toFixed(0)} Kcal)</td>
-                        </tr>`;
-                    (entry.items || []).forEach(item => {
-                        detailHtml += `<tr class="sub-item-row" style="display: none;">
-                                        <td style="padding-left: 40px;">${item.desc}</td>
-                                        <td>${item.qta} g</td>
-                                        <td>${(item.prot || 0).toFixed(1)} g</td>
-                                        <td>${(item.cal || 0).toFixed(0)} Kcal</td>
-                                      </tr>`;
-                    });
-                } else {
-                    detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${(entry.cal || 0).toFixed(0)} Kcal</td></tr>`;
-                }
-            });
-            detailHtml += `</tbody></table>`;
-        } else {
-            detailHtml += '<p>Nessun dettaglio alimentare disponibile per questo giorno.</p>';
-        }
+                giorno.log.forEach((entry, pastoIndex) => {
+                    if (entry.type === 'meal') {
+                        // Calcola i totali specifici per il pasto raggruppato
+                        const totaliPastoCorrente = (entry.items || []).reduce((acc, item) => {
+                            acc.prot += item.prot || 0;
+                            acc.cal += item.cal || 0;
+                            return acc;
+                        }, { prot: 0, cal: 0 });
 
-        detailCell.innerHTML = detailHtml;
-        detailRow.appendChild(detailCell);
-        storicoBody.appendChild(detailRow);
-    });
+                        detailHtml += `
+                            <tr class="meal-group-row" data-giorno-index="${giornoIndex}" data-pasto-index="${pastoIndex}">
+                                <td colspan="4"><span class="meal-expand-arrow">▶</span> <strong>${entry.desc}</strong> (Tot: ${totaliPastoCorrente.prot.toFixed(1)}g Prot, ${totaliPastoCorrente.cal.toFixed(0)} Kcal)</td>
+                            </tr>`;
+                        (entry.items || []).forEach(item => {
+                            detailHtml += `<tr class="sub-item-row meal-active" style="display: none;">
+                                            <td style="padding-left: 40px;">${item.desc}</td>
+                                            <td>${item.qta} g</td>
+                                            <td>${(item.prot || 0).toFixed(1)} g</td>
+                                            <td>${(item.cal || 0).toFixed(0)} Kcal</td>
+                                          </tr>`;
+                        });
+                    } else { // Alimento singolo
+                        detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${(entry.cal || 0).toFixed(0)} Kcal</td></tr>`;
+                    }
+                });
+                detailHtml += `</tbody></table>`;
+            } else {
+                detailHtml += '<p>Nessun dettaglio alimentare disponibile per questo giorno.</p>';
+            }
 
+            detailCell.innerHTML = detailHtml;
+            detailRow.appendChild(detailCell);
+            storicoBody.appendChild(detailRow);
+        });
+    }
+
+    // Event listener per espandere/collassare i dettagli del giorno e dei pasti
     storicoBody.addEventListener('click', (e) => {
         const summaryRow = e.target.closest('.day-summary-row');
         if (summaryRow) {
@@ -167,11 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
             mealRow.classList.toggle('expanded');
             let sibling = mealRow.nextElementSibling;
             while(sibling && sibling.classList.contains('sub-item-row')) {
+                // Alterna la visibilità
                 sibling.style.display = mealRow.classList.contains('expanded') ? 'table-row' : 'none';
                 sibling = sibling.nextElementSibling;
             }
         }
     });
+
+    // Inizializza il rendering dello storico al caricamento della pagina
+    renderStorico();
 });
 </script>
 </body>
