@@ -255,32 +255,46 @@ document.addEventListener('DOMContentLoaded', () => {
 // Funzione per caricare i dati da una data specifica (o da oggi).
 function caricaGiorno(data) {
     // Prima di caricare un nuovo giorno, salva lo stato attuale del giorno visualizzato
-    // per evitare di perdere i dati non salvati del giorno precedente/corrente.
     salvaGiorno(giornoVisualizzato, datiGiornalieri); 
 
     giornoVisualizzato = data;
     dataCaricamentoInput.value = data;
 
     let datiTrovati = null;
-    if (data === getTodayString()) {
-        const salvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
-        // Aggiunto per debug
-        console.log("DEBUG CARICAMENTO: Valore raw da trackerGiornoCorrente:", localStorage.getItem('trackerGiornoCorrente'));
-        if (salvataggio && salvataggio.data === data) {
-            datiTrovati = salvataggio.dati;
+    let rawDataFromLocalStorage = null;
+
+    if (data === getTodayString()) { // Se stiamo caricando il giorno corrente
+        rawDataFromLocalStorage = localStorage.getItem('trackerGiornoCorrente');
+        console.log("DEBUG CARICAMENTO (TODAY): Valore raw da trackerGiornoCorrente:", rawDataFromLocalStorage);
+        
+        try {
+            const salvataggio = JSON.parse(rawDataFromLocalStorage);
+            if (salvataggio && salvataggio.data === data) {
+                datiTrovati = salvataggio.dati;
+                console.log("DEBUG CARICAMENTO (TODAY): Dati PARSED e CONFERMATI per oggi:", datiTrovati);
+            } else {
+                console.warn("DEBUG CARICAMENTO (TODAY): Salvataggio trovato ma data non corrisponde o oggetto non valido.", salvataggio);
+            }
+        } catch (e) {
+            console.error("DEBUG CARICAMENTO (TODAY): Errore nel parsing di trackerGiornoCorrente:", e, "Raw data:", rawDataFromLocalStorage);
         }
-    } else {
-        datiTrovati = JSON.parse(localStorage.getItem(`trackerStorico_${data}`));
+    } else { // Se stiamo caricando un giorno storico
+        rawDataFromLocalStorage = localStorage.getItem(`trackerStorico_${data}`);
+        console.log(`DEBUG CARICAMENTO (STORICO): Valore raw da trackerStorico_${data}:`, rawDataFromLocalStorage);
+        try {
+            datiTrovati = JSON.parse(rawDataFromLocalStorage);
+            console.log("DEBUG CARICAMENTO (STORICO): Dati PARSED e CONFERMATI per storico:", datiTrovati);
+        } catch (e) {
+            console.error(`DEBUG CARICAMENTO (STORICO): Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
+        }
     }
+    
+    console.log("DEBUG CARICAMENTO FINALE: datiTrovati prima del reset/inizializzazione:", datiTrovati);
 
-    // Aggiunto per debug
-    console.log("DEBUG CARICAMENTO: datiTrovati prima del reset/inizializzazione:", datiTrovati);
-
+    // Se datiTrovati è null o undefined, inizializza con un oggetto vuoto
     datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
-
-    // Aggiunto per debug
-    console.log("DEBUG CARICAMENTO: datiGiornalieri dopo reset/inizializzazione:", datiGiornalieri);
-
+    
+    console.log("DEBUG CARICAMENTO FINALE: datiGiornalieri dopo reset/inizializzazione:", datiGiornalieri);
 
     aggiornaUI();
     console.log(`Caricato il giorno: ${giornoVisualizzato}`);
