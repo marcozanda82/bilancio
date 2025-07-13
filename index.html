@@ -29,11 +29,12 @@
         .edit-btn { color: #1976d2; }
         .builder-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* MODIFICA: Forzate due colonne */
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
+        .builder-grid label { font-size: 95%; } /* <-- MODIFICA: Riduzione font label */
         .button-group { display: flex; gap: 10px; margin-top: 15px; }
-        #btn-costruisci-pasto { background-color: #ff8f00; }
+        #btn-costruisci-pasto { background-color: #ff8f00; } /* <-- MODIFICA: Stile per il nuovo tasto */
         #btn-aggiungi-singolo { background-color: #5c6bc0; }
         #meal-builder-sezione[data-visible="false"] { display: none; }
         #btn-salva-pasto { background-color: #2e7d32; width: 100%; margin-top: 15px; }
@@ -83,6 +84,7 @@
             </div>
             <datalist id="food-database-list"></datalist>
             <div class="button-group">
+                <button id="btn-costruisci-pasto">Costruisci Pasto</button>
                 <button id="btn-aggiungi-singolo">Aggiungi Diretto</button>
             </div>
         </div>
@@ -125,12 +127,13 @@
             const totali = (datiGiornalieri.log || []).reduce((acc, item) => {
                 Object.keys(acc).forEach(key => acc[key] += item[key] || 0);
                 return acc;
-            }, { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 });
+            }, { prot: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 });
             
             Object.keys(totali).forEach(key => {
-                const el = dom[`totale_${key}`];
-                if (el) el.textContent = totali[key].toFixed(key !== 'calorie' && key !== 'k' ? 1 : 0);
-                const pEl = dom[`progress_${key}`];
+                const elName = `totale_${key.replace('cal', 'calorie').replace('prot','proteine')}`;
+                const el = dom[elName];
+                if (el) el.textContent = totali[key].toFixed(key.includes('cal') || key.includes('k') ? 0 : 1);
+                const pEl = dom[`progress_${key.replace('calorie','cal').replace('proteine','prot')}`];
                 if (pEl) pEl.value = totali[key];
             });
 
@@ -161,7 +164,7 @@
             const mg100 = parseFloat(dom.builder_mg.value)||0, k100_mg = parseFloat(dom.builder_k.value)||0;
             const vitc100 = parseFloat(dom.builder_vitc.value)||0, ca100 = parseFloat(dom.builder_ca.value)||0;
             if (p100 > 0 || k100 > 0) foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
-            return { desc, qta, prot: (p100/100)*qta, cal: Math.round((k100/100)*qta), mg: (mg100/100)*qta, k: (k100_mg/100)*qta, vitc: (vitc100/100)*qta, ca: (ca100/100)*qta };
+            return { desc: desc, qta: qta, prot: (p100/100)*qta, cal: Math.round((k100/100)*qta), mg: (mg100/100)*qta, k: (k100_mg/100)*qta, vitc: (vitc100/100)*qta, ca: (ca100/100)*qta };
         }
 
         function resetInputAlimento() {
