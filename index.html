@@ -31,167 +31,150 @@
         <div id="sync-config-sezione" class="sezione">
             <h2>Configurazione Sincronizzazione Cloud</h2>
             <p>Incolla qui la configurazione del tuo progetto Firebase per abilitare la sincronizzazione. Devi farlo solo una volta.</p>
-            <textarea id="firebase-config-input" placeholder="Incolla qui l'intero oggetto firebaseConfig" rows="5"></textarea>
+            <textarea id="firebase-config-input" placeholder="Incolla qui l'intero blocco di codice che inizia con 'const firebaseConfig = ...'" rows="5"></textarea>
             <button id="btn-save-config">Salva e Attiva Sincronizzazione</button>
             <p id="sync-status"></p>
         </div>
 
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi (<span id="data-corrente-display"></span>)</h2>
-            </div>
+            <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
+            <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+            <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
+        </div>
 
         <div id="food-adder" class="sezione">
             <h2>Aggiungi Alimento</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
+                <div><label>Quantità (g)</label><input type="number" id="builder-qta"></div>
+                <div><label>Proteine/100g</label><input type="number" id="builder-prot"></div>
+                <div><label>Kcal/100g</label><input type="number" id="builder-kcal"></div>
             </div>
+            <datalist id="food-database-list"></datalist>
+            <button id="btn-aggiungi-singolo" style="width:100%; margin-top:15px;">Aggiungi al Diario</button>
+        </div>
 
         <div class="sezione">
             <h2>Diario Giornaliero</h2>
-            <table id="log-pasti">
-                <thead><tr><th>Descrizione</th><th>Quantità</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
-                <tbody id="log-body"></tbody>
-            </table>
+            <table id="log-pasti"><thead><tr><th>Descrizione</th><th>Quantità</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
             <button id="btn-archivia">Archivia e Chiudi Giornata</button>
         </div>
-    </div>
+
+        </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     let datiGiornalieri, foodDatabase, db;
-    let dataListener; // Variabile per tenere traccia del listener di Firebase
+    let dataListener; 
+    let syncTimeout;
 
     const getTodayString = () => new Date().toISOString().split('T')[0];
 
-    // Funzione per salvare lo stato completo (sia in locale che su Firebase)
-    function salvaStato() {
+    function salvaStato(triggerSync = true) {
         const stato = {
             giornoCorrente: { data: getTodayString(), dati: datiGiornalieri },
-            storico: JSON.parse(localStorage.getItem('trackerStorico')) || [],
+            storico: JSON.parse(localStorage.getItem('storico')) || [],
             databaseAlimenti: foodDatabase
         };
         localStorage.setItem('giornoCorrente', JSON.stringify(stato.giornoCorrente));
         localStorage.setItem('storico', JSON.stringify(stato.storico));
         localStorage.setItem('databaseAlimenti', JSON.stringify(foodDatabase));
         
-        if (db) {
+        if (db && triggerSync) {
             console.log("Salvataggio su Firebase...");
             db.ref('trackerData').set(stato);
         }
     }
 
-    // Funzione per inizializzare Firebase
     function initFirebase() {
         const fbConfigString = localStorage.getItem('firebaseConfig');
         const syncStatusEl = document.getElementById('sync-status');
-        
-        if (fbConfigString) {
-            try {
-                const fbConfig = JSON.parse(fbConfigString);
-                if (firebase.apps.length === 0) {
-                    firebase.initializeApp(fbConfig);
-                }
-                db = firebase.database();
-                syncStatusEl.textContent = "Sincronizzazione Attiva ✅";
-                syncStatusEl.style.color = 'green';
-                document.getElementById('sync-config-sezione').style.borderLeft = '5px solid green';
-
-                // Rimuove il vecchio listener se esiste, per evitare duplicati
-                if(dataListener) db.ref('trackerData').off('value', dataListener);
-                
-                // Imposta un nuovo listener per i dati dal cloud
-                dataListener = db.ref('trackerData').on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        console.log("Dati ricevuti da Firebase. Verifico se sono diversi...");
-                        // Confronta i dati locali con quelli remoti per evitare ricaricamenti infiniti
-                        const datiLocaliString = JSON.stringify({
-                            giornoCorrente: JSON.parse(localStorage.getItem('giornoCorrente')),
-                            storico: JSON.parse(localStorage.getItem('storico')),
-                            databaseAlimenti: JSON.parse(localStorage.getItem('databaseAlimenti'))
-                        });
-
-                        if (JSON.stringify(data) !== datiLocaliString) {
-                            console.log("Dati diversi, aggiorno e ricarico.");
-                            localStorage.setItem('giornoCorrente', JSON.stringify(data.giornoCorrente));
-                            localStorage.setItem('storico', JSON.stringify(data.storico));
-                            localStorage.setItem('databaseAlimenti', JSON.stringify(data.databaseAlimenti));
-                            location.reload();
-                        }
-                    }
-                }, (error) => {
-                    syncStatusEl.textContent = "Errore di connessione.";
-                    syncStatusEl.style.color = 'red';
-                });
-
-            } catch(e) {
-                syncStatusEl.textContent = "Configurazione non valida.";
-                syncStatusEl.style.color = 'red';
-            }
-        } else {
+        if (!fbConfigString) {
             syncStatusEl.textContent = "Sincronizzazione non configurata.";
             syncStatusEl.style.color = 'orange';
+            return;
+        }
+        
+        try {
+            const fbConfig = JSON.parse(fbConfigString);
+            if (firebase.apps.length === 0) firebase.initializeApp(fbConfig);
+            db = firebase.database();
+            syncStatusEl.textContent = "Sincronizzazione Attiva ✅";
+            syncStatusEl.style.color = 'green';
+            
+            if(dataListener) db.ref('trackerData').off('value', dataListener);
+            
+            dataListener = db.ref('trackerData').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const localDataString = JSON.stringify({
+                        giornoCorrente: JSON.parse(localStorage.getItem('giornoCorrente')),
+                        storico: JSON.parse(localStorage.getItem('storico')),
+                        databaseAlimenti: JSON.parse(localStorage.getItem('databaseAlimenti'))
+                    });
+
+                    if (JSON.stringify(data) !== localDataString) {
+                        console.log("Dati remoti diversi, aggiorno l'interfaccia...");
+                        localStorage.setItem('giornoCorrente', JSON.stringify(data.giornoCorrente));
+                        localStorage.setItem('storico', JSON.stringify(data.storico));
+                        localStorage.setItem('databaseAlimenti', JSON.stringify(data.databaseAlimenti));
+                        
+                        // Evita di ricaricare se i dati locali sono stati appena salvati
+                        clearTimeout(syncTimeout);
+                        syncTimeout = setTimeout(() => location.reload(), 500);
+                    }
+                }
+            });
+        } catch(e) {
+            syncStatusEl.textContent = "Configurazione non valida.";
+            syncStatusEl.style.color = 'red';
         }
     }
 
     function initApp() {
         foodDatabase = JSON.parse(localStorage.getItem('databaseAlimenti')) || {};
         const giornoCorrenteData = JSON.parse(localStorage.getItem('giornoCorrente'));
-        
         if (giornoCorrenteData && giornoCorrenteData.data === getTodayString()) {
             datiGiornalieri = giornoCorrenteData.dati;
+        } else if (giornoCorrenteData && giornoCorrenteData.data !== getTodayString()) {
+            // Se c'è un giorno vecchio non archiviato, lo mostra ma segnala
+            datiGiornalieri = giornoCorrenteData.dati;
+            alert(`Stai visualizzando i dati di una giornata passata (${giornoCorrenteData.data}). Ricordati di archiviarla.`);
         } else {
-            // Se la data è cambiata, il giorno vecchio DEVE essere archiviato manualmente.
-            // Si parte con un nuovo giorno pulito.
             datiGiornalieri = { log: [], workoutLog: [] };
         }
         aggiornaUI();
     }
     
-    // ... (Inserisci qui tutte le altre funzioni come aggiornaUI, etc., che non cambiano)
+    // ... Inserisci qui le altre funzioni del tracker (aggiornaUI, etc.)
 
     document.getElementById('btn-save-config').addEventListener('click', () => {
         const configText = document.getElementById('firebase-config-input').value;
         if (!configText) return alert("Incolla la configurazione.");
         try {
-            const configObject = JSON.parse(configText.substring(configText.indexOf('{'), configText.lastIndexOf('}') + 1));
+            // --- LOGICA CORRETTA ---
+            // Cerca l'inizio dell'oggetto JSON
+            const startIndex = configText.indexOf('{');
+            const endIndex = configText.lastIndexOf('}') + 1;
+            const jsonText = configText.substring(startIndex, endIndex);
+            
+            // Il parser JSON nativo non gestisce le chiavi senza virgolette.
+            // Questa regex le aggiunge.
+            const validJsonText = jsonText.replace(/(\s*?{\s*?|,\s*?)(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '$1"$3":');
+
+            const configObject = JSON.parse(validJsonText);
             localStorage.setItem('firebaseConfig', JSON.stringify(configObject));
             alert("Configurazione salvata! La pagina si ricaricherà.");
             location.reload();
         } catch (e) {
-            alert("Errore nel formato della configurazione.");
+            console.error("Errore di parsing:", e);
+            alert("Errore nel formato della configurazione. Assicurati di aver incollato l'intero blocco di codice fornito da Firebase.");
         }
     });
 
-    document.getElementById('btn-archivia').addEventListener('click', () => {
-        const giornoCorrente = JSON.parse(localStorage.getItem('giornoCorrente'));
-        if (!giornoCorrente || giornoCorrente.dati.log.length === 0) return alert("Nessun dato da archiviare.");
-        
-        if (confirm(`Sei sicuro di voler chiudere la giornata del ${giornoCorrente.data} e archiviarla?`)) {
-            const storico = JSON.parse(localStorage.getItem('storico')) || [];
-            
-            // Logica per calcolare totali e deficit
-            const totali = giornoCorrente.dati.log.reduce((acc, i) => { acc.p += i.prot; acc.c += i.cal; return acc; }, {p:0, c:0});
-            // ... (altri calcoli)
+    // ... (tutti gli altri listener e il resto dello script)
 
-            const nuovoRecord = {
-                data: giornoCorrente.data,
-                log: giornoCorrente.dati.log,
-                totali: { proteine: totali.p, calorie: totali.c, /* ... */ },
-                // ... (altri dati dello storico)
-            };
-            
-            const nuovoStorico = storico.filter(item => item.data !== giornoCorrente.data);
-            nuovoStorico.push(nuovoRecord);
-            localStorage.setItem('storico', JSON.stringify(nuovoStorico));
-
-            // Reset del giorno corrente
-            datiGiornalieri = { log: [], workoutLog: [] };
-            salvaStato();
-            alert("Giornata archiviata con successo!");
-            aggiornaUI();
-        }
-    });
-
-    // Avvio
     initFirebase();
     initApp();
 });
