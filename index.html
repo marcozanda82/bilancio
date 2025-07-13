@@ -8,23 +8,37 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
+        h2 { font-size: 1.4em; margin-top: 30px; }
+        h3 { font-size: 1.1em; color: #333; border-bottom: 1px solid #eee; margin-top: 20px; }
+        #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input, select, button { font-size: 1em; }
-        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background-color 0.3s; }
+        input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
         button:hover { background-color: #1565c0; }
+        .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
+        .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
         .sync-button-container { text-align: right; margin-bottom: 15px; }
         .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        .delete-btn { background-color: transparent; border: none; color: #d32f2f; font-size: 1.4em; cursor: pointer; }
-        #caricamento-manuale div { display: flex; gap: 10px; align-items: center; margin-top:15px}
-        #caricamento-manuale input { flex-grow: 1; margin: 0; }
-        #caricamento-manuale button { flex-grow: 0; width: auto; margin: 0; background-color: #673ab7; }
-        
-        /* NUOVO STILE: Rende le righe del diario cliccabili */
-        #log-body tr { cursor: pointer; }
-        #log-body tr:hover { background-color: #e3f2fd; }
+        .sync-button:hover { background-color: #e65100; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8em; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        th { background-color: #f2f2f2; font-weight: 600; }
+        .builder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        .button-group { display: flex; gap: 10px; margin-top: 15px; }
+        #caricamento-manuale { margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; border-left-color: #673ab7;}
+        #caricamento-manuale div { display: flex; gap: 10px; align-items: center; }
+        #caricamento-manuale input { flex-grow: 1; margin-bottom: 0; }
+        #caricamento-manuale button { flex-grow: 0; width: auto; margin-bottom: 0; background-color: #673ab7; }
+
+        /* --- NUOVI STILI PER I BOTTONI EDIT/DELETE --- */
+        .action-buttons { display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .action-buttons button { background: none; border: none; padding: 4px; font-size: 1.3em; line-height: 1; cursor: pointer; }
+        .edit-btn { color: #1976d2; }
+        .edit-btn:hover { color: #0d47a1; }
+        .delete-btn { color: #d32f2f; }
+        .delete-btn:hover { color: #b71c1c; }
     </style>
 </head>
 <body>
@@ -35,9 +49,13 @@
         
         <h1>Tracker Nutrizionale</h1>
         <h2 id="titolo-giornata"></h2>
+        <div class="nav-links">
+            <a href="storico.html">📊 Storico Giornaliero</a>
+            <a href="confronto.html">📈 Confronto Mensile</a>
+        </div>
         
         <div id="food-adder" class="sezione">
-            <h2>Aggiungi o Modifica Alimento</h2>
+            <h2>Aggiungi / Modifica Alimento</h2>
             <div class="builder-grid" style="grid-template-columns: 2fr 1fr; gap: 15px;">
                  <div><label>Alimento</label><input type="text" id="builder-desc" placeholder="es. Pollo" list="food-database-list"></div>
                  <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
@@ -59,23 +77,19 @@
 
         <div class="sezione">
             <h2>Diario Giornaliero</h2>
-            <p>Clicca su una riga per modificarla.</p>
             <table id="log-pasti">
-                <thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
+                <thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Mg</th><th>Azione</th></tr></thead>
                 <tbody id="log-body"></tbody>
             </table>
-            <div id="caricamento-manuale">
-                <h3>Carica un Giorno Specifico</h3>
+            <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
+                <h3 style="margin:0 0 10px 0; font-size:1em;">Carica Giorno Specifico</h3>
                 <div>
                     <input type="date" id="data-caricamento">
                     <button id="btn-carica-giorno">Carica</button>
                 </div>
             </div>
         </div>
-
-        <div id="riepilogo" class="sezione">
-             </div>
-    </div>
+        </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -99,18 +113,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function getTodayString(format = 'ymd') { const today = new Date(); if (format === 'ymd') return today.toISOString().split('T')[0]; return `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}`; }
     
     function salvaGiornoAttuale() {
-        // Ricalcola i totali prima di salvare
         let totali = (datiGiornalieri.log || []).reduce((acc, entry) => {
             Object.keys(acc).forEach(key => acc[key] += entry[key] || 0);
             return acc;
         }, { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 });
         datiGiornalieri = {...datiGiornalieri, ...totali};
 
-        const oggi = getTodayString('ymd');
-        if (giornoVisualizzato === oggi) {
+        if (giornoVisualizzato === getTodayString('ymd')) {
             localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: giornoVisualizzato, dati: datiGiornalieri }));
         } else {
-            // Logica per aggiornare lo storico
+            // Logica per aggiornare lo storico...
         }
     }
 
@@ -148,14 +160,17 @@ document.addEventListener('DOMContentLoaded', () => {
         logBody.innerHTML = ''; 
         (datiGiornalieri.log || []).forEach((entry, index) => {
             const riga = logBody.insertRow();
-            riga.className = 'log-item-row'; // Aggiunge una classe per l'evento click
-            riga.dataset.index = index;    // Salva l'indice per un facile recupero
+            // --- HTML RIGA MODIFICATO ---
             riga.innerHTML = `
                 <td>${entry.desc}</td>
                 <td>${entry.qta}g</td>
                 <td>${(entry.prot||0).toFixed(1)}</td>
                 <td>${(entry.cal||0).toFixed(0)}</td>
-                <td><button class="delete-btn" data-index="${index}">&times;</button></td>
+                <td>${(entry.mg||0).toFixed(1)}</td>
+                <td class="action-buttons">
+                    <button class="edit-btn" data-index="${index}" title="Modifica Voce">✏️</button>
+                    <button class="delete-btn" data-index="${index}" title="Elimina Voce">&times;</button>
+                </td>
             `;
         });
     }
@@ -170,8 +185,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = ''); builderDesc.focus(); }
+    
+    // --- GESTORE EVENTI UNICO ---
+    document.body.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-btn');
+        const deleteBtn = e.target.closest('.delete-btn');
 
-    // --- EVENT LISTENERS ---
+        if (editBtn) {
+            handleEdit(parseInt(editBtn.dataset.index, 10));
+            return;
+        }
+
+        if (deleteBtn) {
+            handleDelete(parseInt(deleteBtn.dataset.index, 10));
+            return;
+        }
+    });
+
+    // --- AZIONI ---
+    function handleEdit(index) {
+        if (!confirm('Vuoi modificare questa voce? Verrà rimossa dal diario e caricata nel modulo in alto.')) return;
+        
+        const itemToEdit = datiGiornalieri.log[index];
+        if (!itemToEdit) return;
+
+        builderDesc.value = itemToEdit.desc;
+        builderQta.value = itemToEdit.qta;
+
+        const foodData = foodDatabase[itemToEdit.desc.toLowerCase()];
+        if(foodData){
+            builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || '';
+            builderMg.value = foodData.mg || ''; builderK.value = foodData.k || '';
+            builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || '';
+        } else {
+             builderProt.value = (itemToEdit.prot / itemToEdit.qta * 100).toFixed(1);
+             builderKcal.value = (itemToEdit.cal / itemToEdit.qta * 100).toFixed(0);
+             builderMg.value = (itemToEdit.mg / itemToEdit.qta * 100).toFixed(1);
+             builderK.value = (itemToEdit.k / itemToEdit.qta * 100).toFixed(0);
+             builderVitC.value = (itemToEdit.vitc / itemToEdit.qta * 100).toFixed(1);
+             builderCa.value = (itemToEdit.ca / itemToEdit.qta * 100).toFixed(1);
+        }
+
+        datiGiornalieri.log.splice(index, 1);
+        salvaGiornoAttuale();
+        aggiornaUI();
+        
+        document.getElementById('food-adder').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function handleDelete(index) {
+        if (confirm('Cancellare la voce?')) {
+            datiGiornalieri.log.splice(index, 1);
+            salvaGiornoAttuale();
+            aggiornaUI();
+        }
+    }
+
     btnCaricaGiorno.addEventListener('click', () => { if (dataCaricamentoInput.value) caricaGiorno(dataCaricamentoInput.value); });
     
     btnAggiungiSingolo.addEventListener('click', () => {
@@ -201,57 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
             builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || '';
             builderMg.value = foodData.mg || ''; builderK.value = foodData.k || '';
             builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || '';
-        }
-    });
-
-    // NUOVO EVENTO: Gestisce il click sulle righe del diario per la modifica
-    logBody.addEventListener('click', (e) => {
-        const deleteBtn = e.target.closest('.delete-btn');
-        if (deleteBtn) { // L'utente ha cliccato sul cestino
-            e.stopPropagation(); // Ferma la propagazione per non attivare il click sulla riga
-            const index = parseInt(deleteBtn.dataset.index, 10);
-            if (confirm('Cancellare la voce?')) {
-                datiGiornalieri.log.splice(index, 1);
-                salvaGiornoAttuale();
-                aggiornaUI();
-            }
-            return;
-        }
-
-        const row = e.target.closest('.log-item-row');
-        if (row) { // L'utente ha cliccato su una riga
-            if (!confirm('Vuoi modificare questa voce? Verrà rimossa dal diario e caricata nel modulo in alto.')) return;
-            
-            const index = parseInt(row.dataset.index, 10);
-            const itemToEdit = datiGiornalieri.log[index];
-            if (!itemToEdit) return;
-
-            // Popola il form con i dati dell'elemento da modificare
-            builderDesc.value = itemToEdit.desc;
-            builderQta.value = itemToEdit.qta;
-
-            // Cerca i valori per 100g nel database, se non li trova li ricalcola
-            const foodData = foodDatabase[itemToEdit.desc.toLowerCase()];
-            if(foodData){
-                builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || '';
-                builderMg.value = foodData.mg || ''; builderK.value = foodData.k || '';
-                builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || '';
-            } else {
-                 builderProt.value = (itemToEdit.prot / itemToEdit.qta * 100).toFixed(1);
-                 builderKcal.value = (itemToEdit.cal / itemToEdit.qta * 100).toFixed(0);
-                 builderMg.value = (itemToEdit.mg / itemToEdit.qta * 100).toFixed(1);
-                 builderK.value = (itemToEdit.k / itemToEdit.qta * 100).toFixed(0);
-                 builderVitC.value = (itemToEdit.vitc / itemToEdit.qta * 100).toFixed(1);
-                 builderCa.value = (itemToEdit.ca / itemToEdit.qta * 100).toFixed(1);
-            }
-
-            // Rimuovi l'elemento dal log
-            datiGiornalieri.log.splice(index, 1);
-            salvaGiornoAttuale();
-            aggiornaUI();
-            
-            // Porta l'utente in cima alla pagina
-            document.getElementById('food-adder').scrollIntoView({ behavior: 'smooth' });
         }
     });
 
