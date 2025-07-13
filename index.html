@@ -12,7 +12,7 @@
         h3 { font-size: 1.1em; color: #333; border-bottom: 1px solid #eee; margin-top: 20px; }
         #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
-        label { font-size: 95%; display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 95%;}
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
         input[type="checkbox"] { width: auto; transform: scale(1.2); }
         button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
@@ -26,7 +26,6 @@
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         .action-btn { background:0; border:0; font-size:1.3em; cursor:pointer; padding: 0 5px; }
         .delete-btn { color:#d32f2f; }
-        .edit-btn { color: #1976d2; }
         .builder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .button-group { display: flex; gap: 10px; margin-top: 15px; }
         #btn-costruisci-pasto { background-color: #ff8f00; }
@@ -141,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const workoutCal = (datiGiornalieri.workoutLog || []).reduce((acc, w) => acc + w.cal, 0);
-        dom.workout_calories_totali.textContent = workoutCal;
+        if(dom.workout_calories_totali) dom.workout_calories_totali.textContent = workoutCal;
 
         dom.log_body.innerHTML = '';
         (datiGiornalieri.log || []).forEach((item, index) => {
@@ -149,12 +148,14 @@ document.addEventListener('DOMContentLoaded', () => {
             riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td>${(item.mg||0).toFixed(1)}</td><td>${(item.k||0).toFixed(1)}</td><td>${(item.vitc||0).toFixed(1)}</td><td>${(item.ca||0).toFixed(1)}</td><td><button class="delete-btn" data-type="log" data-index="${index}">&times;</button></td>`;
         });
         
-        dom.log_allenamenti.style.display = (datiGiornalieri.workoutLog || []).length > 0 ? 'table' : 'none';
-        dom.log_allenamenti_body.innerHTML = '';
-        (datiGiornalieri.workoutLog || []).forEach((item, index) => {
-            dom.log_allenamenti_body.insertRow().innerHTML = `<td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="workout" data-index="${index}">&times;</button></td>`;
-        });
-
+        if (dom.log_allenamenti) dom.log_allenamenti.style.display = (datiGiornalieri.workoutLog || []).length > 0 ? 'table' : 'none';
+        if (dom.log_allenamenti_body) {
+            dom.log_allenamenti_body.innerHTML = '';
+            (datiGiornalieri.workoutLog || []).forEach((item, index) => {
+                dom.log_allenamenti_body.insertRow().innerHTML = `<td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="workout" data-index="${index}">&times;</button></td>`;
+            });
+        }
+        
         dom.food_database_list.innerHTML = Object.keys(foodDatabase).map(key => `<option value="${key.charAt(0).toUpperCase() + key.slice(1)}">`).join('');
     }
     
@@ -180,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (p100 > 0 || k100 > 0) foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
         return { desc, qta, prot: (p100/100)*qta, cal: Math.round((k100/100)*qta), mg: (mg100/100)*qta, k: (k100_mg/100)*qta, vitc: (vitc100/100)*qta, ca: (ca100/100)*qta };
     }
-    
+
     function renderMealBuilder() { 
         if(!dom.meal_builder_sezione) return;
         dom.meal_builder_sezione.dataset.visible = pastoInCostruzione.length > 0;
@@ -244,11 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target) {
             const index = target.dataset.index;
             const type = target.dataset.type;
-            if (type === 'log') {
-                datiGiornalieri.log.splice(index, 1);
-            } else if (type === 'workout') {
-                datiGiornalieri.workoutLog.splice(index, 1);
-            } else if (type === 'builder') {
+            if (type === 'log') datiGiornalieri.log.splice(index, 1);
+            else if (type === 'workout') datiGiornalieri.workoutLog.splice(index, 1);
+            else if (type === 'builder') {
                 pastoInCostruzione.splice(index, 1);
                 renderMealBuilder();
             }
@@ -261,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const giornoCorrente = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
         if (!giornoCorrente || !giornoCorrente.dati || (giornoCorrente.dati.log || []).length === 0) return alert("Nessun dato da archiviare.");
         if (!confirm(`Sei sicuro di voler chiudere e archiviare la giornata del ${new Date(giornoCorrente.data).toLocaleDateString()}?`)) return;
+
         const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
         const nuovoStorico = storico.filter(item => item.data !== giornoCorrente.data);
         nuovoStorico.push({ data: giornoCorrente.data, ...giornoCorrente.dati });
