@@ -285,40 +285,6 @@ function caricaGiorno(data) {
     aggiornaUI();
     console.log(`Caricato il giorno: ${giornoVisualizzato}`);
 }
-    // Funzione per caricare i dati da una data specifica (o da oggi).
-    function caricaGiorno(data) {
-        // Prima di caricare un nuovo giorno, salva lo stato attuale del giorno visualizzato
-        // per evitare di perdere i dati non salvati del giorno precedente/corrente.
-        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
-
-        giornoVisualizzato = data;
-        dataCaricamentoInput.value = data;
-
-        let datiTrovati = null;
-        if (data === getTodayString()) {
-            const salvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
-            // Aggiunto per debug
-            console.log("DEBUG CARICAMENTO: Valore raw da trackerGiornoCorrente:", localStorage.getItem('trackerGiornoCorrente'));
-            if (salvataggio && salvataggio.data === data) {
-                datiTrovati = salvataggio.dati;
-            }
-        } else {
-            datiTrovati = JSON.parse(localStorage.getItem(`trackerStorico_${data}`));
-        }
-        
-        // Aggiunto per debug
-        console.log("DEBUG CARICAMENTO: datiTrovati prima del reset/inizializzazione:", datiTrovati);
-
-        datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
-        
-        // Aggiunto per debug
-        console.log("DEBUG CARICAMENTO: datiGiornalieri dopo reset/inizializzazione:", datiGiornalieri);
-
-
-        aggiornaUI();
-        console.log(`Caricato il giorno: ${giornoVisualizzato}`);
-    }
-    
     // Funzione per calcolare gli obiettivi di proteine e calorie per un pasto specifico
     function calcolaObiettiviPasto(mealType, giornoCorrenteString) {
         const dataVisualizzata = new Date(giornoCorrenteString);
