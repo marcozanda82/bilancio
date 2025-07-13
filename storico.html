@@ -58,8 +58,7 @@
                         <th>Massa Musc.</th>
                     </tr>
                 </thead>
-                <tbody id="storico-body">
-                    </tbody>
+                <tbody id="storico-body"></tbody>
             </table>
         </div>
     </div>
@@ -83,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const stimaGrasso = deficit > 0 ? (deficit / 7700) * 1000 : 0;
         
         let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
-        // Calcola il trend muscolare solo se i dati necessari esistono (per retrocompatibilità)
         if (giorno.obiettivi && giorno.tipoGiornata) {
             let scoreMuscolo = 0;
             if(giorno.totali.proteine >= (giorno.obiettivi.prot * 0.95)) {
@@ -100,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if(scoreMuscolo > 0) trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
             if(scoreMuscolo < 0) trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
         }
-
 
         const summaryRow = document.createElement('tr');
         summaryRow.className = 'day-summary-row';
@@ -125,26 +122,24 @@ document.addEventListener('DOMContentLoaded', () => {
         detailCell.className = 'detail-cell';
         
         let detailHtml = `<h4>Dettaglio Pasti</h4>`;
+        const logDelGiorno = giorno.log || (giorno.dati ? giorno.dati.log : []);
 
-        if (giorno.log && giorno.log.length > 0) {
-            detailHtml += `
-                <table>
-                    <tbody>`;
+        if (logDelGiorno && logDelGiorno.length > 0) {
+            detailHtml += `<table><tbody>`;
 
-            giorno.log.forEach((entry, pastoIndex) => {
+            logDelGiorno.forEach((entry, pastoIndex) => {
                 if (entry.type === 'meal') {
                     detailHtml += `
                         <tr class="meal-group-row" data-giorno-index="${giornoIndex}" data-pasto-index="${pastoIndex}">
                             <td colspan="4"><span class="meal-expand-arrow">▶</span> <strong>${entry.desc}</strong> (Tot: ${entry.prot.toFixed(1)}g Prot, ${entry.cal.toFixed(0)} Kcal)</td>
                         </tr>`;
-                    entry.items.forEach(item => {
-                        detailHtml += `
-                            <tr class="sub-item-row">
-                                <td style="padding-left: 40px;">${item.desc}</td>
-                                <td>${item.qta} g</td>
-                                <td>${item.prot.toFixed(1)} g</td>
-                                <td>${item.cal.toFixed(0)} Kcal</td>
-                            </tr>`;
+                    (entry.items || []).forEach(item => {
+                        detailHtml += `<tr class="sub-item-row" style="display: none;">
+                                        <td style="padding-left: 40px;">${item.desc}</td>
+                                        <td>${item.qta} g</td>
+                                        <td>${item.prot.toFixed(1)} g</td>
+                                        <td>${item.cal.toFixed(0)} Kcal</td>
+                                      </tr>`;
                     });
                 } else {
                     detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${entry.prot.toFixed(1)} g</td><td>${entry.cal.toFixed(0)} Kcal</td></tr>`;
