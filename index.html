@@ -24,7 +24,10 @@
         .config-grid label { margin-bottom: 2px; font-size: 0.9em; }
         .config-grid input { margin-bottom: 5px; }
         .config-help { font-size: 0.8em; color: #666; margin: 0 0 10px 0; }
-        /* Aggiungi qui il resto del tuo CSS originale */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        th { background-color: #f2f2f2; font-weight: 600; }
+        .delete-btn { background-color: transparent; border: none; color: #d32f2f; font-size: 1.3em; font-weight: bold; cursor: pointer; padding: 0 8px; border-radius: 50%; line-height: 1; }
     </style>
 </head>
 <body>
@@ -33,62 +36,79 @@
         <div id="firebase-sezione" class="sezione">
             <h2>Sincronizzazione Cloud</h2>
             <div id="firebase-status" class="status-disconnected">Inserisci i dati di connessione.</div>
-            
             <div class="config-grid">
-                <div>
-                    <label for="fb-api-key">API Key</label>
-                    <input type="text" id="fb-api-key" placeholder="La tua API Key">
-                </div>
-                <div>
-                    <label for="fb-project-id">Project ID</label>
-                    <input type="text" id="fb-project-id" placeholder="Il tuo ID Progetto">
-                </div>
-                <div>
-                    <label for="fb-database-url">Database URL</label>
-                    <input type="url" id="fb-database-url" placeholder="https://nome-db.firebaseio.com">
-                </div>
+                <div><label for="fb-api-key">API Key</label><input type="text" id="fb-api-key" placeholder="La tua API Key"></div>
+                <div><label for="fb-project-id">Project ID</label><input type="text" id="fb-project-id" placeholder="Il tuo ID Progetto"></div>
+                <div><label for="fb-database-url">Database URL</label><input type="url" id="fb-database-url" placeholder="https://nome-db.firebaseio.com"></div>
             </div>
             <p class="config-help">Trovi questi valori nelle impostazioni del tuo progetto Firebase (icona ⚙️) e nella sezione Realtime Database.</p>
             <button id="btn-save-config">Connetti</button>
         </div>
 
         <div id="app-content" class="app-content disabled">
-            <h2 id="titolo-giornata"></h2>
+             <div id="riepilogo" class="sezione">
+                 <h2>Riepilogo di Oggi</h2>
+                 <p>Proteine: <span id="totale-proteine" class="valore-consumato">0</span> / <span id="obiettivo-proteine"></span> g</p>
+                 <p>Calorie: <span id="totale-calorie" class="valore-consumato">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+             </div>
+             <div id="food-adder" class="sezione">
+                 <h2>Aggiungi Alimento</h2>
+                 <div><label>Alimento</label><input type="text" id="builder-desc" placeholder="es. Pollo" list="food-database-list"></div>
+                 <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
+                 <div><label>Proteine/100g</label><input type="number" id="builder-prot" min="0" step="0.1"></div>
+                 <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
+                 <datalist id="food-database-list"></datalist>
+                 <button id="btn-aggiungi-singolo">Aggiungi al Diario</button>
             </div>
+            <div class="sezione">
+                 <h2>Diario Giornaliero</h2>
+                 <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
+            </div>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // --- STATO GLOBALE ---
+        // STATO GLOBALE E COSTANTI
         let db, isFirebaseReady = false, listeners = {};
-        
-        // --- ELEMENTI DEL DOM ---
+        const OBIETTIVI = { prot: 140, cal: 2400 };
+        let datiGiornalieri = { proteine: 0, calorie: 0, log: [] };
+        let foodDatabase = {};
+
+        // ELEMENTI DEL DOM
         const fbApiKeyInput = document.getElementById('fb-api-key');
         const fbProjectIdInput = document.getElementById('fb-project-id');
         const fbDatabaseUrlInput = document.getElementById('fb-database-url');
         const btnSaveConfig = document.getElementById('btn-save-config');
         const firebaseStatusDiv = document.getElementById('firebase-status');
         const appContentDiv = document.getElementById('app-content');
-        // ... (tutti gli altri elementi del DOM della tua app)
+        const spanTotaleProteine = document.getElementById('totale-proteine');
+        const spanTotaleCalorie = document.getElementById('totale-calorie');
+        const spanObiettivoProteine = document.getElementById('obiettivo-proteine');
+        const spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
+        const logBody = document.getElementById('log-body');
+        const builderDesc = document.getElementById('builder-desc');
+        const builderQta = document.getElementById('builder-qta');
+        const builderProt = document.getElementById('builder-prot');
+        const builderKcal = document.getElementById('builder-kcal');
+        const foodDatalist = document.getElementById('food-database-list');
+        const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
 
-        // --- LOGICA DI INIZIALIZZAZIONE ---
+        // LOGICA DI INIZIALIZZAZIONE
         document.addEventListener('DOMContentLoaded', () => {
             const savedConfig = localStorage.getItem('firebaseConfig');
             if (savedConfig) {
                 try {
                     const config = JSON.parse(savedConfig);
-                    // Popola i campi di input con i valori salvati
                     fbApiKeyInput.value = config.apiKey || '';
                     fbProjectIdInput.value = config.projectId || '';
                     fbDatabaseUrlInput.value = config.databaseURL || '';
                     initFirebase(config);
-                } catch (e) {
-                    localStorage.removeItem('firebaseConfig');
-                }
+                } catch (e) { localStorage.removeItem('firebaseConfig'); }
             }
             btnSaveConfig.addEventListener('click', handleConnectClick);
         });
@@ -97,37 +117,27 @@
             const apiKey = fbApiKeyInput.value.trim();
             const projectId = fbProjectIdInput.value.trim();
             const databaseURL = fbDatabaseUrlInput.value.trim();
-
             if (!apiKey || !projectId || !databaseURL) {
-                alert("Per favore, compila tutti e tre i campi di configurazione.");
+                alert("Compila tutti e tre i campi di configurazione.");
                 return;
             }
-
             const config = { apiKey, projectId, databaseURL };
-            
             initFirebase(config);
             localStorage.setItem('firebaseConfig', JSON.stringify(config));
         }
 
         function initFirebase(config) {
             try {
-                // Pulisci eventuali app precedenti per evitare errori di reinizializzazione
-                // Nelle versioni più recenti questo non è strettamente necessario ma è una buona pratica
-                const app = initializeApp(config);
+                const app = !getApps().length ? initializeApp(config) : getApp();
                 db = getDatabase(app);
                 isFirebaseReady = true;
                 updateFirebaseStatus(true, "Connesso a Firebase.");
-                // CHIAMATE PER CARICARE I DATI E ATTIVARE L'APP
-                // loadAllData(); 
-                // wireUpEventListeners();
+                // **QUESTE RIGHE SONO STATE ATTIVATE**
+                loadAllData();
+                wireUpEventListeners();
             } catch (error) {
                 isFirebaseReady = false;
-                // Fornisce un errore più specifico se possibile
-                if (error.code === 'auth/invalid-api-key') {
-                    updateFirebaseStatus(false, "API Key non valida.");
-                } else {
-                    updateFirebaseStatus(false, `Errore: ${error.code}`);
-                }
+                updateFirebaseStatus(false, `Errore: ${error.code}`);
                 console.error("Errore Inizializzazione Firebase:", error);
             }
         }
@@ -138,10 +148,106 @@
             appContentDiv.classList.toggle('disabled', !isConnected);
         }
 
-        // --- INSERISCI QUI IL RESTO DEL TUO SCRIPT ---
-        // (Le funzioni wireUpEventListeners, loadAllData, aggiornaUI, etc.
-        // non cambiano e vanno inserite qui per intero)
+        // GESTIONE DATI E LISTENER
+        function loadAllData() {
+            const oggi = new Date().toISOString().split('T')[0];
+            listenToData('foodDatabase', data => { foodDatabase = data || {}; aggiornaDatalist(); });
+            listenToData(`giorni/${oggi}`, data => {
+                datiGiornalieri = data || { proteine: 0, calorie: 0, log: [] };
+                aggiornaUI();
+            });
+        }
 
+        function listenToData(path, callback) {
+            if (!isFirebaseReady) return;
+            if (listeners[path]) listeners[path](); // Funzione di unsubscribe
+            listeners[path] = onValue(ref(db, path), snapshot => callback(snapshot.val()));
+        }
+
+        function saveData(path, data) {
+            if (!isFirebaseReady) return;
+            set(ref(db, path), data);
+        }
+
+        function wireUpEventListeners() {
+            btnAggiungiSingolo.addEventListener('click', handleAggiungiSingolo);
+            builderDesc.addEventListener('input', e => {
+                const foodData = foodDatabase[e.target.value.toLowerCase()];
+                if (foodData) {
+                    builderProt.value = foodData.prot || '';
+                    builderKcal.value = foodData.kcal || '';
+                }
+            });
+            document.body.addEventListener('click', e => {
+                if (e.target.classList.contains('delete-btn')) {
+                    handleDelete(parseInt(e.target.dataset.index));
+                }
+            });
+        }
+        
+        // AZIONI DELL'UTENTE
+        function handleAggiungiSingolo() {
+            const desc = builderDesc.value.trim();
+            const qta = parseFloat(builderQta.value) || 0;
+            if (!desc || qta <= 0) return alert('Inserisci nome e quantità.');
+            
+            const p100 = parseFloat(builderProt.value) || 0;
+            const k100 = parseFloat(builderKcal.value) || 0;
+
+            if (p100 > 0 || k100 > 0) {
+                foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100 };
+                saveData('foodDatabase', foodDatabase);
+            }
+
+            const oggi = new Date().toISOString().split('T')[0];
+            const nuovoLog = { desc, qta, prot: (p100 / 100) * qta, cal: (k100 / 100) * qta };
+            
+            datiGiornalieri.log.push(nuovoLog);
+            saveData(`giorni/${oggi}`, datiGiornalieri);
+            
+            [builderDesc, builderQta, builderProt, builderKcal].forEach(el => el.value = '');
+            builderDesc.focus();
+        }
+
+        function handleDelete(index) {
+            if (!confirm('Cancellare la voce?')) return;
+            if (datiGiornalieri.log[index]) {
+                datiGiornalieri.log.splice(index, 1);
+                const oggi = new Date().toISOString().split('T')[0];
+                saveData(`giorni/${oggi}`, datiGiornalieri);
+            }
+        }
+
+        // AGGIORNAMENTO INTERFACCIA
+        function aggiornaUI() {
+            if (!isFirebaseReady) return;
+            
+            let totali = (datiGiornalieri.log || []).reduce((acc, item) => {
+                acc.proteine += item.prot;
+                acc.calorie += item.cal;
+                return acc;
+            }, { proteine: 0, calorie: 0 });
+
+            spanObiettivoProteine.textContent = OBIETTIVI.prot;
+            spanObiettivoCalorie.textContent = OBIETTIVI.cal;
+            spanTotaleProteine.textContent = totali.proteine.toFixed(1);
+            spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
+
+            logBody.innerHTML = '';
+            (datiGiornalieri.log || []).forEach((entry, index) => {
+                const riga = logBody.insertRow();
+                riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td><td><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+            });
+        }
+
+        function aggiornaDatalist() {
+            foodDatalist.innerHTML = '';
+            for (const foodName in foodDatabase) {
+                const option = document.createElement('option');
+                option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1);
+                foodDatalist.appendChild(option);
+            }
+        }
     </script>
 </body>
 </html>
