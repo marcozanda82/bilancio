@@ -397,13 +397,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    btnCostruisciPasto.addEventListener('click', () => {
+   btnCostruisciPasto.addEventListener('click', () => {
         const item = creaAlimentoDaInput(false);
         if (item) {
             pastoInCostruzione.push(item);
             salvaPastoInCostruzione();
+            // --- AGGIUNGI QUESTO LOG DI DEBUG ---
+            console.log("Dopo 'Aggiungi a Pasto': pastoInCostruzione.length =", pastoInCostruzione.length);
+            // --- FINE LOG DI DEBUG ---
             renderMealBuilder();
             resetInputAlimento();
+            mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
         }
     });
 
