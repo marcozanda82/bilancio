@@ -89,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Assicurati che non sia già stato salvato come trackerStorico_
                     // o che non sia una data duplicata se già presente
                     if (salvataggioCorrente && salvataggioCorrente.data) {
-                        // Controlla se la data è già presente nello storicoDati per evitare duplicati
                         const isDuplicate = storicoDati.some(item => item.data === salvataggioCorrente.data);
                         if (!isDuplicate) {
                            storicoDati.push({ data: salvataggioCorrente.data, ...salvataggioCorrente.dati });
@@ -134,15 +133,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     entry.items.forEach(item => {
                         totaliGiorno.proteine += item.prot || 0;
                         totaliGiorno.calorie += item.cal || 0;
-                        // Assicurati di sommare anche i micronutrienti se li vuoi mostrare in futuro
-                        // totaliGiorno.mg += item.mg || 0;
-                        // ...
                     });
                 } else {
                     totaliGiorno.proteine += entry.prot || 0;
                     totaliGiorno.calorie += entry.cal || 0;
-                    // totaliGiorno.mg += entry.mg || 0;
-                    // ...
                 }
             });
 
@@ -156,18 +150,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcolo del deficit
             const deficit = totaliGiorno.calorie - obiettiviCalorici;
-            // Arrotonda il deficit per evitare problemi di virgola mobile
             const deficitArrotondato = Math.round(deficit); // Arrotonda all'intero più vicino
             
-            const stimaGrasso = (deficitArrotondato > 0 ? (deficitArrotondato / 7700) : 0) * 1000; // 7700 kcal per 1kg di grasso
+            // Nuovo calcolo della variazione di grasso
+            let variazioneGrasso = 0; // In grammi
+            let testoVariazioneGrasso = '';
+
+            // 7700 kcal per 1kg (1000g) di grasso, quindi 1g di grasso = 7.7 kcal
+            if (deficitArrotondato < 0) { // Se sei in deficit (valore negativo), stai perdendo grasso
+                variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7); // Variazione positiva per la quantità di grasso persa
+                testoVariazioneGrasso = '-' + variazioneGrasso.toFixed(1) + ' g';
+            } else if (deficitArrotondato > 0) { // Se sei in surplus (valore positivo), stai guadagnando grasso
+                variazioneGrasso = (deficitArrotondato / 7.7); // Variazione positiva per la quantità di grasso guadagnata
+                testoVariazioneGrasso = '+' + variazioneGrasso.toFixed(1) + ' g';
+            } else { // DeficitArrotondato è 0
+                testoVariazioneGrasso = '0.0 g';
+            }
             
             // Logica per il trend muscolare (come già presente)
             let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
             let scoreMuscolo = 0;
             if(totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) scoreMuscolo++;
             else scoreMuscolo--;
-            if(pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo++; // Usa pianoDelGiorno.tipo
-            if(deficitArrotondato > 500 && pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo--; // Usa deficitArrotondato
+            if(pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo++;
+            if(deficitArrotondato > 500 && pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo--;
             
             if(scoreMuscolo > 0) trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
             if(scoreMuscolo < 0) trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
@@ -182,8 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${totaliGiorno.proteine.toFixed(1)} g</td>
                 <td>${totaliGiorno.calorie.toFixed(0)}</td>
                 <td>${totaliGiorno.workoutCalorie} kcal</td>
-                <td>${deficitArrotondato} kcal</td> <td>${stimaGrasso.toFixed(1) < 0.1 && stimaGrasso.toFixed(1) > -0.1 ? '0.0' : stimaGrasso.toFixed(1)} g</td>
-                <td>${trendMuscoloHtml}</td>
+                <td>${deficitArrotondato} kcal</td>
+                <td>${testoVariazioneGrasso}</td> <td>${trendMuscoloHtml}</td>
             `;
             storicoBody.appendChild(summaryRow);
 
@@ -248,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
             mealRow.classList.toggle('expanded');
             let sibling = mealRow.nextElementSibling;
             while(sibling && sibling.classList.contains('sub-item-row')) {
-                // Alterna la visibilità
                 sibling.style.display = mealRow.classList.contains('expanded') ? 'table-row' : 'none';
                 sibling = sibling.nextElementSibling;
             }
