@@ -103,6 +103,33 @@
         </div>
         <div id="meal-builder-sezione" class="sezione" data-visible="false">
             <h2>Costruttore Pasto</h2>
+            <div id="meal-builder-sezione" class="sezione" data-visible="false">
+            <h2>Costruttore Pasto</h2>
+            <div id="meal-builder-summary">
+                <p>Pasto Selezionato: <span id="current-meal-type-display"></span></p>
+                <div class="progress-container">
+                    <div class="progress-item">
+                        <p>Proteine: <span id="meal-prot-current">0</span> / <span id="meal-prot-target"></span> g (<span id="meal-prot-remaining"></span>)</p>
+                        <progress id="meal-progress-prot" value="0"></progress>
+                    </div>
+                    <div class="progress-item">
+                        <p>Calorie: <span id="meal-cal-current">0</span> / <span id="meal-cal-target"></span> kcal (<span id="meal-cal-remaining"></span>)</p>
+                        <progress id="meal-progress-cal" value="0"></progress>
+                    </div>
+                </div>
+            </div>
+            <select id="meal-type-selector">
+                <option value="merenda1">Merenda AM</option>
+                <option value="pranzo">Pranzo</option>
+                <option value="merenda2">Merenda PM</option>
+                <option value="cena">Cena</option>
+            </select>
+            <table id="log-pasto-builder">
+                <thead><tr><th>Sel.</th><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
+                <tbody id="log-pasto-builder-body"></tbody>
+            </table>
+            <button id="btn-salva-pasto">Salva Pasto nel Diario</button>
+        </div>
             <select id="meal-type-selector">
                 <option value="merenda1">Merenda AM</option>
                 <option value="pranzo">Pranzo</option>
