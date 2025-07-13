@@ -3,22 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Nutrizionale - Cloud Sync</title>
+    <title>Tracker Nutrizionale - Versione Finale</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1, h2 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
-        .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; }
-        input[type="text"], input[type="number"], textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
-        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; transition: background-color 0.3s; }
+        h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
+        h2 { font-size: 1.4em; margin-top: 30px; }
+        h3 { font-size: 1.1em; color: #333; border-bottom: 1px solid #eee; margin-top: 20px; }
+        #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
+        .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; font-size: 95%;}
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        input[type="checkbox"] { width: auto; transform: scale(1.2); }
+        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
         button:hover { background-color: #1565c0; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
         .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        #riepilogo p { margin: 8px 0; }
+        progress { width: 100%; height: 15px; margin-top: 2px; }
+        progress.macro-progress { height: 25px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
+        .action-btn { background:0; border:0; font-size:1.3em; cursor:pointer; padding: 0 5px; }
+        .delete-btn { color:#d32f2f; }
+        .edit-btn { color: #1976d2; }
+        .builder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .button-group { display: flex; gap: 10px; margin-top: 15px; }
+        #btn-costruisci-pasto { background-color: #ff8f00; }
+        #btn-aggiungi-singolo { background-color: #5c6bc0; }
+        #meal-builder-sezione[data-visible="false"] { display: none; }
+        #btn-salva-pasto { background-color: #2e7d32; width: 100%; margin-top: 15px; }
+        .meal-group-row { background-color: #f0f4f8; font-weight: bold; }
+        .expand-arrow { cursor: pointer; display: inline-block; width: 20px; }
+        .sub-item-row td { padding-left: 25px !important; font-style: italic; color: #555; }
         #btn-archivia { width: 100%; margin-top: 20px; background-color: #c62828; font-weight: bold; }
         #sync-status { text-align:center; font-weight:bold; padding: 10px; border-radius: 6px; }
     </style>
@@ -26,154 +45,304 @@
 <body>
     <div class="container">
         <h1>Tracker Nutrizionale</h1>
+        <h2 id="titolo-giornata"></h2>
         <div class="nav-links"><a href="storico.html">📊 Storico</a></div>
         
-        <div id="sync-config-sezione" class="sezione">
-            <h2>Configurazione Sincronizzazione Cloud</h2>
-            <p>Incolla qui la configurazione del tuo progetto Firebase per abilitare la sincronizzazione. Devi farlo solo una volta.</p>
-            <textarea id="firebase-config-input" placeholder="Incolla qui l'intero blocco di codice che inizia con 'const firebaseConfig = ...'" rows="5"></textarea>
-            <button id="btn-save-config">Salva e Attiva Sincronizzazione</button>
-            <p id="sync-status"></p>
-        </div>
-
         <div id="riepilogo" class="sezione">
-            <h2>Riepilogo di Oggi (<span id="data-corrente-display"></span>)</h2>
+            <h2>Riepilogo di Oggi</h2>
             <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
+            <progress id="progress-proteine" class="macro-progress" value="0"></progress>
             <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+            <progress id="progress-calorie" class="macro-progress" value="0"></progress>
             <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
+            <hr>
+            <h3>Micronutrienti</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
+                    <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
+                </div>
+                <div>
+                    <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
+                    <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
+                </div>
+            </div>
         </div>
 
         <div id="food-adder" class="sezione">
             <h2>Aggiungi Alimento</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="builder-grid">
                 <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
-                <div><label>Quantità (g)</label><input type="number" id="builder-qta"></div>
-                <div><label>Proteine/100g</label><input type="number" id="builder-prot"></div>
-                <div><label>Kcal/100g</label><input type="number" id="builder-kcal"></div>
+                <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
+                <div><label>Proteine/100g</label><input type="number" id="builder-prot" min="0" step="0.1"></div>
+                <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
+            </div>
+            <div class="builder-grid" style="margin-top:10px;">
+                <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
+                <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
+                <div><label>Vit. C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
+                <div><label>Calcio (mg)/100g</label><input type="number" id="builder-ca" min="0"></div>
             </div>
             <datalist id="food-database-list"></datalist>
-            <button id="btn-aggiungi-singolo" style="width:100%; margin-top:15px;">Aggiungi al Diario</button>
+            <div class="button-group">
+                <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
+                <button id="btn-aggiungi-singolo">Aggiungi Diretto</button>
+            </div>
+        </div>
+        
+        <div id="meal-builder-sezione" class="sezione" data-visible="false">
+             <h2>Costruttore Pasto</h2>
+            <table id="log-pasto-builder">
+                <thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
+                <tbody id="log-pasto-builder-body"></tbody>
+            </table>
+            <button id="btn-salva-pasto">Aggiungi Pasto al Diario</button>
         </div>
 
         <div class="sezione">
             <h2>Diario Giornaliero</h2>
-            <table id="log-pasti"><thead><tr><th>Descrizione</th><th>Quantità</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
+            <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
             <button id="btn-archivia">Archivia e Chiudi Giornata</button>
         </div>
-
+        
+        <div class="sezione">
+            <h2>Registra Allenamento</h2>
+            <form id="form-allenamento"><input type="text" id="descrizione-allenamento" placeholder="Descrizione"><input type="number" id="calorie-bruciate" placeholder="Calorie"><button type="submit">Aggiungi</button></form>
+            <table id="log-allenamenti" style="display:none;"><thead><tr><th>Descrizione</th><th>Calorie</th><th>Azione</th></tr></thead><tbody id="log-allenamenti-body"></tbody></table>
         </div>
+
+        <div id="sync-config-sezione" class="sezione">
+            <h2>Configurazione Sincronizzazione Cloud</h2>
+            <p>Per sincronizzare, incolla qui l'URL del tuo Realtime Database.</p>
+            <input type="text" id="firebase-db-url" placeholder="https://tuo-progetto.firebasedatabase.app">
+            <button id="btn-save-config">Salva e Attiva Sync</button>
+            <p id="sync-status"></p>
+        </div>
+    </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    let datiGiornalieri, foodDatabase, db;
-    let dataListener; 
-    let syncTimeout;
+    const PIANO_SETTIMANALE = { 0:{tipo:'💧 Riposo', cal:1700, prot:110}, 1:{tipo:'🔥 Forza', cal:2400, prot:140}, 2:{tipo:'🔥 Forza', cal:2400, prot:140}, 3:{tipo:'🔥 HIIT', cal:2400, prot:140}, 4:{tipo:'🔥 Forza', cal:2400, prot:140}, 5:{tipo:'🔥 Forza', cal:2400, prot:140}, 6:{tipo:'💧 Cardio', cal:1700, prot:110} };
+    let datiGiornalieri, foodDatabase, pastoInCostruzione;
+    let db, dataListener, localUpdateInProgress = false;
 
+    const dom = {};
+    const ids = ['titolo-giornata', 'totale-proteine', 'obiettivo-proteine', 'progress-proteine', 'totale-calorie', 'obiettivo-calorie', 'progress-calorie', 'workout-calories-totali', 'totale-mg', 'progress-mg', 'totale-k', 'progress-k', 'totale-vitc', 'progress-vitc', 'totale-ca', 'progress-ca', 'builder-desc', 'builder-qta', 'builder-prot', 'builder-kcal', 'builder-mg', 'builder-k', 'builder-vitc', 'builder-ca', 'food-database-list', 'log-body', 'form-allenamento', 'log-allenamenti', 'log-allenamenti-body', 'btn-aggiungi-singolo', 'btn-costruisci-pasto', 'btn-salva-pasto', 'btn-archivia', 'meal-builder-sezione', 'log-pasto-builder-body', 'firebase-db-url', 'btn-save-config', 'sync-status'];
+    ids.forEach(id => { if (document.getElementById(id)) dom[id.replace(/-/g,'_')] = document.getElementById(id); });
+    
     const getTodayString = () => new Date().toISOString().split('T')[0];
 
     function salvaStato(triggerSync = true) {
+        localUpdateInProgress = true;
         const stato = {
             giornoCorrente: { data: getTodayString(), dati: datiGiornalieri },
-            storico: JSON.parse(localStorage.getItem('storico')) || [],
-            databaseAlimenti: foodDatabase
+            storico: JSON.parse(localStorage.getItem('trackerStorico')) || [],
+            databaseAlimenti: foodDatabase,
+            pastoInCostruzione: pastoInCostruzione
         };
-        localStorage.setItem('giornoCorrente', JSON.stringify(stato.giornoCorrente));
-        localStorage.setItem('storico', JSON.stringify(stato.storico));
-        localStorage.setItem('databaseAlimenti', JSON.stringify(foodDatabase));
+        localStorage.setItem('trackerGiornoCorrente', JSON.stringify(stato.giornoCorrente));
+        localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase));
+        localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione));
         
         if (db && triggerSync) {
-            console.log("Salvataggio su Firebase...");
-            db.ref('trackerData').set(stato);
+            db.ref('trackerData').set(stato).finally(() => setTimeout(() => localUpdateInProgress = false, 500));
+        } else {
+            localUpdateInProgress = false;
         }
     }
 
     function initFirebase() {
-        const fbConfigString = localStorage.getItem('firebaseConfig');
-        const syncStatusEl = document.getElementById('sync-status');
-        if (!fbConfigString) {
-            syncStatusEl.textContent = "Sincronizzazione non configurata.";
-            syncStatusEl.style.color = 'orange';
-            return;
-        }
+        const dbUrl = localStorage.getItem('firebaseDbUrl');
+        if (!dbUrl) { dom.sync_status.textContent = "Sincronizzazione non configurata."; dom.sync_status.style.color = 'orange'; return; }
         
         try {
-            const fbConfig = JSON.parse(fbConfigString);
-            if (firebase.apps.length === 0) firebase.initializeApp(fbConfig);
+            if (firebase.apps.length === 0) firebase.initializeApp({ databaseURL: dbUrl });
             db = firebase.database();
-            syncStatusEl.textContent = "Sincronizzazione Attiva ✅";
-            syncStatusEl.style.color = 'green';
-            
+            dom.sync_status.textContent = "Sincronizzazione Attiva ✅";
+            dom.sync_status.style.color = 'green';
             if(dataListener) db.ref('trackerData').off('value', dataListener);
             
             dataListener = db.ref('trackerData').on('value', (snapshot) => {
+                if (localUpdateInProgress) return;
                 const data = snapshot.val();
                 if (data) {
-                    const localDataString = JSON.stringify({
-                        giornoCorrente: JSON.parse(localStorage.getItem('giornoCorrente')),
-                        storico: JSON.parse(localStorage.getItem('storico')),
-                        databaseAlimenti: JSON.parse(localStorage.getItem('databaseAlimenti'))
-                    });
-
-                    if (JSON.stringify(data) !== localDataString) {
-                        console.log("Dati remoti diversi, aggiorno l'interfaccia...");
-                        localStorage.setItem('giornoCorrente', JSON.stringify(data.giornoCorrente));
-                        localStorage.setItem('storico', JSON.stringify(data.storico));
-                        localStorage.setItem('databaseAlimenti', JSON.stringify(data.databaseAlimenti));
-                        
-                        // Evita di ricaricare se i dati locali sono stati appena salvati
-                        clearTimeout(syncTimeout);
-                        syncTimeout = setTimeout(() => location.reload(), 500);
-                    }
+                    localStorage.setItem('trackerGiornoCorrente', JSON.stringify(data.giornoCorrente));
+                    localStorage.setItem('trackerStorico', JSON.stringify(data.storico));
+                    localStorage.setItem('trackerFoodDatabase', JSON.stringify(data.databaseAlimenti));
+                    localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(data.pastoInCostruzione));
+                    location.reload();
                 }
             });
         } catch(e) {
-            syncStatusEl.textContent = "Configurazione non valida.";
-            syncStatusEl.style.color = 'red';
+            dom.sync_status.textContent = "URL Firebase non valido.";
+            dom.sync_status.style.color = 'red';
         }
     }
 
+    function aggiornaUI() {
+        const dataAttuale = new Date();
+        const pianoOggi = PIANO_SETTIMANALE[dataAttuale.getDay()];
+        const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal, mg: 420, k: 3400, vitc: 90, ca: 1000 };
+        
+        dom.titolo_giornata.textContent = pianoOggi.tipo;
+        Object.keys(OBIETTIVI).forEach(key => {
+            if(dom[`obiettivo_${key}`]) dom[`obiettivo_${key}`].textContent = OBIETTIVI[key];
+            if(dom[`progress_${key}`]) dom[`progress_${key}`].max = OBIETTIVI[key];
+        });
+        
+        const totali = (datiGiornalieri.log || []).reduce((acc, item) => {
+            Object.keys(acc).forEach(key => acc[key] += item[key] || 0);
+            return acc;
+        }, { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 });
+        
+        Object.keys(totali).forEach(key => {
+            const el = dom[`totale_${key}`];
+            if (el) el.textContent = totali[key].toFixed(key !== 'calorie' && key !== 'k' ? 1 : 0);
+            if (dom[`progress_${key}`]) dom[`progress_${key}`].value = totali[key];
+        });
+
+        const workoutCal = (datiGiornalieri.workoutLog || []).reduce((acc, w) => acc + w.cal, 0);
+        dom.workout_calories_totali.textContent = workoutCal;
+
+        dom.log_body.innerHTML = '';
+        (datiGiornalieri.log || []).forEach((item, index) => {
+            const riga = dom.log_body.insertRow();
+            riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td>${(item.mg||0).toFixed(1)}</td><td>${(item.k||0).toFixed(0)}</td><td>${(item.vitc||0).toFixed(1)}</td><td>${(item.ca||0).toFixed(1)}</td><td><button class="action-btn delete-btn" data-type="log" data-index="${index}">&times;</button></td>`;
+        });
+        
+        dom.log_allenamenti.style.display = (datiGiornalieri.workoutLog || []).length > 0 ? 'table' : 'none';
+        dom.log_allenamenti_body.innerHTML = '';
+        (datiGiornalieri.workoutLog || []).forEach((item, index) => {
+            dom.log_allenamenti_body.insertRow().innerHTML = `<td>${item.desc}</td><td>${item.cal}</td><td><button class="action-btn delete-btn" data-type="workout" data-index="${index}">&times;</button></td>`;
+        });
+
+        dom.food_database_list.innerHTML = Object.keys(foodDatabase).map(key => `<option value="${key.charAt(0).toUpperCase() + key.slice(1)}">`).join('');
+    }
+    
     function initApp() {
-        foodDatabase = JSON.parse(localStorage.getItem('databaseAlimenti')) || {};
-        const giornoCorrenteData = JSON.parse(localStorage.getItem('giornoCorrente'));
+        foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
+        pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
+        const giornoCorrenteData = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
         if (giornoCorrenteData && giornoCorrenteData.data === getTodayString()) {
             datiGiornalieri = giornoCorrenteData.dati;
-        } else if (giornoCorrenteData && giornoCorrenteData.data !== getTodayString()) {
-            // Se c'è un giorno vecchio non archiviato, lo mostra ma segnala
-            datiGiornalieri = giornoCorrenteData.dati;
-            alert(`Stai visualizzando i dati di una giornata passata (${giornoCorrenteData.data}). Ricordati di archiviarla.`);
         } else {
             datiGiornalieri = { log: [], workoutLog: [] };
         }
         aggiornaUI();
+        renderMealBuilder();
+    }
+
+    function creaAlimentoDaInput() {
+        const desc = dom.builder_desc.value.trim(); const qta = parseFloat(dom.builder_qta.value) || 0;
+        if (!desc || qta <= 0) { alert('Inserisci nome e quantità.'); return null; }
+        const p100 = parseFloat(dom.builder_prot.value)||0, k100 = parseFloat(dom.builder_kcal.value)||0;
+        const mg100 = parseFloat(dom.builder_mg.value)||0, k100_mg = parseFloat(dom.builder_k.value)||0;
+        const vitc100 = parseFloat(dom.builder_vitc.value)||0, ca100 = parseFloat(dom.builder_ca.value)||0;
+        if (p100 > 0 || k100 > 0) foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
+        return { desc, qta, prot: (p100/100)*qta, cal: Math.round((k100/100)*qta), mg: (mg100/100)*qta, k: (k100_mg/100)*qta, vitc: (vitc100/100)*qta, ca: (ca100/100)*qta };
     }
     
-    // ... Inserisci qui le altre funzioni del tracker (aggiornaUI, etc.)
+    function renderMealBuilder() { 
+        if(!dom.meal_builder_sezione) return;
+        dom.meal_builder_sezione.dataset.visible = pastoInCostruzione.length > 0;
+        if (pastoInCostruzione.length === 0) return;
+        dom.log_pasto_builder_body.innerHTML = '';
+        pastoInCostruzione.forEach((item, index) => {
+            const riga = dom.log_pasto_builder_body.insertRow();
+            riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td><button class="action-btn delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`;
+        });
+    }
 
-    document.getElementById('btn-save-config').addEventListener('click', () => {
-        const configText = document.getElementById('firebase-config-input').value;
-        if (!configText) return alert("Incolla la configurazione.");
-        try {
-            // --- LOGICA CORRETTA ---
-            // Cerca l'inizio dell'oggetto JSON
-            const startIndex = configText.indexOf('{');
-            const endIndex = configText.lastIndexOf('}') + 1;
-            const jsonText = configText.substring(startIndex, endIndex);
-            
-            // Il parser JSON nativo non gestisce le chiavi senza virgolette.
-            // Questa regex le aggiunge.
-            const validJsonText = jsonText.replace(/(\s*?{\s*?|,\s*?)(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '$1"$3":');
+    function resetInputAlimento() {
+        ['builder_desc', 'builder_qta', 'builder_prot', 'builder_kcal', 'builder_mg', 'builder_k', 'builder_vitc', 'builder_ca'].forEach(id => dom[id].value = '');
+        dom.builder_desc.focus();
+    }
 
-            const configObject = JSON.parse(validJsonText);
-            localStorage.setItem('firebaseConfig', JSON.stringify(configObject));
-            alert("Configurazione salvata! La pagina si ricaricherà.");
-            location.reload();
-        } catch (e) {
-            console.error("Errore di parsing:", e);
-            alert("Errore nel formato della configurazione. Assicurati di aver incollato l'intero blocco di codice fornito da Firebase.");
+    dom.btn_aggiungi_singolo.addEventListener('click', () => { 
+        const item = creaAlimentoDaInput(); 
+        if(item) { datiGiornalieri.log.push(item); salvaStato(); aggiornaUI(); resetInputAlimento(); }
+    });
+
+    dom.btn_costruisci_pasto.addEventListener('click', () => { 
+        const item = creaAlimentoDaInput(); 
+        if(item) { pastoInCostruzione.push(item); salvaStato(); renderMealBuilder(); resetInputAlimento(); }
+    });
+    
+    dom.btn_salva_pasto.addEventListener('click', () => {
+        if (pastoInCostruzione.length === 0) return alert("Nessun alimento nel costruttore.");
+        pastoInCostruzione.forEach(item => datiGiornalieri.log.push(item));
+        pastoInCostruzione = [];
+        salvaStato();
+        aggiornaUI();
+        renderMealBuilder();
+    });
+
+    dom.builder_desc.addEventListener('input', (e) => {
+        const foodData = foodDatabase[e.target.value.toLowerCase()];
+        if(foodData) ['prot', 'kcal', 'mg', 'k', 'vitc', 'ca'].forEach(key => {
+            if(dom[`builder_${key}`]) dom[`builder_${key}`].value = foodData[key] || '';
+        });
+    });
+
+    dom.form_allenamento.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const descInput = e.target.querySelector('input[type="text"]');
+        const calInput = e.target.querySelector('input[type="number"]');
+        const desc = descInput.value || 'Allenamento';
+        const cal = parseInt(calInput.value, 10);
+        if (cal > 0) {
+            if (!datiGiornalieri.workoutLog) datiGiornalieri.workoutLog = [];
+            datiGiornalieri.workoutLog.push({ desc, cal });
+            salvaStato();
+            aggiornaUI();
+            descInput.value = '';
+            calInput.value = '';
         }
     });
 
-    // ... (tutti gli altri listener e il resto dello script)
+    document.querySelector('.container').addEventListener('click', (e) => {
+        const target = e.target.closest('.delete-btn');
+        if (target) {
+            const index = target.dataset.index;
+            const type = target.dataset.type;
+            if (type === 'log') {
+                datiGiornalieri.log.splice(index, 1);
+            } else if (type === 'workout') {
+                datiGiornalieri.workoutLog.splice(index, 1);
+            } else if (type === 'builder') {
+                pastoInCostruzione.splice(index, 1);
+                renderMealBuilder();
+            }
+            salvaStato();
+            aggiornaUI();
+        }
+    });
+    
+    dom.btn_archivia.addEventListener('click', () => {
+        const giornoCorrente = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
+        if (!giornoCorrente || !giornoCorrente.dati || (giornoCorrente.dati.log || []).length === 0) return alert("Nessun dato da archiviare.");
+        if (!confirm(`Sei sicuro di voler chiudere e archiviare la giornata del ${new Date(giornoCorrente.data).toLocaleDateString()}?`)) return;
+        const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
+        const nuovoStorico = storico.filter(item => item.data !== giornoCorrente.data);
+        nuovoStorico.push({ data: giornoCorrente.data, ...giornoCorrente.dati });
+        localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico));
+        datiGiornalieri = { log: [], workoutLog: [] };
+        pastoInCostruzione = [];
+        salvaStato();
+        alert(`Giornata archiviata!`);
+        aggiornaUI();
+        renderMealBuilder();
+    });
+
+    dom.btn_save_config.addEventListener('click', () => {
+        const dbUrl = dom.firebase_db_url.value.trim();
+        if (!dbUrl.startsWith('https://') || !(dbUrl.includes('.firebaseio.com') || dbUrl.includes('.firebasedatabase.app'))) {
+            return alert("URL non valido. Incolla l'URL completo del tuo Realtime Database.");
+        }
+        localStorage.setItem('firebaseDbUrl', dbUrl);
+        alert("Configurazione salvata! La pagina si ricaricherà per attivare la sincronizzazione.");
+        location.reload();
+    });
 
     initFirebase();
     initApp();
