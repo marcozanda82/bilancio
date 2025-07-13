@@ -3,26 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Definitivo - Sincronizzazione Pubblica</title>
+    <title>Tracker Definitivo - Sincronizzazione Pubblica (Corretto)</title>
     <style>
-        /* CSS INVARIATO - Ometto per brevità */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
-        h2 { font-size: 1.4em; margin-top: 30px; }
-        h3 { font-size: 1.1em; color: #333; border-bottom: 1px solid #eee; margin-top: 20px; }
-        #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input[type="text"], input[type="number"], input[type="date"], select, input[type="email"], input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
-        input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
-        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
+        input, select, textarea, button { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        button { background-color: #1976d2; color: white; border: none; cursor: pointer; font-weight: 600; transition: background-color 0.3s; }
         button:hover { background-color: #1565c0; }
-        .button-group { display: flex; gap: 10px; margin-top: 15px; }
         #firebase-sezione { border-left-color: #f57c00; }
         #firebase-status { padding: 10px; margin-top: 10px; border-radius: 6px; text-align: center; font-weight: 600; }
         .status-connected { background-color: #e8f5e9; color: #2e7d32; }
         .status-disconnected { background-color: #ffebee; color: #c62828; }
+        .app-content.disabled { opacity: 0.5; pointer-events: none; }
+        /* Aggiungi qui il resto del tuo CSS originale */
     </style>
 </head>
 <body>
@@ -31,130 +27,182 @@
 
         <div id="firebase-sezione" class="sezione">
             <h2>Sincronizzazione Cloud (Firebase)</h2>
-            <div id="firebase-status" class="status-disconnected">Disconnesso</div>
+            <div id="firebase-status" class="status-disconnected">Inserisci la configurazione per iniziare.</div>
             <details style="margin-top: 15px;">
                 <summary style="cursor: pointer; color: #555;">Configurazione Firebase</summary>
                 <div style="margin-top: 10px;">
-                    <p style="font-size: 0.9em; color: #777;">Incolla qui le credenziali del tuo progetto Firebase.</p>
-                    <textarea id="firebase-config-json" rows="6" style="width: 100%; font-family: monospace; font-size: 0.8em;"></textarea>
-                    <button id="btn-save-config" style="margin-top: 10px;">Salva e Connetti</button>
+                    <p style="font-size: 0.9em; color: #777;">Incolla qui l'oggetto di configurazione del tuo progetto Firebase.</p>
+                    <textarea id="firebase-config-json" rows="8" style="font-family: monospace; font-size: 0.9em;"></textarea>
+                    <button id="btn-save-config">Connetti</button>
                 </div>
             </details>
         </div>
 
-        <h2 id="titolo-giornata"></h2>
-        <div class="nav-links">
-            <a href="storico.html">📊 Storico Giornaliero</a>
-            <a href="confronto.html">📈 Confronto Mensile</a>
-        </div>
-        <div id="proiezione" class="sezione proiezione-neutra">
-            <h2>Proiezione del Trend</h2>
-            <p id="testo-proiezione">Connetti a Firebase per caricare i dati.</p>
-        </div>
-        <div id="riepilogo" class="sezione">...</div>
-        <div id="food-adder" class="sezione">...</div>
-        <div id="meal-builder-sezione" class="sezione" data-visible="false">...</div>
-        <div class="sezione"><h2>Registra Allenamento</h2>...</div>
-        <div class="sezione"><h2>Diario Giornaliero</h2>...</div>
-        <div id="backup-sezione" class="sezione">...</div>
-        <div id="confronto-sezione" class="sezione">...</div>
+        <div id="app-content" class="app-content disabled">
+            <h2 id="titolo-giornata"></h2>
+            <div class="nav-links" style="display: flex; gap: 10px;">
+                 <a href="storico.html" style="flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px;">📊 Storico</a>
+                 <a href="confronto.html" style="flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px;">📈 Confronto</a>
+            </div>
+             </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
 
     <script type="module">
-        // Importa solo le funzioni necessarie
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get, child } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
-        
-        // --- VARIABILI GLOBALI E DI STATO ---
-        let firebaseApp, db;
-        let unsubscribeGiornoCorrente; 
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // Rimuoviamo le costanti e le variabili globali che erano nel tuo script originale
-        // e le aggiungiamo qui per completezza
-        const PIANO_SETTIMANALE = { 0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, 1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 2: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 3: { tipo: '🔥 HIIT/Core (Mantenimento)', cal: 2400, prot: 140 }, 4: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 5: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 6: { tipo: '💧 Cardio LISS (Deficit)', cal: 1700, prot: 110 } };
-        const pianoOggi = PIANO_SETTIMANALE[new Date().getDay()];
-        const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal, mg: 420, k: 3400, vitc: 90, ca: 1000 };
-        const TDEE_BASE = 2311;
-        
-        let datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] };
-        let foodDatabase = {};
-        let pastoInCostruzione = [];
-        let storico = [];
-        let pesate = [];
+        // --- STATO DELL'APPLICAZIONE ---
+        let db;
+        let isFirebaseReady = false;
+        let listeners = {}; // Per gestire i listener e rimuoverli se necessario
 
-        // Ottieni elementi del DOM necessari per la logica Firebase
+        // --- ELEMENTI DEL DOM ---
         const firebaseConfigTextarea = document.getElementById('firebase-config-json');
         const btnSaveConfig = document.getElementById('btn-save-config');
         const firebaseStatusDiv = document.getElementById('firebase-status');
+        const appContentDiv = document.getElementById('app-content');
 
-        // --- LOGICA DI FIREBASE ---
+        // --- LOGICA DI INIZIALIZZAZIONE ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Controlla se una configurazione è già salvata in localStorage
+            const savedConfig = localStorage.getItem('firebaseConfig');
+            if (savedConfig) {
+                try {
+                    const config = JSON.parse(savedConfig);
+                    firebaseConfigTextarea.value = JSON.stringify(config, null, 2);
+                    initFirebase(config);
+                } catch (e) {
+                    console.error("Errore nel parsing della configurazione salvata:", e);
+                    localStorage.removeItem('firebaseConfig');
+                }
+            }
+
+            // 2. Aggiungi l'evento al pulsante per salvare e connettere
+            btnSaveConfig.addEventListener('click', handleConnectClick);
+        });
+
+        function handleConnectClick() {
+            const configString = firebaseConfigTextarea.value;
+            if (!configString) {
+                alert("Per favore, incolla il JSON di configurazione di Firebase.");
+                return;
+            }
+            try {
+                const config = JSON.parse(configString);
+                // Tenta di inizializzare Firebase subito, senza ricaricare la pagina
+                initFirebase(config);
+                // Se l'inizializzazione va a buon fine, salva la config
+                localStorage.setItem('firebaseConfig', JSON.stringify(config));
+            } catch (e) {
+                alert("Errore nel formato JSON della configurazione. Assicurati che sia corretto.");
+                console.error("Errore di parsing JSON:", e);
+                updateFirebaseStatus(false, "Configurazione non valida.");
+            }
+        }
 
         function initFirebase(config) {
             try {
-                firebaseApp = initializeApp(config);
-                db = getDatabase(firebaseApp);
-                
-                firebaseStatusDiv.textContent = "Connesso a Firebase";
-                firebaseStatusDiv.className = 'status-connected';
-                
-                // Una volta connesso, carica i dati
-                caricaDatiDaFirebase();
-
+                const app = initializeApp(config);
+                db = getDatabase(app);
+                isFirebaseReady = true;
+                updateFirebaseStatus(true, "Connesso a Firebase.");
+                loadAllData();
             } catch (error) {
-                console.error("Errore inizializzazione Firebase:", error);
-                firebaseStatusDiv.textContent = "Errore di configurazione Firebase.";
-                firebaseStatusDiv.className = 'status-disconnected';
-                alert("Configurazione Firebase non valida. Controlla il JSON inserito.");
+                isFirebaseReady = false;
+                console.error("Errore Inizializzazione Firebase:", error);
+                updateFirebaseStatus(false, `Errore: ${error.code}`);
             }
         }
-        
-        function caricaDatiDaFirebase() {
-            // Carica dati una tantum (storico, database cibi, etc)
-            // I percorsi ora sono alla radice, non sotto /users/{userId}
-            get(ref(db)).then((snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    foodDatabase = data.foodDatabase || {};
-                    storico = data.storico || [];
-                    pesate = data.pesate || [];
-                    pastoInCostruzione = data.pastoInCostruzione || [];
-                    
-                    aggiornaDatalist();
-                    renderMealBuilder();
-                } else {
-                    console.log("Database vuoto, creando struttura base.");
-                    salvaFoodDatabase(); 
-                }
-            }).catch((error) => console.error("Errore nel caricamento dei dati statici:", error));
 
-            // Si mette in ascolto IN TEMPO REALE per i dati del giorno corrente
-            const oggi = getTodayString('ymd');
-            const giornoCorrenteRef = ref(db, `giorni/${oggi}`);
+        function updateFirebaseStatus(isConnected, message) {
+            firebaseStatusDiv.textContent = message;
+            if (isConnected) {
+                firebaseStatusDiv.className = 'status-connected';
+                appContentDiv.classList.remove('disabled');
+            } else {
+                firebaseStatusDiv.className = 'status-disconnected';
+                appContentDiv.classList.add('disabled');
+            }
+        }
+
+        // --- GESTIONE DEI DATI ---
+
+        function loadAllData() {
+            if (!isFirebaseReady) return;
+            console.log("Caricamento dati da Firebase...");
             
-            if (unsubscribeGiornoCorrente) unsubscribeGiornoCorrente();
+            // Esempio di caricamento dati (adatta con i tuoi dati)
+            // Carica il foodDatabase
+            listenToData('foodDatabase', (data) => {
+                const foodDatabase = data || {};
+                // Qui aggiorni la UI relativa al food database
+                console.log("Food Database caricato:", foodDatabase);
+            });
 
-            unsubscribeGiornoCorrente = onValue(giornoCorrenteRef, (snapshot) => {
-                const datiSalvati = snapshot.val();
-                if (datiSalvati) {
-                    datiGiornalieri = datiSalvati;
-                } else {
-                    datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] };
-                    salvaGiornoCorrente();
-                }
-                aggiornaUI();
+            // Carica i dati del giorno corrente
+            const oggi = new Date().toISOString().split('T')[0];
+            listenToData(`giorni/${oggi}`, (data) => {
+                const datiGiornalieri = data || { log: [], workoutLog: [] }; // Default
+                // Qui aggiorni la UI con i dati del giorno
+                console.log("Dati del giorno caricati:", datiGiornalieri);
             });
         }
         
-        // --- FUNZIONI DI SALVATAGGIO (con percorsi pubblici) ---
-
-        function salvaGiornoCorrente() {
-            if (!db) return;
-            const oggi = getTodayString('ymd');
-            set(ref(db, `giorni/${oggi}`), datiGiornalieri);
+        /**
+         * Funzione generica per mettersi in ascolto di un percorso sul database.
+         * @param {string} path Il percorso dei dati (es. 'foodDatabase' o 'giorni/2023-10-27')
+         * @param {function} callback La funzione da eseguire quando i dati cambiano
+         */
+        function listenToData(path, callback) {
+            if (!isFirebaseReady) return;
+            // Rimuovi un eventuale listener precedente per lo stesso percorso
+            if (listeners[path]) {
+                listeners[path](); // Esegue la funzione di unsubscribe
+            }
+            const dataRef = ref(db, path);
+            const unsubscribe = onValue(dataRef, (snapshot) => {
+                const data = snapshot.val();
+                callback(data);
+            });
+            // Salva la funzione di unsubscribe per poterla richiamare
+            listeners[path] = unsubscribe;
         }
 
-        function salvaFoodDatabase() {
-            if (!db
+        /**
+         * Funzione generica per salvare dati su un percorso specifico.
+         * @param {string} path Il percorso dove salvare i dati
+         * @param {any} data I dati da salvare
+         */
+        function saveData(path, data) {
+            if (!isFirebaseReady) {
+                alert("Connessione a Firebase non attiva. Impossibile salvare.");
+                return;
+            }
+            set(ref(db, path), data)
+                .catch(error => console.error(`Errore nel salvataggio su ${path}:`, error));
+        }
+
+        // --- ESEMPIO DI UTILIZZO ---
+        // Quando aggiungi un alimento, invece di modificare solo una variabile locale,
+        // dovrai leggere i dati attuali, modificarli e poi salvarli con saveData.
+
+        // Esempio:
+        // function aggiungiAlimento(nuovoAlimento) {
+        //     const oggi = new Date().toISOString().split('T')[0];
+        //     const percorso = `giorni/${oggi}`;
+        //
+        //     // Leggi i dati correnti una sola volta per evitare sovrascritture
+        //     get(ref(db, percorso)).then((snapshot) => {
+        //         const datiAttuali = snapshot.val() || { log: [], workoutLog: [] };
+        //         datiAttuali.log.push(nuovoAlimento);
+        //         saveData(percorso, datiAttuali); // Salva l'oggetto aggiornato
+        //     });
+        // }
+
+    </script>
+</body>
+</html>
