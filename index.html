@@ -17,18 +17,49 @@
         input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
         button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
         button:hover { background-color: #1565c0; }
+        #form-allenamento button { background-color: #2e7d32; }
+        #form-allenamento button:hover { background-color: #1b5e20; }
+        .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
+        .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
         .sync-button-container { text-align: right; margin-bottom: 15px; }
         .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         .sync-button:hover { background-color: #e65100; }
+        #riepilogo p { font-size: 1.1em; margin: 8px 0; }
+        #riepilogo .valore-consumato { font-weight: 600; color: #1976d2; }
+        #riepilogo .valore-bruciato { font-weight: 600; color: #2e7d32; }
+        #riepilogo .valore-deficit { font-weight: 600; color: #0d47a1; }
+        progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
+        progress.macro-progress { height: 25px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8em; }
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background-color: #f2f2f2; font-weight: 600; }
+        td:first-child, th:first-child { text-align: center; }
         .delete-btn { background-color: transparent; border: none; color: #d32f2f; font-size: 1.3em; font-weight: bold; cursor: pointer; padding: 0 8px; border-radius: 50%; line-height: 1; }
+        .delete-btn:hover { background-color: #ffebee; color: #b71c1c; }
+        .proiezione-ok { border-left-color: #4caf50; } .proiezione-attenzione { border-left-color: #ff9800; } .proiezione-pericolo { border-left-color: #f44336; } .proiezione-neutra { border-left-color: #9e9e9e; }
+        .builder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        .builder-grid div { display: flex; flex-direction: column; }
+        .builder-grid label { font-size: 0.8em; margin-bottom: 4px; }
+        .builder-grid input { margin-bottom: 0; }
+        .button-group { display: flex; gap: 10px; margin-top: 15px; }
+        .button-group button { flex-grow: 1; }
+        #btn-costruisci-pasto { background-color: #ff8f00; } #btn-costruisci-pasto:hover { background-color: #e65100; }
+        #btn-aggiungi-singolo { background-color: #5c6bc0; } #btn-aggiungi-singolo:hover { background-color: #3949ab; }
+        #meal-builder-sezione[data-visible="false"] { display: none; }
+        #meal-builder-sezione { border-left-color: #ff8f00; }
+        .builder-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+        .builder-stats p { margin: 0 0 5px 0; font-weight: 600; }
+        #btn-salva-pasto { background-color: #2e7d32; width: 100%; margin-top: 15px; }
+        #btn-salva-pasto:hover { background-color: #1b5e20; }
+        #feedback-deficit { padding: 10px; margin-top: 15px; border-radius: 6px; font-weight: 600; text-align: center; }
+        .deficit-ok { background-color: #e8f5e9; color: #2e7d32; } .deficit-alto { background-color: #e3f2fd; color: #1565c0; } .surplus { background-color: #fff3e0; color: #e65100; }
+        .meal-group-row { background-color: #f0f4f8; font-weight: bold; }
+        .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; }
+        .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
         #caricamento-manuale { margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; border-left-color: #673ab7;}
         #caricamento-manuale div { display: flex; gap: 10px; align-items: center; }
         #caricamento-manuale input { flex-grow: 1; margin-bottom: 0; }
         #caricamento-manuale button { flex-grow: 0; width: auto; margin-bottom: 0; background-color: #673ab7; }
-        #caricamento-manuale button:hover { background-color: #512da8; }
     </style>
 </head>
 <body>
@@ -94,7 +125,7 @@
 
         <div id="meal-builder-sezione" class="sezione" data-visible="false">
             <h2>Costruttore Pasto</h2>
-            <select id="meal-type-selector">
+             <select id="meal-type-selector">
                 <option value="merenda1">Merenda AM</option>
                 <option value="pranzo">Pranzo</option>
                 <option value="merenda2">Merenda PM</option>
@@ -115,6 +146,7 @@
         <div class="sezione">
             <h2>Diario Giornaliero</h2>
             <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
+            
             <div id="caricamento-manuale" class="sezione">
                 <h3>Carica un Giorno Specifico</h3>
                 <div>
@@ -137,11 +169,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let foodDatabase = {};
     let pastoInCostruzione = []; 
 
-    // --- ELEMENTI DEL DOM ---
-    const allDomElements = {
-        titoloGiornataEl: document.getElementById('titolo-giornata'), proiezioneDiv: document.getElementById('proiezione'), testoProiezione: document.getElementById('testo-proiezione'), formAllenamento: document.getElementById('form-allenamento'), spanTotaleProteine: document.getElementById('totale-proteine'), spanTotaleCalorie: document.getElementById('totale-calorie'), spanObiettivoProteine: document.getElementById('obiettivo-proteine'), spanObiettivoCalorie: document.getElementById('obiettivo-calorie'), spanTotaleMg: document.getElementById('totale-mg'), spanTotaleK: document.getElementById('totale-k'), spanTotaleVitC: document.getElementById('totale-vitc'), spanTotaleCa: document.getElementById('totale-ca'), progressProteine: document.getElementById('progress-proteine'), progressCalorie: document.getElementById('progress-calorie'), progressMg: document.getElementById('progress-mg'), progressK: document.getElementById('progress-k'), progressVitC: document.getElementById('progress-vitc'), progressCa: document.getElementById('progress-ca'), spanWorkoutCalories: document.getElementById('workout-calories-totali'), logBody: document.getElementById('log-body'), logAllenamentiBody: document.getElementById('log-allenamenti-body'), builderDesc: document.getElementById('builder-desc'), builderQta: document.getElementById('builder-qta'), builderProt: document.getElementById('builder-prot'), builderKcal: document.getElementById('builder-kcal'), builderMg: document.getElementById('builder-mg'), builderK: document.getElementById('builder-k'), builderVitC: document.getElementById('builder-vitc'), builderCa: document.getElementById('builder-ca'), foodDatalist: document.getElementById('food-database-list'), btnCostruisciPasto: document.getElementById('btn-costruisci-pasto'), btnAggiungiSingolo: document.getElementById('btn-aggiungi-singolo'), mealBuilderSezione: document.getElementById('meal-builder-sezione'), mealTypeSelector: document.getElementById('meal-type-selector'), logPastoBuilderBody: document.getElementById('log-pasto-builder-body'), btnSalvaPasto: document.getElementById('btn-salva-pasto'), btnCaricaGiorno: document.getElementById('btn-carica-giorno'), dataCaricamentoInput: document.getElementById('data-caricamento')
-    };
-
+    // --- ELEMENTI DEL DOM (definiti singolarmente per massima compatibilità) ---
+    const titoloGiornataEl = document.getElementById('titolo-giornata');
+    const proiezioneDiv = document.getElementById('proiezione'), testoProiezione = document.getElementById('testo-proiezione');
+    const formAllenamento = document.getElementById('form-allenamento');
+    const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
+    const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
+    const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
+    const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
+    const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
+    const spanWorkoutCalories = document.getElementById('workout-calories-totali');
+    const logBody = document.getElementById('log-body');
+    const logAllenamentiBody = document.getElementById('log-allenamenti-body');
+    const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
+    const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
+    const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
+    const foodDatalist = document.getElementById('food-database-list');
+    const btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
+    const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
+    const mealBuilderSezione = document.getElementById('meal-builder-sezione');
+    const logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
+    const btnSalvaPasto = document.getElementById('btn-salva-pasto');
+    const btnCaricaGiorno = document.getElementById('btn-carica-giorno');
+    const dataCaricamentoInput = document.getElementById('data-caricamento');
+    
     // --- FUNZIONI DI GESTIONE DATI ---
     function getTodayString(format = 'ymd') { const today = new Date(); if (format === 'ymd') return today.toISOString().split('T')[0]; return `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}`; }
     function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
@@ -169,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function caricaGiorno(data) {
         giornoVisualizzato = data;
-        allDomElements.dataCaricamentoInput.value = data;
+        dataCaricamentoInput.value = data;
         const oggi = getTodayString('ymd');
         let datiTrovati = null;
         if (data === oggi) {
@@ -193,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const oggi = getTodayString('ymd');
         const giornoCorrenteSalvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
         if (giornoCorrenteSalvataggio && giornoCorrenteSalvataggio.data !== oggi && (giornoCorrenteSalvataggio.dati.calorie > 0 || giornoCorrenteSalvataggio.dati.workoutCalorie > 0)) {
-            // Logica di archiviazione (omessa per brevità, ma la tua originale va bene)
+            // Qui andrebbe la funzione di archiviazione
             localStorage.removeItem('trackerGiornoCorrente');
         }
         caricaGiorno(oggi);
@@ -202,13 +253,13 @@ document.addEventListener('DOMContentLoaded', () => {
         aggiornaDatalist();
     }
 
-    // --- FUNZIONI DI AGGIORNAMENTO UI ---
+    // --- FUNZIONI DI AGGIORNAMENTO UI (COMPLETE) ---
     function aggiornaUI() {
         const dataVisualizzata = new Date(giornoVisualizzato);
         const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()];
         const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: pianoDelGiorno.cal, ...OBIETTIVI_MICRO };
         
-        allDomElements.titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {weekday: 'long', day: 'numeric', month: 'long'})}`;
+        titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {weekday: 'long', day: 'numeric', month: 'long'})}`;
         
         // Ricalcolo totali
         let totali = (datiGiornalieri.log || []).reduce((acc, entry) => {
@@ -218,34 +269,33 @@ document.addEventListener('DOMContentLoaded', () => {
         
         datiGiornalieri = {...datiGiornalieri, ...totali};
 
-        allDomElements.spanObiettivoProteine.textContent = OBIETTIVI.prot;
-        allDomElements.spanObiettivoCalorie.textContent = OBIETTIVI.cal.toFixed(0);
-        allDomElements.spanTotaleProteine.textContent = totali.proteine.toFixed(1); 
-        allDomElements.spanTotaleCalorie.textContent = totali.calorie.toFixed(0); 
-        allDomElements.spanTotaleMg.textContent = totali.mg.toFixed(1); 
-        allDomElements.spanTotaleK.textContent = totali.k.toFixed(0); 
-        allDomElements.spanTotaleVitC.textContent = totali.vitc.toFixed(1); 
-        allDomElements.spanTotaleCa.textContent = totali.ca.toFixed(1);
-        allDomElements.spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie || 0;
+        spanObiettivoProteine.textContent = OBIETTIVI.prot;
+        spanObiettivoCalorie.textContent = OBIETTIVI.cal.toFixed(0);
+        spanTotaleProteine.textContent = totali.proteine.toFixed(1); 
+        spanTotaleCalorie.textContent = totali.calorie.toFixed(0); 
+        spanTotaleMg.textContent = totali.mg.toFixed(1); 
+        spanTotaleK.textContent = totali.k.toFixed(0); 
+        spanTotaleVitC.textContent = totali.vitc.toFixed(1); 
+        spanTotaleCa.textContent = totali.ca.toFixed(1);
+        spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie || 0;
         
-        allDomElements.progressProteine.max = OBIETTIVI.prot; allDomElements.progressProteine.value = totali.proteine;
-        allDomElements.progressCalorie.max = OBIETTIVI.cal + (datiGiornalieri.workoutCalorie || 0); allDomElements.progressCalorie.value = totali.calorie;
-        allDomElements.progressMg.max = OBIETTIVI.mg; allDomElements.progressMg.value = totali.mg;
-        allDomElements.progressK.max = OBIETTIVI.k; allDomElements.progressK.value = totali.k;
-        allDomElements.progressVitC.max = OBIETTIVI.vitc; allDomElements.progressVitC.value = totali.vitc;
-        allDomElements.progressCa.max = OBIETTIVI.ca; allDomElements.progressCa.value = totali.ca;
+        progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
+        progressCalorie.max = OBIETTIVI.cal + (datiGiornalieri.workoutCalorie || 0); progressCalorie.value = totali.calorie;
+        progressMg.max = OBIETTIVI.mg; progressMg.value = totali.mg;
+        progressK.max = OBIETTIVI.k; progressK.value = totali.k;
+        progressVitC.max = OBIETTIVI.vitc; progressVitC.value = totali.vitc;
+        progressCa.max = OBIETTIVI.ca; progressCa.value = totali.ca;
 
-        allDomElements.logBody.innerHTML = ''; 
+        logBody.innerHTML = ''; 
         (datiGiornalieri.log || []).forEach((entry, index) => {
-            const riga = allDomElements.logBody.insertRow();
+            const riga = logBody.insertRow();
             riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td><button class="delete-btn" data-type="pasto" data-index="${index}">&times;</button></td>`;
-        }); 
+        });
     }
     
-    function aggiornaDatalist() { allDomElements.foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); allDomElements.foodDatalist.appendChild(option); } }
+    function aggiornaDatalist() { foodDatalist.innerHTML = ''; for (const foodName in foodDatabase) { const option = document.createElement('option'); option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); foodDatalist.appendChild(option); } }
 
     function creaAlimentoDaInput(isSingle = false) {
-        const { builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa } = allDomElements;
         const desc = builderDesc.value.trim(); const qta = parseFloat(builderQta.value) || 0;
         if (!desc || qta <= 0) { alert('Inserisci nome e quantità.'); return null; }
         const p100 = parseFloat(builderProt.value) || 0, k100 = parseFloat(builderKcal.value) || 0;
@@ -254,18 +304,19 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (p100 > 0 || k100 > 0) { foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 }; salvaFoodDatabase(); aggiornaDatalist(); }
         
-        return {
+        const foodItem = {
             desc, qta, prot: (p100 / 100) * qta, cal: (k100 / 100) * qta, mg: (mg100 / 100) * qta, k: (k100_mg / 100) * qta, vitc: (vitc100 / 100) * qta, ca: (ca100 / 100) * qta,
-            type: isSingle ? 'single' : undefined, selezionato: !isSingle
         };
+        if (!isSingle) foodItem.selezionato = true;
+        return foodItem;
     }
 
-    function resetInputAlimento() { [allDomElements.builderDesc, allDomElements.builderQta, allDomElements.builderProt, allDomElements.builderKcal, allDomElements.builderMg, allDomElements.builderK, allDomElements.builderVitC, allDomElements.builderCa].forEach(el => el.value = ''); allDomElements.builderDesc.focus(); }
+    function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = ''); builderDesc.focus(); }
 
     // --- EVENT LISTENERS ---
-    allDomElements.btnCaricaGiorno.addEventListener('click', () => { if (allDomElements.dataCaricamentoInput.value) caricaGiorno(allDomElements.dataCaricamentoInput.value); });
+    btnCaricaGiorno.addEventListener('click', () => { if (dataCaricamentoInput.value) caricaGiorno(dataCaricamentoInput.value); });
     
-    allDomElements.btnAggiungiSingolo.addEventListener('click', () => {
+    btnAggiungiSingolo.addEventListener('click', () => {
         const item = creaAlimentoDaInput(true);
         if (item) {
             datiGiornalieri.log.push(item);
@@ -275,11 +326,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    allDomElements.formAllenamento.addEventListener('submit', (e) => {
+    formAllenamento.addEventListener('submit', (e) => {
         e.preventDefault();
         const cal = parseInt(document.getElementById('calorie-bruciate').value, 10);
         if (isNaN(cal) || cal <= 0) return;
         datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + cal;
+        if (!datiGiornalieri.workoutLog) datiGiornalieri.workoutLog = [];
+        datiGiornalieri.workoutLog.push({ data: giornoVisualizzato, desc: document.getElementById('descrizione-allenamento').value, cal });
         salvaGiornoAttuale();
         aggiornaUI();
         e.target.reset();
