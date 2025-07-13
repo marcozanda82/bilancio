@@ -27,11 +27,7 @@
         .action-btn { background:0; border:0; font-size:1.3em; cursor:pointer; padding: 0 5px; }
         .delete-btn { color:#d32f2f; }
         .edit-btn { color: #1976d2; }
-        .builder-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* MODIFICA: Forzate due colonne */
-            gap: 15px;
-        }
+        .builder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .button-group { display: flex; gap: 10px; margin-top: 15px; }
         #btn-costruisci-pasto { background-color: #ff8f00; }
         #btn-aggiungi-singolo { background-color: #5c6bc0; }
@@ -76,6 +72,8 @@
                 <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
                 <div><label>Proteine/100g</label><input type="number" id="builder-prot" min="0" step="0.1"></div>
                 <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
+            </div>
+            <div class="builder-grid" style="margin-top:10px;">
                 <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
                 <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
                 <div><label>Vit. C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
@@ -83,10 +81,20 @@
             </div>
             <datalist id="food-database-list"></datalist>
             <div class="button-group">
+                <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
                 <button id="btn-aggiungi-singolo">Aggiungi Diretto</button>
             </div>
         </div>
         
+        <div id="meal-builder-sezione" class="sezione" data-visible="false">
+             <h2>Costruttore Pasto</h2>
+            <table id="log-pasto-builder">
+                <thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
+                <tbody id="log-pasto-builder-body"></tbody>
+            </table>
+            <button id="btn-salva-pasto">Aggiungi Pasto al Diario</button>
+        </div>
+
         <div class="sezione">
             <h2>Diario Giornaliero</h2>
             <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
@@ -97,10 +105,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const PIANO_SETTIMANALE = { 0:{tipo:'💧 Riposo', cal:1700, prot:110}, 1:{tipo:'🔥 Forza', cal:2400, prot:140}, 2:{tipo:'🔥 Forza', cal:2400, prot:140}, 3:{tipo:'🔥 HIIT', cal:2400, prot:140}, 4:{tipo:'🔥 Forza', cal:2400, prot:140}, 5:{tipo:'🔥 Forza', cal:2400, prot:140}, 6:{tipo:'💧 Cardio', cal:1700, prot:110} };
-        let datiGiornalieri, foodDatabase;
+        let datiGiornalieri, foodDatabase, pastoInCostruzione;
 
         const dom = {};
-        const ids = ['titolo-giornata', 'totale-proteine', 'obiettivo-proteine', 'progress-proteine', 'totale-calorie', 'obiettivo-calorie', 'progress-calorie', 'totale-mg', 'progress-mg', 'totale-k', 'progress-k', 'totale-vitc', 'progress-vitc', 'totale-ca', 'progress-ca', 'builder-desc', 'builder-qta', 'builder-prot', 'builder-kcal', 'builder-mg', 'builder-k', 'builder-vitc', 'builder-ca', 'food-database-list', 'log-body', 'btn-aggiungi-singolo', 'btn-archivia'];
+        const ids = ['titolo-giornata', 'totale-proteine', 'obiettivo-proteine', 'progress-proteine', 'totale-calorie', 'obiettivo-calorie', 'progress-calorie', 'totale-mg', 'progress-mg', 'totale-k', 'progress-k', 'totale-vitc', 'progress-vitc', 'totale-ca', 'progress-ca', 'builder-desc', 'builder-qta', 'builder-prot', 'builder-kcal', 'builder-mg', 'builder-k', 'builder-vitc', 'builder-ca', 'food-database-list', 'log-body', 'btn-aggiungi-singolo', 'btn-costruisci-pasto', 'btn-salva-pasto', 'btn-archivia', 'meal-builder-sezione', 'log-pasto-builder-body'];
         ids.forEach(id => { if (document.getElementById(id)) dom[id.replace(/-/g,'_')] = document.getElementById(id); });
         
         const getTodayString = () => new Date().toISOString().split('T')[0];
@@ -108,6 +116,7 @@
         function salvaStato() {
             localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: getTodayString(), dati: datiGiornalieri }));
             localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase));
+            localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione));
         }
 
         function aggiornaUI() {
@@ -145,6 +154,7 @@
         
         function initApp() {
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
+            pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
             const giornoCorrenteData = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
             if (giornoCorrenteData && giornoCorrenteData.data === getTodayString()) {
                 datiGiornalieri = giornoCorrenteData.dati;
@@ -152,6 +162,7 @@
                 datiGiornalieri = { log: [], workoutLog: [] };
             }
             aggiornaUI();
+            renderMealBuilder();
         }
 
         function creaAlimentoDaInput() {
@@ -164,6 +175,17 @@
             return { desc, qta, prot: (p100/100)*qta, cal: Math.round((k100/100)*qta), mg: (mg100/100)*qta, k: (k100_mg/100)*qta, vitc: (vitc100/100)*qta, ca: (ca100/100)*qta };
         }
 
+        function renderMealBuilder() { 
+            if(!dom.meal_builder_sezione) return;
+            dom.meal_builder_sezione.dataset.visible = pastoInCostruzione.length > 0;
+            if (pastoInCostruzione.length === 0) return;
+            dom.log_pasto_builder_body.innerHTML = '';
+            pastoInCostruzione.forEach((item, index) => {
+                const riga = dom.log_pasto_builder_body.insertRow();
+                riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`;
+            });
+        }
+        
         function resetInputAlimento() {
             ['builder_desc', 'builder_qta', 'builder_prot', 'builder_kcal', 'builder_mg', 'builder_k', 'builder_vitc', 'builder_ca'].forEach(id => dom[id].value = '');
             dom.builder_desc.focus();
@@ -174,6 +196,20 @@
             if(item) { datiGiornalieri.log.push(item); salvaStato(); aggiornaUI(); resetInputAlimento(); }
         });
 
+        dom.btn_costruisci_pasto.addEventListener('click', () => { 
+            const item = creaAlimentoDaInput(); 
+            if(item) { pastoInCostruzione.push(item); salvaStato(); renderMealBuilder(); resetInputAlimento(); }
+        });
+        
+        dom.btn_salva_pasto.addEventListener('click', () => {
+            if (pastoInCostruzione.length === 0) return alert("Nessun alimento nel costruttore.");
+            pastoInCostruzione.forEach(item => datiGiornalieri.log.push(item));
+            pastoInCostruzione = [];
+            salvaStato();
+            aggiornaUI();
+            renderMealBuilder();
+        });
+
         dom.builder_desc.addEventListener('input', (e) => {
             const foodData = foodDatabase[e.target.value.toLowerCase()];
             if(foodData) ['prot', 'kcal', 'mg', 'k', 'vitc', 'ca'].forEach(key => {
@@ -182,9 +218,15 @@
         });
 
         document.querySelector('.container').addEventListener('click', (e) => {
-            if (e.target.classList.contains('delete-btn')) {
-                const index = e.target.dataset.index;
-                datiGiornalieri.log.splice(index, 1);
+            const target = e.target.closest('.delete-btn');
+            if (target) {
+                const index = target.dataset.index;
+                if (target.closest('#log-pasti')) {
+                    datiGiornalieri.log.splice(index, 1);
+                } else if (target.closest('#log-pasto-builder')) {
+                    pastoInCostruzione.splice(index, 1);
+                    renderMealBuilder();
+                }
                 salvaStato();
                 aggiornaUI();
             }
@@ -199,10 +241,13 @@
             const nuovoStorico = storico.filter(item => item.data !== giornoCorrente.data);
             nuovoStorico.push({ data: giornoCorrente.data, ...giornoCorrente.dati });
             localStorage.setItem('trackerStorico', JSON.stringify(nuovoStorico));
+            
             datiGiornalieri = { log: [], workoutLog: [] };
+            pastoInCostruzione = [];
             salvaStato();
             alert(`Giornata archiviata!`);
             aggiornaUI();
+            renderMealBuilder();
         });
 
         initApp();
