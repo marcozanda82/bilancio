@@ -207,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MEAL_TYPE_SEQUENCE = ['merenda1', 'pranzo', 'merenda2', 'cena'];
 
     // --- ELEMENTI DEL DOM ---
+    // Tutte le variabili DOM sono dichiarate qui in cima al DOMContentLoaded
     const titoloGiornataEl = document.getElementById('titolo-giornata');
     const logBody = document.getElementById('log-body');
     const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
@@ -216,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo'), btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
     const mealBuilderSezione = document.getElementById('meal-builder-sezione'), logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
     const btnSalvaPasto = document.getElementById('btn-salva-pasto');
-    const mealTypeSelector = document.getElementById('meal-type-selector'); // Spostato qui
+    const mealTypeSelector = document.getElementById('meal-type-selector'); // Spostato qui per essere accessibile prima
 
     const btnCaricaGiorno = document.getElementById('btn-carica-giorno'), dataCaricamentoInput = document.getElementById('data-caricamento');
     const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
@@ -226,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
     const spanWorkoutCalories = document.getElementById('workout-calories-totali');
 
-    // Nuovi elementi per il riepilogo del costruttore pasti
+    // Elementi specifici del riepilogo del costruttore pasti
     const currentMealTypeDisplay = document.getElementById('current-meal-type-display');
     const mealProtCurrent = document.getElementById('meal-prot-current'), mealProtTarget = document.getElementById('meal-prot-target'), mealProtRemaining = document.getElementById('meal-prot-remaining');
     const mealCalCurrent = document.getElementById('meal-cal-current'), mealCalTarget = document.getElementById('meal-cal-target'), mealCalRemaining = document.getElementById('meal-cal-remaining');
@@ -285,12 +286,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let obiettivoPastoProt = 0;
         let obiettivoPastoCal = 0;
-        
-        const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc : 0;
-        
-        obiettivoPastoProt = Math.round(obiettivoProtTotale * protRatio);
-        obiettivoPastoCal = Math.round(obiettivoCalTotale * protRatio);
 
+        if (mealType === 'cena') {
+            // Calcola le proteine e calorie già consumate negli altri pasti (Merenda AM, Pranzo, Merenda PM)
+            let consumatoProtAltriPasti = 0;
+            let consumatoCalAltriPasti = 0;
+
+            (datiGiornalieri.log || []).forEach(entry => {
+                // Considera solo i pasti che non sono la cena
+                if (entry.type === 'meal' && entry.mealId && entry.mealId !== 'cena') {
+                    consumatoProtAltriPasti += entry.prot || 0;
+                    consumatoCalAltriPasti += entry.cal || 0;
+                }
+            });
+
+            // L'obiettivo della cena è il residuo
+            obiettivoPastoProt = Math.round(obiettivoProtTotale - consumatoProtAltriPasti);
+            obiettivoPastoCal = Math.round(obiettivoCalTotale - consumatoCalAltriPasti);
+
+            // Assicurati che gli obiettivi residui non siano negativi
+            if (obiettivoPastoProt < 0) obiettivoPastoProt = 0;
+            if (obiettivoPastoCal < 0) obiettivoPastoCal = 0;
+
+        } else {
+            // Logica proporzionale per gli altri pasti
+            const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc : 0;
+            
+            obiettivoPastoProt = Math.round(obiettivoProtTotale * protRatio);
+            obiettivoPastoCal = Math.round(obiettivoCalTotale * protRatio);
+        }
+        
         const totaliPastoInCostruzione = pastoInCostruzione.reduce((acc, item) => {
             acc.prot += item.prot || 0;
             acc.cal += item.cal || 0;
@@ -451,7 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Assicurati che mealTypeSelector sia definito e abbia un valore selezionato
         const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; // Fallback se non ancora disponibile
-        const selectedMealTypeText = mealTypeSelector && mealTypeSelector.options[mealTypeSelector.selectedIndex] ? mealTypeSelector.options[mealTypeSelector.selectedIndex].text : '';
+        // Accesso sicuro a options e selectedIndex
+        const selectedMealTypeText = (mealTypeSelector && mealTypeSelector.options && mealTypeSelector.options[mealTypeSelector.selectedIndex]) ? mealTypeSelector.options[mealTypeSelector.selectedIndex].text : '';
         
         const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
         console.log("Obiettivi Pasto (from calcolaObiettiviPasto):", obiettiviPasto);
