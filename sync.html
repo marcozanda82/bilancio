@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sincronizzazione Cloud</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
+        .container { width: 100%; max-width: 600px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9em; }
+        input[type="text"], input[type="url"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        button { width: 100%; background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: background-color 0.3s; margin-bottom: 10px; }
+        button:hover { opacity: 0.9; }
+        #btn-upload { background-color: #2e7d32; }
+        #btn-download { background-color: #d32f2f; }
+        #firebase-status { padding: 10px; margin-top: 10px; border-radius: 6px; text-align: center; font-weight: 600; }
+        .status-connected { background-color: #e8f5e9; color: #2e7d32; }
+        .status-disconnected { background-color: #ffebee; color: #c62828; }
+        .sync-actions.disabled { opacity: 0.5; pointer-events: none; }
+        .warning { background-color: #fff3e0; border: 1px solid #ffcc80; padding: 15px; border-radius: 6px; font-size: 0.9em; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" style="text-decoration: none; color: #555;">&larr; Torna al Tracker</a>
+        <h1>Sincronizzazione Cloud</h1>
+        
+        <div id="firebase-config">
+            <h2>Configurazione Firebase</h2>
+            <div><label for="fb-api-key">API Key</label><input type="text" id="fb-api-key"></div>
+            <div><label for="fb-project-id">Project ID</label><input type="text" id="fb-project-id"></div>
+            <div><label for="fb-database-url">Database URL</label><input type="url" id="fb-database-url"></div>
+            <button id="btn-connect">Connetti</button>
+            <div id="firebase-status" class="status-disconnected">Disconnesso</div>
+        </div>
+        
+        <hr style="margin: 30px 0;">
+
+        <div id="sync-actions" class="sync-actions disabled">
+            <h2>Azioni</h2>
+            <button id="btn-upload">⬆️ Carica Dati Locali su Cloud</button>
+            <button id="btn-download">⬇️ Scarica Dati dal Cloud (Sovrascrive i Locali)</button>
+            <div class="warning">
+                <strong>Attenzione:</strong><br>
+                - <strong>Carica:</strong> Sostituisce i dati sul cloud con quelli che hai sul computer.<br>
+                - <strong>Scarica:</strong> Sostituisce i dati su questo computer con quelli salvati sul cloud.
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        let db;
+        const fbApiKeyInput = document.getElementById('fb-api-key');
+        const fbProjectIdInput = document.getElementById('fb-project-id');
+        const fbDatabaseUrlInput = document.getElementById('fb-database-url');
+        const btnConnect = document.getElementById('btn-connect');
+        const firebaseStatusDiv = document.getElementById('firebase-status');
+        const syncActionsDiv = document.getElementById('sync-actions');
+        const btnUpload = document.getElementById('btn-upload');
+        const btnDownload = document.getElementById('btn-download');
+
+        const LOCAL_STORAGE_KEYS = ['trackerGiornoCorrente', 'trackerStorico', 'trackerFoodDatabase', 'trackerPesate', 'trackerMealType'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedConfig = localStorage.getItem('firebaseSyncConfig');
+            if (savedConfig) {
+                try {
+                    const config = JSON.parse(savedConfig);
+                    fbApiKeyInput.value = config.apiKey || '';
+                    fbProjectIdInput.value = config.projectId || '';
+                    fbDatabaseUrlInput.value = config.databaseURL || '';
+                    initFirebase(config);
+                } catch(e) { console.error("Errore config salvata"); }
+            }
+            btnConnect.addEventListener('click', handleConnectClick);
+            btnUpload.addEventListener('click', handleUpload);
+            btnDownload.addEventListener('click', handleDownload);
+        });
+
+        function handleConnectClick() {
+            const config = {
+                apiKey: fbApiKeyInput.value.trim(),
+                projectId: fbProjectIdInput.value.trim(),
+                databaseURL: fbDatabaseUrlInput.value.trim(),
+            };
+            if (!config.apiKey || !config.projectId || !config.databaseURL) {
+                alert("Compila tutti i campi di configurazione.");
+                return;
+            }
+            initFirebase(config);
+            localStorage.setItem('firebaseSyncConfig', JSON.stringify(config));
+        }
+
+        function initFirebase(config) {
+            try {
+                const app = !getApps().length ? initializeApp(config, "syncApp") : getApp("syncApp");
+                db = getDatabase(app);
+                firebaseStatusDiv.textContent = "Connesso";
+                firebaseStatusDiv.className = 'status-connected';
+                syncActionsDiv.classList.remove('disabled');
+            } catch (error) {
+                firebaseStatusDiv.textContent = `Errore Connessione: ${error.code}`;
+                firebaseStatusDiv.className = 'status-disconnected';
+                syncActionsDiv.classList.add('disabled');
+            }
+        }
+
+        function handleUpload() {
+            if (!confirm("Sei sicuro di voler sovrascrivere i dati sul cloud con quelli locali?")) return;
+            
+            const localData = {};
+            LOCAL_STORAGE_KEYS.forEach(key => {
+                const data = localStorage.getItem(key);
+                if (data) {
+                    localData[key] = JSON.parse(data);
+                }
+            });
+
+            set(ref(db, '/'), localData)
+                .then(() => alert("Caricamento completato con successo!"))
+                .catch(err => alert(`Errore durante il caricamento: ${err.message}`));
+        }
+
+        function handleDownload() {
+            if (!confirm("ATTENZIONE: i dati locali verranno sovrascritti. Continuare?")) return;
+
+            get(ref(db, '/'))
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const cloudData = snapshot.val();
+                        LOCAL_STORAGE_KEYS.forEach(key => {
+                            if (cloudData[key]) {
+                                localStorage.setItem(key, JSON.stringify(cloudData[key]));
+                            }
+                        });
+                        alert("Download completato! Ricarica la pagina del tracker per vedere le modifiche.");
+                    } else {
+                        alert("Nessun dato trovato sul cloud.");
+                    }
+                })
+                .catch(err => alert(`Errore durante il download: ${err.message}`));
+        }
+    </script>
+</body>
+</html>
