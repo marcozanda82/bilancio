@@ -65,7 +65,14 @@
         const btnUpload = document.getElementById('btn-upload');
         const btnDownload = document.getElementById('btn-download');
 
-        const LOCAL_STORAGE_KEYS = ['trackerGiornoCorrente', 'trackerStorico', 'trackerFoodDatabase', 'trackerPesate', 'trackerMealType'];
+        // Le chiavi di localStorage fisse
+        const FIXED_LOCAL_STORAGE_KEYS = [
+            'trackerGiornoCorrente',
+            'trackerFoodDatabase',
+            'trackerPesate',
+            'trackerMealType',
+            'trackerPastoInCostruzione' // Ho aggiunto anche questa, se vuoi sincronizzarla
+        ];
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedConfig = localStorage.getItem('firebaseSyncConfig');
@@ -99,7 +106,8 @@
 
         function initFirebase(config) {
             try {
-                const app = !getApps().length ? initializeApp(config, "syncApp") : getApp("syncApp");
+                // Inizializza l'app Firebase, se già esistente la recupera
+                const app = getApps().find(app => app.name === "syncApp") || initializeApp(config, "syncApp");
                 db = getDatabase(app);
                 firebaseStatusDiv.textContent = "Connesso";
                 firebaseStatusDiv.className = 'status-connected';
@@ -108,6 +116,7 @@
                 firebaseStatusDiv.textContent = `Errore Connessione: ${error.code}`;
                 firebaseStatusDiv.className = 'status-disconnected';
                 syncActionsDiv.classList.add('disabled');
+                console.error("Errore connessione Firebase:", error);
             }
         }
 
@@ -115,14 +124,41 @@
             if (!confirm("Sei sicuro di voler sovrascrivere i dati sul cloud con quelli locali?")) return;
             
             const localData = {};
-            LOCAL_STORAGE_KEYS.forEach(key => {
+            
+            // 1. Carica le chiavi fisse
+            FIXED_LOCAL_STORAGE_KEYS.forEach(key => {
                 const data = localStorage.getItem(key);
                 if (data) {
-                    localData[key] = JSON.parse(data);
+                    try {
+                        localData[key] = JSON.parse(data);
+                    } catch (e) {
+                        console.error(`Errore parsing localStorage key ${key}:`, e);
+                        localData[key] = data; // Carica come stringa se non parsabile
+                    }
                 }
             });
 
-            set(ref(db, '/'), localData)
+            // 2. Carica le chiavi dinamiche dello storico
+            const storicoData = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('trackerStorico_')) {
+                    const data = localStorage.getItem(key);
+                    if (data) {
+                        try {
+                            storicoData[key] = JSON.parse(data);
+                        } catch (e) {
+                            console.error(`Errore parsing storico key ${key}:`, e);
+                            storicoData[key] = data; // Carica come stringa se non parsabile
+                        }
+                    }
+                }
+            }
+            if (Object.keys(storicoData).length > 0) {
+                localData.storico = storicoData; // Salva lo storico dinamico sotto una sotto-chiave 'storico' su Firebase
+            }
+
+            set(ref(db, '/'), localData) // Carica tutti i dati (fissi + storico) su Firebase
                 .then(() => alert("Caricamento completato con successo!"))
                 .catch(err => alert(`Errore durante il caricamento: ${err.message}`));
         }
@@ -134,11 +170,39 @@
                 .then(snapshot => {
                     if (snapshot.exists()) {
                         const cloudData = snapshot.val();
-                        LOCAL_STORAGE_KEYS.forEach(key => {
+                        
+                        // Pulisci prima lo storico locale per evitare dati orfani, ma con cautela!
+                        // Potresti voler chiedere conferma prima di una pulizia totale.
+                        // Per ora, sovrascriviamo solo.
+                        for (let i = localStorage.length - 1; i >= 0; i--) {
+                            const key = localStorage.key(i);
+                            if (key.startsWith('trackerStorico_')) {
+                                localStorage.removeItem(key);
+                            }
+                        }
+
+                        // 1. Scarica le chiavi fisse
+                        FIXED_LOCAL_STORAGE_KEYS.forEach(key => {
                             if (cloudData[key]) {
-                                localStorage.setItem(key, JSON.stringify(cloudData[key]));
+                                // Assicurati di non sovrascrivere l'intera app config di Firebase se non è quella che vuoi gestire
+                                if (key !== 'firebaseSyncConfig') { // Evita di sovrascrivere le credenziali di Firebase con quelle del cloud se diverse
+                                    localStorage.setItem(key, JSON.stringify(cloudData[key]));
+                                }
+                            } else {
+                                // Rimuovi la chiave locale se non presente sul cloud, per pulizia
+                                localStorage.removeItem(key);
                             }
                         });
+
+                        // 2. Scarica le chiavi dinamiche dello storico
+                        if (cloudData.storico) {
+                            for (const key in cloudData.storico) {
+                                if (key.startsWith('trackerStorico_')) {
+                                    localStorage.setItem(key, JSON.stringify(cloudData.storico[key]));
+                                }
+                            }
+                        }
+
                         alert("Download completato! Ricarica la pagina del tracker per vedere le modifiche.");
                     } else {
                         alert("Nessun dato trovato sul cloud.");
