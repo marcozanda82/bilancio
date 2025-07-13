@@ -154,7 +154,7 @@
                 <option value="cena">Cena</option>
             </select>
             <table id="log-pasto-builder">
-                <thead><tr><th>Sel.</th><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th><th>Azione</th></tr></thead>
+                <thead><tr><th>Sel.</th><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
                 <tbody id="log-pasto-builder-body"></tbody>
             </table>
             <button id="btn-salva-pasto">Salva Pasto nel Diario</button>
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo'), btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
     const mealBuilderSezione = document.getElementById('meal-builder-sezione'), logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
     const btnSalvaPasto = document.getElementById('btn-salva-pasto');
-    const mealTypeSelector = document.getElementById('meal-type-selector'); 
+    const mealTypeSelector = document.getElementById('meal-type-selector');
 
     const btnCaricaGiorno = document.getElementById('btn-carica-giorno'), dataCaricamentoInput = document.getElementById('data-caricamento');
     const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
@@ -240,68 +240,65 @@ document.addEventListener('DOMContentLoaded', () => {
     function salvaPastoInCostruzione() { localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); }
     
     // Funzione per salvare i dati di un giorno specifico nello storico o come giorno corrente
-    // Restituisce true se ha salvato in trackerStorico_, false altrimenti
     function salvaGiorno(dataDaSalvare, datiDaSalvare) {
         if (!datiDaSalvare) {
             datiDaSalvare = datiGiornalieri;
         }
         if (dataDaSalvare === getTodayString()) {
             localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: dataDaSalvare, dati: datiDaSalvare }));
-            return false; // Non salvato in storico_
         } else {
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
             console.log(`Dati salvati nello storico per il giorno: ${dataDaSalvare}`);
-            return true; // Salvato in storico_
         }
-    }
-
-    // Funzione per caricare i dati da una data specifica (o da oggi).
-    function caricaGiorno(data) {
-        // Rimosso salvaGiorno(giornoVisualizzato, datiGiornalieri); per evitare sovrascritture premature
-        // Il salvataggio del giorno precedente è gestito dal beforeunload o dal click sul tasto "Carica/Salva" con OK.
-
-        giornoVisualizzato = data;
-        dataCaricamentoInput.value = data;
-
-        let datiTrovati = null;
-        let rawDataFromLocalStorage = null;
-
-        if (data === getTodayString()) {
-            rawDataFromLocalStorage = localStorage.getItem('trackerGiornoCorrente');
-            console.log("DEBUG CARICAMENTO (TODAY): Valore raw da trackerGiornoCorrente:", rawDataFromLocalStorage);
-            
-            try {
-                const salvataggio = JSON.parse(rawDataFromLocalStorage);
-                if (salvataggio && salvataggio.data === data) {
-                    datiTrovati = salvataggio.dati;
-                    console.log("DEBUG CARICAMENTO (TODAY): Dati PARSED e CONFERMATI per oggi:", datiTrovati);
-                } else {
-                    console.warn("DEBUG CARICAMENTO (TODAY): Salvataggio trovato ma data non corrisponde o oggetto non valido.", salvataggio);
-                }
-            } catch (e) {
-                console.error("DEBUG CARICAMENTO (TODAY): Errore nel parsing di trackerGiornoCorrente:", e, "Raw data:", rawDataFromLocalStorage);
-            }
-        } else {
-            rawDataFromLocalStorage = localStorage.getItem(`trackerStorico_${data}`);
-            console.log(`DEBUG CARICAMENTO (STORICO): Valore raw da trackerStorico_${data}:`, rawDataFromLocalStorage);
-            try {
-                datiTrovati = JSON.parse(rawDataFromLocalStorage);
-                console.log("DEBUG CARICAMENTO (STORICO): Dati PARSED e CONFERMATI per storico:", datiTrovati);
-            } catch (e) {
-                console.error(`DEBUG CARICAMENTO (STORICO): Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
-            }
-        }
-        
-        console.log("DEBUG CARICAMENTO FINALE: datiTrovati prima del reset/inizializzazione:", datiTrovati);
-
-        datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
-        
-        console.log("DEBUG CARICAMENTO FINALE: datiGiornalieri dopo reset/inizializzazione:", datiGiornalieri);
-
-        aggiornaUI();
-        console.log(`Caricato il giorno: ${giornoVisualizzato}`);
     }
     
+// Funzione per caricare i dati da una data specifica (o da oggi).
+function caricaGiorno(data) {
+    // RIMUOVI QUESTA RIGA:
+    // salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+
+    giornoVisualizzato = data;
+    dataCaricamentoInput.value = data;
+
+    let datiTrovati = null;
+    let rawDataFromLocalStorage = null;
+
+    if (data === getTodayString()) { // Se stiamo caricando il giorno corrente
+        rawDataFromLocalStorage = localStorage.getItem('trackerGiornoCorrente');
+        console.log("DEBUG CARICAMENTO (TODAY): Valore raw da trackerGiornoCorrente:", rawDataFromLocalStorage); //
+        
+        try {
+            const salvataggio = JSON.parse(rawDataFromLocalStorage);
+            if (salvataggio && salvataggio.data === data) {
+                datiTrovati = salvataggio.dati;
+                console.log("DEBUG CARICAMENTO (TODAY): Dati PARSED e CONFERMATI per oggi:", datiTrovati); //
+            } else {
+                console.warn("DEBUG CARICAMENTO (TODAY): Salvataggio trovato ma data non corrisponde o oggetto non valido.", salvataggio); //
+            }
+        } catch (e) {
+            console.error("DEBUG CARICAMENTO (TODAY): Errore nel parsing di trackerGiornoCorrente:", e, "Raw data:", rawDataFromLocalStorage); //
+        }
+    } else { // Se stiamo caricando un giorno storico
+        rawDataFromLocalStorage = localStorage.getItem(`trackerStorico_${data}`);
+        console.log(`DEBUG CARICAMENTO (STORICO): Valore raw da trackerStorico_${data}:`, rawDataFromLocalStorage); //
+        try {
+            datiTrovati = JSON.parse(rawDataFromLocalStorage);
+            console.log("DEBUG CARICAMENTO (STORICO): Dati PARSED e CONFERMATI per storico:", datiTrovati); //
+        } catch (e) {
+            console.error(`DEBUG CARICAMENTO (STORICO): Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage); //
+        }
+    }
+    
+    console.log("DEBUG CARICAMENTO FINALE: datiTrovati prima del reset/inizializzazione:", datiTrovati); //
+
+    // Se datiTrovati è null o undefined, inizializza con un oggetto vuoto
+    datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; //
+    
+    console.log("DEBUG CARICAMENTO FINALE: datiGiornalieri dopo reset/inizializzazione:", datiGiornalieri); //
+
+    aggiornaUI();
+    console.log(`Caricato il giorno: ${giornoVisualizzato}`); //
+}
     // Funzione per calcolare gli obiettivi di proteine e calorie per un pasto specifico
     function calcolaObiettiviPasto(mealType, giornoCorrenteString) {
         const dataVisualizzata = new Date(giornoCorrenteString);
@@ -315,23 +312,28 @@ document.addEventListener('DOMContentLoaded', () => {
         let obiettivoPastoCal = 0;
 
         if (mealType === 'cena') {
+            // Calcola le proteine e calorie già consumate negli altri pasti (Merenda AM, Pranzo, Merenda PM)
             let consumatoProtAltriPasti = 0;
             let consumatoCalAltriPasti = 0;
 
             (datiGiornalieri.log || []).forEach(entry => {
+                // Considera solo i pasti che non sono la cena
                 if (entry.type === 'meal' && entry.mealId && entry.mealId !== 'cena') {
                     consumatoProtAltriPasti += entry.prot || 0;
                     consumatoCalAltriPasti += entry.cal || 0;
                 }
             });
 
+            // L'obiettivo della cena è il residuo
             obiettivoPastoProt = Math.round(obiettivoProtTotale - consumatoProtAltriPasti);
             obiettivoPastoCal = Math.round(obiettivoCalTotale - consumatoCalAltriPasti);
 
-            if (obiettivoPastoProt < 0) objetivoPastoProt = 0;
-            if (obiettivoPastoCal < 0) objetivoPastoCal = 0;
+            // Assicurati che gli obiettivi residui non siano negativi
+            if (obiettivoPastoProt < 0) obiettivoPastoProt = 0;
+            if (obiettivoPastoCal < 0) obiettivoPastoCal = 0;
 
         } else {
+            // Logica proporzionale per gli altri pasti
             const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc : 0;
             
             obiettivoPastoProt = Math.round(obiettivoProtTotale * protRatio);
@@ -481,10 +483,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Funzione renderMealBuilder() con log di debug e fix per il selector
     function renderMealBuilder() {
-        // console.log("--- START renderMealBuilder ---"); // Commentato
-        // console.log("Pasto in costruzione (length):", pastoInCostruzione.length); // Commentato
+        console.log("--- START renderMealBuilder ---");
+        console.log("Pasto in costruzione (length):", pastoInCostruzione.length);
         mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
-        // console.log("mealBuilderSezione data-visible set to:", mealBuilderSezione.dataset.visible); // Commentato
+        console.log("mealBuilderSezione data-visible set to:", mealBuilderSezione.dataset.visible);
         
         logPastoBuilderBody.innerHTML = ''; 
 
@@ -494,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
             acc.cal += item.cal || 0;
             return acc;
         }, { prot: 0, cal: 0 });
-        // console.log("Current Meal Totals (calculated from pastoInCostruzione):", currentMealTotals); // Commentato
+        console.log("Current Meal Totals (calculated from pastoInCostruzione):", currentMealTotals);
 
         // Assicurati che mealTypeSelector sia definito e abbia un valore selezionato
         const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; // Fallback se non ancora disponibile
@@ -502,40 +504,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedMealTypeText = (mealTypeSelector && mealTypeSelector.options && mealTypeSelector.options[mealTypeSelector.selectedIndex]) ? mealTypeSelector.options[mealTypeSelector.selectedIndex].text : '';
         
         const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
-        // console.log("Obiettivi Pasto (from calcolaObiettiviPasto):", obiettiviPasto); // Commentato
+        console.log("Obiettivi Pasto (from calcolaObiettiviPasto):", obiettiviPasto);
 
         // Aggiorna il riepilogo del costruttore pasti
         currentMealTypeDisplay.textContent = selectedMealTypeText;
         
-        mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1);
+        mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1); // Ora usa obiettiviPasto.currentProt
         mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
         mealProtRemaining.textContent = `${(obiettiviPasto.remainingProt).toFixed(1)} g`;
         mealProgressProt.max = obiettiviPasto.targetProt;
-        mealProgressProt.value = obiettiviPasto.currentProt;
+        mealProgressProt.value = obiettiviPasto.currentProt; // Ora usa obiettiviPasto.currentProt
 
-        // console.log("DEBUG PROTEINE BAR:"); // Commentato
-        // console.log("  currentProt:", obiettiviPasto.currentProt); // Commentato
-        // console.log("  targetProt:", obiettiviPasto.targetProt); // Commentato
-        // console.log("  progressProt.max:", mealProgressProt.max); // Commentato
-        // console.log("  progressProt.value:", mealProgressProt.value); // Commentato
+        console.log("DEBUG PROTEINE BAR:");
+        console.log("  currentProt:", obiettiviPasto.currentProt);
+        console.log("  targetProt:", obiettiviPasto.targetProt);
+        console.log("  progressProt.max:", mealProgressProt.max);
+        console.log("  progressProt.value:", mealProgressProt.value);
 
-        mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
+        mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0); // Ora usa obiettiviPasto.currentCal
         mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
         mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
         mealProgressCal.max = obiettiviPasto.targetCal;
-        mealProgressCal.value = obiettiviPasto.currentCal;
+        mealProgressCal.value = obiettiviPasto.currentCal; // Ora usa obiettiviPasto.currentCal
 
-        // console.log("DEBUG CALORIE BAR:"); // Commentato
-        // console.log("  currentCal:", obiettiviPasto.currentCal); // Commentato
-        // console.log("  targetCal:", obiettiviPasto.targetCal); // Commentato
-        // console.log("  progressCal.max:", mealProgressCal.max); // Commentato
-        // console.log("  progressCal.value:", mealProgressCal.value); // Commentato
+        console.log("DEBUG CALORIE BAR:");
+        console.log("  currentCal:", obiettiviPasto.currentCal);
+        console.log("  targetCal:", obiettiviPasto.targetCal);
+        console.log("  progressCal.max:", mealProgressCal.max);
+        console.log("  progressCal.value:", mealProgressCal.value);
 
         pastoInCostruzione.forEach((item, index) => { 
             const riga = logPastoBuilderBody.insertRow(); 
             riga.innerHTML = `<td><input type="checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
         });
-        // console.log("--- END renderMealBuilder ---"); // Commentato
+        console.log("--- END renderMealBuilder ---");
     }
 
     function aggiornaDatalist() {
@@ -584,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (item) {
             pastoInCostruzione.push(item);
             salvaPastoInCostruzione();
-            // console.log("Dopo 'Aggiungi a Pasto': pastoInCostruzione.length =", pastoInCostruzione.length); // Commentato
+            console.log("Dopo 'Aggiungi a Pasto': pastoInCostruzione.length =", pastoInCostruzione.length);
             renderMealBuilder();
             resetInputAlimento();
             mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
@@ -700,22 +702,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
 Premi 'OK' per SALVARE i dati attuali per quella data.
 Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il diario attuale).`)) {
-            // L'utente ha scelto di SALVARE i dati attuali nella data selezionata
-            const savedToHistorical = salvaGiorno(dataSelezionata, datiGiornalieri); // Chiamata per salvare
-
-            // Se il salvataggio è andato a buon fine (o anche se no, ma l'utente voleva salvare)
-            // Allora azzeriamo il diario corrente
-            datiGiornalieri = { log: [], workoutCalorie: 0 };
-            localStorage.removeItem('trackerGiornoCorrente'); // Rimuovi dal localStorage
-            localStorage.removeItem('lastMealTypeSelected_' + getTodayString()); // Resetta la selezione pasto per oggi
-
-            aggiornaUI(); // Aggiorna l'interfaccia per mostrare il diario vuoto
-            renderMealBuilder(); // Aggiorna il costruttore pasto (dovrebbe azzerare gli obiettivi)
-            mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0]; // Resetta il selettore pasto a Merenda AM
-
-            alert(`Dati attuali del diario salvati per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}. Il diario corrente è stato azzerato.`);
+            salvaGiorno(dataSelezionata, datiGiornalieri);
+            alert(`Dati attuali del diario salvati per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}.`);
         } else {
-            // L'utente ha scelto di CARICARE i dati del giorno selezionato
             caricaGiorno(dataSelezionata);
             alert(`Dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} caricati.`);
         }
@@ -732,39 +721,37 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 const vecchioStorico = JSON.parse(vecchioStoricoRaw);
 
                 if (Array.isArray(vecchioStorico)) {
-                    // console.log("Trovato vecchio formato storico. Avvio migrazione..."); // Commentato
-                    // console.log("Numero di elementi nel vecchio storico:", vecchioStorico.length); // Commentato
+                    console.log("Trovato vecchio formato storico. Avvio migrazione...");
+                    console.log("Numero di elementi nel vecchio storico:", vecchioStorico.length);
 
                     vecchioStorico.forEach((giorno, index) => {
-                        // console.log(`Processing giorno ${index}:`, giorno); // Commentato
+                        console.log(`Processing giorno ${index}:`, giorno);
                         if (giorno.data && giorno.log) {
                             localStorage.setItem(`trackerStorico_${giorno.data}`, JSON.stringify(giorno));
-                            // console.log(`SUCCESS: Migrato giorno: ${giorno.data}`); // Commentato
+                            console.log(`SUCCESS: Migrato giorno: ${giorno.data}`);
                         } else {
-                            // console.warn(`SKIP: Giorno ${index} non migrato. Manca 'data' o 'log'.`, giorno); // Commentato
+                            console.warn(`SKIP: Giorno ${index} non migrato. Manca 'data' o 'log'.`, giorno);
                         }
                     });
 
                     // Lascio commentato per debugging come da richiesta precedente.
                     // localStorage.removeItem('trackerStorico');
-                    // console.log("Migrazione completata (vecchia chiave non rimossa automaticamente per debugging). Controlla la console."); // Commentato
+                    console.log("Migrazione completata (vecchia chiave non rimossa automaticamente per debugging). Controlla la console.");
                     alert("Lo storico è stato aggiornato al nuovo formato! Controlla la console per i dettagli. Ricarica la pagina per visualizzare tutti i dati.");
                 } else {
-                    // console.warn("La chiave 'trackerStorico' esiste ma non contiene un array valido. Nessuna migrazione necessaria."); // Commentato
+                    console.warn("La chiave 'trackerStorico' esiste ma non contiene un array valido. Nessuna migrazione necessaria.");
                 }
             } catch (e) {
-                // console.error("Errore durante il parsing del vecchio storico per la migrazione. Potrebbe essere corrotto.", e); // Commentato
+                console.error("Errore durante il parsing del vecchio storico per la migrazione. Potrebbe essere corrotto.", e);
             }
         } else {
-            // console.log("Nessun vecchio formato storico da migrare trovato."); // Commentato
+            console.log("Nessun vecchio formato storico da migrare trovato.");
         }
     }
 
 
     // --- Chiamata alla funzione di migrazione all'avvio dell'app ---
     eseguiMigrazioneStorico();
-
-    // --- NON PIÙ PRESENTE: Funzione gestisciFineGiornataAutomatico() è stata rimossa ---
 
     // --- Salva i dati prima che la pagina venga scaricata ---
     window.addEventListener('beforeunload', () => {
