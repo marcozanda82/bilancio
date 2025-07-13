@@ -148,12 +148,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Recupera gli obiettivi dal PIANO_SETTIMANALE
             const dataDelGiorno = new Date(giorno.data);
-            const pianoDelGiorno = PIANO_SETTIMANALE[dataDelGiorno.getDay()] || PIANO_SETTIMANALE[1];
-            const obiettiviCalorici = pianoDelGiorno.cal;
+            const giornoSettimana = dataDelGiorno.getDay(); // 0 = Domenica, 6 = Sabato
+            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1]; // Fallback al Lunedì se non trovato
+            
+            // Assicurati che obiettiviCalorici sia un numero intero
+            const obiettiviCalorici = Math.round(pianoDelGiorno.cal); // Arrotonda l'obiettivo dal piano
 
             // Calcolo del deficit
             const deficit = totaliGiorno.calorie - obiettiviCalorici;
-            const stimaGrasso = deficit > 0 ? (deficit / 7700) * 1000 : 0; // 7700 kcal per 1kg di grasso
+            // Arrotonda il deficit per evitare problemi di virgola mobile
+            const deficitArrotondato = Math.round(deficit); // Arrotonda all'intero più vicino
+            
+            const stimaGrasso = (deficitArrotondato > 0 ? (deficitArrotondato / 7700) : 0) * 1000; // 7700 kcal per 1kg di grasso
             
             // Logica per il trend muscolare (come già presente)
             let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
@@ -161,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) scoreMuscolo++;
             else scoreMuscolo--;
             if(pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo++; // Usa pianoDelGiorno.tipo
-            if(deficit > 500 && pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo--; // Usa pianoDelGiorno.tipo
+            if(deficitArrotondato > 500 && pianoDelGiorno.tipo.includes('Forza')) scoreMuscolo--; // Usa deficitArrotondato
             
             if(scoreMuscolo > 0) trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
             if(scoreMuscolo < 0) trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
@@ -176,8 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${totaliGiorno.proteine.toFixed(1)} g</td>
                 <td>${totaliGiorno.calorie.toFixed(0)}</td>
                 <td>${totaliGiorno.workoutCalorie} kcal</td>
-                <td>${deficit} kcal</td>
-                <td>${stimaGrasso.toFixed(1) < 0.1 && stimaGrasso.toFixed(1) > -0.1 ? '0.0' : stimaGrasso.toFixed(1)} g</td>
+                <td>${deficitArrotondato} kcal</td> <td>${stimaGrasso.toFixed(1) < 0.1 && stimaGrasso.toFixed(1) > -0.1 ? '0.0' : stimaGrasso.toFixed(1)} g</td>
                 <td>${trendMuscoloHtml}</td>
             `;
             storicoBody.appendChild(summaryRow);
