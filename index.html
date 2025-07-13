@@ -485,26 +485,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // Aggiorna il riepilogo del costruttore pasti
         currentMealTypeDisplay.textContent = selectedMealTypeText;
         
-        mealProtCurrent.textContent = currentMealTotals.prot.toFixed(1);
+        mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1); // Ora usa obiettiviPasto.currentProt
         mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
         mealProtRemaining.textContent = `${(obiettiviPasto.remainingProt).toFixed(1)} g`;
         mealProgressProt.max = obiettiviPasto.targetProt;
-        mealProgressProt.value = currentMealTotals.prot;
+        mealProgressProt.value = obiettiviPasto.currentProt; // Ora usa obiettiviPasto.currentProt
 
         console.log("DEBUG PROTEINE BAR:");
-        console.log("  currentProt:", currentMealTotals.prot);
+        console.log("  currentProt:", obiettiviPasto.currentProt);
         console.log("  targetProt:", obiettiviPasto.targetProt);
         console.log("  progressProt.max:", mealProgressProt.max);
         console.log("  progressProt.value:", mealProgressProt.value);
 
-        mealCalCurrent.textContent = currentMealTotals.cal.toFixed(0);
+        mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0); // Ora usa obiettiviPasto.currentCal
         mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
         mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
         mealProgressCal.max = obiettiviPasto.targetCal;
-        mealProgressCal.value = currentMealTotals.cal;
+        mealProgressCal.value = obiettiviPasto.currentCal; // Ora usa obiettiviPasto.currentCal
 
         console.log("DEBUG CALORIE BAR:");
-        console.log("  currentCal:", currentMealTotals.cal);
+        console.log("  currentCal:", obiettiviPasto.currentCal);
         console.log("  targetCal:", obiettiviPasto.targetCal);
         console.log("  progressCal.max:", mealProgressCal.max);
         console.log("  progressCal.value:", mealProgressCal.value);
