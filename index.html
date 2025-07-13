@@ -48,6 +48,37 @@
         .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; }
         .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
         .sub-item-row td:last-child { visibility: hidden; }
+               /* Stili per il riepilogo del costruttore pasti */
+        #meal-builder-summary {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+        }
+        #meal-builder-summary p {
+            margin: 5px 0;
+            font-weight: 600;
+            color: #1e88e5;
+        }
+        #meal-builder-summary .progress-container {
+            display: flex;
+            gap: 20px; /* Barre affiancate */
+            margin-top: 10px;
+        }
+        #meal-builder-summary .progress-item {
+            flex: 1; /* Distribuisci lo spazio equamente */
+        }
+        #meal-builder-summary .progress-item p {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #3f51b5;
+        }
+        #meal-builder-summary .progress-item progress {
+            height: 18px;
+            border-radius: 4px;
+        }
+        /* FINE DEL NUOVO BLOCCO DI CODICE CSS */
     </style>
 </head>
 <body>
