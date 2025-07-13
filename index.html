@@ -161,7 +161,7 @@
         <div id="sync-config-sezione" class="sezione">
             <h2>Configurazione Sincronizzazione Cloud</h2>
             <p>Incolla qui la configurazione del tuo progetto Firebase per abilitare la sincronizzazione automatica.</p>
-            <textarea id="firebase-config-input" placeholder="Incolla qui l'intero blocco di codice che inizia con 'const firebaseConfig = ...'" rows="4"></textarea>
+            <textarea id="firebase-config-input" placeholder="Incolla qui l'intero blocco di codice..." rows="4"></textarea>
             <button id="btn-save-config">Salva Configurazione</button>
             <p id="sync-status"></p>
         </div>
@@ -169,22 +169,22 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // --- COSTANTI E VARIABILI GLOBALI ---
     const PIANO_SETTIMANALE = { 0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, 1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 2: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 3: { tipo: '🔥 HIIT/Core (Mantenimento)', cal: 2400, prot: 140 }, 4: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 5: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, 6: { tipo: '💧 Cardio LISS (Deficit)', cal: 1700, prot: 110 } };
     const TDEE_BASE = 2311;
     const mealSequence = ['merenda1', 'pranzo', 'merenda2', 'cena'];
-    
-    let datiGiornalieri = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, log: [], workoutCalorie: 0, workoutLog: [] };
-    let foodDatabase = {};
-    let pastoInCostruzione = []; 
+    let datiGiornalieri, foodDatabase, pastoInCostruzione;
     let db;
     let dataListener;
     let localUpdateInProgress = false;
 
-    const domElements = {};
+    // --- RIFERIMENTI DOM ---
+    const dom = {};
     ['titolo-giornata', 'proiezione', 'testo-proiezione', 'form-allenamento', 'totale-proteine', 'totale-calorie', 'obiettivo-proteine', 'obiettivo-calorie', 'totale-mg', 'totale-k', 'totale-vitc', 'totale-ca', 'progress-proteine', 'progress-calorie', 'progress-mg', 'progress-k', 'progress-vitc', 'progress-ca', 'workout-calories-totali', 'log-body', 'log-allenamenti', 'log-allenamenti-body', 'builder-desc', 'builder-qta', 'builder-prot', 'builder-kcal', 'builder-mg', 'builder-k', 'builder-vitc', 'builder-ca', 'food-database-list', 'btn-costruisci-pasto', 'btn-aggiungi-singolo', 'meal-builder-sezione', 'meal-type-selector', 'builder-prot-restanti', 'builder-cal-restanti', 'builder-progress-prot', 'builder-progress-cal', 'log-pasto-builder-body', 'btn-salva-pasto', 'deficit-attuale', 'feedback-deficit', 'btn-archivia', 'btn-save-config', 'firebase-config-input', 'sync-status'].forEach(id => {
-        domElements[id.replace(/-/g, '_')] = document.getElementById(id);
+        dom[id.replace(/-/g, '_')] = document.getElementById(id);
     });
 
+    // --- FUNZIONI DI BASE E GESTIONE DATI ---
     const getTodayString = () => new Date().toISOString().split('T')[0];
 
     function salvaStato(triggerSync = true) {
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             storico: JSON.parse(localStorage.getItem('trackerStorico')) || [],
             databaseAlimenti: foodDatabase,
             pastoInCostruzione: pastoInCostruzione,
-            mealType: domElements.meal_type_selector.value
+            mealType: dom.meal_type_selector.value
         };
         localStorage.setItem('trackerGiornoCorrente', JSON.stringify(stato.giornoCorrente));
         localStorage.setItem('trackerStorico', JSON.stringify(stato.storico));
@@ -211,11 +211,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- LOGICA DI SINCRONIZZAZIONE (FIREBASE) ---
     function initFirebase() {
         const fbConfigString = localStorage.getItem('firebaseConfig');
         if (!fbConfigString) {
-            domElements.sync_status.textContent = "Sincronizzazione non configurata.";
-            domElements.sync_status.style.color = 'orange';
+            dom.sync_status.textContent = "Sincronizzazione non configurata.";
+            dom.sync_status.style.color = 'orange';
             return;
         }
         
@@ -223,8 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const fbConfig = JSON.parse(fbConfigString);
             if (firebase.apps.length === 0) firebase.initializeApp(fbConfig);
             db = firebase.database();
-            domElements.sync_status.textContent = "Sincronizzazione Attiva ✅";
-            domElements.sync_status.style.color = 'green';
+            dom.sync_status.textContent = "Sincronizzazione Attiva ✅";
+            dom.sync_status.style.color = 'green';
             
             if(dataListener) db.ref('trackerData').off('value', dataListener);
             
@@ -241,21 +242,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } catch(e) {
-            domElements.sync_status.textContent = "Configurazione non valida.";
-            domElements.sync_status.style.color = 'red';
-            localStorage.removeItem('firebaseConfig');
+            dom.sync_status.textContent = "Configurazione non valida.";
+            dom.sync_status.style.color = 'red';
         }
     }
 
+    // --- AVVIO E GESTIONE UI ---
     function initApp() {
         foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
         pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
         const mealType = localStorage.getItem('trackerMealType');
-        if(mealType) domElements.meal_type_selector.value = mealType;
+        if(mealType) dom.meal_type_selector.value = mealType;
 
         const giornoCorrenteData = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
         
         if (giornoCorrenteData) {
+            if(giornoCorrenteData.data !== getTodayString()){
+                alert(`ATTENZIONE: Stai visualizzando i dati di una giornata passata (${new Date(giornoCorrenteData.data).toLocaleDateString()}). Ricordati di archiviarli con il pulsante in fondo alla pagina, altrimenti verranno persi al prossimo avvio in un giorno diverso.`);
+            }
             datiGiornalieri = giornoCorrenteData.dati;
         } else {
             datiGiornalieri = { log: [], workoutLog: [] };
@@ -265,78 +269,74 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function aggiornaUI() {
-        const giornoCorrenteData = JSON.parse(localStorage.getItem('trackerGiornoCorrente')) || {data: getTodayString()};
+        const giornoCorrenteData = JSON.parse(localStorage.getItem('trackerGiornoCorrente')) || {data: getTodayString(), dati: {log:[], workoutLog:[]}};
         const dataAttuale = new Date(giornoCorrenteData.data);
         const pianoOggi = PIANO_SETTIMANALE[dataAttuale.getDay()];
         if(!pianoOggi) return;
         const OBIETTIVI = { prot: pianoOggi.prot, cal: pianoOggi.cal, mg: 420, k: 3400, vitc: 90, ca: 1000 };
 
-        domElements.titolo_giornata.textContent = pianoOggi.tipo; 
+        dom.titolo_giornata.textContent = pianoOggi.tipo; 
         
         const workoutCal = (datiGiornalieri.workoutLog || []).reduce((acc, w) => acc + w.cal, 0);
         let obiettivoCaloricoDinamico = pianoOggi.tipo.includes('Forza') ? TDEE_BASE + workoutCal : pianoOggi.cal;
         
-        domElements.obiettivo_proteine.textContent = OBIETTIVI.prot; 
-        domElements.obiettivo_calorie.textContent = obiettivoCaloricoDinamico.toFixed(0);
-        domElements.progress_proteine.max = OBIETTIVI.prot; 
-        domElements.progress_calorie.max = obiettivoCaloricoDinamico; 
+        dom.obiettivo_proteine.textContent = OBIETTIVI.prot; 
+        dom.obiettivo_calorie.textContent = obiettivoCaloricoDinamico.toFixed(0);
+        dom.progress_proteine.max = OBIETTIVI.prot; 
+        dom.progress_calorie.max = obiettivoCaloricoDinamico; 
+        dom.progress_mg.max = OBIETTIVI.mg; dom.progress_k.max = OBIETTIVI.k;
+        dom.progress_vitc.max = OBIETTIVI.vitc; dom.progress_ca.max = OBIETTIVI.ca;
 
         const totali = (datiGiornalieri.log || []).reduce((acc, entry) => {
-            const items = entry.type === 'meal' ? entry.items : [entry];
-            (items || []).forEach(item => {
-                acc.proteine += item.prot || 0;
-                acc.calorie += item.cal || 0;
-                acc.mg += item.mg || 0;
-                acc.k += item.k || 0;
-                acc.vitc += item.vitc || 0;
-                acc.ca += item.ca || 0;
-            });
+            acc.proteine += entry.prot || 0; acc.calorie += entry.cal || 0; acc.mg += entry.mg || 0;
+            acc.k += entry.k || 0; acc.vitc += entry.vitc || 0; acc.ca += entry.ca || 0;
             return acc;
         }, { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 });
 
-        ['proteine', 'calorie', 'mg', 'k', 'vitc', 'ca'].forEach(key => {
-            datiGiornalieri[key] = totali[key];
-            const el = domElements[`totale_${key}`];
-            if(el) el.textContent = totali[key].toFixed(['proteine', 'vitc', 'mg', 'ca'].includes(key) ? 1 : 0);
-        });
+        datiGiornalieri.proteine = totali.proteine; datiGiornalieri.calorie = totali.calorie;
+        datiGiornalieri.mg = totali.mg; datiGiornalieri.k = totali.k;
+        datiGiornalieri.vitc = totali.vitc; datiGiornalieri.ca = totali.ca;
 
-        Object.keys(totali).forEach(key => {
-            const el = domElements[`progress_${key}`];
-            if (el) el.value = totali[key];
+        ['proteine', 'calorie', 'mg', 'k', 'vitc', 'ca'].forEach(key => {
+            const el = dom[`totale_${key}`];
+            if(el) el.textContent = totali[key].toFixed(['proteine', 'vitc', 'mg', 'ca'].includes(key) ? 1 : 0);
+            
+            const pEl = dom[`progress_${key}`];
+            if (pEl) pEl.value = totali[key];
         });
-        domElements.workout_calories_totali.textContent = workoutCal; 
+        dom.workout_calories_totali.textContent = workoutCal; 
         
-        domElements.log_body.innerHTML = '';
+        dom.log_body.innerHTML = '';
         (datiGiornalieri.log || []).forEach((entry, index) => {
             if (entry.type === 'meal') {
-                const riga = domElements.log_body.insertRow();
+                const riga = dom.log_body.insertRow();
                 riga.className = 'meal-group-row';
                 const arrow = entry.isExpanded ? '&#9652;' : '&#9662;';
                 riga.innerHTML = `<td style="text-align:left; padding-left:5px;"><span class="expand-arrow" data-index="${index}">${arrow}</span> ${entry.desc}</td><td>${entry.items.reduce((sum, i) => sum + i.qta, 0)}g</td><td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td><td>${(entry.mg || 0).toFixed(1)}</td><td>${(entry.k || 0).toFixed(0)}</td><td>${(entry.vitc || 0).toFixed(1)}</td><td>${(entry.ca || 0).toFixed(1)}</td><td><button class="delete-btn" data-type="pasto" data-index="${index}">&times;</button></td>`;
                 if (entry.isExpanded) {
                     entry.items.forEach(item => {
-                        const subRiga = domElements.log_body.insertRow();
+                        const subRiga = dom.log_body.insertRow();
                         subRiga.className = 'sub-item-row';
                         subRiga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td>${(item.mg || 0).toFixed(1)}</td><td>${(item.k || 0).toFixed(0)}</td><td>${(item.vitc || 0).toFixed(1)}</td><td>${(item.ca || 0).toFixed(1)}</td><td></td>`;
                     });
                 }
             } else {
-                const riga = domElements.log_body.insertRow();
+                const riga = dom.log_body.insertRow();
                 riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${entry.prot.toFixed(1)}</td><td>${entry.cal.toFixed(0)}</td><td>${(entry.mg || 0).toFixed(1)}</td><td>${(entry.k || 0).toFixed(0)}</td><td>${(entry.vitc || 0).toFixed(1)}</td><td>${(entry.ca || 0).toFixed(1)}</td><td><button class="delete-btn" data-type="pasto" data-index="${index}">&times;</button></td>`;
             }
         }); 
 
-        domElements.log_allenamenti.style.display = (datiGiornalieri.workoutLog || []).length > 0 ? 'table' : 'none'; 
-        domElements.log_allenamenti_body.innerHTML = ''; 
-        (datiGiornalieri.workoutLog || []).forEach((item, index) => { domElements.log_allenamenti_body.insertRow().innerHTML = `<td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="allenamento" data-index="${index}">&times;</button></td>`; }); 
+        dom.log_allenamenti.style.display = (datiGiornalieri.workoutLog || []).length > 0 ? 'table' : 'none'; 
+        dom.log_allenamenti_body.innerHTML = ''; 
+        (datiGiornalieri.workoutLog || []).forEach((item, index) => { dom.log_allenamenti_body.insertRow().innerHTML = `<td>${item.data ? new Date(item.data).toLocaleDateString() : ''}</td><td>${item.desc}</td><td>${item.cal}</td><td><button class="delete-btn" data-type="allenamento" data-index="${index}">&times;</button></td>`; }); 
         
-        domElements.food_database_list.innerHTML = Object.keys(foodDatabase).map(key => `<option value="${key.charAt(0).toUpperCase() + key.slice(1)}">`).join('');
+        dom.food_database_list.innerHTML = Object.keys(foodDatabase).map(key => `<option value="${key.charAt(0).toUpperCase() + key.slice(1)}">`).join('');
     }
 
     function renderMealBuilder() { 
-        if (pastoInCostruzione.length === 0) { domElements.meal_builder_sezione.dataset.visible = 'false'; return; } 
-        domElements.meal_builder_sezione.dataset.visible = 'true'; 
-        const mealType = domElements.meal_type_selector.value; 
+        if (pastoInCostruzione.length === 0) { dom.meal_builder_sezione.dataset.visible = 'false'; return; } 
+        dom.meal_builder_sezione.dataset.visible = 'true'; 
+        const mealType = dom.meal_type_selector.value; 
         let budgetProtPasto, budgetCalPasto; 
         const pianoOggi = PIANO_SETTIMANALE[new Date().getDay()];
         
@@ -345,85 +345,82 @@ document.addEventListener('DOMContentLoaded', () => {
             budgetProtPasto = pianoOggi.prot - datiGiornalieri.proteine; 
             budgetCalPasto = calorieTarget - datiGiornalieri.calorie; 
         } else { 
-            const proteinCap = (mealType === 'merenda1' || mealType === 'merenda2') ? 30 : 40;
+            let proteinCap = (mealType === 'merenda1' || mealType === 'merenda2') ? 30 : 40;
             const calToProtRatio = pianoOggi.cal / pianoOggi.prot; 
             budgetProtPasto = proteinCap; 
             budgetCalPasto = proteinCap * calToProtRatio; 
         } 
         const totaliPastoSelezionato = pastoInCostruzione.reduce((acc, item) => { if (item.selezionato) { acc.prot += item.prot; acc.cal += item.cal; } return acc; }, { prot: 0, cal: 0 }); 
-        domElements.builder_prot_restanti.textContent = `${(budgetProtPasto - totaliPastoSelezionato.prot).toFixed(1)} g`; 
-        domElements.builder_cal_restanti.textContent = `${(budgetCalPasto - totaliPastoSelezionato.cal).toFixed(0)} kcal`; 
-        domElements.builder_progress_prot.max = budgetProtPasto > 0 ? budgetProtPasto : 1; 
-        domElements.builder_progress_prot.value = totaliPastoSelezionato.prot; 
-        domElements.builder_progress_cal.max = budgetCalPasto > 0 ? budgetCalPasto : 1; 
-        domElements.builder_progress_cal.value = totaliPastoSelezionato.cal; 
-        domElements.log_pasto_builder_body.innerHTML = ''; 
-        pastoInCostruzione.forEach((item, index) => { const riga = domElements.log_pasto_builder_body.insertRow(); const checkedAttr = item.selezionato ? 'checked' : ''; riga.innerHTML = `<td><input type="checkbox" class="builder-item-checkbox" data-index="${index}" ${checkedAttr}></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; }); 
+        dom.builder_prot_restanti.textContent = `${(budgetProtPasto - totaliPastoSelezionato.prot).toFixed(1)} g`; 
+        dom.builder_cal_restanti.textContent = `${(budgetCalPasto - totaliPastoSelezionato.cal).toFixed(0)} kcal`; 
+        dom.builder_progress_prot.max = budgetProtPasto > 0 ? budgetProtPasto : 1; 
+        dom.builder_progress_prot.value = totaliPastoSelezionato.prot; 
+        dom.builder_progress_cal.max = budgetCalPasto > 0 ? budgetCalPasto : 1; 
+        dom.builder_progress_cal.value = totaliPastoSelezionato.cal; 
+        dom.log_pasto_builder_body.innerHTML = ''; 
+        pastoInCostruzione.forEach((item, index) => { const riga = dom.log_pasto_builder_body.insertRow(); const checkedAttr = item.selezionato ? 'checked' : ''; riga.innerHTML = `<td><input type="checkbox" class="builder-item-checkbox" data-index="${index}" ${checkedAttr}></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; }); 
     }
 
     function creaAlimentoDaInput(isSingle = false) {
-        const desc = domElements.builder_desc.value.trim(); const qta = parseFloat(domElements.builder_qta.value) || 0;
+        const desc = dom.builder_desc.value.trim(); const qta = parseFloat(dom.builder_qta.value) || 0;
         if (!desc || qta <= 0) { alert('Per favore, inserisci nome e quantità.'); return null; }
-        const p100 = parseFloat(domElements.builder_prot.value) || 0, k100 = parseFloat(domElements.builder_kcal.value) || 0;
-        const mg100 = parseFloat(domElements.builder_mg.value) || 0, k100_mg = parseFloat(domElements.builder_k.value) || 0;
-        const vitc100 = parseFloat(domElements.builder_vitc.value) || 0, ca100 = parseFloat(domElements.builder_ca.value) || 0;
+        const p100 = parseFloat(dom.builder_prot.value) || 0, k100 = parseFloat(dom.builder_kcal.value) || 0;
+        const mg100 = parseFloat(dom.builder_mg.value) || 0, k100_mg = parseFloat(dom.builder_k.value) || 0;
+        const vitc100 = parseFloat(dom.builder_vitc.value) || 0, ca100 = parseFloat(dom.builder_ca.value) || 0;
         if (p100 > 0 || k100 > 0) { foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 }; }
         const foodItem = { data: getTodayString(), desc, qta, prot: (p100 / 100) * qta, cal: Math.round((k100 / 100) * qta), mg: (mg100 / 100) * qta, k: (k100_mg / 100) * qta, vitc: (vitc100 / 100) * qta, ca: (ca100 / 100) * qta};
         if (!isSingle) foodItem.selezionato = true; else foodItem.type = 'single';
         return foodItem;
     }
+
+    function resetInputAlimento() {
+        ['builder_desc', 'builder_qta', 'builder_prot', 'builder_kcal', 'builder_mg', 'builder_k', 'builder_vitc', 'builder_ca'].forEach(id => dom[id].value = '');
+        dom.builder_desc.focus();
+    }
     
     // --- EVENT LISTENERS ---
-    domElements.btn_aggiungi_singolo.addEventListener('click', () => { 
+    dom.btn_aggiungi_singolo.addEventListener('click', () => { 
         const item = creaAlimentoDaInput(true); 
-        if (item) {
-            datiGiornalieri.log.push(item);
-            salvaStato();
-            aggiornaUI();
-        }
+        if (item) { datiGiornalieri.log.push(item); salvaStato(); aggiornaUI(); resetInputAlimento(); }
     });
 
-    domElements.btn_costruisci_pasto.addEventListener('click', () => { 
+    dom.btn_costruisci_pasto.addEventListener('click', () => { 
         const item = creaAlimentoDaInput(); 
-        if(item) {
-            pastoInCostruzione.push(item); 
-            salvaStato(); 
-            renderMealBuilder(); 
-        }
+        if(item) { pastoInCostruzione.push(item); salvaStato(); renderMealBuilder(); resetInputAlimento(); }
     });
     
-    domElements.btn_salva_pasto.addEventListener('click', () => {
+    dom.btn_salva_pasto.addEventListener('click', () => {
         const alimentiSelezionati = pastoInCostruzione.filter(item => item.selezionato);
         if (alimentiSelezionati.length === 0) return alert("Nessun alimento selezionato.");
         
-        const mealName = domElements.meal_type_selector.options[domElements.meal_type_selector.selectedIndex].text;
+        const mealName = dom.meal_type_selector.options[dom.meal_type_selector.selectedIndex].text;
         const totaliPasto = alimentiSelezionati.reduce((acc, item) => {
-            Object.keys(acc).forEach(key => acc[key] += item[key] || 0);
+            ['prot', 'cal', 'mg', 'k', 'vitc', 'ca'].forEach(key => acc[key] += item[key] || 0);
             return acc;
         }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0});
 
         datiGiornalieri.log.push({ type: 'meal', desc: mealName, isExpanded: false, items: alimentiSelezionati, ...totaliPasto });
         
         pastoInCostruzione = [];
-        const currentIndex = mealSequence.indexOf(domElements.meal_type_selector.value);
-        domElements.meal_type_selector.value = mealSequence[(currentIndex + 1) % mealSequence.length];
+        const currentIndex = mealSequence.indexOf(dom.meal_type_selector.value);
+        dom.meal_type_selector.value = mealSequence[(currentIndex + 1) % mealSequence.length];
         
         salvaStato();
         aggiornaUI();
         renderMealBuilder();
     });
 
-    domElements.builder_desc.addEventListener('input', (e) => {
+    dom.builder_desc.addEventListener('input', (e) => {
         const foodData = foodDatabase[e.target.value.toLowerCase()];
-        if(foodData) Object.keys(foodData).forEach(key => domElements[`builder_${key}`].value = foodData[key]);
+        if(foodData) ['prot', 'kcal', 'mg', 'k', 'vitc', 'ca'].forEach(key => dom[`builder_${key}`].value = foodData[key] || '');
     });
 
-    domElements.form_allenamento.addEventListener('submit', (e) => {
+    dom.form_allenamento.addEventListener('submit', (e) => {
         e.preventDefault();
         const desc = e.target.elements[0].value || 'Allenamento';
         const cal = parseInt(e.target.elements[1].value, 10);
         if (cal > 0) {
-            datiGiornalieri.workoutLog.push({ desc, cal });
+            datiGiornalieri.workoutLog.push({ data: getTodayString(), desc, cal });
             salvaStato();
             aggiornaUI();
             e.target.reset();
@@ -447,49 +444,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const entry = datiGiornalieri.log[index];
             if(entry && entry.type === 'meal') {
                 entry.isExpanded = !entry.isExpanded;
+                salvaStato();
                 aggiornaUI();
             }
         }
     });
 
-    domElements.log_pasto_builder_body.addEventListener('change', (e) => {
+    dom.log_pasto_builder_body.addEventListener('change', (e) => {
         if (e.target.classList.contains('builder-item-checkbox')) {
             const index = parseInt(e.target.dataset.index, 10);
             if(pastoInCostruzione[index]) pastoInCostruzione[index].selezionato = e.target.checked;
-            salvaStato();
+            salvaStato(false); // Non triggera il sync per non sovraccaricare
             renderMealBuilder();
         }
     });
-    
-    domElements.meal_type_selector.addEventListener('change', () => {
-        salvaStato();
+    dom.meal_type_selector.addEventListener('change', () => {
+        salvaStato(false);
         renderMealBuilder();
     });
 
-    domElements.btn_archivia.addEventListener('click', () => {
+    dom.btn_archivia.addEventListener('click', () => {
         const giornoCorrente = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
-        if (!giornoCorrente || (giornoCorrente.dati.log || []).length === 0) return alert("Nessun dato da archiviare.");
-        if (!confirm(`Sei sicuro di voler chiudere la giornata del ${new Date(giornoCorrente.data).toLocaleDateString()} e archiviarla?`)) return;
+        if (!giornoCorrente || !giornoCorrente.dati || (giornoCorrente.dati.log || []).length === 0) return alert("Nessun dato da archiviare.");
+        if (!confirm(`Sei sicuro di voler chiudere e archiviare la giornata del ${new Date(giornoCorrente.data).toLocaleDateString()}?`)) return;
 
         const storico = JSON.parse(localStorage.getItem('trackerStorico')) || [];
         const nuovoStorico = storico.filter(item => item.data !== giornoCorrente.data);
         const dataArchiviazione = new Date(giornoCorrente.data);
         const pianoArchiviazione = PIANO_SETTIMANALE[dataArchiviazione.getDay()];
-        const datiDaArchiviare = giornoCorrente.dati;
         
-        const totali = datiDaArchiviare.log.reduce((acc, entry) => {
-            const items = entry.type === 'meal' ? entry.items : [entry];
-            (items || []).forEach(item => { Object.keys(acc).forEach(key => acc[key] += item[key] || 0) });
+        const totali = (giornoCorrente.dati.log || []).reduce((acc, entry) => {
+            acc.proteine += entry.prot || 0; acc.calorie += entry.cal || 0; acc.mg += entry.mg || 0;
+            acc.k += entry.k || 0; acc.vitc += entry.vitc || 0; acc.ca += entry.ca || 0;
             return acc;
         }, { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 });
-        
-        const workoutCal = (datiDaArchiviare.workoutLog || []).reduce((acc, item) => acc + item.cal, 0);
+        const workoutCal = (giornoCorrente.dati.workoutLog || []).reduce((acc, item) => acc + item.cal, 0);
         const deficit = (TDEE_BASE + workoutCal) - totali.calorie;
 
         nuovoStorico.push({
             data: giornoCorrente.data,
             tipoGiornata: pianoArchiviazione.tipo,
-            log: datiDaArchiviare.log,
+            log: giornoCorrente.dati.log,
             isLogExpanded: false,
             totali: { ...totali, workoutCalorie: workoutCal },
             obiettivi: { prot: pianoArchiviazione.prot, cal: pianoArchiviazione.cal },
@@ -502,17 +497,17 @@ document.addEventListener('DOMContentLoaded', () => {
         salvaStato();
         
         alert(`Giornata del ${giornoCorrente.data} archiviata con successo!`);
-        initApp();
+        location.reload();
     });
 
-    domElements.btn_save_config.addEventListener('click', () => {
-        const configText = domElements.firebase_config_input.value;
+    dom.btn_save_config.addEventListener('click', () => {
+        const configText = dom.firebase_config_input.value;
         if (!configText) return alert("Incolla la configurazione.");
         try {
             const startIndex = configText.indexOf('{');
             const endIndex = configText.lastIndexOf('}') + 1;
             const jsonText = configText.substring(startIndex, endIndex);
-            const validJsonText = jsonText.replace(/(\w+):/g, '"$1":');
+            const validJsonText = jsonText.replace(/(\w+)\s*:/g, '"$1":');
             const configObject = JSON.parse(validJsonText);
             
             localStorage.setItem('firebaseConfig', JSON.stringify(configObject));
