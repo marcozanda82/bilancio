@@ -92,8 +92,14 @@
             <a href="storico.html">📊 Storico Giornaliero</a>
             <a href="confronto.html">📈 Confronto Mensile</a>
         </div>
+
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi</h2>
+            <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
+            <progress id="progress-proteine" class="macro-progress" value="0"></progress>
+            <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+            <progress id="progress-calorie" class="macro-progress" value="0"></progress>
+            
             <div id="form-allenamento" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
                 <h3>Registra Allenamento</h3>
                 <div>
@@ -106,12 +112,6 @@
                 </div>
                 <button id="btn-salva-allenamento">Salva Allenamento</button>
             </div>
-            ```
-**Nota:** La riga `<p>Workout: <span id="workout-calories-totali">0</span> kcal</p>` è già presente nel tuo `index.html` (riga 100 nello screenshot). La nuova sezione `form-allenamento` andrà *prima* di questa riga.
-            <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
-            <progress id="progress-proteine" class="macro-progress" value="0"></progress>
-            <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
-            <progress id="progress-calorie" class="macro-progress" value="0"></progress>
             <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
             <hr>
             <h3>Micronutrienti</h3>
