@@ -196,7 +196,6 @@
             border-radius: 5px;
             white-space: nowrap; /* Evita il wrap del testo */
             transform: translateX(-50%); /* Centra l'elemento stesso sul punto 'left' */
-            /* Non usiamo 'transition: left' per evitare l'effetto scattoso, lasciamo al browser il repainting */
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             pointer-events: none; /* Permette di cliccare attraverso l'elemento */
             z-index: 10; /* Assicura che sia sopra lo slider */
@@ -435,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Caricato il giorno: ${giornoVisualizzato}`); 
     }
 
-    // Nuova funzione per aggiornare la posizione e il testo del valore dello slider
+    // Funzione per aggiornare la posizione e il testo del valore dello slider
     function updateSliderDisplay() {
         const sliderValue = parseFloat(calorieAdjustmentSlider.value);
         targetAdjustmentDisplay.textContent = `${sliderValue} kcal`;
@@ -447,21 +446,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Calcola la percentuale del valore rispetto al range dello slider (0 a 1)
         const percentage = (val - min) / (max - min);
         
-        // Ottieni la larghezza effettiva della traccia cliccabile dello slider
-        // La larghezza del thumb (cursore) è 24px come da CSS
+        // Ottieni la larghezza effettiva della traccia dello slider
+        const sliderWidth = calorieAdjustmentSlider.offsetWidth;
+        // Stima la larghezza del thumb (cursore)
         const thumbWidth = 24; 
-        const sliderRect = calorieAdjustmentSlider.getBoundingClientRect();
-        const sliderTrackWidth = sliderRect.width - thumbWidth; // Larghezza del percorso effettivo del thumb
 
-        // Calcola la posizione X del centro del thumb rispetto all'inizio del percorso dello slider
-        const thumbCenterPosition = (percentage * sliderTrackWidth) + (thumbWidth / 2);
-
-        // Posiziona l'elemento `targetAdjustmentDisplay` usando `left` e `transform: translateX(-50%)`
-        // `sliderRect.left` è la posizione assoluta dello slider rispetto al viewport
-        // `sliderRect.left - sliderRect.parentElement.getBoundingClientRect().left` è l'offset dello slider rispetto al contenitore
-        // Vogliamo posizionare il display all'altezza del cursore all'interno del riquadro del slider container
-        targetAdjustmentDisplay.style.left = `${(sliderRect.left - sliderRect.parentElement.getBoundingClientRect().left) + thumbCenterPosition}px`;
-        // `transform: translateX(-50%)` nel CSS assicura che il centro dell'elemento sia esattamente sul punto `left`
+        // Calcola la posizione 'left' del punto centrale del thumb
+        // `percentage * (sliderWidth - thumbWidth)` dà la posizione del bordo sinistro del thumb
+        // `+ (thumbWidth / 2)` sposta al centro del thumb
+        let leftPos = percentage * (sliderWidth - thumbWidth) + (thumbWidth / 2);
+        
+        // Applica l'offset dello slider rispetto al suo contenitore per posizionamento assoluto
+        const sliderOffsetLeft = calorieAdjustmentSlider.offsetLeft;
+        targetAdjustmentDisplay.style.left = `${sliderOffsetLeft + leftPos}px`;
     }
 
 
@@ -573,6 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const obiettivoCaloriePerBarre = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
         const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCaloriePerBarre, ...OBIETTIVI_MICRO };
         
+        // Aggiorna il titolo della giornata
         titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
         
         let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
