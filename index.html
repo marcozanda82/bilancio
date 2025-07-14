@@ -79,6 +79,45 @@
             height: 18px;
             border-radius: 4px;
         }
+
+        /* Nuovi stili per l'indicatore deficit/surplus */
+        #calorie-balance-container {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            position: relative;
+            overflow: hidden; /* Assicura che l'indicatore non fuoriesca */
+        }
+
+        #calorie-balance-indicator {
+            position: absolute;
+            top: 0;
+            left: 50%; /* Inizia al centro */
+            transform: translateX(-50%); /* Centra l'indicatore stesso */
+            width: 16px;
+            height: 16px;
+            background-color: #1976d2; /* Colore blu */
+            border-radius: 50%; /* Forma a cerchio */
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease-out; /* Animazione fluida */
+            z-index: 10;
+        }
+        /* Icone per l'indicatore, opzionale */
+        #calorie-balance-indicator::before {
+            content: '⚖️'; /* Bilancia per equilibrio */
+            font-size: 0.8em;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            z-index: 1;
+        }
+
     </style>
 </head>
 <body>
@@ -94,6 +133,9 @@
         </div>
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi</h2>
+            <div id="calorie-balance-container">
+                <div id="calorie-balance-indicator"></div>
+            </div>
             <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
             <progress id="progress-proteine" class="macro-progress" value="0"></progress>
             <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
@@ -246,6 +288,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const workoutCaloriesInput = document.getElementById('workout-calories');
     const btnAddWorkout = document.getElementById('btn-add-workout');
 
+    // Nuovo elemento per l'indicatore deficit/surplus
+    const calorieBalanceIndicator = document.getElementById('calorie-balance-indicator');
+
 
     // --- FUNZIONI DI GESTIONE DATI ---
     function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
@@ -275,8 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
         }
         
-        // Inizializza con un oggetto vuoto se non è stato trovato nulla
-        // Assicurati che workoutCalorie sia sempre definito, anche se 0
         datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
         if (typeof datiGiornalieri.workoutCalorie === 'undefined') {
             datiGiornalieri.workoutCalorie = 0;
@@ -402,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     totali.ca += item.ca || 0;
                 });
             } else if (entry.type === 'single') { 
-                totali.proteine += entry.prot || 0;
+                totali.prote proteine += entry.prot || 0;
                 totali.calorie += entry.cal || 0;
                 totali.mg += entry.mg || 0;
                 totali.k += entry.k || 0;
@@ -427,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
         spanTotaleK.textContent = totali.k.toFixed(0);
         spanTotaleVitC.textContent = totali.vitc.toFixed(1);
         spanTotaleCa.textContent = totali.ca.toFixed(1);
-        spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; // Mostra le calorie totali del workout
+        spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
 
         progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
         progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
@@ -484,7 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (entry.type === 'workout') { // Gestisci l'elemento workout
                 const riga = logBody.insertRow();
-                // Notare che le colonne qta, prot, e micronutrienti non hanno senso per un workout, quindi rimangono vuote
                 riga.innerHTML = `
                     <td>${entry.desc}</td>
                     <td></td> 
@@ -501,6 +543,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
             }
         });
+
+        // Aggiorna l'indicatore di deficit/surplus
+        const currentCalories = totali.calorie;
+        const targetCalories = OBIETTIVI.cal;
+        const calorieDifference = currentCalories - targetCalories; // Positivo per surplus, negativo per deficit
+
+        // Mappa la differenza calorica a una posizione da 0% (massimo deficit) a 100% (massimo surplus)
+        // Definisco un range massimo di deficit/surplus per la visualizzazione (es. +/- 500 kcal)
+        const maxCalorieRange = 500; // Calorie massime per lo spostamento completo a destra o sinistra
+        let positionPercentage = 50 + (calorieDifference / (2 * maxCalorieRange)) * 100;
+        
+        // Limita la percentuale tra 0 e 100
+        positionPercentage = Math.max(0, Math.min(100, positionPercentage));
+
+        calorieBalanceIndicator.style.transform = `translateX(${positionPercentage}%) translateX(-${calorieBalanceIndicator.offsetWidth / 2}px)`; // Centra l'indicatore sulla percentuale
+
+        // Cambia l'icona in base al deficit/surplus
+        if (calorieDifference < -50) { // Deficit significativo
+            calorieBalanceIndicator.style.backgroundColor = '#d32f2f'; // Rosso
+            calorieBalanceIndicator.querySelector('::before').content = '⬇️';
+        } else if (calorieDifference > 50) { // Surplus significativo
+            calorieBalanceIndicator.style.backgroundColor = '#2e7d32'; // Verde
+            calorieBalanceIndicator.querySelector('::before').content = '⬆️';
+        } else { // Equilibrio
+            calorieBalanceIndicator.style.backgroundColor = '#1976d2'; // Blu
+            calorieBalanceIndicator.querySelector('::before').content = '⚖️';
+        }
     }
 
     function renderMealBuilder() {
@@ -557,7 +626,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const existingFood = foodDatabase[desc.toLowerCase()];
         if (existingFood) {
-            // Se i campi input sono vuoti, usa i valori del database
             p100 = (builderProt.value === '') ? existingFood.prot || 0 : p100;
             k100 = (builderKcal.value === '') ? existingFood.kcal || 0 : k100;
             mg100 = (builderMg.value === '') ? existingFood.mg || 0 : mg100;
@@ -566,7 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ca100 = (builderCa.value === '') ? existingFood.ca || 0 : ca100;
         }
 
-        // Aggiorna il database con i valori finali usati
         foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
         salvaFoodDatabase();
         aggiornaDatalist();
