@@ -262,35 +262,35 @@
 
         /* NUOVI STILI per il riquadro di benvenuto minimizzato */
         #auth-section.logged-in {
-            padding: 10px 20px; /* Ridotto il padding */
-            background-color: #e3f2fd; /* Sfondo più chiaro */
-            border: 1px solid #90caf9; /* Bordo più leggero */
-            box-shadow: none; /* Rimosso l'ombreggiatura */
-            text-align: center; /* Centra il contenuto */
-            display: flex; /* Flexbox per allineare */
-            align-items: center; /* Centra verticalmente */
-            justify-content: center; /* Centra orizzontalmente */
-            flex-wrap: wrap; /* Permette il wrapping se lo spazio è limitato */
-            gap: 10px; /* Spazio tra gli elementi */
+            padding: 10px 20px;
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            box-shadow: none;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         #auth-section.logged-in #auth-header,
         #auth-section.logged-in #auth-form-fields,
         #auth-section.logged-in #auth-status {
-            display: none !important; /* Nasconde questi elementi quando loggato */
+            display: none !important;
         }
         #auth-section.logged-in #welcome-message {
-            margin: 0; /* Rimuove margini extra */
-            font-size: 1em; /* Dimensione del font leggermente più piccola */
-            white-space: nowrap; /* Evita il wrapping del testo email */
-            overflow: hidden; /* Nasconde l'eccesso */
-            text-overflow: ellipsis; /* Aggiunge i puntini di sospensione */
+            margin: 0;
+            font-size: 1em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         #auth-section.logged-in #btn-sign-out {
-            width: auto; /* Larghezza automatica per il pulsante Esci */
-            padding: 5px 10px; /* Padding ridotto */
-            font-size: 0.8em; /* Font più piccolo per il pulsante */
-            margin: 0; /* Rimuove margini extra */
-            flex-shrink: 0; /* Non si restringe */
+            width: auto;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            margin: 0;
+            flex-shrink: 0;
         }
 
     </style>
@@ -1131,7 +1131,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     authStatusP.textContent = ''; 
 
                     authSection.style.borderColor = '#2e7d32'; 
-                    authSection.classList.add('logged-in'); /* Aggiungi classe per stili minimizzati */
+                    authSection.classList.add('logged-in'); 
 
                     mainTrackerContent.classList.add('authenticated'); 
                     
@@ -1140,6 +1140,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     
                     console.log("Utente autenticato. UI aggiornata.");
+                    // Non chiamare initAppUI() qui. Viene chiamata da DOMContentLoaded.
 
                 } else {
                     currentUserUID = null;
@@ -1151,7 +1152,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     authStatusP.textContent = "Non autenticato";
 
                     authSection.style.borderColor = '#c62828'; 
-                    authSection.classList.remove('logged-in'); /* Rimuovi classe per stili normali */
+                    authSection.classList.remove('logged-in'); 
                     mainTrackerContent.classList.remove('authenticated'); 
                     
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
@@ -1159,6 +1160,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
+                    // Non chiamare initAppUI() qui. Viene chiamata da DOMContentLoaded.
                 }
             });
 
@@ -1331,7 +1333,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico();
-            initAppUI(); // Inizializza l'UI e carica i dati locali subito all'avvio
+            initAppUI(); // Carica sempre i dati locali e inizializza l'UI
+            // onAuthStateChanged gestirà la visibilità dell'interfaccia a questo punto.
         });
 
     </script>
