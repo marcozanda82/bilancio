@@ -192,15 +192,14 @@
             transform: translateX(-50%); /* Centra l'elemento stesso */
             font-size: 1.2em;
             font-weight: bold;
-            color: #333;
+            color: #333; /* Colore più neutro per il numero */
             background-color: #fff;
             padding: 3px 8px;
             border-radius: 5px;
-            white-space: nowrap;
+            white-space: nowrap; /* Evita il wrap del testo */
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             pointer-events: none; /* Permette di cliccare attraverso l'elemento */
             z-index: 10; /* Assicura che sia sopra lo slider */
-            /* Rimosso transition: left per non farlo muovere con il cursore */
         }
         
         .slider-labels {
@@ -774,12 +773,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Slider per l'aggiustamento calorico
-    calorieAdjustmentSlider.addEventListener('input', () => {
-        datiGiornalieri.calorieAdjustment = parseFloat(calorieAdjustmentSlider.value);
+    calorieAdjustmentSlider.addEventListener('input', (e) => {
+        datiGiornalieri.calorieAdjustment = parseFloat(e.target.value);
         updateSliderDisplay(); 
         aggiornaUI(); 
         salvaGiorno(giornoVisualizzato, datiGiornalieri); 
     });
+
+    // Aggiungi event listener per prevenire lo scroll sui touch/pointer events
+    calorieAdjustmentSlider.addEventListener('touchmove', (e) => {
+        e.preventDefault(); // Impedisce lo scroll
+    }, { passive: false }); // `passive: false` è necessario per usare preventDefault su touch events
+
+    // Anche per pointer events per una copertura più ampia
+    calorieAdjustmentSlider.addEventListener('pointermove', (e) => {
+        if (e.pointerType === 'touch' || e.pointerType === 'mouse') { // Solo per touch/mouse
+            e.preventDefault();
+        }
+    }, { passive: false });
+
 
     // Aggiorna la posizione del valore dello slider anche al ridimensionamento della finestra
     window.addEventListener('resize', updateSliderDisplay);
