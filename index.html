@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF="8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tracker Nutrizionale Definitivo</title>
     <style>
@@ -225,26 +225,36 @@
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
         }
-        .auth-buttons {
+        #auth-section .auth-buttons {
             display: flex;
             gap: 10px;
         }
-        .auth-buttons button {
+        #auth-section .auth-buttons button {
             width: 50%;
             background-color: #1976d2;
         }
-        #btn-sign-out {
+        #auth-section #btn-sign-out { /* Applica stili specifici per il pulsante esci all'interno di auth-section */
             background-color: #607d8b;
+            display: none; /* Inizialmente nascosto */
+            margin-top: 15px; /* Spazio sopra il pulsante esci */
         }
         #auth-status {
             text-align: center;
             font-weight: 600;
             margin-top: 15px;
         }
+        #welcome-message { /* Nuovo stile per il messaggio di benvenuto */
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #0d47a1;
+            margin-bottom: 10px;
+            display: none; /* Inizialmente nascosto */
+        }
 
         /* Nascondi il tracker finché l'utente non è autenticato */
         #main-tracker-content {
-            display: none; /* AGGIUNTA QUESTA REGOLA CSS FONDAMENTALE */
+            display: none; /* Fondamentale per nascondere il tracker all'inizio */
         }
         #main-tracker-content.authenticated {
             display: block;
@@ -257,15 +267,16 @@
         <h1>Tracker Nutrizionale</h1>
         
         <div id="auth-section" class="sezione">
-            <h2>Accedi / Registrati</h2>
-            <div><label for="user-email">Email</label><input type="email" id="user-email"></div>
-            <div><label for="user-password">Password</label><input type="password" id="user-password"></div>
-            <div class="auth-buttons">
-                <button id="btn-register">Registrati</button>
-                <button id="btn-login">Accedi</button>
+            <h2 id="auth-header">Accedi / Registrati</h2>
+            <p id="welcome-message"></p> <div id="auth-form-fields"> <div><label for="user-email">Email</label><input type="email" id="user-email"></div>
+                <div><label for="user-password">Password</label><input type="password" id="user-password"></div>
+                <div class="auth-buttons">
+                    <button id="btn-register">Registrati</button>
+                    <button id="btn-login">Accedi</button>
+                </div>
             </div>
-            <button id="btn-sign-out" style="display: none;">Esci</button>
-            <p id="auth-status" style="text-align: center; font-weight: 600; margin-top: 15px;"></p>
+            <button id="btn-sign-out">Esci</button>
+            <p id="auth-status"></p>
         </div>
         <div id="main-tracker-content">
             <h2 id="titolo-giornata"></h2>
@@ -380,7 +391,7 @@
                     <span id="cloud-sync-status" class="cloud-sync-status disconnected">Connessione Cloud: Disconnesso</span>
                 </div>
                 <p style="font-size: 0.85em; color: #777; margin-top: 10px;">
-                    Effettua il login/registrazione sopra per sincronizzare.
+                    Una volta autenticato, puoi sincronizzare i dati.
                     I pulsanti di sincronizzazione manuale funzioneranno solo se sei autenticato.
                 </p>
                 <div class="warning" style="margin-top: 15px;">
@@ -403,7 +414,7 @@
         // ************************************************************
         // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
         // ************************************************************
-        const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
   authDomain: "mio-tracker.firebaseapp.com",
   databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
@@ -422,7 +433,6 @@
         let foodDatabase = {};
         let pastoInCostruzione = [];
         
-        // Dichiarazione delle variabili Firebase qui per renderle globali nel modulo
         let db; 
         let auth; 
         let firebaseApp; 
@@ -456,7 +466,6 @@
 
 
         // --- ELEMENTI DEL DOM ---
-        // Elementi autenticazione
         const authSection = document.getElementById('auth-section');
         const userEmailInput = document.getElementById('user-email');
         const userPasswordInput = document.getElementById('user-password');
@@ -465,8 +474,10 @@
         const btnSignOut = document.getElementById('btn-sign-out');
         const authStatusP = document.getElementById('auth-status');
         const authButtonsDiv = document.querySelector('.auth-buttons');
+        const authHeader = document.getElementById('auth-header'); // Nuovo elemento per il titolo della sezione auth
+        const welcomeMessage = document.getElementById('welcome-message'); // Nuovo elemento per il messaggio di benvenuto
+        const authFormFields = document.getElementById('auth-form-fields'); // Nuovo elemento per raggruppare i campi input
 
-        // Contenuto principale del tracker
         const mainTrackerContent = document.getElementById('main-tracker-content');
         const titoloGiornataEl = document.getElementById('titolo-giornata');
         const logBody = document.getElementById('log-body');
@@ -613,7 +624,6 @@
             };
         }
 
-        // Funzione per inizializzare l'app, ora chiamata solo dopo che Firebase è pronto
         function initAppUI() {
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
             aggiornaDatalist();
@@ -796,8 +806,8 @@
             mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
             mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
             mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
-            mealProgressCal.max = obiettiviPasto.targetCal;
-            mealProgressCal.value = obiettiviPasto.currentCal;
+            mealProgressCal.max = obiettiviPasti.targetCal;
+            mealProgressCal.value = obiettiviPasti.currentCal;
 
             pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
@@ -1063,8 +1073,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
         // Inizializza Firebase all'avvio dello script
         try {
-            // Assicurati di inizializzare l'app solo una volta (la stessa logica che avevamo in sync.html)
-            if (!getApps().some(app => app.name === "globalTrackerApp")) { // Nome unico per l'app
+            if (!getApps().some(app => app.name === "globalTrackerApp")) {
                 firebaseApp = initializeApp(firebaseConfig, "globalTrackerApp");
             } else {
                 firebaseApp = getApp("globalTrackerApp");
@@ -1076,29 +1085,37 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     currentUserUID = user.uid;
-                    authStatusP.textContent = `Autenticato come: ${user.email}`;
-                    authButtonsDiv.style.display = 'none'; // Nascondi login/register buttons
-                    btnSignOut.style.display = 'block'; // Mostra sign out button
-                    authSection.style.borderColor = '#2e7d32'; // Colore bordo verde per connesso
+                    // Nascondi i campi di input e i pulsanti di login/registrazione
+                    authFormFields.style.display = 'none';
+                    authHeader.style.display = 'none'; // Nasconde il titolo "Accedi / Registrati"
 
+                    // Mostra il messaggio di benvenuto e il pulsante Esci
+                    welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
+                    welcomeMessage.style.display = 'block';
+                    btnSignOut.style.display = 'block';
+                    authStatusP.textContent = ''; // Pulisci lo stato precedente
+
+                    authSection.style.borderColor = '#2e7d32'; // Colore bordo verde per connesso
                     mainTrackerContent.classList.add('authenticated'); // Mostra il tracker
-                    
+
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     
                     console.log("Utente autenticato. Inizializzazione UI e listener salvataggio.");
                     initAppUI(); // Inizializza l'UI e carica i dati locali
-                    // NON fare un download automatico qui, per mantenere il controllo manuale.
-                    // L'utente userà il pulsante "Scarica" se vuole caricare i dati cloud.
-
                 } else {
                     currentUserUID = null;
+                    // Mostra i campi di input e i pulsanti di login/registrazione
+                    authFormFields.style.display = 'block';
+                    authHeader.style.display = 'block'; // Mostra il titolo "Accedi / Registrati"
+                    
+                    // Nascondi il messaggio di benvenuto e il pulsante Esci
+                    welcomeMessage.style.display = 'none';
+                    btnSignOut.style.display = 'none';
                     authStatusP.textContent = "Non autenticato";
-                    authButtonsDiv.style.display = 'flex'; // Mostra login/register buttons
-                    btnSignOut.style.display = 'none'; // Nascondi sign out button
-                    authSection.style.borderColor = '#c62828'; // Colore bordo rosso per disconnesso
 
+                    authSection.style.borderColor = '#c62828'; // Colore bordo rosso per disconnesso
                     mainTrackerContent.classList.remove('authenticated'); // Nascondi il tracker
                     
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
@@ -1107,7 +1124,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
                     initAppUI(); // Carica comunque l'UI con i dati locali per il giorno corrente
-                                  // ma l'utente vedrà solo la sezione di autenticazione.
                 }
             });
 
@@ -1115,11 +1131,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             console.error("Errore durante l'inizializzazione di Firebase:", error);
             authStatusP.textContent = `Errore Firebase: ${error.message}`;
             authSection.style.borderColor = '#c62828';
-            mainTrackerContent.classList.remove('authenticated'); // Assicurati sia nascosto in caso di errore
+            mainTrackerContent.classList.remove('authenticated');
             cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
         }
 
-        // Funzioni di autenticazione (spostate da sync.html)
         async function handleRegister() {
             const email = userEmailInput.value.trim();
             const password = userPasswordInput.value.trim();
@@ -1164,7 +1179,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        // Event Listeners per i pulsanti di autenticazione
         btnRegister.addEventListener('click', handleRegister);
         btnLogin.addEventListener('click', handleLogin);
         btnSignOut.addEventListener('click', handleSignOut);
@@ -1280,12 +1294,9 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        // L'app viene inizializzata qui, e onAuthStateChanged gestirà la visibilità e il caricamento dei dati
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico();
             // initAppUI() è chiamata da onAuthStateChanged per garantire che l'UI si adatti allo stato auth
-            // I pulsanti sono disabilitati inizialmente via CSS e JS
-            // La gestione dell'autenticazione è ora completamente in questa pagina.
         });
 
     </script>
