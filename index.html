@@ -392,7 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
             obiettivoPastoCal = Math.round(obiettivoCalTotale * protRatio);
         }
         
-        const totaliPastoInCostruzione = pastoInCostruzione.reduce((acc, item) => {
+        // IMPORTANT: Update this to consider only SELECTED items
+        const totaliPastoInCostruzione = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
             acc.prot += item.prot || 0;
             acc.cal += item.cal || 0;
             return acc;
@@ -589,22 +590,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
         const selectedMealTypeText = (mealTypeSelector && mealTypeSelector.options && mealTypeSelector.options[mealTypeSelector.selectedIndex]) ? mealTypeSelector.options[mealTypeSelector.selectedIndex].text : '';
         
+        // Calculate totals ONLY for selected items in pastoInCostruzione
+        const totaliPastoInCostruzioneSelected = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
+            acc.prot += item.prot || 0;
+            acc.cal += item.cal || 0;
+            return acc;
+        }, { prot: 0, cal: 0 });
+
+        // Pass these calculated totals to calcolaObiettiviPasto (it already accepts them indirectly via `pastoInCostruzione` and filters itself)
+        // Re-calculate objectives based on the current meal type and the _overall_ day's data
         const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
 
         currentMealTypeDisplay.textContent = selectedMealTypeText;
         
-        mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1);
-        mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
-        mealProtRemaining.textContent = `${(obiettiviPasto.remainingProt).toFixed(1)} g`;
+        // These now reflect ONLY the selected items in the meal builder
+        mealProtCurrent.textContent = totaliPastoInCostruzioneSelected.prot.toFixed(1);
+        mealProtRemaining.textContent = `${(obiettiviPasto.targetProt - totaliPastoInCostruzioneSelected.prot).toFixed(1)} g`;
         mealProgressProt.max = obiettiviPasto.targetProt;
-        mealProgressProt.value = obiettiviPasto.currentProt;
+        mealProgressProt.value = totaliPastoInCostruzioneSelected.prot;
 
-        mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
-        mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
-        mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
+        mealCalCurrent.textContent = totaliPastoInCostruzioneSelected.cal.toFixed(0);
+        mealCalRemaining.textContent = `${(obiettiviPasto.targetCal - totaliPastoInCostruzioneSelected.cal).toFixed(0)} kcal`;
         mealProgressCal.max = obiettiviPasto.targetCal;
-        mealProgressCal.value = obiettiviPasto.currentCal;
+        mealProgressCal.value = totaliPastoInCostruzioneSelected.cal;
 
+        // Render all items in pastoInCostruzione, but their selection state determines their contribution to totals
         pastoInCostruzione.forEach((item, index) => { 
             const riga = logPastoBuilderBody.insertRow(); 
             riga.innerHTML = `<td><input type="checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
@@ -724,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pastoInCostruzione[index]) {
                 pastoInCostruzione[index].selezionato = e.target.checked;
                 salvaPastoInCostruzione();
-                renderMealBuilder();
+                renderMealBuilder(); // This call will now re-calculate based on selected items
             }
         } else if (e.target.id === 'meal-type-selector') {
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
