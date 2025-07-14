@@ -306,12 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Nuova costante per la distribuzione base delle proteine nei giorni di forza (totale 140g)
     const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
-        merenda1: { prot: 30, cal_ratio: null },
-        pranzo: { prot: 40, cal_ratio: null },
-        merenda2: { prot: 30, cal_ratio: null },
-        cena: { prot: 40, cal_ratio: null } // 140 - 30 - 40 - 30 = 40
+        merenda1: { prot: 30, cal_perc: 0.20 }, // Esempio di percentuali cal (da aggiustare a seconda del piano)
+        pranzo: { prot: 40, cal_perc: 0.35 },
+        merenda2: { prot: 30, cal_perc: 0.15 },
+        cena: { prot: 40, cal_perc: 0.30 }
     };
-    // Calcola le proporzioni percentuali e i rapporti cal/prot una tantum
+    // Calcola le proporzioni percentuali delle proteine una tantum
     const totalProtForza = Object.values(OBIETTIVI_MACRO_PASTO_BASE_FORZA).reduce((sum, p) => sum + p.prot, 0);
     for (const mealType in OBIETTIVI_MACRO_PASTO_BASE_FORZA) {
         OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot / totalProtForza;
@@ -410,12 +410,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const giornoSettimana = dataVisualizzata.getDay();
         const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
-        // L'obiettivo calorico ora include le calorie bruciate con l'allenamento E la correzione manuale
-        const obiettivoProtTotale = pianoDelGiorno.prot;
-        const obiettivoCalTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
+        // L'obiettivo calorico giornaliero totale ora include la base, il workout e la correzione manuale
+        const obiettivoCalTotaleGiornaliero = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
+        const obiettivoProtTotaleGiornaliero = pianoDelGiorno.prot;
 
         let obiettivoPastoProt = 0;
         let obiettivoPastoCal = 0;
+
+        // Recupera le percentuali di calorie dal piano dei pasti
+        const calRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].cal_perc : 0;
+        const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc : 0;
+
 
         if (mealType === 'cena') {
             let consumatoProtAltriPasti = 0;
@@ -439,17 +444,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            obiettivoPastoProt = Math.round(obiettivoProtTotale - consumatoProtAltriPasti);
-            obiettivoPastoCal = Math.round(obiettivoCalTotale - consumatoCalAltriPasti);
+            obiettivoPastoProt = Math.round(obiettivoProtTotaleGiornaliero - consumatoProtAltriPasti);
+            obiettivoPastoCal = Math.round(obiettivoCalTotaleGiornaliero - consumatoCalAltriPasti);
 
             if (obiettivoPastoProt < 0) obiettivoPastoProt = 0;
             if (obiettivoPastoCal < 0) obiettivoPastoCal = 0;
 
         } else {
-            const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc : 0;
-            
-            obiettivoPastoProt = Math.round(obiettivoProtTotale * protRatio);
-            obiettivoPastoCal = Math.round(obiettivoCalTotale * protRatio);
+            // Calcola gli obiettivi di proteine e calorie per il pasto in base alle percentuali dell'obiettivo giornaliero totale
+            obiettivoPastoProt = Math.round(obiettivoProtTotaleGiornaliero * protRatio);
+            obiettivoPastoCal = Math.round(obiettivoCalTotaleGiornaliero * calRatio);
         }
         
         const totaliPastoInCostruzione = pastoInCostruzione.reduce((acc, item) => {
@@ -502,8 +506,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
         
         // Calcola l'obiettivo calorico tenendo conto delle calorie bruciate con l'allenamento E la correzione manuale
-        const obiettivoCalorieConWorkout = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
-        const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieConWorkout, ...OBIETTIVI_MICRO };
+        const obiettivoCalorieConWorkoutECorrezione = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
+        const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieConWorkoutECorrezione, ...OBIETTIVI_MICRO };
         
         titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
         
@@ -622,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Aggiorna l'indicatore testuale di deficit/surplus
         const currentCalories = totali.calorie;
-        const targetCalories = OBIETTIVI.cal;
+        const targetCalories = OBIETTIVI.cal; // Usa l'obiettivo calorico già corretto
         const calorieDifference = currentCalories - targetCalories; // Positivo per surplus, negativo per deficit
 
         let balanceText = '';
@@ -917,12 +921,14 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         datiGiornalieri.calorieAdjustment = (datiGiornalieri.calorieAdjustment || 0) + 10;
         aggiornaUI();
         salvaGiorno(giornoVisualizzato, datiGiornalieri);
+        renderMealBuilder(); // Aggiorna anche il costruttore pasti per riflettere i nuovi obiettivi
     });
 
     btnCalorieMinus.addEventListener('click', () => {
         datiGiornalieri.calorieAdjustment = (datiGiornalieri.calorieAdjustment || 0) - 10;
         aggiornaUI();
         salvaGiorno(giornoVisualizzato, datiGiornalieri);
+        renderMealBuilder(); // Aggiorna anche il costruttore pasti per riflettere i nuovi obiettivi
     });
 
 
