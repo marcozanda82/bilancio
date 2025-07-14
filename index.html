@@ -233,17 +233,17 @@
             width: 50%;
             background-color: #1976d2;
         }
-        #auth-section #btn-sign-out { /* Applica stili specifici per il pulsante esci all'interno di auth-section */
+        #auth-section #btn-sign-out {
             background-color: #607d8b;
-            display: none; /* Inizialmente nascosto */
-            margin-top: 15px; /* Spazio sopra il pulsante esci */
+            display: none;
+            margin-top: 15px;
         }
         #auth-status {
             text-align: center;
             font-weight: 600;
             margin-top: 15px;
         }
-        #welcome-message { /* Nuovo stile per il messaggio di benvenuto */
+        #welcome-message {
             text-align: center;
             font-weight: bold;
             font-size: 1.2em;
@@ -254,7 +254,7 @@
 
         /* Nascondi il tracker finché l'utente non è autenticato */
         #main-tracker-content {
-            display: none; /* Fondamentale per nascondere il tracker all'inizio */
+            display: none;
         }
         #main-tracker-content.authenticated {
             display: block;
@@ -268,7 +268,9 @@
         
         <div id="auth-section" class="sezione">
             <h2 id="auth-header">Accedi / Registrati</h2>
-            <p id="welcome-message"></p> <div id="auth-form-fields"> <div><label for="user-email">Email</label><input type="email" id="user-email"></div>
+            <p id="welcome-message"></p>
+            <div id="auth-form-fields">
+                <div><label for="user-email">Email</label><input type="email" id="user-email"></div>
                 <div><label for="user-password">Password</label><input type="password" id="user-password"></div>
                 <div class="auth-buttons">
                     <button id="btn-register">Registrati</button>
@@ -474,9 +476,9 @@ const firebaseConfig = {
         const btnSignOut = document.getElementById('btn-sign-out');
         const authStatusP = document.getElementById('auth-status');
         const authButtonsDiv = document.querySelector('.auth-buttons');
-        const authHeader = document.getElementById('auth-header'); // Nuovo elemento per il titolo della sezione auth
-        const welcomeMessage = document.getElementById('welcome-message'); // Nuovo elemento per il messaggio di benvenuto
-        const authFormFields = document.getElementById('auth-form-fields'); // Nuovo elemento per raggruppare i campi input
+        const authHeader = document.getElementById('auth-header');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const authFormFields = document.getElementById('auth-form-fields');
 
         const mainTrackerContent = document.getElementById('main-tracker-content');
         const titoloGiornataEl = document.getElementById('titolo-giornata');
@@ -624,6 +626,7 @@ const firebaseConfig = {
             };
         }
 
+        // Funzione per inizializzare l'app, ora chiamata solo dopo che Firebase è pronto
         function initAppUI() {
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
             aggiornaDatalist();
@@ -804,8 +807,8 @@ const firebaseConfig = {
             mealProgressProt.value = obiettiviPasto.currentProt;
 
             mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
-            mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
-            mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
+            mealCalTarget.textContent = obiettiviPasti.targetCal.toFixed(0);
+            mealCalRemaining.textContent = `${(obiettiviPasti.remainingCal).toFixed(0)} kcal`;
             mealProgressCal.max = obiettiviPasti.targetCal;
             mealProgressCal.value = obiettiviPasti.currentCal;
 
@@ -1087,43 +1090,46 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     currentUserUID = user.uid;
                     // Nascondi i campi di input e i pulsanti di login/registrazione
                     authFormFields.style.display = 'none';
-                    authHeader.style.display = 'none'; // Nasconde il titolo "Accedi / Registrati"
+                    authHeader.style.display = 'none'; 
 
                     // Mostra il messaggio di benvenuto e il pulsante Esci
                     welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
                     welcomeMessage.style.display = 'block';
                     btnSignOut.style.display = 'block';
-                    authStatusP.textContent = ''; // Pulisci lo stato precedente
+                    authStatusP.textContent = ''; 
 
-                    authSection.style.borderColor = '#2e7d32'; // Colore bordo verde per connesso
-                    mainTrackerContent.classList.add('authenticated'); // Mostra il tracker
+                    authSection.style.borderColor = '#2e7d32'; 
 
+                    mainTrackerContent.classList.add('authenticated'); 
+                    
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     
-                    console.log("Utente autenticato. Inizializzazione UI e listener salvataggio.");
-                    initAppUI(); // Inizializza l'UI e carica i dati locali
+                    console.log("Utente autenticato. UI aggiornata.");
+                    // initAppUI() NON viene chiamata qui per evitare doppi caricamenti o reset UI
+                    // quando l'utente è già loggato e la pagina viene ricaricata.
+                    // L'UI è già inizializzata da DOMContentLoaded.
                 } else {
                     currentUserUID = null;
                     // Mostra i campi di input e i pulsanti di login/registrazione
                     authFormFields.style.display = 'block';
-                    authHeader.style.display = 'block'; // Mostra il titolo "Accedi / Registrati"
+                    authHeader.style.display = 'block'; 
                     
                     // Nascondi il messaggio di benvenuto e il pulsante Esci
                     welcomeMessage.style.display = 'none';
                     btnSignOut.style.display = 'none';
                     authStatusP.textContent = "Non autenticato";
 
-                    authSection.style.borderColor = '#c62828'; // Colore bordo rosso per disconnesso
-                    mainTrackerContent.classList.remove('authenticated'); // Nascondi il tracker
+                    authSection.style.borderColor = '#c62828'; 
+                    mainTrackerContent.classList.remove('authenticated'); 
                     
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
                     cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
-                    initAppUI(); // Carica comunque l'UI con i dati locali per il giorno corrente
+                    // initAppUI() NON viene chiamata qui. L'UI è già inizializzata da DOMContentLoaded.
                 }
             });
 
@@ -1295,8 +1301,9 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            eseguiMigrazioneStorico();
-            // initAppUI() è chiamata da onAuthStateChanged per garantire che l'UI si adatti allo stato auth
+            eseguiMigrazioneStorico(); // Esegui migrazione locale all'avvio
+            initAppUI(); // Inizializza sempre l'UI con i dati locali all'avvio
+            // onAuthStateChanged gestirà la visibilità di auth-section e main-tracker-content
         });
 
     </script>
