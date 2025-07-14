@@ -190,13 +190,13 @@
             top: 40px; /* Regolato per essere sopra il thumb */
             font-size: 1.2em;
             font-weight: bold;
-            color: #333;
+            color: #333; /* Colore più neutro per il numero */
             background-color: #fff;
             padding: 3px 8px;
             border-radius: 5px;
-            white-space: nowrap;
-            transform: translateX(-50%); /* Centra l'elemento stesso */
-            /* Removed transition: left 0.05s linear; because it was causing some jerky movement on fast drags */
+            white-space: nowrap; /* Evita il wrap del testo */
+            transform: translateX(-50%); /* Centra l'elemento stesso sul punto 'left' */
+            /* Non usiamo 'transition: left' per evitare l'effetto scattoso, lasciamo al browser il repainting */
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             pointer-events: none; /* Permette di cliccare attraverso l'elemento */
             z-index: 10; /* Assicura che sia sopra lo slider */
@@ -444,27 +444,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const max = parseFloat(calorieAdjustmentSlider.max);
         const val = parseFloat(calorieAdjustmentSlider.value);
         
-        // Calcola la percentuale di avanzamento del cursore (0 a 1)
+        // Calcola la percentuale del valore rispetto al range dello slider (0 a 1)
         const percentage = (val - min) / (max - min);
         
-        // Ottieni le dimensioni e la posizione reali dello slider e del suo contenitore
-        const sliderRect = calorieAdjustmentSlider.getBoundingClientRect();
-        const containerRect = calorieAdjustmentSlider.parentElement.getBoundingClientRect();
-
-        // Stima la larghezza effettiva del "track" dello slider (escludendo il "thumb" alle estremità se presente)
-        // La larghezza del thumb è circa 24px (dal CSS)
+        // Ottieni la larghezza effettiva della traccia cliccabile dello slider
+        // La larghezza del thumb (cursore) è 24px come da CSS
         const thumbWidth = 24; 
-        const trackWidth = sliderRect.width - thumbWidth;
+        const sliderRect = calorieAdjustmentSlider.getBoundingClientRect();
+        const sliderTrackWidth = sliderRect.width - thumbWidth; // Larghezza del percorso effettivo del thumb
 
-        // Calcola la posizione del centro del thumb rispetto all'inizio del track
-        const thumbCenterPx = (percentage * trackWidth) + (thumbWidth / 2);
+        // Calcola la posizione X del centro del thumb rispetto all'inizio del percorso dello slider
+        const thumbCenterPosition = (percentage * sliderTrackWidth) + (thumbWidth / 2);
 
-        // Posiziona l'elemento `targetAdjustmentDisplay` rispetto al bordo sinistro del suo contenitore
-        // (che è `#calorie-target-slider-container`)
-        // Aggiungi la posizione dello slider all'interno del contenitore, più la posizione calcolata del thumb
-        // Sottrai metà della larghezza del display stesso per centrarlo orizzontalmente sul thumb
-        targetAdjustmentDisplay.style.left = `${(sliderRect.left - containerRect.left) + thumbCenterPx}px`;
-        // La trasformazione translateX(-50%) lo centra ulteriormente
+        // Posiziona l'elemento `targetAdjustmentDisplay` usando `left` e `transform: translateX(-50%)`
+        // `sliderRect.left` è la posizione assoluta dello slider rispetto al viewport
+        // `sliderRect.left - sliderRect.parentElement.getBoundingClientRect().left` è l'offset dello slider rispetto al contenitore
+        // Vogliamo posizionare il display all'altezza del cursore all'interno del riquadro del slider container
+        targetAdjustmentDisplay.style.left = `${(sliderRect.left - sliderRect.parentElement.getBoundingClientRect().left) + thumbCenterPosition}px`;
+        // `transform: translateX(-50%)` nel CSS assicura che il centro dell'elemento sia esattamente sul punto `left`
     }
 
 
@@ -550,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
         caricaGiorno(getTodayString());
         
         const pastiRegistrati = (datiGiornalieri.log || []).filter(entry => entry.type === 'meal');
-        let nextMealType = MEAL_TYPE_SEQUENCE[0];
+        let nextMealType = MEAL_TYPE_SEQUENCE[0]; 
 
         if (pastiRegistrati.length > 0) {
             const ultimoPasto = pastiRegistrati[pastiRegistrati.length - 1];
