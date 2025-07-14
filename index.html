@@ -6,6 +6,11 @@
     <title>Tracker Nutrizionale Definitivo</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        /* Aggiunto stile per bloccare lo scroll orizzontale */
+        body.no-horizontal-scroll {
+            overflow-x: hidden;
+        }
+
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
         h2 { font-size: 1.4em; margin-top: 30px; }
@@ -188,19 +193,18 @@
         #target-adjustment-display {
             position: absolute;
             top: 40px; 
-            left: 50%; /* Fisso al centro del contenitore */
-            transform: translateX(-50%); /* Centra l'elemento stesso */
+            left: 50%; 
+            transform: translateX(-50%); 
             font-size: 1.2em;
             font-weight: bold;
-            color: #333;
+            color: #333; 
             background-color: #fff;
             padding: 3px 8px;
             border-radius: 5px;
-            white-space: nowrap;
+            white-space: nowrap; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            pointer-events: none;
+            pointer-events: none; 
             z-index: 10;
-            /* Rimosso transition: left per eliminare l'inerzia */
         }
         
         .slider-labels {
@@ -781,17 +785,22 @@ document.addEventListener('DOMContentLoaded', () => {
         salvaGiorno(giornoVisualizzato, datiGiornalieri); 
     });
 
-    // Aggiungi event listener per prevenire lo scroll sui touch/pointer events
-    // Questi event listener non sono necessari se il numero non si muove più con il cursore
-    // perché il browser non dovrebbe più interpretare il touch/pointer sul numero come uno scroll.
-    // calorieAdjustmentSlider.addEventListener('touchmove', (e) => {
-    //     e.preventDefault(); 
-    // }, { passive: false });
-    // calorieAdjustmentSlider.addEventListener('pointermove', (e) => {
-    //     if (e.pointerType === 'touch' || e.pointerType === 'mouse') { 
-    //         e.preventDefault();
-    //     }
-    // }, { passive: false });
+    // Aggiungi event listener per bloccare lo scroll orizzontale durante il drag del thumb
+    calorieAdjustmentSlider.addEventListener('pointerdown', (e) => {
+        // Solo per touch o il click del mouse primario
+        if (e.pointerType === 'touch' || (e.pointerType === 'mouse' && e.button === 0)) {
+            document.body.classList.add('no-horizontal-scroll');
+        }
+    });
+
+    calorieAdjustmentSlider.addEventListener('pointerup', () => {
+        document.body.classList.remove('no-horizontal-scroll');
+    });
+
+    // Per sicurezza, se per qualche motivo pointerup non scatta (es. utente trascina fuori dalla finestra)
+    document.body.addEventListener('pointerup', () => {
+        document.body.classList.remove('no-horizontal-scroll');
+    });
 
 
     // Aggiorna la posizione del valore dello slider anche al ridimensionamento della finestra
