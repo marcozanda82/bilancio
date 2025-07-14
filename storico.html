@@ -88,15 +88,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const datiGiorno = JSON.parse(localStorage.getItem(key));
                     
-                    // Aggiungi solo se i dati del giorno sono validi e la data non è stata vista
-                    if (datiGiorno && datiGiorno.data === dataString) { // Verifica che la data all'interno dell'oggetto sia consistente
+                    // Ho semplificato questa logica per essere meno stringente,
+                    // dato l'avviso di "inconsistenza data".
+                    // Se vuoi re-introdurre il controllo stretto, devi assicurarti
+                    // che index.html salvi SEMPRE il campo 'data' all'interno dell'oggetto.
+                    if (datiGiorno) {
+                        // Se il campo data nell'oggetto non c'è o non corrisponde, usiamo quello della chiave.
+                        if (!datiGiorno.data || datiGiorno.data !== dataString) {
+                             console.warn(`Inconsistenza data nella chiave ${key}. Usando la data dalla chiave.`);
+                             // Puoi decidere qui se aggiornare datiGiorno.data = dataString;
+                        }
                         storicoDati.push({ data: dataString, ...datiGiorno });
                         dateViste.add(dataString);
-                    } else if (datiGiorno) {
-                         // Caso in cui la chiave ha una data ma l'oggetto interno no, o è diversa
-                         console.warn(`Inconsistenza data nella chiave ${key}. Usando la data dalla chiave.`);
-                         storicoDati.push({ data: dataString, ...datiGiorno });
-                         dateViste.add(dataString);
                     }
 
                 } catch (e) {
@@ -181,15 +184,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo); // Arrotonda all'intero più vicino
 
+            // Determina la stringa per Deficit/Surplus
+            let deficitSurplusText = '';
+            if (deficitArrotondato < 0) {
+                deficitSurplusText = `${deficitArrotondato} kcal (Deficit)`; // Es: -4 kcal (Deficit)
+            } else if (deficitArrotondato > 0) {
+                deficitSurplusText = `+${deficitArrotondato} kcal (Surplus)`; // Es: +96 kcal (Surplus)
+            } else {
+                deficitSurplusText = `0 kcal (Pari)`;
+            }
+
             // Calcolo della variazione di grasso
             let variazioneGrasso = 0; // In grammi
             let testoVariazioneGrasso = '';
 
             // 7.7 kcal per 1g di grasso (1kg = 7700 kcal, 1g = 7.7 kcal)
-            if (deficitArrotondato < 0) { // Se il deficit è negativo (hai consumato meno calorie del bisogno), stai perdendo grasso
+            if (deficitArrotondato < 0) { // Se il deficit è negativo (stai consumando meno calorie del bisogno), stai perdendo grasso
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
                 testoVariazioneGrasso = '-' + variazioneGrasso.toFixed(1) + ' g';
-            } else if (deficitArrotondato > 0) { // Se il deficit è positivo (hai consumato più calorie del bisogno), stai guadagnando grasso
+            } else if (deficitArrotondato > 0) { // Se il deficit è positivo (stai consumando più calorie del bisogno), stai guadagnando grasso
                 variazioneGrasso = (deficitArrotondato / 7.7);
                 testoVariazioneGrasso = '+' + variazioneGrasso.toFixed(1) + ' g';
             } else { // DeficitArrotondato è 0
@@ -237,7 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${totaliGiorno.proteine.toFixed(1)} g</td>
                 <td>${totaliGiorno.calorie.toFixed(0)}</td>
                 <td>${workoutCalories} kcal</td>
-                <td>${deficitArrotonnato} kcal</td> <td>${testoVariazioneGrasso}</td> <td>${trendMuscoloHtml}</td>
+                <td>${deficitSurplusText}</td> <td>${testoVariazioneGrasso}</td>
+                <td>${trendMuscoloHtml}</td>
             `;
             storicoBody.appendChild(summaryRow);
 
@@ -276,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (entry.type === 'single') { // Alimento singolo
                         detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${(entry.cal || 0).toFixed(0)} Kcal</td></tr>`;
                     } else if (entry.type === 'workout') { // Allenamento
+                         // Ho aggiunto " (bruciate)" per chiarezza nel dettaglio
                          detailHtml += `<tr><td>${entry.desc}</td><td></td><td></td><td>${(entry.cal || 0).toFixed(0)} Kcal (bruciate)</td></tr>`;
                     }
                 });
