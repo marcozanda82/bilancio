@@ -103,7 +103,7 @@
             border-radius: 50%; /* Forma a cerchio */
             border: 2px solid #fff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease-out; /* Animazione fluida */
+            transition: transform 0.3s ease-out, background-color 0.3s ease-out; /* Animazione fluida anche per colore */
             z-index: 10;
         }
         /* Icone per l'indicatore, opzionale */
@@ -320,10 +320,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
         }
         
+        // Inizializza con un oggetto vuoto se non è stato trovato nulla
+        // Assicurati che log sia sempre un array e workoutCalorie sia sempre un numero
         datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
-        if (typeof datiGiornalieri.workoutCalorie === 'undefined') {
-            datiGiornalieri.workoutCalorie = 0;
-        }
+        if (!datiGiornalieri.log) datiGiornalieri.log = [];
+        if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
         
         aggiornaUI();
         console.log(`Caricato il giorno: ${giornoVisualizzato}`); 
@@ -412,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderMealBuilder();
 
+        // Carica il giorno corrente all'avvio
         caricaGiorno(getTodayString());
         
         const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
@@ -434,7 +436,8 @@ document.addEventListener('DOMContentLoaded', () => {
         titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
         
         let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
-        (datiGiornalieri.log || []).forEach(entry => {
+        // Assicurati che datiGiornalieri.log sia un array prima di chiamare forEach
+        (datiGiornalieri.log || []).forEach(entry => { 
             if (entry.type === 'meal' && entry.items) {
                 entry.items.forEach(item => {
                     totali.proteine += item.prot || 0;
@@ -445,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     totali.ca += item.ca || 0;
                 });
             } else if (entry.type === 'single') { 
-                totali.prote proteine += entry.prot || 0;
+                totali.proteine += entry.prot || 0;
                 totali.calorie += entry.cal || 0;
                 totali.mg += entry.mg || 0;
                 totali.k += entry.k || 0;
@@ -557,18 +560,38 @@ document.addEventListener('DOMContentLoaded', () => {
         // Limita la percentuale tra 0 e 100
         positionPercentage = Math.max(0, Math.min(100, positionPercentage));
 
-        calorieBalanceIndicator.style.transform = `translateX(${positionPercentage}%) translateX(-${calorieBalanceIndicator.offsetWidth / 2}px)`; // Centra l'indicatore sulla percentuale
+        // Usa `positionPercentage` per `left` e `translateX(-50%)` per centrare
+        calorieBalanceIndicator.style.left = `${positionPercentage}%`;
+        calorieBalanceIndicator.style.transform = `translateX(-50%)`;
 
-        // Cambia l'icona in base al deficit/surplus
+        const indicatorPseudoElement = calorieBalanceIndicator.querySelector('::before'); // Non puoi selezionare pseudo-elementi con querySelector
+        
+        // Aggiorna colore e icona dell'indicatore
         if (calorieDifference < -50) { // Deficit significativo
             calorieBalanceIndicator.style.backgroundColor = '#d32f2f'; // Rosso
-            calorieBalanceIndicator.querySelector('::before').content = '⬇️';
+            calorieBalanceIndicator.setAttribute('data-icon', '⬇️'); // Usa un attributo per il contenuto
         } else if (calorieDifference > 50) { // Surplus significativo
             calorieBalanceIndicator.style.backgroundColor = '#2e7d32'; // Verde
-            calorieBalanceIndicator.querySelector('::before').content = '⬆️';
+            calorieBalanceIndicator.setAttribute('data-icon', '⬆️');
         } else { // Equilibrio
             calorieBalanceIndicator.style.backgroundColor = '#1976d2'; // Blu
-            calorieBalanceIndicator.querySelector('::before').content = '⚖️';
+            calorieBalanceIndicator.setAttribute('data-icon', '⚖️');
+        }
+        // Aggiorna lo pseudo-elemento CSS tramite un attributo data, se non direttamente accessibile via JS
+        // Per modificare il contenuto di un pseudo-elemento tramite JS, si deve usare un attributo data
+        // e aggiornare la regola CSS di conseguenza. Aggiungo uno stile dinamico per questo.
+        const styleSheet = document.styleSheets[0];
+        let ruleIndex = -1;
+        for (let i = 0; i < styleSheet.cssRules.length; i++) {
+            if (styleSheet.cssRules[i].selectorText === '#calorie-balance-indicator::before') {
+                ruleIndex = i;
+                break;
+            }
+        }
+        if (ruleIndex !== -1) {
+            styleSheet.cssRules[ruleIndex].style.content = `'${calorieBalanceIndicator.getAttribute('data-icon')}'`;
+        } else {
+            styleSheet.insertRule(`#calorie-balance-indicator::before { content: '${calorieBalanceIndicator.getAttribute('data-icon')}'; }`, styleSheet.cssRules.length);
         }
     }
 
@@ -626,12 +649,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const existingFood = foodDatabase[desc.toLowerCase()];
         if (existingFood) {
-            p100 = (builderProt.value === '') ? existingFood.prot || 0 : p100;
-            k100 = (builderKcal.value === '') ? existingFood.kcal || 0 : k100;
-            mg100 = (builderMg.value === '') ? existingFood.mg || 0 : mg100;
-            k100_mg = (builderK.value === '') ? existingFood.k || 0 : k100_mg;
-            vitc100 = (builderVitC.value === '') ? existingFood.vitc || 0 : vitc100;
-            ca100 = (builderCa.value === '') ? existingFood.ca || 0 : ca100;
+            // Se i campi input sono vuoti, usa i valori del database
+            p100 = (builderProt.value === '' || isNaN(p100)) ? existingFood.prot || 0 : p100;
+            k100 = (builderKcal.value === '' || isNaN(k100)) ? existingFood.kcal || 0 : k100;
+            mg100 = (builderMg.value === '' || isNaN(mg100)) ? existingFood.mg || 0 : mg100;
+            k100_mg = (builderK.value === '' || isNaN(k100_mg)) ? existingFood.k || 0 : k100_mg;
+            vitc100 = (builderVitC.value === '' || isNaN(vitc100)) ? existingFood.vitc || 0 : vitc100;
+            ca100 = (builderCa.value === '' || isNaN(ca100)) ? existingFood.ca || 0 : ca100;
         }
 
         foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
@@ -676,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
         datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
 
         aggiornaUI();
-        salvaGiorno(giornoVisualizzato, datiGiornalieri);
+        salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
         workoutDescInput.value = '';
         workoutCaloriesInput.value = '';
     });
@@ -687,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             datiGiornalieri.log.push(item);
             aggiornaUI();
-            salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+            salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
             resetInputAlimento();
         }
     });
@@ -735,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pastoInCostruzione = [];
         salvaPastoInCostruzione();
         aggiornaUI(); 
-        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+        salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
         renderMealBuilder();
 
         const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
@@ -764,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             salvaPastoInCostruzione(); 
             aggiornaUI(); 
-            salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+            salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
             renderMealBuilder();
             mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
             
@@ -792,14 +816,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 datiGiornalieri.log.splice(index, 1);
                 aggiornaUI(); 
-                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+                salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
             }
         } else if (target.closest('.expand-arrow')) {
             const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
             if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
                 datiGiornalieri.log[index].isExpanded = !datiGiornalieri.log[index].isExpanded;
                 aggiornaUI(); 
-                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+                salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
             }
         }
     });
