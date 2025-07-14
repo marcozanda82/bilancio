@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tracker Nutrizionale Definitivo</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -159,14 +158,20 @@
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            -moz-appearance: textfield;
+            /* Rimosso -moz-appearance e -webkit-appearance per permettere frecce del browser */
+            /* Se si desidera rimuovere le frecce, è necessario reimpostare queste proprietà */
         }
-        /* Remove arrows in Chrome, Safari, Edge */
-        #calorie-adjuster input::-webkit-outer-spin-button,
+        /* Se si desidera rimuovere le frecce per l'input number, decommentare: */
+        /* #calorie-adjuster input::-webkit-outer-spin-button,
         #calorie-adjuster input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+        #calorie-adjuster input[type="number"] {
+            -moz-appearance: textfield;
+        } */
+
+
         #calorie-adjuster label {
             margin-bottom: 0;
             font-weight: normal;
@@ -301,29 +306,29 @@
             align-items: center;
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 10px;
-            margin-bottom: 25px; /* Adjust margin to avoid clash with other elements below */
+            margin-bottom: 25px;
         }
         .summary-header-row h2 {
-            margin: 0; /* Remove default margin from h2 */
-            border-bottom: none; /* Remove border from h2 as it's handled by parent div */
+            margin: 0;
+            border-bottom: none;
         }
         .floppy-disk-button {
-            background-color: #00796b; /* Darker Teal, similar to upload button */
+            background-color: #00796b;
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 1.5em; /* Larger icon */
-            width: 40px; /* Square button */
+            font-size: 1.5em;
+            width: 40px;
             height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background-color 0.3s;
-            flex-shrink: 0; /* Prevent shrinking */
+            flex-shrink: 0;
         }
         .floppy-disk-button:hover {
-            background-color: #004d40; /* Even darker on hover */
+            background-color: #004d40;
         }
         .floppy-disk-button.disabled {
             opacity: 0.5;
@@ -362,13 +367,13 @@
                     <button id="btn-floppy-upload" class="floppy-disk-button" title="Carica dati locali su Cloud">
                         <i class="fas fa-save"></i> </button>
                 </div>
+                
                 <span id="calorie-balance-text"></span>
 
                 <div id="calorie-adjuster">
                     <label for="calorie-adjustment-input">Correzione Obiettivo:</label>
                     <button id="btn-calorie-minus" class="minus">-</button>
-                    <input type="number" id="calorie-adjustment-input" value="0" readonly>
-                    <button id="btn-calorie-plus">+</button>
+                    <input type="number" id="calorie-adjustment-input" value="0"> <button id="btn-calorie-plus">+</button>
                     <span>kcal</span>
                 </div>
 
@@ -489,6 +494,7 @@
         // ************************************************************
         // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
         // ************************************************************
+        const firebaseConfig = {
 const firebaseConfig = {
   apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
   authDomain: "mio-tracker.firebaseapp.com",
@@ -591,8 +597,7 @@ const firebaseConfig = {
         const btnCalorieMinus = document.getElementById('btn-calorie-minus');
         const btnCaloriePlus = document.getElementById('btn-calorie-plus');
 
-        // Pulsanti sincronizzazione manuale
-        const btnFloppyUpload = document.getElementById('btn-floppy-upload'); // Nuovo pulsante floppy disk
+        const btnFloppyUpload = document.getElementById('btn-floppy-upload'); 
         const btnDownloadManual = document.getElementById('btn-download-manual');
         const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
         const cloudSyncSection = document.querySelector('.cloud-sync-section');
@@ -873,7 +878,6 @@ const firebaseConfig = {
             
             const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
 
-            // Calcola i totali correnti del pasto solo per gli alimenti selezionati
             const totaliPastoCorrenteSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
                 acc.prot += item.prot || 0;
                 acc.cal += item.cal || 0;
@@ -1142,6 +1146,19 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         
         dataCaricamentoInput.value = getTodayString('ymd');
 
+        // Event listener per l'input manuale della correzione obiettivo
+        calorieAdjustmentInput.addEventListener('input', () => {
+            const value = parseFloat(calorieAdjustmentInput.value);
+            if (!isNaN(value)) {
+                datiGiornalieri.calorieAdjustment = value;
+            } else {
+                datiGiornalieri.calorieAdjustment = 0; // O mantenere il valore precedente se la digitazione è incompleta
+            }
+            aggiornaUI();
+            salvaGiorno(giornoVisualizzato, datiGiornalieri);
+            renderMealBuilder(); 
+        });
+
         btnCaloriePlus.addEventListener('click', () => {
             datiGiornalieri.calorieAdjustment = (datiGiornalieri.calorieAdjustment || 0) + 10;
             aggiornaUI();
@@ -1290,7 +1307,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             return true;
         }
 
-        // Questa funzione ora è puramente per gli upload AUTOMATICI in background
+        // Questa funzione è per gli upload AUTOMATICI in background
         async function saveAllTrackerDataToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
@@ -1372,7 +1389,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
             if (!confirm("Sei sicuro di voler SOVRASCRIVERE i dati sul cloud con quelli locali?")) return;
 
-            btnFloppyUpload.disabled = true; // Disabilita il pulsante floppy
+            // Disabilita il pulsante e mostra un messaggio di caricamento
+            btnFloppyUpload.disabled = true;
             cloudSyncStatusSpan.textContent = "Caricamento in corso...";
             cloudSyncStatusSpan.className = 'cloud-sync-status'; 
 
@@ -1397,7 +1415,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 console.error("Manual Upload error:", error);
             } finally {
                 btnFloppyUpload.disabled = false; // Riabilita il pulsante floppy
-                // Aggiorna lo stato della connessione (prendi lo stato attuale dall'auth)
                 if (auth && auth.currentUser) {
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${auth.currentUser.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
@@ -1408,9 +1425,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-
-        btnFloppyUpload.addEventListener('click', handleManualUploadToCloud); // Collega il pulsante floppy alla funzione
-        btnDownloadManual.addEventListener('click', loadAllTrackerDataFromCloud); // Lascia il download manuale inalterato
+        btnFloppyUpload.addEventListener('click', handleManualUploadToCloud); 
+        btnDownloadManual.addEventListener('click', loadAllTrackerDataFromCloud);
 
 
         // --- FUNZIONE DI MIGRAZIONE VECCHIO STORICO A NUOVO FORMATO ---
@@ -1451,7 +1467,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
-            btnFloppyUpload.disabled = true; // Disabilita il pulsante floppy all'avvio
+            btnFloppyUpload.disabled = true; 
         });
 
     </script>
