@@ -128,6 +128,49 @@
         .collapsible-header.expanded .arrow {
             transform: rotate(90deg); /* Ruota la freccia quando espanso */
         }
+
+        /* Stili per il regolatore deficit/surplus */
+        #calorie-adjuster {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        #calorie-adjuster button {
+            padding: 5px 12px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            background-color: #4CAF50; /* Green for plus */
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #calorie-adjuster button.minus {
+            background-color: #f44336; /* Red for minus */
+        }
+        #calorie-adjuster input[type="number"] {
+            width: 80px;
+            text-align: center;
+            font-size: 1.1em;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            -moz-appearance: textfield; /* Remove arrows in Firefox */
+        }
+        /* Remove arrows in Chrome, Safari, Edge */
+        #calorie-adjuster input::-webkit-outer-spin-button,
+        #calorie-adjuster input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        #calorie-adjuster label {
+            margin-bottom: 0;
+            font-weight: normal;
+            color: #333;
+        }
+
     </style>
 </head>
 <body>
@@ -141,6 +184,14 @@
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi</h2>
             <span id="calorie-balance-text"></span>
+
+            <div id="calorie-adjuster">
+                <label for="calorie-adjustment-input">Correzione Obiettivo:</label>
+                <button id="btn-calorie-minus" class="minus">-</button>
+                <input type="number" id="calorie-adjustment-input" value="0" readonly>
+                <button id="btn-calorie-plus">+</button>
+                <span>kcal</span>
+            </div>
 
             <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
             <progress id="progress-proteine" class="macro-progress" value="0"></progress>
@@ -240,6 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let datiGiornalieri = {};
     let foodDatabase = {};
     let pastoInCostruzione = [];
+    // let calorieAdjustment = 0; // Spostato dentro datiGiornalieri
+
     const PIANO_SETTIMANALE = {
         0: { tipo: '💧 Riposo (Deficit)', cal_base: 1700, prot: 110 }, // Domenica
         1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Lunedì - Base 2300 kcal
@@ -306,6 +359,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const workoutHeader = document.getElementById('workout-header');
     const workoutContent = document.getElementById('workout-content');
 
+    // Nuovi elementi per il regolatore calorie
+    const calorieAdjustmentInput = document.getElementById('calorie-adjustment-input');
+    const btnCalorieMinus = document.getElementById('btn-calorie-minus');
+    const btnCaloriePlus = document.getElementById('btn-calorie-plus');
+
 
     // --- FUNZIONI DI GESTIONE DATI ---
     function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
@@ -335,10 +393,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
         }
         
-        datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
+        // Inizializza datiGiornalieri con valori di default se non trovati o corrotti
+        datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0, calorieAdjustment: 0 }; 
         if (!datiGiornalieri.log) datiGiornalieri.log = [];
         if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
-        
+        // Inizializza calorieAdjustment se non presente nei dati caricati
+        if (typeof datiGiornalieri.calorieAdjustment === 'undefined') datiGiornalieri.calorieAdjustment = 0;
+
         aggiornaUI();
         console.log(`Caricato il giorno: ${giornoVisualizzato}`); 
     }
@@ -349,10 +410,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const giornoSettimana = dataVisualizzata.getDay();
         const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
-        // L'obiettivo calorico ora include le calorie bruciate con l'allenamento
+        // L'obiettivo calorico ora include le calorie bruciate con l'allenamento E la correzione manuale
         const obiettivoProtTotale = pianoDelGiorno.prot;
-        // Usa cal_base dal piano settimanale e aggiungi le calorie bruciate nell'allenamento
-        const obiettivoCalTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
+        const obiettivoCalTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
 
         let obiettivoPastoProt = 0;
         let obiettivoPastoCal = 0;
@@ -441,8 +501,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataVisualizzata = new Date(giornoVisualizzato);
         const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
         
-        // Calcola l'obiettivo calorico tenendo conto delle calorie bruciate con l'allenamento
-        const obiettivoCalorieConWorkout = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
+        // Calcola l'obiettivo calorico tenendo conto delle calorie bruciate con l'allenamento E la correzione manuale
+        const obiettivoCalorieConWorkout = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
         const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieConWorkout, ...OBIETTIVI_MICRO };
         
         titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
@@ -450,7 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
         // Assicurati che datiGiornalieri.log sia un array prima di chiamare forEach
         (datiGiornalieri.log || []).forEach(entry => { 
-            if (entry.type === 'meal' && entry.items) {
+            if (entry.type === 'meal') {
+                // Per i pasti di tipo 'meal', somma i totali dei sub-item
                 entry.items.forEach(item => {
                     totali.proteine += item.prot || 0;
                     totali.calorie += item.cal || 0;
@@ -579,6 +640,9 @@ document.addEventListener('DOMContentLoaded', () => {
             calorieBalanceText.classList.add('balance-even');
         }
         calorieBalanceText.textContent = balanceText;
+
+        // Aggiorna il valore dell'input di regolazione calorie
+        calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment || 0;
     }
 
     function renderMealBuilder() {
@@ -847,6 +911,20 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
     });
     
     dataCaricamentoInput.value = getTodayString('ymd');
+
+    // Event listeners per i pulsanti di regolazione calorie
+    btnCaloriePlus.addEventListener('click', () => {
+        datiGiornalieri.calorieAdjustment = (datiGiornalieri.calorieAdjustment || 0) + 10;
+        aggiornaUI();
+        salvaGiorno(giornoVisualizzato, datiGiornalieri);
+    });
+
+    btnCalorieMinus.addEventListener('click', () => {
+        datiGiornalieri.calorieAdjustment = (datiGiornalieri.calorieAdjustment || 0) - 10;
+        aggiornaUI();
+        salvaGiorno(giornoVisualizzato, datiGiornalieri);
+    });
+
 
     // --- FUNZIONE DI MIGRAZIONE VECCHIO STORICO A NUOVO FORMATO ---
     function eseguiMigrazioneStorico() {
