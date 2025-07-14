@@ -260,6 +260,39 @@
             display: block;
         }
 
+        /* NUOVI STILI per il riquadro di benvenuto minimizzato */
+        #auth-section.logged-in {
+            padding: 10px 20px; /* Ridotto il padding */
+            background-color: #e3f2fd; /* Sfondo più chiaro */
+            border: 1px solid #90caf9; /* Bordo più leggero */
+            box-shadow: none; /* Rimosso l'ombreggiatura */
+            text-align: center; /* Centra il contenuto */
+            display: flex; /* Flexbox per allineare */
+            align-items: center; /* Centra verticalmente */
+            justify-content: center; /* Centra orizzontalmente */
+            flex-wrap: wrap; /* Permette il wrapping se lo spazio è limitato */
+            gap: 10px; /* Spazio tra gli elementi */
+        }
+        #auth-section.logged-in #auth-header,
+        #auth-section.logged-in #auth-form-fields,
+        #auth-section.logged-in #auth-status {
+            display: none !important; /* Nasconde questi elementi quando loggato */
+        }
+        #auth-section.logged-in #welcome-message {
+            margin: 0; /* Rimuove margini extra */
+            font-size: 1em; /* Dimensione del font leggermente più piccola */
+            white-space: nowrap; /* Evita il wrapping del testo email */
+            overflow: hidden; /* Nasconde l'eccesso */
+            text-overflow: ellipsis; /* Aggiunge i puntini di sospensione */
+        }
+        #auth-section.logged-in #btn-sign-out {
+            width: auto; /* Larghezza automatica per il pulsante Esci */
+            padding: 5px 10px; /* Padding ridotto */
+            font-size: 0.8em; /* Font più piccolo per il pulsante */
+            margin: 0; /* Rimuove margini extra */
+            flex-shrink: 0; /* Non si restringe */
+        }
+
     </style>
 </head>
 <body>
@@ -635,7 +668,7 @@ const firebaseConfig = {
 
             caricaGiorno(getTodayString());
             
-            if (mealTypeSelector) { // Aggiunto controllo per sicurezza
+            if (mealTypeSelector) { 
                 const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
                 if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
                     mealTypeSelector.value = lastMealTypeSaved;
@@ -1098,6 +1131,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     authStatusP.textContent = ''; 
 
                     authSection.style.borderColor = '#2e7d32'; 
+                    authSection.classList.add('logged-in'); /* Aggiungi classe per stili minimizzati */
 
                     mainTrackerContent.classList.add('authenticated'); 
                     
@@ -1106,8 +1140,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     
                     console.log("Utente autenticato. UI aggiornata.");
-                    // In questo punto, initAppUI è già stata chiamata da DOMContentLoaded
-                    // Questo blocco gestisce solo la VISIBILITÀ e lo stato dei pulsanti, non il caricamento dati.
 
                 } else {
                     currentUserUID = null;
@@ -1119,6 +1151,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     authStatusP.textContent = "Non autenticato";
 
                     authSection.style.borderColor = '#c62828'; 
+                    authSection.classList.remove('logged-in'); /* Rimuovi classe per stili normali */
                     mainTrackerContent.classList.remove('authenticated'); 
                     
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
@@ -1126,8 +1159,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
-                    // initAppUI() è già stata chiamata da DOMContentLoaded.
-                    // Questo blocco gestisce solo la VISIBILITÀ e lo stato dei pulsanti.
                 }
             });
 
@@ -1298,11 +1329,9 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        // Questo è il punto di ingresso quando la pagina è completamente caricata
         document.addEventListener('DOMContentLoaded', () => {
-            eseguiMigrazioneStorico(); // Prima esegui la migrazione locale
-            initAppUI(); // Carica sempre i dati locali e inizializza l'UI
-            // onAuthStateChanged gestirà la visibilità dell'interfaccia a questo punto.
+            eseguiMigrazioneStorico();
+            initAppUI(); // Inizializza l'UI e carica i dati locali subito all'avvio
         });
 
     </script>
