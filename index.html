@@ -20,7 +20,7 @@
         #form-allenamento button { background-color: #2e7d32; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
         .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        .sync-button-container { text-align: right; margin-bottom: 15px; }
+        .sync-button-container { text-align: center; margin-top: 20px; } /* Moved to bottom, centered */
         .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
@@ -80,7 +80,7 @@
             border-radius: 4px;
         }
 
-        /* Nuovo stile per l'indicatore testuale deficit/surplus */
+        /* Stili per l'indicatore testuale deficit/surplus */
         #calorie-balance-text {
             display: block;
             text-align: center;
@@ -96,13 +96,42 @@
         .balance-surplus { background-color: #e8f5e9; color: #2e7d32; } /* Light Green */
         .balance-even { background-color: #e3f2fd; color: #1976d2; }   /* Light Blue */
 
+        /* Stili per l'area allenamento a scomparsa */
+        .collapsible-header {
+            cursor: pointer;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #0d47a1;
+            font-size: 1.4em;
+        }
+        .collapsible-header:hover {
+            color: #1976d2;
+        }
+        .collapsible-header .arrow {
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+        }
+        .collapsible-content {
+            display: none; /* Inizialmente nascosto */
+            overflow: hidden;
+            transition: max-height 0.3s ease-out; /* Per una transizione più fluida */
+            max-height: 0; /* Inizialmente zero per transizione */
+        }
+        .collapsible-content.expanded {
+            display: block; /* Mostra il contenuto */
+            max-height: 500px; /* Valore sufficientemente grande per contenere il contenuto */
+        }
+        .collapsible-header.expanded .arrow {
+            transform: rotate(90deg); /* Ruota la freccia quando espanso */
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="sync-button-container">
-            <a href="sync.html" class="sync-button">☁️ Sincronizza con il Cloud</a>
-        </div>
         <h1>Tracker Nutrizionale</h1>
         <h2 id="titolo-giornata"></h2>
         <div class="nav-links">
@@ -132,12 +161,14 @@
             </div>
         </div>
         <div id="form-allenamento" class="sezione">
-            <h2>Registra Allenamento</h2>
-            <label for="workout-desc">Descrizione Allenamento</label>
-            <input type="text" id="workout-desc" placeholder="es. Corsa 30 min, Pesistica">
-            <label for="workout-calories">Calorie Bruciate (kcal)</label>
-            <input type="number" id="workout-calories" min="0">
-            <button id="btn-add-workout">Aggiungi Allenamento</button>
+            <h2 class="collapsible-header" id="workout-header">Registra Allenamento <span class="arrow">▶</span></h2>
+            <div class="collapsible-content" id="workout-content">
+                <label for="workout-desc">Descrizione Allenamento</label>
+                <input type="text" id="workout-desc" placeholder="es. Corsa 30 min, Pesistica">
+                <label for="workout-calories">Calorie Bruciate (kcal)</label>
+                <input type="number" id="workout-calories" min="0">
+                <button id="btn-add-workout">Aggiungi Allenamento</button>
+            </div>
         </div>
         <div id="food-adder" class="sezione">
             <h2>Aggiungi Alimento</h2>
@@ -196,6 +227,9 @@
                     <button id="btn-carica-giorno">Carica/Salva</button>
                 </div>
             </div>
+        </div>
+        <div class="sync-button-container">
+            <a href="sync.html" class="sync-button">☁️ Sincronizza con il Cloud</a>
         </div>
     </div>
 
@@ -265,8 +299,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const workoutCaloriesInput = document.getElementById('workout-calories');
     const btnAddWorkout = document.getElementById('btn-add-workout');
 
-    // Nuovo elemento per l'indicatore deficit/surplus testuale
+    // Elemento per l'indicatore deficit/surplus testuale
     const calorieBalanceText = document.getElementById('calorie-balance-text');
+
+    // Nuovi elementi per la sezione allenamento a scomparsa
+    const workoutHeader = document.getElementById('workout-header');
+    const workoutContent = document.getElementById('workout-content');
 
 
     // --- FUNZIONI DI GESTIONE DATI ---
@@ -297,8 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
         }
         
-        // Inizializza con un oggetto vuoto se non è stato trovato nulla
-        // Assicurati che log sia sempre un array e workoutCalorie sia sempre un numero
         datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
         if (!datiGiornalieri.log) datiGiornalieri.log = [];
         if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
@@ -599,7 +635,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const existingFood = foodDatabase[desc.toLowerCase()];
         if (existingFood) {
-            // Se i campi input sono vuoti, usa i valori del database
             p100 = (builderProt.value === '' || isNaN(p100)) ? existingFood.prot || 0 : p100;
             k100 = (builderKcal.value === '' || isNaN(k100)) ? existingFood.kcal || 0 : k100;
             mg100 = (builderMg.value === '' || isNaN(mg100)) ? existingFood.mg || 0 : mg100;
@@ -629,6 +664,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = ''); builderDesc.focus(); }
 
     // --- EVENT LISTENERS ---
+    // Toggle collapsible workout section
+    workoutHeader.addEventListener('click', () => {
+        workoutContent.classList.toggle('expanded');
+        workoutHeader.classList.toggle('expanded');
+    });
+
     btnAddWorkout.addEventListener('click', () => {
         const desc = workoutDescInput.value.trim();
         const calories = parseFloat(workoutCaloriesInput.value);
