@@ -80,43 +80,21 @@
             border-radius: 4px;
         }
 
-        /* Nuovi stili per l'indicatore deficit/surplus */
-        #calorie-balance-container {
-            width: 100%;
-            height: 20px;
-            background-color: #e0e0e0;
-            border-radius: 10px;
+        /* Nuovo stile per l'indicatore testuale deficit/surplus */
+        #calorie-balance-text {
+            display: block;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
             margin-top: 15px;
-            margin-bottom: 5px;
-            position: relative;
-            overflow: hidden; /* Assicura che l'indicatore non fuoriesca */
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-radius: 5px;
         }
-
-        #calorie-balance-indicator {
-            position: absolute;
-            top: 0;
-            left: 50%; /* Inizia al centro */
-            transform: translateX(-50%); /* Centra l'indicatore stesso */
-            width: 16px;
-            height: 16px;
-            background-color: #1976d2; /* Colore blu */
-            border-radius: 50%; /* Forma a cerchio */
-            border: 2px solid #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease-out, background-color 0.3s ease-out; /* Animazione fluida anche per colore */
-            z-index: 10;
-        }
-        /* Icone per l'indicatore, opzionale */
-        #calorie-balance-indicator::before {
-            content: '⚖️'; /* Bilancia per equilibrio */
-            font-size: 0.8em;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            z-index: 1;
-        }
+        /* Colori per lo stato */
+        .balance-deficit { background-color: #ffebee; color: #d32f2f; } /* Light Red */
+        .balance-surplus { background-color: #e8f5e9; color: #2e7d32; } /* Light Green */
+        .balance-even { background-color: #e3f2fd; color: #1976d2; }   /* Light Blue */
 
     </style>
 </head>
@@ -133,9 +111,8 @@
         </div>
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi</h2>
-            <div id="calorie-balance-container">
-                <div id="calorie-balance-indicator"></div>
-            </div>
+            <span id="calorie-balance-text"></span>
+
             <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
             <progress id="progress-proteine" class="macro-progress" value="0"></progress>
             <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
@@ -288,8 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const workoutCaloriesInput = document.getElementById('workout-calories');
     const btnAddWorkout = document.getElementById('btn-add-workout');
 
-    // Nuovo elemento per l'indicatore deficit/surplus
-    const calorieBalanceIndicator = document.getElementById('calorie-balance-indicator');
+    // Nuovo elemento per l'indicatore deficit/surplus testuale
+    const calorieBalanceText = document.getElementById('calorie-balance-text');
 
 
     // --- FUNZIONI DI GESTIONE DATI ---
@@ -413,7 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderMealBuilder();
 
-        // Carica il giorno corrente all'avvio
         caricaGiorno(getTodayString());
         
         const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
@@ -547,52 +523,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Aggiorna l'indicatore di deficit/surplus
+        // Aggiorna l'indicatore testuale di deficit/surplus
         const currentCalories = totali.calorie;
         const targetCalories = OBIETTIVI.cal;
         const calorieDifference = currentCalories - targetCalories; // Positivo per surplus, negativo per deficit
 
-        // Mappa la differenza calorica a una posizione da 0% (massimo deficit) a 100% (massimo surplus)
-        // Definisco un range massimo di deficit/surplus per la visualizzazione (es. +/- 500 kcal)
-        const maxCalorieRange = 500; // Calorie massime per lo spostamento completo a destra o sinistra
-        let positionPercentage = 50 + (calorieDifference / (2 * maxCalorieRange)) * 100;
-        
-        // Limita la percentuale tra 0 e 100
-        positionPercentage = Math.max(0, Math.min(100, positionPercentage));
+        let balanceText = '';
+        calorieBalanceText.className = ''; // Resetta le classi CSS
+        const tolerance = 50; // Tolleranza in kcal per essere considerato "in pari"
 
-        // Usa `positionPercentage` per `left` e `translateX(-50%)` per centrare
-        calorieBalanceIndicator.style.left = `${positionPercentage}%`;
-        calorieBalanceIndicator.style.transform = `translateX(-50%)`;
-
-        const indicatorPseudoElement = calorieBalanceIndicator.querySelector('::before'); // Non puoi selezionare pseudo-elementi con querySelector
-        
-        // Aggiorna colore e icona dell'indicatore
-        if (calorieDifference < -50) { // Deficit significativo
-            calorieBalanceIndicator.style.backgroundColor = '#d32f2f'; // Rosso
-            calorieBalanceIndicator.setAttribute('data-icon', '⬇️'); // Usa un attributo per il contenuto
-        } else if (calorieDifference > 50) { // Surplus significativo
-            calorieBalanceIndicator.style.backgroundColor = '#2e7d32'; // Verde
-            calorieBalanceIndicator.setAttribute('data-icon', '⬆️');
-        } else { // Equilibrio
-            calorieBalanceIndicator.style.backgroundColor = '#1976d2'; // Blu
-            calorieBalanceIndicator.setAttribute('data-icon', '⚖️');
-        }
-        // Aggiorna lo pseudo-elemento CSS tramite un attributo data, se non direttamente accessibile via JS
-        // Per modificare il contenuto di un pseudo-elemento tramite JS, si deve usare un attributo data
-        // e aggiornare la regola CSS di conseguenza. Aggiungo uno stile dinamico per questo.
-        const styleSheet = document.styleSheets[0];
-        let ruleIndex = -1;
-        for (let i = 0; i < styleSheet.cssRules.length; i++) {
-            if (styleSheet.cssRules[i].selectorText === '#calorie-balance-indicator::before') {
-                ruleIndex = i;
-                break;
-            }
-        }
-        if (ruleIndex !== -1) {
-            styleSheet.cssRules[ruleIndex].style.content = `'${calorieBalanceIndicator.getAttribute('data-icon')}'`;
+        if (calorieDifference < -tolerance) {
+            balanceText = `Deficit: ${Math.abs(calorieDifference).toFixed(0)} kcal`;
+            calorieBalanceText.classList.add('balance-deficit');
+        } else if (calorieDifference > tolerance) {
+            balanceText = `Surplus: ${calorieDifference.toFixed(0)} kcal`;
+            calorieBalanceText.classList.add('balance-surplus');
         } else {
-            styleSheet.insertRule(`#calorie-balance-indicator::before { content: '${calorieBalanceIndicator.getAttribute('data-icon')}'; }`, styleSheet.cssRules.length);
+            balanceText = `In Pari`;
+            calorieBalanceText.classList.add('balance-even');
         }
+        calorieBalanceText.textContent = balanceText;
     }
 
     function renderMealBuilder() {
@@ -700,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
         datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
 
         aggiornaUI();
-        salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
+        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
         workoutDescInput.value = '';
         workoutCaloriesInput.value = '';
     });
@@ -711,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             datiGiornalieri.log.push(item);
             aggiornaUI();
-            salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
+            salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             resetInputAlimento();
         }
     });
@@ -759,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pastoInCostruzione = [];
         salvaPastoInCostruzione();
         aggiornaUI(); 
-        salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
+        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
         renderMealBuilder();
 
         const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
@@ -776,7 +726,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.closest('.edit-btn')) {
             const index = parseInt(target.closest('.edit-btn').dataset.index, 10);
             const itemToEdit = datiGiornalieri.log[index];
-            // Non permettere di editare gli allenamenti o gli elementi "single" tramite questa funzione
             if (!itemToEdit || itemToEdit.type === 'workout' || itemToEdit.type === 'single' || !confirm("Vuoi modificare questa voce? Verrà spostata nel 'Costruttore Pasto'.")) return;
             
             pastoInCostruzione = [];
@@ -788,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             salvaPastoInCostruzione(); 
             aggiornaUI(); 
-            salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
+            salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             renderMealBuilder();
             mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
             
@@ -816,14 +765,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 datiGiornalieri.log.splice(index, 1);
                 aggiornaUI(); 
-                salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
+                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             }
         } else if (target.closest('.expand-arrow')) {
             const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
             if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
                 datiGiornalieri.log[index].isExpanded = !datiGiornalieri.log[index].isExpanded;
                 aggiornaUI(); 
-                salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva qui
+                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             }
         }
     });
