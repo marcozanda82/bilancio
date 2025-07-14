@@ -449,7 +449,7 @@
         // ************************************************************
         // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
         // ************************************************************
-const firebaseConfig = {
+       const firebaseConfig = {
   apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
   authDomain: "mio-tracker.firebaseapp.com",
   databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
@@ -1140,7 +1140,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     
                     console.log("Utente autenticato. UI aggiornata.");
-                    // Non chiamare initAppUI() qui. Viene chiamata da DOMContentLoaded.
 
                 } else {
                     currentUserUID = null;
@@ -1160,7 +1159,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
-                    // Non chiamare initAppUI() qui. Viene chiamata da DOMContentLoaded.
                 }
             });
 
@@ -1228,6 +1226,17 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             return ref(db, 'users/' + currentUserUID + '/tracker_data/');
         }
 
+        // --- NUOVA LOGICA DI PARSING PER SALVATAGGIO/CARICAMENTO ---
+        // Funzione helper per determinare se una stringa è un JSON valido
+        function isJsonString(str) {
+            try {
+                JSON.parse(str);
+            } catch (e) {
+                return false;
+            }
+            return true;
+        }
+
         async function saveAllTrackerDataToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
@@ -1237,11 +1246,17 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             const dataToUpload = {};
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+
+                // Solo includi chiavi pertinenti alla sincronizzazione
                 if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key) || key.startsWith('lastMealTypeSelected_')) { 
-                    try {
-                        dataToUpload[key] = JSON.parse(localStorage.getItem(key));
-                    } catch (e) {
-                        console.warn(`Skipping invalid JSON for key ${key} during cloud upload:`, e);
+                    // Se il valore è una stringa che *non* è un JSON valido, salvala così com'è.
+                    // Altrimenti, salvala come oggetto JSON parsato.
+                    if (isJsonString(value)) {
+                        dataToUpload[key] = JSON.parse(value);
+                    } else {
+                        // Questo gestirà chiavi come 'lastMealTypeSelected_YYYY-MM-DD' che sono semplici stringhe
+                        dataToUpload[key] = value; 
                     }
                 }
             }
@@ -1269,6 +1284,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     const cloudData = snapshot.val();
                     console.log("Dati scaricati manualmente dal cloud:", cloudData);
 
+                    // Pulisci solo le chiavi di localStorage che gestiamo per evitare residui
                     for (let i = 0; i < localStorage.length; i++) {
                         const key = localStorage.key(i);
                         if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key) || key.startsWith('lastMealTypeSelected_')) { 
@@ -1276,9 +1292,16 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                         }
                     }
 
+                    // Popola localStorage con i dati scaricati
                     for (const key in cloudData) {
                         if (Object.prototype.hasOwnProperty.call(cloudData, key)) {
-                            localStorage.setItem(key, JSON.stringify(cloudData[key]));
+                            const value = cloudData[key];
+                            // Salva come stringa se non è un oggetto (es. lastMealTypeSelected)
+                            if (typeof value === 'object' && value !== null) {
+                                localStorage.setItem(key, JSON.stringify(value));
+                            } else {
+                                localStorage.setItem(key, value);
+                            }
                         }
                     }
                     alert("Download completato! Ricarica la pagina per vedere le modifiche.");
@@ -1292,7 +1315,56 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        btnUploadManual.addEventListener('click', saveAllTrackerDataToCloud);
+        // Funzione specifica per l'upload manuale
+        async function handleManualUploadToCloud() {
+            const dataRef = getUserDataRef();
+            if (!dataRef) {
+                alert("Devi essere autenticato per caricare i dati sul cloud.");
+                return;
+            }
+
+            if (!confirm("Sei sicuro di voler SOVRASCRIVERE i dati sul cloud con quelli locali?")) return;
+
+            // Disabilita il pulsante e mostra un messaggio di caricamento
+            btnUploadManual.disabled = true;
+            cloudSyncStatusSpan.textContent = "Caricamento in corso...";
+            cloudSyncStatusSpan.className = 'cloud-sync-status'; // Rimuovi stato connesso/disconnesso temporaneamente
+
+            try {
+                const dataToUpload = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key) || key.startsWith('lastMealTypeSelected_')) {
+                        if (isJsonString(value)) {
+                            dataToUpload[key] = JSON.parse(value);
+                        } else {
+                            dataToUpload[key] = value;
+                        }
+                    }
+                }
+                await set(dataRef, dataToUpload);
+                alert("Caricamento completato con successo!");
+                console.log("Caricamento manuale completato!");
+            } catch (error) {
+                alert(`Errore durante il caricamento: ${error.message}`);
+                console.error("Manual Upload error:", error);
+            } finally {
+                // Riabilita il pulsante e ripristina lo stato
+                btnUploadManual.disabled = false;
+                // Aggiorna lo stato della connessione (prendi lo stato attuale dall'auth)
+                if (auth && auth.currentUser) {
+                    cloudSyncStatusSpan.textContent = `Connesso Cloud: ${auth.currentUser.email}`;
+                    cloudSyncStatusSpan.className = 'cloud-sync-status connected';
+                } else {
+                    cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
+                    cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
+                }
+            }
+        }
+
+
+        btnUploadManual.addEventListener('click', handleManualUploadToCloud); // Collega la nuova funzione
         btnDownloadManual.addEventListener('click', loadAllTrackerDataFromCloud);
 
 
@@ -1332,9 +1404,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            eseguiMigrazioneStorico();
+            eseguiMigrazioneStorico(); 
             initAppUI(); // Carica sempre i dati locali e inizializza l'UI
-            // onAuthStateChanged gestirà la visibilità dell'interfaccia a questo punto.
         });
 
     </script>
