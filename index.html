@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tracker Nutrizionale Definitivo</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -159,7 +158,19 @@
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            /* Rimosso -moz-appearance e -webkit-appearance per permettere frecce del browser */
+            /* Se si desidera rimuovere le frecce, è necessario reimpostare queste proprietà */
         }
+        /* Se si desidera rimuovere le frecce per l'input number, decommentare: */
+        /* #calorie-adjuster input::-webkit-outer-spin-button,
+        #calorie-adjuster input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        #calorie-adjuster input[type="number"] {
+            -moz-appearance: textfield;
+        } */
+
 
         #calorie-adjuster label {
             margin-bottom: 0;
@@ -362,8 +373,7 @@
                 <div id="calorie-adjuster">
                     <label for="calorie-adjustment-input">Correzione Obiettivo:</label>
                     <button id="btn-calorie-minus" class="minus">-</button>
-                    <input type="number" id="calorie-adjustment-input" value="0">
-                    <button id="btn-calorie-plus">+</button>
+                    <input type="number" id="calorie-adjustment-input" value="0"> <button id="btn-calorie-plus">+</button>
                     <span>kcal</span>
                 </div>
 
@@ -736,7 +746,7 @@ const firebaseConfig = {
                         totali.ca += item.ca || 0;
                     });
                 } else if (entry.type === 'single') { 
-                    totali.prote proteine += entry.prot || 0;
+                    totali.proteine += entry.prot || 0;
                     totali.calorie += entry.cal || 0;
                     totali.mg += entry.mg || 0;
                     totali.k += entry.k || 0;
@@ -1195,7 +1205,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
-                    btnFloppyUpload.disabled = false; 
+                    btnFloppyUpload.disabled = false; // Abilita il pulsante floppy
                     
                     console.log("Utente autenticato. UI aggiornata.");
 
@@ -1215,7 +1225,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
                     cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-                    btnFloppyUpload.disabled = true; 
+                    btnFloppyUpload.disabled = true; // Disabilita il pulsante floppy
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
                 }
@@ -1227,7 +1237,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             authSection.style.borderColor = '#c62828';
             mainTrackerContent.classList.remove('authenticated');
             cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-            btnFloppyUpload.disabled = true; 
+            btnFloppyUpload.disabled = true; // Disabilita il pulsante floppy anche in caso di errore Firebase
         }
 
         async function handleRegister() {
@@ -1286,6 +1296,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             return ref(db, 'users/' + currentUserUID + '/tracker_data/');
         }
 
+        // Funzione helper per determinare se una stringa è un JSON valido
         function isJsonString(str) {
             try {
                 JSON.parse(str);
@@ -1295,6 +1306,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             return true;
         }
 
+        // Questa funzione è per gli upload AUTOMATICI in background
         async function saveAllTrackerDataToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
@@ -1366,6 +1378,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
+        // Funzione specifica per l'upload manuale (collegata al pulsante floppy)
         async function handleManualUploadToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
@@ -1375,7 +1388,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
             if (!confirm("Sei sicuro di voler SOVRASCRIVERE i dati sul cloud con quelli locali?")) return;
 
-            btnFloppyUpload.disabled = true; 
+            // Disabilita il pulsante e mostra un messaggio di caricamento
+            btnFloppyUpload.disabled = true;
             cloudSyncStatusSpan.textContent = "Caricamento in corso...";
             cloudSyncStatusSpan.className = 'cloud-sync-status'; 
 
@@ -1399,7 +1413,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 alert(`Errore durante il caricamento: ${error.message}`);
                 console.error("Manual Upload error:", error);
             } finally {
-                btnFloppyUpload.disabled = false; 
+                btnFloppyUpload.disabled = false; // Riabilita il pulsante floppy
                 if (auth && auth.currentUser) {
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${auth.currentUser.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
