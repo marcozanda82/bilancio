@@ -291,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let datiGiornalieri = {};
     let foodDatabase = {};
     let pastoInCostruzione = [];
-    // let calorieAdjustment = 0; // Spostato dentro datiGiornalieri
 
     const PIANO_SETTIMANALE = {
         0: { tipo: '💧 Riposo (Deficit)', cal_base: 1700, prot: 110 }, // Domenica
@@ -304,9 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000 };
 
-    // Nuova costante per la distribuzione base delle proteine nei giorni di forza (totale 140g)
+    // Nuova costante per la distribuzione base delle proteine e calorie nei giorni di forza
+    // Le percentuali delle calorie devono sommare a 1 (o 100%)
     const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
-        merenda1: { prot: 30, cal_perc: 0.20 }, // Esempio di percentuali cal (da aggiustare a seconda del piano)
+        merenda1: { prot: 30, cal_perc: 0.20 }, // Esempio: 20% delle calorie totali per la merenda AM
         pranzo: { prot: 40, cal_perc: 0.35 },
         merenda2: { prot: 30, cal_perc: 0.15 },
         cena: { prot: 40, cal_perc: 0.30 }
@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let obiettivoPastoProt = 0;
         let obiettivoPastoCal = 0;
 
-        // Recupera le percentuali di calorie dal piano dei pasti
+        // Recupera le percentuali di calorie e proteine dal piano dei pasti
         const calRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].cal_perc : 0;
         const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc : 0;
 
@@ -505,9 +505,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataVisualizzata = new Date(giornoVisualizzato);
         const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
         
-        // Calcola l'obiettivo calorico tenendo conto delle calorie bruciate con l'allenamento E la correzione manuale
-        const obiettivoCalorieConWorkoutECorrezione = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
-        const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieConWorkoutECorrezione, ...OBIETTIVI_MICRO };
+        // Obiettivo calorico base (solo dal piano settimanale + workout)
+        const obiettivoCalorieBaseWorkout = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
+
+        // Obiettivo calorico totale (base + workout + correzione manuale)
+        const obiettivoCalorieTotale = obiettivoCalorieBaseWorkout + (datiGiornalieri.calorieAdjustment || 0);
+        const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO };
         
         titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
         
@@ -543,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
         datiGiornalieri.ca = totali.ca;
 
         spanObiettivoProteine.textContent = OBIETTIVI.prot;
-        spanObiettivoCalorie.textContent = OBIETTIVI.cal; 
+        spanObiettivoCalorie.textContent = OBIETTIVI.cal; // Qui mostriamo l'obiettivo totale con la correzione
         spanTotaleProteine.textContent = totali.proteine.toFixed(1);
         spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
         spanTotaleMg.textContent = totali.mg.toFixed(1);
@@ -553,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
         spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
 
         progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
-        progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
+        progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie; // La barra di progresso usa l'obiettivo totale
         progressMg.max = OBIETTIVI.mg; progressMg.value = totali.mg;
         progressK.max = OBIETTIVI.k; progressK.value = totali.k;
         progressVitC.max = OBIETTIVI.vitc; progressVitC.value = totali.vitc;
@@ -625,9 +628,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Aggiorna l'indicatore testuale di deficit/surplus
+        // Questo calcolo ORA NON include la calorieAdjustment
         const currentCalories = totali.calorie;
-        const targetCalories = OBIETTIVI.cal; // Usa l'obiettivo calorico già corretto
-        const calorieDifference = currentCalories - targetCalories; // Positivo per surplus, negativo per deficit
+        const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
+        const calorieDifference = currentCalories - targetCaloriesForBalanceText; // Positivo per surplus, negativo per deficit
 
         let balanceText = '';
         calorieBalanceText.className = ''; // Resetta le classi CSS
@@ -657,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
         const selectedMealTypeText = (mealTypeSelector && mealTypeSelector.options && mealTypeSelector.options[mealTypeSelector.selectedIndex]) ? mealTypeSelector.options[mealTypeSelector.selectedIndex].text : '';
         
-        const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
+        const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato); // Questa funzione ora usa l'obiettivo totale corretto
 
         currentMealTypeDisplay.textContent = selectedMealTypeText;
         
@@ -762,6 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
         salvaGiorno(giornoVisualizzato, datiGiornalieri); 
         workoutDescInput.value = '';
         workoutCaloriesInput.value = '';
+        renderMealBuilder(); // Necessario per aggiornare gli obiettivi dei pasti se l'allenamento cambia
     });
 
     btnAggiungiSingolo.addEventListener('click', () => {
