@@ -403,7 +403,7 @@
                 </div>
             </div>
         </div>
-        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
@@ -626,19 +626,16 @@ const firebaseConfig = {
             };
         }
 
-        // Renamed from gestisciAvvioApp to initAppUI for clarity
-        // This function sets up the UI and loads initial local data
         function initAppUI() {
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
-            aggiornaDatalist(); // Aggiorna la datalist con foodDatabase caricato
+            aggiornaDatalist();
 
             pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
-            renderMealBuilder(); // Renderizza il costruttore pasti
+            renderMealBuilder();
 
-            caricaGiorno(getTodayString()); // Carica i dati per il giorno corrente e aggiorna UI
+            caricaGiorno(getTodayString());
             
-            // Assicurati che mealTypeSelector esista prima di tentare di accedervi
-            if (mealTypeSelector) {
+            if (mealTypeSelector) { // Aggiunto controllo per sicurezza
                 const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
                 if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
                     mealTypeSelector.value = lastMealTypeSaved;
@@ -1109,8 +1106,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     
                     console.log("Utente autenticato. UI aggiornata.");
-                    // L'UI è già stata inizializzata da DOMContentLoaded -> initAppUI.
-                    // Questo blocco ora gestisce solo la VISIBILITÀ e lo stato dei pulsanti.
+                    // In questo punto, initAppUI è già stata chiamata da DOMContentLoaded
+                    // Questo blocco gestisce solo la VISIBILITÀ e lo stato dei pulsanti, non il caricamento dati.
 
                 } else {
                     currentUserUID = null;
@@ -1129,8 +1126,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
-                    // L'UI è già stata inizializzata da DOMContentLoaded -> initAppUI.
-                    // Questo blocco ora gestisce solo la VISIBILITÀ e lo stato dei pulsanti.
+                    // initAppUI() è già stata chiamata da DOMContentLoaded.
+                    // Questo blocco gestisce solo la VISIBILITÀ e lo stato dei pulsanti.
                 }
             });
 
@@ -1304,9 +1301,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         // Questo è il punto di ingresso quando la pagina è completamente caricata
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); // Prima esegui la migrazione locale
-            // initAppUI() viene ora chiamata all'interno del listener onAuthStateChanged
-            // Questo garantisce che i dati locali vengano caricati e l'UI inizializzata
-            // solo dopo che Firebase ha determinato lo stato di autenticazione.
+            initAppUI(); // Carica sempre i dati locali e inizializza l'UI
+            // onAuthStateChanged gestirà la visibilità dell'interfaccia a questo punto.
         });
 
     </script>
