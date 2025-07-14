@@ -112,6 +112,14 @@
                 </div>
             </div>
         </div>
+        <div id="form-allenamento" class="sezione">
+            <h2>Registra Allenamento</h2>
+            <label for="workout-desc">Descrizione Allenamento</label>
+            <input type="text" id="workout-desc" placeholder="es. Corsa 30 min, Pesistica">
+            <label for="workout-calories">Calorie Bruciate (kcal)</label>
+            <input type="number" id="workout-calories" min="0">
+            <button id="btn-add-workout">Aggiungi Allenamento</button>
+        </div>
         <div id="food-adder" class="sezione">
             <h2>Aggiungi Alimento</h2>
             <div class="builder-grid">
@@ -232,6 +240,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const mealProtCurrent = document.getElementById('meal-prot-current'), mealProtTarget = document.getElementById('meal-prot-target'), mealProtRemaining = document.getElementById('meal-prot-remaining');
     const mealCalCurrent = document.getElementById('meal-cal-current'), mealCalTarget = document.getElementById('meal-cal-target'), mealCalRemaining = document.getElementById('meal-cal-remaining');
     const mealProgressProt = document.getElementById('meal-progress-prot'), mealProgressCal = document.getElementById('meal-progress-cal');
+    
+    // Nuovi elementi per l'allenamento
+    const workoutDescInput = document.getElementById('workout-desc');
+    const workoutCaloriesInput = document.getElementById('workout-calories');
+    const btnAddWorkout = document.getElementById('btn-add-workout');
 
 
     // --- FUNZIONI DI GESTIONE DATI ---
@@ -244,9 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!datiDaSalvare) {
             datiDaSalvare = datiGiornalieri;
         }
-        
-        // Salva sempre i dati nella chiave specifica del giorno.
-        // NON salvare più il giorno corrente separatamente qui.
         localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
         console.log(`Dati salvati per il giorno: ${dataDaSalvare}`);
     }
@@ -265,7 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
         }
         
-        // Inizializza con un oggetto vuoto se non è stato trovato nulla
         datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
         
         aggiornaUI();
@@ -278,27 +287,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const giornoSettimana = dataVisualizzata.getDay();
         const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
+        // L'obiettivo calorico ora include le calorie bruciate con l'allenamento
         const obiettivoProtTotale = pianoDelGiorno.prot;
-        const obiettivoCalTotale = pianoDelGiorno.cal;
+        const obiettivoCalTotale = pianoDelGiorno.cal + (datiGiornalieri.workoutCalorie || 0); // Aggiungi le calorie bruciate
 
         let obiettivoPastoProt = 0;
         let obiettivoPastoCal = 0;
 
         if (mealType === 'cena') {
-            // Calcola le proteine e calorie già consumate negli altri pasti (Merenda AM, Pranzo, Merenda PM)
             let consumatoProtAltriPasti = 0;
             let consumatoCalAltriPasti = 0;
 
             (datiGiornalieri.log || []).forEach(entry => {
-                // Considera solo i pasti che non sono la cena
                 if (entry.type === 'meal' && entry.mealId && entry.mealId !== 'cena') {
-                    // Se l'entry è un pasto, somma i totali degli items al suo interno
                     if (entry.items) {
                         entry.items.forEach(item => {
                             consumatoProtAltriPasti += item.prot || 0;
                             consumatoCalAltriPasti += item.cal || 0;
                         });
-                    } else { // Se è un singolo alimento, somma direttamente
+                    } else { 
                         consumatoProtAltriPasti += entry.prot || 0;
                         consumatoCalAltriPasti += entry.cal || 0;
                     }
@@ -308,16 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // L'obiettivo della cena è il residuo
             obiettivoPastoProt = Math.round(obiettivoProtTotale - consumatoProtAltriPasti);
             obiettivoPastoCal = Math.round(obiettivoCalTotale - consumatoCalAltriPasti);
 
-            // Assicurati che gli obiettivi residui non siano negativi
             if (obiettivoPastoProt < 0) obiettivoPastoProt = 0;
             if (obiettivoPastoCal < 0) obiettivoPastoCal = 0;
 
         } else {
-            // Logica proporzionale per gli altri pasti
             const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType] ? OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc : 0;
             
             obiettivoPastoProt = Math.round(obiettivoProtTotale * protRatio);
@@ -342,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function gestisciAvvioApp() {
-        // 1. Carica i dati del foodDatabase
         const dbSalvato = JSON.parse(localStorage.getItem('trackerFoodDatabase'));
         if (dbSalvato) {
             foodDatabase = dbSalvato;
@@ -351,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         aggiornaDatalist();
 
-        // 2. Carica il pasto in costruzione
         const pastoSalvato = JSON.parse(localStorage.getItem('trackerPastoInCostruzione'));
         if (pastoSalvato) {
             pastoInCostruzione = pastoSalvato;
@@ -360,10 +362,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderMealBuilder();
 
-        // 3. Tenta di caricare i dati del giorno corrente dallo storico
-        caricaGiorno(getTodayString()); // Se non ci sono dati, inizializzerà datiGiornalieri a vuoto.
+        caricaGiorno(getTodayString());
         
-        // 4. Imposta il selettore del tipo di pasto
         const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
         if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
             mealTypeSelector.value = lastMealTypeSaved;
@@ -376,7 +376,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function aggiornaUI() {
         const dataVisualizzata = new Date(giornoVisualizzato);
         const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
-        const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: pianoDelGiorno.cal, ...OBIETTIVI_MICRO };
+        
+        // Calcola l'obiettivo calorico tenendo conto delle calorie bruciate con l'allenamento
+        const obiettivoCalorieConWorkout = pianoDelGiorno.cal + (datiGiornalieri.workoutCalorie || 0);
+        const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieConWorkout, ...OBIETTIVI_MICRO };
         
         titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
         
@@ -409,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
         datiGiornalieri.ca = totali.ca;
 
         spanObiettivoProteine.textContent = OBIETTIVI.prot;
-        spanObiettivoCalorie.textContent = OBIETTIVI.cal;
+        spanObiettivoCalorie.textContent = OBIETTIVI.cal; // Obiettivo calorico aggiornato
         spanTotaleProteine.textContent = totali.proteine.toFixed(1);
         spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
         spanTotaleMg.textContent = totali.mg.toFixed(1);
@@ -471,15 +474,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         `;
                     });
                 }
-            } else { 
+            } else if (entry.type === 'workout') { // Gestisci l'elemento workout
                 const riga = logBody.insertRow();
-                riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                riga.innerHTML = `
+                    <td>${entry.desc}</td>
+                    <td></td> 
+                    <td></td>
+                    <td>${entry.cal.toFixed(0)} kcal</td>
+                    <td></td><td></td><td></td><td></td>
+                    <td class="action-buttons">
+                        <button class="delete-btn" data-index="${index}">&times;</button>
+                    </td>
+                `;
+            }
+            else { // Renderizza gli item di tipo 'single'
+                const riga = logBody.insertRow();
+                riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;`;
             }
         });
-        // Rimosso: salvaGiorno(giornoVisualizzato, datiGiornalieri); // Non salvare automaticamente qui
     }
 
-    // Funzione renderMealBuilder() con log di debug e fix per il selector
     function renderMealBuilder() {
         mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
         
@@ -563,13 +577,39 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = ''); builderDesc.focus(); }
 
     // --- EVENT LISTENERS ---
+    btnAddWorkout.addEventListener('click', () => {
+        const desc = workoutDescInput.value.trim();
+        const calories = parseFloat(workoutCaloriesInput.value);
+
+        if (!desc || isNaN(calories) || calories <= 0) {
+            alert('Inserisci una descrizione e calorie valide per l\'allenamento.');
+            return;
+        }
+
+        const workoutEntry = {
+            type: 'workout',
+            desc: desc,
+            cal: calories
+        };
+
+        if (!datiGiornalieri.log) datiGiornalieri.log = [];
+        datiGiornalieri.log.push(workoutEntry);
+        
+        // Aggiorna il totale delle calorie bruciate con l'allenamento per il giorno corrente
+        datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
+
+        aggiornaUI();
+        salvaGiorno(giornoVisualizzato, datiGiornalieri);
+        workoutDescInput.value = '';
+        workoutCaloriesInput.value = '';
+    });
+
     btnAggiungiSingolo.addEventListener('click', () => {
         const item = creaAlimentoDaInput(true);
         if (item) {
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             datiGiornalieri.log.push(item);
             aggiornaUI();
-            // Salva il giorno DOPO l'aggiunta di un singolo alimento
             salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             resetInputAlimento();
         }
@@ -618,7 +658,6 @@ document.addEventListener('DOMContentLoaded', () => {
         pastoInCostruzione = [];
         salvaPastoInCostruzione();
         aggiornaUI(); 
-        // Salva il giorno DOPO il salvataggio di un pasto
         salvaGiorno(giornoVisualizzato, datiGiornalieri); 
         renderMealBuilder();
 
@@ -636,7 +675,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.closest('.edit-btn')) {
             const index = parseInt(target.closest('.edit-btn').dataset.index, 10);
             const itemToEdit = datiGiornalieri.log[index];
-            if (!itemToEdit || !confirm("Vuoi modificare questa voce? Verrà spostata nel 'Costruttore Pasto'.")) return;
+            // Non permettere di editare gli allenamenti tramite questa funzione
+            if (!itemToEdit || itemToEdit.type === 'workout' || !confirm("Vuoi modificare questa voce? Verrà spostata nel 'Costruttore Pasto'.")) return;
             
             pastoInCostruzione = [];
 
@@ -647,7 +687,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             salvaPastoInCostruzione(); 
             aggiornaUI(); 
-            // Salva il giorno DOPO la modifica/spostamento di un elemento
             salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             renderMealBuilder();
             mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
@@ -662,14 +701,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const button = target.closest('.delete-btn');
             const index = parseInt(button.dataset.index, 10);
             if (!confirm('Cancellare la voce?')) return;
-            if (button.dataset.type === 'builder') {
+
+            const itemToDelete = datiGiornalieri.log[index];
+
+            if (button.dataset.type === 'builder') { // Cancellazione dal costruttore pasto
                 pastoInCostruzione.splice(index, 1);
                 salvaPastoInCostruzione();
                 renderMealBuilder();
-            } else {
+            } else { // Cancellazione dal diario giornaliero
+                if (itemToDelete.type === 'workout') {
+                    // Sottrai le calorie dell'allenamento dal totale giornaliero prima di eliminarlo
+                    datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) - (itemToDelete.cal || 0);
+                    if (datiGiornalieri.workoutCalorie < 0) datiGiornalieri.workoutCalorie = 0; // Assicurati che non vada sotto zero
+                }
                 datiGiornalieri.log.splice(index, 1);
                 aggiornaUI(); 
-                // Salva il giorno DOPO la cancellazione di un elemento
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             }
         } else if (target.closest('.expand-arrow')) {
@@ -677,7 +723,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
                 datiGiornalieri.log[index].isExpanded = !datiGiornalieri.log[index].isExpanded;
                 aggiornaUI(); 
-                // Salva il giorno DOPO l'espansione/collasso
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             }
         }
@@ -734,7 +779,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                         }
                     });
 
-                    // Rimuovi la vecchia chiave dopo la migrazione, se vuoi che sia permanente.
                     localStorage.removeItem('trackerStorico'); 
                     console.log("Migrazione completata. La vecchia chiave 'trackerStorico' è stata rimossa.");
                     alert("Lo storico è stato aggiornato al nuovo formato! Ricarica la pagina per visualizzare tutti i dati.");
@@ -750,13 +794,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
     }
 
 
-    // --- Chiamata alla funzione di migrazione all'avvio dell'app ---
     eseguiMigrazioneStorico();
-
-    // --- Rimosso: window.addEventListener('beforeunload') ---
-    // Il salvataggio ora avviene solo tramite le azioni utente o il pulsante Carica/Salva.
-    
-    // Inizializza l'applicazione
     gestisciAvvioApp();
 });
 </script>
