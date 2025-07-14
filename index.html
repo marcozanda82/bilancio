@@ -187,18 +187,19 @@
         
         #target-adjustment-display {
             position: absolute; /* Posizionamento assoluto per muoverlo */
-            top: 60px; /* Distanza dalla cima del contenitore */
+            top: 40px; /* Regolato per essere sopra il thumb */
             font-size: 1.2em;
             font-weight: bold;
-            color: #333; /* Colore più neutro per il numero */
+            color: #333;
             background-color: #fff;
             padding: 3px 8px;
             border-radius: 5px;
-            white-space: nowrap; /* Evita il wrap del testo */
+            white-space: nowrap;
             transform: translateX(-50%); /* Centra l'elemento stesso */
-            transition: left 0.05s linear; /* Transizione per il movimento orizzontale */
+            /* Removed transition: left 0.05s linear; because it was causing some jerky movement on fast drags */
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             pointer-events: none; /* Permette di cliccare attraverso l'elemento */
+            z-index: 10; /* Assicura che sia sopra lo slider */
         }
         
         .slider-labels {
@@ -443,23 +444,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const max = parseFloat(calorieAdjustmentSlider.max);
         const val = parseFloat(calorieAdjustmentSlider.value);
         
+        // Calcola la percentuale di avanzamento del cursore (0 a 1)
         const percentage = (val - min) / (max - min);
         
-        const sliderWidth = calorieAdjustmentSlider.offsetWidth;
-        const thumbWidth = 24; // Larghezza del thumb dello slider
+        // Ottieni le dimensioni e la posizione reali dello slider e del suo contenitore
+        const sliderRect = calorieAdjustmentSlider.getBoundingClientRect();
+        const containerRect = calorieAdjustmentSlider.parentElement.getBoundingClientRect();
 
-        // Calcola la posizione X del centro del thumb, tenendo conto della larghezza del thumb
-        // e la larghezza del display del valore per centrarlo
-        const displayWidth = targetAdjustmentDisplay.offsetWidth;
-        let positionX = percentage * (sliderWidth - thumbWidth) + (thumbWidth / 2) - (displayWidth / 2);
-        
-        // Limita la posizione per evitare che il numero vada fuori dai bordi dello slider
-        const minPosition = -(thumbWidth / 2); // Il bordo sinistro del thumb quando slider è al min
-        const maxPosition = sliderWidth - (thumbWidth / 2) - displayWidth; // Il bordo destro del thumb quando slider è al max
-        
-        positionX = Math.max(minPosition, Math.min(maxPosition, positionX));
+        // Stima la larghezza effettiva del "track" dello slider (escludendo il "thumb" alle estremità se presente)
+        // La larghezza del thumb è circa 24px (dal CSS)
+        const thumbWidth = 24; 
+        const trackWidth = sliderRect.width - thumbWidth;
 
-        targetAdjustmentDisplay.style.left = `${calorieAdjustmentSlider.offsetLeft + positionX}px`;
+        // Calcola la posizione del centro del thumb rispetto all'inizio del track
+        const thumbCenterPx = (percentage * trackWidth) + (thumbWidth / 2);
+
+        // Posiziona l'elemento `targetAdjustmentDisplay` rispetto al bordo sinistro del suo contenitore
+        // (che è `#calorie-target-slider-container`)
+        // Aggiungi la posizione dello slider all'interno del contenitore, più la posizione calcolata del thumb
+        // Sottrai metà della larghezza del display stesso per centrarlo orizzontalmente sul thumb
+        targetAdjustmentDisplay.style.left = `${(sliderRect.left - containerRect.left) + thumbCenterPx}px`;
+        // La trasformazione translateX(-50%) lo centra ulteriormente
     }
 
 
@@ -485,11 +490,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             consumatoProtAltriPasti += item.prot || 0;
                             consumatoCalAltriPasti += item.cal || 0;
                         });
-                    } else {
+                    } else { 
                         consumatoProtAltriPasti += entry.prot || 0;
                         consumatoCalAltriPasti += entry.cal || 0;
                     }
-                } else if (entry.type === 'single' && entry.mealId !== 'cena') {
+                } else if (entry.type === 'single' && entry.mealId !== 'cena') { 
                      consumatoProtAltriPasti += entry.prot || 0;
                      consumatoCalAltriPasti += entry.cal || 0;
                 }
@@ -544,9 +549,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         caricaGiorno(getTodayString());
         
-        // Logica per preimpostare il selettore del pasto
         const pastiRegistrati = (datiGiornalieri.log || []).filter(entry => entry.type === 'meal');
-        let nextMealType = MEAL_TYPE_SEQUENCE[0]; // Default a Merenda AM
+        let nextMealType = MEAL_TYPE_SEQUENCE[0];
 
         if (pastiRegistrati.length > 0) {
             const ultimoPasto = pastiRegistrati[pastiRegistrati.length - 1];
@@ -556,13 +560,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) {
                 nextMealType = MEAL_TYPE_SEQUENCE[currentIndex + 1];
             } else {
-                // Se l'ultimo pasto è Cena o un tipo non riconosciuto, torna a Merenda AM
                 nextMealType = MEAL_TYPE_SEQUENCE[0];
             }
         }
         mealTypeSelector.value = nextMealType;
 
-        // Salva l'ultima selezione del pasto per la sessione corrente
         localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
     }
 
@@ -856,6 +858,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    mealBuilderSezione.addEventListener('change', (e) => {
+        if (e.target.type === 'checkbox' && e.target.closest('#log-pasto-builder-body')) {
+            const index = parseInt(e.target.dataset.index, 10);
+            if (pastoInCostruzione[index]) {
+                pastoInCostruzione[index].selezionato = e.target.checked;
+                salvaPastoInCostruzione();
+                renderMealBuilder();
+            }
+        } else if (e.target.id === 'meal-type-selector') {
+            localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
+            renderMealBuilder();
+        }
+    });
+
     btnSalvaPasto.addEventListener('click', () => {
         const alimentiSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false);
         if (alimentiSelezionati.length === 0) return alert("Nessun alimento selezionato nel costruttore pasto.");
@@ -877,12 +893,11 @@ document.addEventListener('DOMContentLoaded', () => {
         salvaGiorno(giornoVisualizzato, datiGiornalieri); 
         renderMealBuilder();
 
-        // Logica per preimpostare il prossimo pasto dopo averne salvato uno
         const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
         if (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) {
             mealTypeSelector.value = MEAL_TYPE_SEQUENCE[currentIndex + 1];
         } else {
-            mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0]; // Torna a Merenda AM se è l'ultimo pasto o non riconosciuto
+            mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
         }
         localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
     });
