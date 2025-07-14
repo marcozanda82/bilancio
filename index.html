@@ -94,6 +94,20 @@
         </div>
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi</h2>
+            <div id="form-allenamento" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                <h3>Registra Allenamento</h3>
+                <div>
+                    <label for="workout-type">Tipo di Allenamento</label>
+                    <input type="text" id="workout-type" placeholder="Es. Forza, Cardio, HIIT">
+                </div>
+                <div>
+                    <label for="workout-calories-burned">Calorie Bruciate (stimate)</label>
+                    <input type="number" id="workout-calories-burned" min="0" value="0">
+                </div>
+                <button id="btn-salva-allenamento">Salva Allenamento</button>
+            </div>
+            ```
+**Nota:** La riga `<p>Workout: <span id="workout-calories-totali">0</span> kcal</p>` è già presente nel tuo `index.html` (riga 100 nello screenshot). La nuova sezione `form-allenamento` andrà *prima* di questa riga.
             <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
             <progress id="progress-proteine" class="macro-progress" value="0"></progress>
             <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
