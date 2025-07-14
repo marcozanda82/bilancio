@@ -188,13 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let foodDatabase = {};
     let pastoInCostruzione = [];
     const PIANO_SETTIMANALE = {
-        0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, // Domenica
-        1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, // Lunedì
-        2: { tipo: '💪 Forza (Mantenimento)', cal: 2400, prot: 140 }, // Martedì
-        3: { tipo: '🏃 Cardio (Deficit)', cal: 1900, prot: 120 }, // Mercoledì
-        4: { tipo: '🏋️ Forza (Mantenimento)', cal: 2400, prot: 140 }, // Giovedì
-        5: { tipo: '🏃 Cardio (Deficit)', cal: 1900, prot: 120 }, // Venerdì
-        6: { tipo: '🥗 Mantenimento (Free)', cal: 1700, prot: 110 }  // Sabato
+        0: { tipo: '💧 Riposo (Deficit)', cal_base: 1700, prot: 110 }, // Domenica
+        1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Lunedì - Base 2300 kcal
+        2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Martedì - Base 2300 kcal
+        3: { tipo: '🏃 Cardio (Deficit)', cal_base: 1900, prot: 120 }, // Mercoledì
+        4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Giovedì - Base 2300 kcal
+        5: { tipo: '🏃 Cardio (Deficit)', cal_base: 1900, prot: 120 }, // Venerdì
+        6: { tipo: '🥗 Mantenimento (Free)', cal_base: 1700, prot: 110 }  // Sabato
     };
     const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000 };
 
@@ -275,7 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
         }
         
+        // Inizializza con un oggetto vuoto se non è stato trovato nulla
+        // Assicurati che workoutCalorie sia sempre definito, anche se 0
         datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
+        if (typeof datiGiornalieri.workoutCalorie === 'undefined') {
+            datiGiornalieri.workoutCalorie = 0;
+        }
         
         aggiornaUI();
         console.log(`Caricato il giorno: ${giornoVisualizzato}`); 
@@ -289,7 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // L'obiettivo calorico ora include le calorie bruciate con l'allenamento
         const obiettivoProtTotale = pianoDelGiorno.prot;
-        const obiettivoCalTotale = pianoDelGiorno.cal + (datiGiornalieri.workoutCalorie || 0); // Aggiungi le calorie bruciate
+        // Usa cal_base dal piano settimanale e aggiungi le calorie bruciate nell'allenamento
+        const obiettivoCalTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
 
         let obiettivoPastoProt = 0;
         let obiettivoPastoCal = 0;
@@ -299,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let consumatoCalAltriPasti = 0;
 
             (datiGiornalieri.log || []).forEach(entry => {
-                // Considera solo i pasti che non sono la cena o che non sono allenamenti
+                // Considera solo i pasti (e non gli allenamenti) che non sono la cena
                 if (entry.type === 'meal' && entry.mealId && entry.mealId !== 'cena') {
                     if (entry.items) {
                         entry.items.forEach(item => {
@@ -378,7 +384,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataVisualizzata = new Date(giornoVisualizzato);
         const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
         
-        const obiettivoCalorieConWorkout = pianoDelGiorno.cal + (datiGiornalieri.workoutCalorie || 0);
+        // Calcola l'obiettivo calorico tenendo conto delle calorie bruciate con l'allenamento
+        const obiettivoCalorieConWorkout = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
         const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieConWorkout, ...OBIETTIVI_MICRO };
         
         titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
@@ -477,6 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (entry.type === 'workout') { // Gestisci l'elemento workout
                 const riga = logBody.insertRow();
+                // Notare che le colonne qta, prot, e micronutrienti non hanno senso per un workout, quindi rimangono vuote
                 riga.innerHTML = `
                     <td>${entry.desc}</td>
                     <td></td> 
@@ -490,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             else { // Renderizza gli item di tipo 'single'
                 const riga = logBody.insertRow();
-                riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;`;
+                riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
             }
         });
     }
@@ -549,14 +557,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const existingFood = foodDatabase[desc.toLowerCase()];
         if (existingFood) {
-            p100 = p100 || existingFood.prot || 0;
-            k100 = k100 || existingFood.kcal || 0;
-            mg100 = mg100 || existingFood.mg || 0;
-            k100_mg = k100_mg || existingFood.k || 0;
-            vitc100 = existingFood.vitc || 0; // Utilizza sempre il valore del DB se esiste, altrimenti 0
-            ca100 = existingFood.ca || 0;     // Utilizza sempre il valore del DB se esiste, altrimenti 0
+            // Se i campi input sono vuoti, usa i valori del database
+            p100 = (builderProt.value === '') ? existingFood.prot || 0 : p100;
+            k100 = (builderKcal.value === '') ? existingFood.kcal || 0 : k100;
+            mg100 = (builderMg.value === '') ? existingFood.mg || 0 : mg100;
+            k100_mg = (builderK.value === '') ? existingFood.k || 0 : k100_mg;
+            vitc100 = (builderVitC.value === '') ? existingFood.vitc || 0 : vitc100;
+            ca100 = (builderCa.value === '') ? existingFood.ca || 0 : ca100;
         }
 
+        // Aggiorna il database con i valori finali usati
         foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
         salvaFoodDatabase();
         aggiornaDatalist();
@@ -590,13 +600,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const workoutEntry = {
             type: 'workout',
             desc: desc,
-            cal: calories // Le calorie sono l'unico dato significativo per l'allenamento
+            cal: calories 
         };
 
         if (!datiGiornalieri.log) datiGiornalieri.log = [];
         datiGiornalieri.log.push(workoutEntry);
         
-        // Aggiungi le calorie dell'allenamento al totale giornaliero
         datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
 
         aggiornaUI();
