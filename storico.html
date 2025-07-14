@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Costanti per il piano settimanale (COPIA ESATTAMENTE DA INDEX.HTML PER CONSISTENZA)
     const PIANO_SETTIMANALE = {
         0: { tipo: '💧 Riposo (Deficit)', cal: 1700, prot: 110 }, // Domenica
-        1: { tipo: '🔥 Forza (Mantenimento)', cal: 2400, prot: 140 }, // Lunedì
+        1: { tipo: '🔥 Forza (Mantenimento)', cal: 2300, prot: 140 }, // Lunedì: Modificato da 2400 a 2300 per allinearsi all'index.html
         2: { tipo: '💪 Forza (Mantenimento)', cal: 2400, prot: 140 }, // Martedì
         3: { tipo: '🏃 Cardio (Deficit)', cal: 1900, prot: 120 }, // Mercoledì
         4: { tipo: '🏋️ Forza (Mantenimento)', cal: 2400, prot: 140 }, // Giovedì
@@ -170,9 +170,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const giornoSettimana = dataDelGiorno.getDay(); // 0 = Domenica, 6 = Sabato
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1]; // Fallback al Lunedì
             
-            // Calcolo del Deficit/Surplus (Calorie Assunte - (Obiettivo dal Piano + Calorie Workout))
-            // Questo ora riflette il vero deficit energetico rispetto all'obiettivo giornaliero più il dispendio da workout
-            const deficitEffettivo = totaliGiorno.calorie - (pianoDelGiorno.cal + workoutCalories);
+            // Recupare l'aggiustamento calorico per questo giorno specifico dallo storico
+            // Assicurati che 'giorno.calorieAdjustment' esista e sia corretto nei dati salvati
+            const calorieAdjustment = giorno.calorieAdjustment || 0; // Se presente nel log del giorno
+
+            // Calcola l'obiettivo calorico TOTALE per questo giorno, replicando la logica dell'index.html
+            // Obiettivo: base + workout + aggiustamento_manuale
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + calorieAdjustment;
+
+            // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
+            const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo); // Arrotonda all'intero più vicino
 
             // Calcolo della variazione di grasso
@@ -211,8 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     scoreMuscolo--; // Indice negativo per la massa muscolare
                 }
             }
-            // La vecchia condizione "deficitArrotondato > 500 && pianoDelGiorno.tipo.includes('Forza')" è stata rimossa
-            // perché si riferiva a un surplus eccessivo, mentre ora l'attenzione è sul deficit massimo.
 
             // Determinazione del simbolo finale
             if(scoreMuscolo > 0) {
