@@ -20,7 +20,7 @@
         #form-allenamento button { background-color: #2e7d32; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
         .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        .sync-button-container { text-align: center; margin-top: 20px; } /* Moved to bottom, centered */
+        .sync-button-container { text-align: center; margin-top: 20px; }
         .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
@@ -92,9 +92,9 @@
             border-radius: 5px;
         }
         /* Colori per lo stato */
-        .balance-deficit { background-color: #ffebee; color: #d32f2f; } /* Light Red */
-        .balance-surplus { background-color: #e8f5e9; color: #2e7d32; } /* Light Green */
-        .balance-even { background-color: #e3f2fd; color: #1976d2; }   /* Light Blue */
+        .balance-deficit { background-color: #ffebee; color: #d32f2f; }
+        .balance-surplus { background-color: #e8f5e9; color: #2e7d32; }
+        .balance-even { background-color: #e3f2fd; color: #1976d2; }
 
         /* Stili per l'area allenamento a scomparsa */
         .collapsible-header {
@@ -116,17 +116,17 @@
             transition: transform 0.3s ease;
         }
         .collapsible-content {
-            display: none; /* Inizialmente nascosto */
+            display: none;
             overflow: hidden;
-            transition: max-height 0.3s ease-out; /* Per una transizione più fluida */
-            max-height: 0; /* Inizialmente zero per transizione */
+            transition: max-height 0.3s ease-out;
+            max-height: 0;
         }
         .collapsible-content.expanded {
-            display: block; /* Mostra il contenuto */
-            max-height: 500px; /* Valore sufficientemente grande per contenere il contenuto */
+            display: block;
+            max-height: 500px;
         }
         .collapsible-header.expanded .arrow {
-            transform: rotate(90deg); /* Ruota la freccia quando espanso */
+            transform: rotate(90deg);
         }
 
         /* Stili per il regolatore deficit/surplus */
@@ -142,13 +142,13 @@
             padding: 5px 12px;
             font-size: 1.2em;
             border-radius: 5px;
-            background-color: #4CAF50; /* Green for plus */
+            background-color: #4CAF50;
             color: white;
             border: none;
             cursor: pointer;
         }
         #calorie-adjuster button.minus {
-            background-color: #f44336; /* Red for minus */
+            background-color: #f44336;
         }
         #calorie-adjuster input[type="number"] {
             width: 80px;
@@ -157,7 +157,7 @@
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            -moz-appearance: textfield; /* Remove arrows in Firefox */
+            -moz-appearance: textfield;
         }
         /* Remove arrows in Chrome, Safari, Edge */
         #calorie-adjuster input::-webkit-outer-spin-button,
@@ -177,21 +177,21 @@
             gap: 10px;
             margin-top: 20px;
             padding: 15px;
-            background-color: #e0f2f7; /* Light blue background */
+            background-color: #e0f2f7;
             border: 1px solid #b2ebf2;
             border-radius: 8px;
-            flex-wrap: wrap; /* Allow buttons to wrap */
+            flex-wrap: wrap;
         }
         .cloud-sync-section button {
-            flex: 1 1 auto; /* Allow buttons to grow and shrink, and wrap */
-            min-width: 150px; /* Minimum width for buttons */
-            margin-bottom: 5px; /* Spacing between wrapped buttons */
+            flex: 1 1 auto;
+            min-width: 150px;
+            margin-bottom: 5px;
         }
         .cloud-sync-section #btn-upload-manual {
-            background-color: #00796b; /* Darker Teal */
+            background-color: #00796b;
         }
         .cloud-sync-section #btn-download-manual {
-            background-color: #e64a19; /* Orange-Red */
+            background-color: #e64a19;
         }
         .cloud-sync-status {
             width: 100%;
@@ -351,7 +351,7 @@
         // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
         // GLI STESSI CHE HAI MESSO IN sync.html
         // ************************************************************
-       const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
   authDomain: "mio-tracker.firebaseapp.com",
   databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
@@ -373,7 +373,7 @@
         // Dichiarazione delle variabili Firebase qui per renderle globali nel modulo
         let db; 
         let auth; 
-        let firebaseApp; // Questa variabile deve essere dichiarata qui
+        let firebaseApp; 
         let currentUserUID = null; 
 
         const PIANO_SETTIMANALE = {
@@ -400,8 +400,7 @@
 
         const MEAL_TYPE_SEQUENCE = ['merenda1', 'pranzo', 'merenda2', 'cena'];
 
-        // Chiavi di localStorage da considerare per la sincronizzazione cloud
-        const LOCAL_STORAGE_SYNC_KEYS = ['trackerFoodDatabase', 'trackerPesate', 'trackerMealType', 'trackerPastoInCostruzione', 'lastMealTypeSelected_' + getTodayString()];
+        const LOCAL_STORAGE_SYNC_KEYS = ['trackerFoodDatabase', 'trackerPesate', 'trackerMealType', 'trackerPastoInCostruzione'];
 
 
         // --- ELEMENTI DEL DOM ---
@@ -453,12 +452,12 @@
         
         function salvaFoodDatabase() { 
             localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); 
-            saveAllTrackerDataToCloud(); // <-- Trigger cloud save
+            saveAllTrackerDataToCloud(); 
         }
         
         function salvaPastoInCostruzione() { 
             localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); 
-            saveAllTrackerDataToCloud(); // <-- Trigger cloud save
+            saveAllTrackerDataToCloud(); 
         }
         
         function salvaGiorno(dataDaSalvare, datiDaSalvare) {
@@ -467,7 +466,7 @@
             }
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
             console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
-            saveAllTrackerDataToCloud(); // <-- Trigger cloud save
+            saveAllTrackerDataToCloud(); 
         }
         
         function caricaGiorno(data) {
@@ -857,7 +856,7 @@
                 }
             } else if (e.target.id === 'meal-type-selector') {
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
-                saveAllTrackerDataToCloud(); // <-- Trigger cloud save for this specific key
+                // Non chiamiamo saveAllTrackerDataToCloud qui, lo fa salvaPastoInCostruzione()
                 renderMealBuilder();
             }
         });
@@ -890,7 +889,7 @@
                 mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
-            saveAllTrackerDataToCloud(); // <-- Trigger cloud save for this specific key
+            // Non chiamiamo saveAllTrackerDataToCloud qui, lo fa salvaPastoInCostruzione()
         });
 
         document.body.addEventListener('click', (e) => {
@@ -919,7 +918,7 @@
                     mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
                 }
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
-                saveAllTrackerDataToCloud(); // <-- Trigger cloud save for this specific key
+                // Non chiamiamo saveAllTrackerDataToCloud qui, lo fa salvaPastoInCostruzione()
             } else if (target.closest('.delete-btn')) {
                 const button = target.closest('.delete-btn');
                 const index = parseInt(button.dataset.index, 10);
@@ -1044,8 +1043,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         async function saveAllTrackerDataToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
-                 // console.warn("Non autenticato o Firebase non disponibile per il salvataggio cloud.");
-                 return; // Non mostrare un alert qui, dato che i pulsanti sono disabilitati se non loggati
+                 return; 
             }
             
             const dataToUpload = {};
@@ -1053,7 +1051,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 // Includi tutti gli storici giornalieri e le altre chiavi di sincronizzazione
-                if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key)) {
+                if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key) || key.startsWith('lastMealTypeSelected_')) { // Aggiunto check per lastMealTypeSelected_
                     try {
                         dataToUpload[key] = JSON.parse(localStorage.getItem(key));
                     } catch (e) {
@@ -1089,7 +1087,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     // Pulisci solo le chiavi di localStorage che gestiamo per evitare residui
                     for (let i = 0; i < localStorage.length; i++) {
                         const key = localStorage.key(i);
-                        if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key)) {
+                        if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key) || key.startsWith('lastMealTypeSelected_')) { // Aggiunto check per lastMealTypeSelected_
                             localStorage.removeItem(key);
                         }
                     }
@@ -1101,7 +1099,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                         }
                     }
                     alert("Download completato! Ricarica la pagina per vedere le modifiche.");
-                    location.reload(); // Ricarica la pagina per applicare i dati locali appena scaricati
+                    location.reload(); 
                 } else {
                     alert("Nessun dato trovato sul cloud per questo utente.");
                 }
@@ -1111,7 +1109,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        // Aggiungi event listener per i nuovi pulsanti manuali
         btnUploadManual.addEventListener('click', saveAllTrackerDataToCloud);
         btnDownloadManual.addEventListener('click', loadAllTrackerDataFromCloud);
 
@@ -1153,12 +1150,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
 
         eseguiMigrazioneStorico();
-        gestisciAvvioApp(); // Inizializza l'app con i dati locali
+        gestisciAvvioApp(); 
         
-        // Disabilita inizialmente i pulsanti di sincronizzazione cloud
         cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
 
-        // Modifica del link "Sincronizza con il Cloud"
         document.querySelector('.sync-button-container a').href = "sync.html";
         document.querySelector('.sync-button-container a').textContent = "☁️ Gestisci Account Cloud";
 
