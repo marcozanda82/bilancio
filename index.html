@@ -299,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let consumatoCalAltriPasti = 0;
 
             (datiGiornalieri.log || []).forEach(entry => {
+                // Considera solo i pasti che non sono la cena o che non sono allenamenti
                 if (entry.type === 'meal' && entry.mealId && entry.mealId !== 'cena') {
                     if (entry.items) {
                         entry.items.forEach(item => {
@@ -377,7 +378,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataVisualizzata = new Date(giornoVisualizzato);
         const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
         
-        // Calcola l'obiettivo calorico tenendo conto delle calorie bruciate con l'allenamento
         const obiettivoCalorieConWorkout = pianoDelGiorno.cal + (datiGiornalieri.workoutCalorie || 0);
         const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieConWorkout, ...OBIETTIVI_MICRO };
         
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     totali.vitc += item.vitc || 0;
                     totali.ca += item.ca || 0;
                 });
-            } else { 
+            } else if (entry.type === 'single') { 
                 totali.proteine += entry.prot || 0;
                 totali.calorie += entry.cal || 0;
                 totali.mg += entry.mg || 0;
@@ -402,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totali.vitc += entry.vitc || 0;
                 totali.ca += entry.ca || 0;
             }
+            // Gli allenamenti non contribuiscono ai micronutrienti o proteine ingerite
         });
         
         datiGiornalieri.proteine = totali.proteine;
@@ -412,14 +413,14 @@ document.addEventListener('DOMContentLoaded', () => {
         datiGiornalieri.ca = totali.ca;
 
         spanObiettivoProteine.textContent = OBIETTIVI.prot;
-        spanObiettivoCalorie.textContent = OBIETTIVI.cal; // Obiettivo calorico aggiornato
+        spanObiettivoCalorie.textContent = OBIETTIVI.cal; 
         spanTotaleProteine.textContent = totali.proteine.toFixed(1);
         spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
         spanTotaleMg.textContent = totali.mg.toFixed(1);
         spanTotaleK.textContent = totali.k.toFixed(0);
         spanTotaleVitC.textContent = totali.vitc.toFixed(1);
         spanTotaleCa.textContent = totali.ca.toFixed(1);
-        spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie || 0;
+        spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; // Mostra le calorie totali del workout
 
         progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
         progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
@@ -552,8 +553,8 @@ document.addEventListener('DOMContentLoaded', () => {
             k100 = k100 || existingFood.kcal || 0;
             mg100 = mg100 || existingFood.mg || 0;
             k100_mg = k100_mg || existingFood.k || 0;
-            vitc100 = vitc100 || existingFood.vitc || 0;
-            ca100 = ca100 || existingFood.ca || 0;
+            vitc100 = existingFood.vitc || 0; // Utilizza sempre il valore del DB se esiste, altrimenti 0
+            ca100 = existingFood.ca || 0;     // Utilizza sempre il valore del DB se esiste, altrimenti 0
         }
 
         foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
@@ -589,13 +590,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const workoutEntry = {
             type: 'workout',
             desc: desc,
-            cal: calories
+            cal: calories // Le calorie sono l'unico dato significativo per l'allenamento
         };
 
         if (!datiGiornalieri.log) datiGiornalieri.log = [];
         datiGiornalieri.log.push(workoutEntry);
         
-        // Aggiorna il totale delle calorie bruciate con l'allenamento per il giorno corrente
+        // Aggiungi le calorie dell'allenamento al totale giornaliero
         datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
 
         aggiornaUI();
@@ -675,8 +676,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.closest('.edit-btn')) {
             const index = parseInt(target.closest('.edit-btn').dataset.index, 10);
             const itemToEdit = datiGiornalieri.log[index];
-            // Non permettere di editare gli allenamenti tramite questa funzione
-            if (!itemToEdit || itemToEdit.type === 'workout' || !confirm("Vuoi modificare questa voce? Verrà spostata nel 'Costruttore Pasto'.")) return;
+            // Non permettere di editare gli allenamenti o gli elementi "single" tramite questa funzione
+            if (!itemToEdit || itemToEdit.type === 'workout' || itemToEdit.type === 'single' || !confirm("Vuoi modificare questa voce? Verrà spostata nel 'Costruttore Pasto'.")) return;
             
             pastoInCostruzione = [];
 
@@ -704,15 +705,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const itemToDelete = datiGiornalieri.log[index];
 
-            if (button.dataset.type === 'builder') { // Cancellazione dal costruttore pasto
+            if (button.dataset.type === 'builder') { 
                 pastoInCostruzione.splice(index, 1);
                 salvaPastoInCostruzione();
                 renderMealBuilder();
-            } else { // Cancellazione dal diario giornaliero
+            } else { 
                 if (itemToDelete.type === 'workout') {
-                    // Sottrai le calorie dell'allenamento dal totale giornaliero prima di eliminarlo
                     datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) - (itemToDelete.cal || 0);
-                    if (datiGiornalieri.workoutCalorie < 0) datiGiornalieri.workoutCalorie = 0; // Assicurati che non vada sotto zero
+                    if (datiGiornalieri.workoutCalorie < 0) datiGiornalieri.workoutCalorie = 0; 
                 }
                 datiGiornalieri.log.splice(index, 1);
                 aggiornaUI(); 
