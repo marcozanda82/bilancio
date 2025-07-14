@@ -20,7 +20,7 @@
         #form-allenamento button { background-color: #2e7d32; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
         .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        .sync-button-container { text-align: center; margin-top: 20px; } /* Moved to bottom, centered */
+        .sync-button-container { text-align: center; margin-top: 20px; }
         .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
@@ -428,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof datiGiornalieri.calorieAdjustment === 'undefined') datiGiornalieri.calorieAdjustment = 0;
 
         calorieAdjustmentSlider.value = datiGiornalieri.calorieAdjustment;
-        updateSliderDisplay(); // Chiamiamo la nuova funzione per aggiornare posizione e testo
+        updateSliderDisplay(); 
         
         aggiornaUI();
         console.log(`Caricato il giorno: ${giornoVisualizzato}`); 
@@ -439,28 +439,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const sliderValue = parseFloat(calorieAdjustmentSlider.value);
         targetAdjustmentDisplay.textContent = `${sliderValue} kcal`;
 
-        // Calcola la posizione del thumb per posizionare il numero sopra
         const min = parseFloat(calorieAdjustmentSlider.min);
         const max = parseFloat(calorieAdjustmentSlider.max);
         const val = parseFloat(calorieAdjustmentSlider.value);
         
-        // Percentuale della posizione del thumb (0 a 1)
         const percentage = (val - min) / (max - min);
         
-        // Larghezza del thumb (stimata, o misurata)
-        const thumbWidth = 24; // Da CSS
+        // La larghezza effettiva della traccia dello slider, tenendo conto del padding o margini
+        const sliderRect = calorieAdjustmentSlider.getBoundingClientRect();
+        const sliderWidth = sliderRect.width;
+
+        // Si assume un thumb di 24px di larghezza come da CSS
+        const thumbWidth = 24; 
         
-        // Larghezza totale della traccia dello slider
-        const sliderWidth = calorieAdjustmentSlider.offsetWidth;
+        // Calcola la posizione X per il centro del thumb rispetto all'inizio del *slider track*
+        // Quindi dobbiamo convertire questa posizione relativa al *slider track* in posizione relativa
+        // all'elemento genitore (`#calorie-target-slider-container`)
+        const trackLeftOffset = (sliderWidth * percentage); // Posizione del centro del thumb rispetto all'inizio della track virtuale
         
-        // Posizione in pixel lungo la traccia
-        // offsetLeft è la posizione del slider rispetto al suo contenitore
-        // (sliderWidth - thumbWidth) è la larghezza effettiva su cui il thumb può muoversi
-        // (thumbWidth / 2) è per centrare il valore sul thumb
-        const thumbPositionX = percentage * (sliderWidth - thumbWidth) + (thumbWidth / 2);
+        // Posiziona il display del valore.
+        // `sliderRect.left` è la posizione dello slider rispetto al viewport.
+        // `targetAdjustmentDisplay.parentElement.getBoundingClientRect().left` è la posizione del contenitore.
+        // Dobbiamo trovare la posizione relativa del thumb rispetto al contenitore dello slider.
+        const containerLeft = targetAdjustmentDisplay.parentElement.getBoundingClientRect().left;
+        const sliderLeft = calorieAdjustmentSlider.getBoundingClientRect().left;
+
+        // La posizione del centro del thumb all'interno del contenitore del range
+        const positionInContainer = (sliderLeft - containerLeft) + (percentage * sliderWidth);
         
-        // Posiziona il display del valore
-        targetAdjustmentDisplay.style.left = `${calorieAdjustmentSlider.offsetLeft + thumbPositionX}px`;
+        // Applica questa posizione al left del display, poi sottrai metà della sua larghezza per centrarlo
+        targetAdjustmentDisplay.style.left = `${positionInContainer}px`;
     }
 
 
@@ -469,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const giornoSettimana = dataVisualizzata.getDay();
         const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
-        // Obiettivo calorico base + workout + aggiustamento da slider
         const obiettivoProtTotale = pianoDelGiorno.prot;
         const obiettivoCalTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
 
@@ -584,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totali.vitc += entry.vitc || 0;
                 totali.ca += entry.ca || 0;
             }
+            // Gli allenamenti non contribuiscono ai micronutrienti o proteine ingerite, solo al total workout calorie
         });
         
         datiGiornalieri.proteine = totali.proteine;
@@ -611,17 +619,19 @@ document.addEventListener('DOMContentLoaded', () => {
         progressCa.max = OBIETTIVI.ca; progressCa.value = totali.ca;
 
         logBody.innerHTML = ''; 
+        // L'errore era qui: l'iterazione `forEach` precedente era scorretta
+        // e non riusciva a distinguere correttamente i tipi di entry
         (datiGiornalieri.log || []).forEach((entry, index) => {
+            let riga = logBody.insertRow();
             if (entry.type === 'meal') {
-                const rigaPasto = logBody.insertRow();
-                rigaPasto.classList.add('meal-group-row');
+                riga.classList.add('meal-group-row');
                 const totaliPastoCorrente = (entry.items || []).reduce((acc, item) => {
                     acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0;
                     acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
                     return acc;
                 }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0 });
 
-                rigaPasto.innerHTML = `
+                riga.innerHTML = `
                     <td>
                         <span class="expand-arrow" data-index="${index}">${entry.isExpanded ? '▼' : '▶'}</span>
                         ${entry.desc}
@@ -656,8 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         `;
                     });
                 }
-            } else if (entry.type === 'workout') { 
-                const riga = logBody.insertRow();
+            } else if (entry.type === 'workout') {
                 riga.innerHTML = `
                     <td>${entry.desc}</td>
                     <td></td> 
@@ -668,15 +677,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="delete-btn" data-index="${index}">&times;</button>
                     </td>
                 `;
-            }
-            else { 
-                const riga = logBody.insertRow();
+            } else { // type === 'single'
                 riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
             }
         });
 
         // Calcolo del deficit/surplus per l'indicatore testuale
-        // Qui usiamo l'obiettivo base + workout, ignorando l'adjustment dello slider
         const targetCaloriesForBalance = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
         const currentCalories = totali.calorie;
         const calorieDifferenceForBalance = currentCalories - targetCaloriesForBalance; 
@@ -722,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
         mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
         mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
-        mealProgressCal.max = obiettiviPasti.targetCal;
+        mealProgressCal.max = obiettiviPasto.targetCal;
         mealProgressCal.value = obiettiviPasto.currentCal;
 
         pastoInCostruzione.forEach((item, index) => { 
@@ -793,8 +799,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Slider per l'aggiustamento calorico
     calorieAdjustmentSlider.addEventListener('input', () => {
         datiGiornalieri.calorieAdjustment = parseFloat(calorieAdjustmentSlider.value);
-        updateSliderDisplay(); // Aggiorna il display del valore
-        aggiornaUI(); // Aggiorna l'intera UI
+        updateSliderDisplay(); 
+        aggiornaUI(); 
         salvaGiorno(giornoVisualizzato, datiGiornalieri); 
     });
 
