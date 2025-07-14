@@ -331,7 +331,7 @@
             <div class="warning" style="margin-top: 15px;">
                 <strong>Attenzione:</strong><br>
                 - <strong>Carica:</strong> Sostituisce i dati sul cloud con quelli che hai su questo dispositivo.<br>
-                - <strong>Scarica:</strong> Sostituisce i dati su questo dispositivo con quelli salvati sul cloud.
+                - <strong>Scarica:k</strong> Sostituisce i dati su questo dispositivo con quelli salvati sul cloud.
             </div>
         </div>
         <div class="sync-button-container">
@@ -345,20 +345,20 @@
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"; // Importa onAuthStateChanged
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
         // ************************************************************
         // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
         // GLI STESSI CHE HAI MESSO IN sync.html
         // ************************************************************
         const firebaseConfig = {
-            apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",           // Es: "AIzaSyC0xxxxxxxxxxxxxxxxxxxxxxxxx"
-            authDomain: "mio-tracker.firebaseapp.com", // Es: "tracker-nutrizionale-12345.firebaseapp.com"
-            databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app", // Es: "https://tracker-nutrizionale-12345-default-rtdb.europe-west1.firebasedatabase.app"
-            projectId: "mio-tracker",     // Es: "tracker-nutrizionale-12345"
-            storageBucket: "mio-tracker.firebasestorage.app",
-            messagingSenderId: "382993217593",
-            appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+            apiKey: "IL_TUO_API_KEY",           // Es: "AIzaSyC0xxxxxxxxxxxxxxxxxxxxxxxxx"
+            authDomain: "IL_TUO_PROJECT_ID.firebaseapp.com", // Es: "tracker-nutrizionale-12345.firebaseapp.com"
+            databaseURL: "https://IL_TUO_PROJECT_ID-default-rtdb.europe-west1.firebasedatabase.app", // Es: "https://tracker-nutrizionale-12345-default-rtdb.europe-west1.firebasedatabase.app"
+            projectId: "IL_TUO_PROJECT_ID",     // Es: "tracker-nutrizionale-12345"
+            storageBucket: "IL_TUO_PROJECT_ID.appspot.com",
+            messagingSenderId: "IL_TUO_MESSAGING_SENDER_ID",
+            appId: "IL_TUO_APP_ID"
         };
         // ************************************************************
         // FINE CONFIGURAZIONE FIREBASE
@@ -399,7 +399,8 @@
         const MEAL_TYPE_SEQUENCE = ['merenda1', 'pranzo', 'merenda2', 'cena'];
 
         // Chiavi di localStorage da considerare per la sincronizzazione cloud
-        const LOCAL_STORAGE_SYNC_KEYS = ['trackerFoodDatabase', 'trackerPesate', 'trackerMealType']; // 'trackerGiornoCorrente' non serve più se salviamo per data
+        // Abbiamo bisogno di tutte le chiavi che non iniziano con trackerStorico_
+        const LOCAL_STORAGE_SYNC_KEYS = ['trackerFoodDatabase', 'trackerPesate', 'trackerMealType', 'trackerPastoInCostruzione', 'lastMealTypeSelected_' + getTodayString()];
 
 
         // --- ELEMENTI DEL DOM ---
@@ -417,7 +418,7 @@
         const btnCaricaGiorno = document.getElementById('btn-carica-giorno'), dataCaricamentoInput = document.getElementById('data-caricamento');
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
         const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
-        const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document="trackerVitC", spanTotaleCa = document.getElementById('totale-ca');
+        const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
         const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
         const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
@@ -440,22 +441,25 @@
         const btnCalorieMinus = document.getElementById('btn-calorie-minus');
         const btnCaloriePlus = document.getElementById('btn-calorie-plus');
 
-        // NUOVI ELEMENTI per i pulsanti di sincronizzazione manuale
         const btnUploadManual = document.getElementById('btn-upload-manual');
         const btnDownloadManual = document.getElementById('btn-download-manual');
         const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
-        const cloudSyncSection = document.querySelector('.cloud-sync-section'); // Per abilitare/disabilitare i pulsanti
+        const cloudSyncSection = document.querySelector('.cloud-sync-section');
 
 
         // --- FUNZIONI DI GESTIONE DATI ---
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
         
-        // La funzione salvaFoodDatabase ora viene chiamata anche da saveAllTrackerDataToCloud
-        function salvaFoodDatabase() { localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); }
-        function salvaPastoInCostruzione() { localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); }
+        function salvaFoodDatabase() { 
+            localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); 
+            saveAllTrackerDataToCloud(); // <-- Trigger cloud save
+        }
         
-        // Funzione per salvare i dati di un giorno specifico (o il giorno corrente)
-        // Questa ora salva solo a livello locale, la sincronizzazione cloud avviene separatamente
+        function salvaPastoInCostruzione() { 
+            localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); 
+            saveAllTrackerDataToCloud(); // <-- Trigger cloud save
+        }
+        
         function salvaGiorno(dataDaSalvare, datiDaSalvare) {
             if (!datiDaSalvare) {
                 datiDaSalvare = datiGiornalieri;
@@ -520,8 +524,8 @@
                 obiettivoPastoProt = Math.round(obiettivoProtTotaleGiornaliero - consumatoProtAltriPasti);
                 obiettivoPastoCal = Math.round(obiettivoCalTotaleGiornaliero - consumatoCalAltriPasti);
 
-                if (obiettivoPastoProt < 0) objetivoPastoProt = 0;
-                if (obiettivoPastoCal < 0) objetivoPastoCal = 0;
+                if (obiettivoPastoProt < 0) obiettivoPastoProt = 0;
+                if (obiettivoPastoCal < 0) obiettivoPastoCal = 0;
 
             } else {
                 obiettivoPastoProt = Math.round(obiettivoProtTotaleGiornaliero * protRatio);
@@ -537,23 +541,24 @@
             return {
                 currentProt: totaliPastoInCostruzione.prot,
                 targetProt: obiettivoPastoProt,
-                remainingProt: objetivoPastoProt - totaliPastoInCostruzione.prot,
+                remainingProt: obiettivoPastoProt - totaliPastoInCostruzione.prot,
                 
                 currentCal: totaliPastoInCostruzione.cal,
-                targetCal: objetivoPastoCal,
-                remainingCal: objetivoPastoCal - totaliPastoInCostruzione.cal
+                targetCal: obiettivoPastoCal,
+                remainingCal: obiettivoPastoCal - totaliPastoInCostruzione.cal
             };
         }
 
-        // Modificata la logica di avvio per usare caricaGiorno
         function gestisciAvvioApp() {
+            // Carica foodDatabase subito, in quanto è usata per la datalist e non dipende dai dati del giorno corrente
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
             aggiornaDatalist();
 
+            // Carica il pasto in costruzione
             pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
             renderMealBuilder();
 
-            // Carica il giorno corrente
+            // Carica il giorno corrente (con i dati locali o quelli appena scaricati dal cloud)
             caricaGiorno(getTodayString());
             
             const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
@@ -562,6 +567,7 @@
             } else {
                 mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
             }
+            console.log("App avviata con successo.");
         }
 
         function aggiornaUI() {
@@ -744,7 +750,7 @@
                 option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); 
                 foodDatalist.appendChild(option);
             }
-            salvaFoodDatabase(); 
+            // Non chiamare salvaFoodDatabase qui, viene chiamata dalla funzione stessa dopo aver popolato foodDatabase
         }
 
         function creaAlimentoDaInput(isSingle = false) {
@@ -770,7 +776,7 @@
             }
 
             foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
-            salvaFoodDatabase();
+            salvaFoodDatabase(); // Questo salverà anche sul cloud
             aggiornaDatalist();
             
             const foodItem = { 
@@ -837,7 +843,7 @@
             const item = creaAlimentoDaInput(false);
             if (item) {
                 pastoInCostruzione.push(item);
-                salvaPastoInCostruzione();
+                salvaPastoInCostruzione(); 
                 renderMealBuilder();
                 resetInputAlimento();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
@@ -849,11 +855,12 @@
                 const index = parseInt(e.target.dataset.index, 10);
                 if (pastoInCostruzione[index]) {
                     pastoInCostruzione[index].selezionato = e.target.checked;
-                    salvaPastoInCostruzione();
+                    salvaPastoInCostruzione(); 
                     renderMealBuilder();
                 }
             } else if (e.target.id === 'meal-type-selector') {
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
+                saveAllTrackerDataToCloud(); // <-- Trigger cloud save for this specific key
                 renderMealBuilder();
             }
         });
@@ -874,7 +881,7 @@
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             datiGiornalieri.log.push(newMeal);
             pastoInCostruzione = [];
-            salvaPastoInCostruzione();
+            salvaPastoInCostruzione(); 
             aggiornaUI(); 
             salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             renderMealBuilder();
@@ -886,6 +893,7 @@
                 mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
+            saveAllTrackerDataToCloud(); // <-- Trigger cloud save for this specific key
         });
 
         document.body.addEventListener('click', (e) => {
@@ -914,6 +922,7 @@
                     mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
                 }
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
+                saveAllTrackerDataToCloud(); // <-- Trigger cloud save for this specific key
             } else if (target.closest('.delete-btn')) {
                 const button = target.closest('.delete-btn');
                 const index = parseInt(button.dataset.index, 10);
@@ -923,7 +932,7 @@
 
                 if (button.dataset.type === 'builder') { 
                     pastoInCostruzione.splice(index, 1);
-                    salvaPastoInCostruzione();
+                    salvaPastoInCostruzione(); 
                     renderMealBuilder();
                 } else { 
                     if (itemToDelete.type === 'workout') {
@@ -989,11 +998,11 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         });
 
 
-        // --- NUOVE FUNZIONI DI SINCRONIZZAZIONE CLOUD ---
+        // --- FUNZIONI DI SINCRONIZZAZIONE CLOUD ---
 
         // Inizializza Firebase all'avvio dello script
         try {
-            if (!getApps().some(app => app.name === "trackerApp")) { // Usa un nome diverso per l'app per distinguerla da sync.html
+            if (!getApps().some(app => app.name === "trackerApp")) {
                 firebaseApp = initializeApp(firebaseConfig, "trackerApp");
             } else {
                 firebaseApp = getApp("trackerApp");
@@ -1002,7 +1011,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             auth = getAuth(firebaseApp);
             console.log("Firebase inizializzato in index.html");
 
-            // Listener per lo stato di autenticazione per abilitare/disabilitare i pulsanti e mostrare lo stato
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     currentUserUID = user.uid;
@@ -1010,6 +1018,17 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     console.log("Utente autenticato in index.html:", user.email);
+
+                    // Dopo che l'utente è autenticato e l'UI è stata inizializzata con i dati locali,
+                    // tentiamo di scaricare i dati dal cloud senza sovrascrivere se non necessario.
+                    // Chiamiamo loadAllTrackerDataFromCloud (senza alert di conferma, solo con log)
+                    // per un'operazione di "sync in background" iniziale.
+                    // Però per i pulsanti manuali serve la conferma esplicita.
+                    // Quindi qui chiamiamo una versione 'silent' del download o logghiamo solo.
+                    // Per ora, non facciamo un download automatico all'avvio da index.html
+                    // per evitare sovrascritture inaspettate e mantenere il controllo manuale.
+                    // Se l'utente vuole scaricare, userà il pulsante esplicitamente.
+
                 } else {
                     currentUserUID = null;
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato (Accedi da 'Gestisci Account Cloud')";
@@ -1026,21 +1045,51 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
         }
 
-        // Funzione per ottenere il riferimento al database specifico dell'utente
         function getUserDataRef() {
             if (!db || !currentUserUID) {
-                alert("Devi essere autenticato per sincronizzare i dati.");
+                // Non mostrare l'alert qui, viene gestito dal chiamante (pulsanti disabilitati)
                 return null;
             }
-            // Salviamo tutti i dati locali sotto una singola chiave per l'utente autenticato.
-            // Esempio: /users/<UID>/all_tracker_data
-            return ref(db, 'users/' + currentUserUID + '/all_tracker_data/');
+            return ref(db, 'users/' + currentUserUID + '/tracker_data/'); // Percorso più specifico
+        }
+
+        // Salva tutti i dati del tracker sul cloud
+        async function saveAllTrackerDataToCloud() {
+            const dataRef = getUserDataRef();
+            if (!dataRef) {
+                 console.warn("Non autenticato o Firebase non disponibile per il salvataggio cloud.");
+                 return;
+            }
+            
+            const dataToUpload = {};
+            // Raccogli tutti i dati rilevanti dal localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                // Includi tutti gli storici giornalieri e le altre chiavi di sincronizzazione
+                if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key)) {
+                    try {
+                        dataToUpload[key] = JSON.parse(localStorage.getItem(key));
+                    } catch (e) {
+                        console.warn(`Skipping invalid JSON for key ${key} during cloud upload:`, e);
+                    }
+                }
+            }
+            
+            try {
+                await set(dataRef, dataToUpload);
+                console.log("Dati caricati automaticamente sul cloud.");
+            } catch(err) {
+                console.error("Errore durante il caricamento automatico sul cloud:", err);
+            }
         }
 
         // Carica tutti i dati del tracker dal cloud (per i pulsanti manuali)
         async function loadAllTrackerDataFromCloud() {
             const dataRef = getUserDataRef();
-            if (!dataRef) return;
+            if (!dataRef) {
+                alert("Devi essere autenticato per scaricare i dati dal cloud.");
+                return;
+            }
 
             if (!confirm("ATTENZIONE: i dati locali verranno SOVRASCRITTI con quelli dal cloud. Continuare?")) return;
 
@@ -1075,36 +1124,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        // Salva tutti i dati del tracker sul cloud (per i pulsanti manuali)
-        async function saveAllTrackerDataToCloud() {
-            const dataRef = getUserDataRef();
-            if (!dataRef) return;
-
-            if (!confirm("Sei sicuro di voler SOVRASCRIVERE i dati sul cloud con quelli locali?")) return;
-            
-            const dataToUpload = {};
-            // Raccogli tutti i dati rilevanti dal localStorage
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key)) {
-                    try {
-                        dataToUpload[key] = JSON.parse(localStorage.getItem(key));
-                    } catch (e) {
-                        console.warn(`Skipping invalid JSON for key ${key} during manual cloud upload:`, e);
-                    }
-                }
-            }
-            
-            try {
-                await set(dataRef, dataToUpload);
-                alert("Caricamento completato con successo sul cloud!");
-            } catch(err) {
-                alert(`Errore durante il caricamento sul cloud: ${err.message}`);
-                console.error("Manual Upload error:", err);
-            }
-        }
-
-        // Aggiungi event listener per i nuovi pulsanti
+        // Aggiungi event listener per i nuovi pulsanti manuali
         btnUploadManual.addEventListener('click', saveAllTrackerDataToCloud);
         btnDownloadManual.addEventListener('click', loadAllTrackerDataFromCloud);
 
@@ -1153,7 +1173,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
 
         // Modifica del link "Sincronizza con il Cloud"
-        // Ora indirizza a una pagina più generale di gestione account cloud
         document.querySelector('.sync-button-container a').href = "sync.html";
         document.querySelector('.sync-button-container a').textContent = "☁️ Gestisci Account Cloud";
 
