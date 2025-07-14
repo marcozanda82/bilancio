@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF="8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tracker Nutrizionale Definitivo</title>
     <style>
@@ -13,7 +13,7 @@
         #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input[type="text"], input[type="number"], input[type="date"], select, input[type="email"], input[type="password"] { /* Aggiunto input email e password */
+        input[type="text"], input[type="number"], input[type="date"], select, input[type="email"], input[type="password"] {
             width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em;
         }
         button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
@@ -244,7 +244,7 @@
 
         /* Nascondi il tracker finché l'utente non è autenticato */
         #main-tracker-content {
-            display: none;
+            display: none; /* AGGIUNTA QUESTA REGOLA CSS FONDAMENTALE */
         }
         #main-tracker-content.authenticated {
             display: block;
@@ -404,7 +404,6 @@
         // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
         // ************************************************************
         const firebaseConfig = {
-const firebaseConfig = {
   apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
   authDomain: "mio-tracker.firebaseapp.com",
   databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
@@ -622,7 +621,7 @@ const firebaseConfig = {
             pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
             renderMealBuilder();
 
-            caricaGiorno(getTodayString()); // Carica i dati per il giorno corrente
+            caricaGiorno(getTodayString());
             
             const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
             if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
@@ -1107,9 +1106,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
-                    // Anche se non autenticato, carica l'UI con i dati locali (se presenti)
-                    // ma l'utente vedrà solo la sezione di login/registrazione.
-                    initAppUI(); 
+                    initAppUI(); // Carica comunque l'UI con i dati locali per il giorno corrente
+                                  // ma l'utente vedrà solo la sezione di autenticazione.
                 }
             });
 
@@ -1132,8 +1130,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
                 alert("Registrazione completata e accesso effettuato!");
-                // onAuthStateChanged gestirà l'aggiornamento UI
-                userPasswordInput.value = ''; // Pulisci campo password
+                userPasswordInput.value = '';
             } catch (error) {
                 alert(`Errore di registrazione: ${error.message}`);
                 console.error("Registration error:", error);
@@ -1150,8 +1147,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 alert("Accesso effettuato con successo!");
-                // onAuthStateChanged gestirà l'aggiornamento UI
-                userPasswordInput.value = ''; // Pulisci campo password
+                userPasswordInput.value = '';
             } catch (error) {
                 alert(`Errore di accesso: ${error.message}`);
                 console.error("Login error:", error);
@@ -1162,7 +1158,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             try {
                 await signOut(auth);
                 alert("Disconnessione avvenuta.");
-                // onAuthStateChanged gestirà l'aggiornamento UI
             } catch (error) {
                 alert(`Errore durante la disconnessione: ${error.message}`);
                 console.error("Sign out error:", error);
@@ -1286,12 +1281,12 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         }
 
         // L'app viene inizializzata qui, e onAuthStateChanged gestirà la visibilità e il caricamento dei dati
-        eseguiMigrazioneStorico(); // Esegui migrazione locale, non dipende dall'autenticazione
-        // Non chiamare gestisciAvvioApp() o initAppUI() direttamente qui. onAuthStateChanged lo farà.
-
-        // Rimosso il vecchio link a sync.html, ora è tutto in index
-        // document.querySelector('.sync-button-container a').href = "sync.html";
-        // document.querySelector('.sync-button-container a').textContent = "☁️ Gestisci Account Cloud";
+        document.addEventListener('DOMContentLoaded', () => {
+            eseguiMigrazioneStorico();
+            // initAppUI() è chiamata da onAuthStateChanged per garantire che l'UI si adatti allo stato auth
+            // I pulsanti sono disabilitati inizialmente via CSS e JS
+            // La gestione dell'autenticazione è ora completamente in questa pagina.
+        });
 
     </script>
 </body>
