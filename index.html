@@ -186,20 +186,21 @@
         }
         
         #target-adjustment-display {
-            position: absolute; /* Posizionamento assoluto per muoverlo */
-            top: 40px; /* Regolato per essere sopra la barra */
-            left: 50%; /* Centra orizzontalmente rispetto al contenitore */
+            position: absolute;
+            top: 40px; 
+            left: 50%; /* Fisso al centro del contenitore */
             transform: translateX(-50%); /* Centra l'elemento stesso */
             font-size: 1.2em;
             font-weight: bold;
-            color: #333; /* Colore più neutro per il numero */
+            color: #333;
             background-color: #fff;
             padding: 3px 8px;
             border-radius: 5px;
-            white-space: nowrap; /* Evita il wrap del testo */
+            white-space: nowrap;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            pointer-events: none; /* Permette di cliccare attraverso l'elemento */
-            z-index: 10; /* Assicura che sia sopra lo slider */
+            pointer-events: none;
+            z-index: 10;
+            /* Rimosso transition: left per eliminare l'inerzia */
         }
         
         .slider-labels {
@@ -781,16 +782,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Aggiungi event listener per prevenire lo scroll sui touch/pointer events
-    calorieAdjustmentSlider.addEventListener('touchmove', (e) => {
-        e.preventDefault(); // Impedisce lo scroll
-    }, { passive: false }); // `passive: false` è necessario per usare preventDefault su touch events
-
-    // Anche per pointer events per una copertura più ampia
-    calorieAdjustmentSlider.addEventListener('pointermove', (e) => {
-        if (e.pointerType === 'touch' || e.pointerType === 'mouse') { // Solo per touch/mouse
-            e.preventDefault();
-        }
-    }, { passive: false });
+    // Questi event listener non sono necessari se il numero non si muove più con il cursore
+    // perché il browser non dovrebbe più interpretare il touch/pointer sul numero come uno scroll.
+    // calorieAdjustmentSlider.addEventListener('touchmove', (e) => {
+    //     e.preventDefault(); 
+    // }, { passive: false });
+    // calorieAdjustmentSlider.addEventListener('pointermove', (e) => {
+    //     if (e.pointerType === 'touch' || e.pointerType === 'mouse') { 
+    //         e.preventDefault();
+    //     }
+    // }, { passive: false });
 
 
     // Aggiorna la posizione del valore dello slider anche al ridimensionamento della finestra
