@@ -445,30 +445,21 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const percentage = (val - min) / (max - min);
         
-        // La larghezza effettiva della traccia dello slider, tenendo conto del padding o margini
-        const sliderRect = calorieAdjustmentSlider.getBoundingClientRect();
-        const sliderWidth = sliderRect.width;
+        const sliderWidth = calorieAdjustmentSlider.offsetWidth;
+        const thumbWidth = 24; // Larghezza del thumb dello slider
 
-        // Si assume un thumb di 24px di larghezza come da CSS
-        const thumbWidth = 24; 
+        // Calcola la posizione X del centro del thumb, tenendo conto della larghezza del thumb
+        // e la larghezza del display del valore per centrarlo
+        const displayWidth = targetAdjustmentDisplay.offsetWidth;
+        let positionX = percentage * (sliderWidth - thumbWidth) + (thumbWidth / 2) - (displayWidth / 2);
         
-        // Calcola la posizione X per il centro del thumb rispetto all'inizio del *slider track*
-        // Quindi dobbiamo convertire questa posizione relativa al *slider track* in posizione relativa
-        // all'elemento genitore (`#calorie-target-slider-container`)
-        const trackLeftOffset = (sliderWidth * percentage); // Posizione del centro del thumb rispetto all'inizio della track virtuale
+        // Limita la posizione per evitare che il numero vada fuori dai bordi dello slider
+        const minPosition = -(thumbWidth / 2); // Il bordo sinistro del thumb quando slider è al min
+        const maxPosition = sliderWidth - (thumbWidth / 2) - displayWidth; // Il bordo destro del thumb quando slider è al max
         
-        // Posiziona il display del valore.
-        // `sliderRect.left` è la posizione dello slider rispetto al viewport.
-        // `targetAdjustmentDisplay.parentElement.getBoundingClientRect().left` è la posizione del contenitore.
-        // Dobbiamo trovare la posizione relativa del thumb rispetto al contenitore dello slider.
-        const containerLeft = targetAdjustmentDisplay.parentElement.getBoundingClientRect().left;
-        const sliderLeft = calorieAdjustmentSlider.getBoundingClientRect().left;
+        positionX = Math.max(minPosition, Math.min(maxPosition, positionX));
 
-        // La posizione del centro del thumb all'interno del contenitore del range
-        const positionInContainer = (sliderLeft - containerLeft) + (percentage * sliderWidth);
-        
-        // Applica questa posizione al left del display, poi sottrai metà della sua larghezza per centrarlo
-        targetAdjustmentDisplay.style.left = `${positionInContainer}px`;
+        targetAdjustmentDisplay.style.left = `${calorieAdjustmentSlider.offsetLeft + positionX}px`;
     }
 
 
@@ -494,11 +485,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             consumatoProtAltriPasti += item.prot || 0;
                             consumatoCalAltriPasti += item.cal || 0;
                         });
-                    } else { 
+                    } else {
                         consumatoProtAltriPasti += entry.prot || 0;
                         consumatoCalAltriPasti += entry.cal || 0;
                     }
-                } else if (entry.type === 'single' && entry.mealId !== 'cena') { 
+                } else if (entry.type === 'single' && entry.mealId !== 'cena') {
                      consumatoProtAltriPasti += entry.prot || 0;
                      consumatoCalAltriPasti += entry.cal || 0;
                 }
@@ -553,12 +544,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         caricaGiorno(getTodayString());
         
-        const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
-        if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
-            mealTypeSelector.value = lastMealTypeSaved;
-        } else {
-            mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
+        // Logica per preimpostare il selettore del pasto
+        const pastiRegistrati = (datiGiornalieri.log || []).filter(entry => entry.type === 'meal');
+        let nextMealType = MEAL_TYPE_SEQUENCE[0]; // Default a Merenda AM
+
+        if (pastiRegistrati.length > 0) {
+            const ultimoPasto = pastiRegistrati[pastiRegistrati.length - 1];
+            const lastMealId = ultimoPasto.mealId;
+            const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(lastMealId);
+            
+            if (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) {
+                nextMealType = MEAL_TYPE_SEQUENCE[currentIndex + 1];
+            } else {
+                // Se l'ultimo pasto è Cena o un tipo non riconosciuto, torna a Merenda AM
+                nextMealType = MEAL_TYPE_SEQUENCE[0];
+            }
         }
+        mealTypeSelector.value = nextMealType;
+
+        // Salva l'ultima selezione del pasto per la sessione corrente
+        localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
     }
 
     // --- FUNZIONE DI AGGIORNAMENTO UI (COMPLETA E CORRETTA) ---
@@ -566,7 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const dataVisualizzata = new Date(giornoVisualizzato);
         const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
         
-        // Obiettivo calorico che include l'aggiustamento dello slider, usato per le barre di progresso
         const obiettivoCaloriePerBarre = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
         const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCaloriePerBarre, ...OBIETTIVI_MICRO };
         
@@ -591,7 +595,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 totali.vitc += entry.vitc || 0;
                 totali.ca += entry.ca || 0;
             }
-            // Gli allenamenti non contribuiscono ai micronutrienti o proteine ingerite, solo al total workout calorie
         });
         
         datiGiornalieri.proteine = totali.proteine;
@@ -619,8 +622,6 @@ document.addEventListener('DOMContentLoaded', () => {
         progressCa.max = OBIETTIVI.ca; progressCa.value = totali.ca;
 
         logBody.innerHTML = ''; 
-        // L'errore era qui: l'iterazione `forEach` precedente era scorretta
-        // e non riusciva a distinguere correttamente i tipi di entry
         (datiGiornalieri.log || []).forEach((entry, index) => {
             let riga = logBody.insertRow();
             if (entry.type === 'meal') {
@@ -703,7 +704,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         calorieBalanceText.textContent = balanceText;
 
-        // Aggiorna la posizione del display del valore dello slider
         updateSliderDisplay();
     }
 
@@ -856,20 +856,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    mealBuilderSezione.addEventListener('change', (e) => {
-        if (e.target.type === 'checkbox' && e.target.closest('#log-pasto-builder-body')) {
-            const index = parseInt(e.target.dataset.index, 10);
-            if (pastoInCostruzione[index]) {
-                pastoInCostruzione[index].selezionato = e.target.checked;
-                salvaPastoInCostruzione();
-                renderMealBuilder();
-            }
-        } else if (e.target.id === 'meal-type-selector') {
-            localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
-            renderMealBuilder();
-        }
-    });
-
     btnSalvaPasto.addEventListener('click', () => {
         const alimentiSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false);
         if (alimentiSelezionati.length === 0) return alert("Nessun alimento selezionato nel costruttore pasto.");
@@ -891,11 +877,12 @@ document.addEventListener('DOMContentLoaded', () => {
         salvaGiorno(giornoVisualizzato, datiGiornalieri); 
         renderMealBuilder();
 
+        // Logica per preimpostare il prossimo pasto dopo averne salvato uno
         const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
         if (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) {
             mealTypeSelector.value = MEAL_TYPE_SEQUENCE[currentIndex + 1];
         } else {
-            mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
+            mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0]; // Torna a Merenda AM se è l'ultimo pasto o non riconosciuto
         }
         localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
     });
