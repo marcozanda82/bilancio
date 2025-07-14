@@ -246,11 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Salva sempre i dati nella chiave specifica del giorno.
-        // Se è il giorno corrente, sarà anche nella chiave del giorno corrente per facilitare il caricamento rapido.
+        // NON salvare più il giorno corrente separatamente qui.
         localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
-        if (dataDaSalvare === getTodayString()) {
-            localStorage.setItem('trackerGiornoCorrente', JSON.stringify({ data: dataDaSalvare, dati: datiDaSalvare }));
-        }
         console.log(`Dati salvati per il giorno: ${dataDaSalvare}`);
     }
     
@@ -260,28 +257,12 @@ document.addEventListener('DOMContentLoaded', () => {
         dataCaricamentoInput.value = data;
 
         let datiTrovati = null;
-        let rawDataFromLocalStorage = null;
-
-        if (data === getTodayString()) { // Se stiamo caricando il giorno corrente
-            rawDataFromLocalStorage = localStorage.getItem('trackerGiornoCorrente');
-            try {
-                const salvataggio = JSON.parse(rawDataFromLocalStorage);
-                if (salvataggio && salvataggio.data === data) {
-                    datiTrovati = salvataggio.dati;
-                }
-            } catch (e) {
-                console.error("Errore nel parsing di trackerGiornoCorrente:", e, "Raw data:", rawDataFromLocalStorage);
-            }
-        } 
+        let rawDataFromLocalStorage = localStorage.getItem(`trackerStorico_${data}`);
         
-        // Se non trovato come giorno corrente, o se è un giorno storico, prova a caricare dalla chiave storica
-        if (!datiTrovati) {
-            rawDataFromLocalStorage = localStorage.getItem(`trackerStorico_${data}`);
-            try {
-                datiTrovati = JSON.parse(rawDataFromLocalStorage);
-            } catch (e) {
-                console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
-            }
+        try {
+            datiTrovati = JSON.parse(rawDataFromLocalStorage);
+        } catch (e) {
+            console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
         }
         
         // Inizializza con un oggetto vuoto se non è stato trovato nulla
@@ -321,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         consumatoProtAltriPasti += entry.prot || 0;
                         consumatoCalAltriPasti += entry.cal || 0;
                     }
-                } else if (entry.type === 'single' && entry.mealId !== 'cena') { // Assicurati che i "single" non siano erroneamente conteggiati come parte di un pasto specifico per questo calcolo
+                } else if (entry.type === 'single' && entry.mealId !== 'cena') { 
                      consumatoProtAltriPasti += entry.prot || 0;
                      consumatoCalAltriPasti += entry.cal || 0;
                 }
@@ -361,28 +342,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function gestisciAvvioApp() {
-        // 1. Carica i dati del giorno corrente. Questo imposta 'datiGiornalieri'.
-        caricaGiorno(getTodayString());
-        
-        // 2. Carica il foodDatabase
+        // 1. Carica i dati del foodDatabase
         const dbSalvato = JSON.parse(localStorage.getItem('trackerFoodDatabase'));
         if (dbSalvato) {
             foodDatabase = dbSalvato;
         } else {
-            // Inizializza foodDatabase se non esiste (o carica un database predefinito se ne hai uno)
             foodDatabase = {}; 
         }
         aggiornaDatalist();
 
-        // 3. Carica il pasto in costruzione
+        // 2. Carica il pasto in costruzione
         const pastoSalvato = JSON.parse(localStorage.getItem('trackerPastoInCostruzione'));
         if (pastoSalvato) {
             pastoInCostruzione = pastoSalvato;
         } else {
             pastoInCostruzione = [];
         }
-        renderMealBuilder(); // Renderizza il costruttore pasti dopo aver caricato foodDatabase e pastoInCostruzione
+        renderMealBuilder();
 
+        // 3. Tenta di caricare i dati del giorno corrente dallo storico
+        caricaGiorno(getTodayString()); // Se non ci sono dati, inizializzerà datiGiornalieri a vuoto.
+        
         // 4. Imposta il selettore del tipo di pasto
         const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
         if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
@@ -411,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     totali.vitc += item.vitc || 0;
                     totali.ca += item.ca || 0;
                 });
-            } else { // Gestisce gli item di tipo 'single'
+            } else { 
                 totali.proteine += entry.prot || 0;
                 totali.calorie += entry.cal || 0;
                 totali.mg += entry.mg || 0;
@@ -491,12 +471,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         `;
                     });
                 }
-            } else { // Renderizza gli item di tipo 'single'
+            } else { 
                 const riga = logBody.insertRow();
                 riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
             }
         });
-        salvaGiorno(giornoVisualizzato, datiGiornalieri); // Salva i dati dopo ogni aggiornamento dell'UI
+        // Rimosso: salvaGiorno(giornoVisualizzato, datiGiornalieri); // Non salvare automaticamente qui
     }
 
     // Funzione renderMealBuilder() con log di debug e fix per il selector
@@ -505,14 +485,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         logPastoBuilderBody.innerHTML = ''; 
 
-        // Assicurati che mealTypeSelector sia definito e abbia un valore selezionato
-        const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; // Fallback se non ancora disponibile
-        // Accesso sicuro a options e selectedIndex
+        const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
         const selectedMealTypeText = (mealTypeSelector && mealTypeSelector.options && mealTypeSelector.options[mealTypeSelector.selectedIndex]) ? mealTypeSelector.options[mealTypeSelector.selectedIndex].text : '';
         
         const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
 
-        // Aggiorna il riepilogo del costruttore pasti
         currentMealTypeDisplay.textContent = selectedMealTypeText;
         
         mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1);
@@ -537,12 +514,10 @@ document.addEventListener('DOMContentLoaded', () => {
         foodDatalist.innerHTML = '';
         for (const foodName in foodDatabase) {
             const option = document.createElement('option');
-            // Assicurati che il valore dell'opzione sia la versione capitalizzata se vuoi che corrisponda alla casella di input
-            // ma il riferimento nel database rimane lowercase
             option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); 
             foodDatalist.appendChild(option);
         }
-        salvaFoodDatabase(); // Salva il foodDatabase ogni volta che viene aggiornato
+        salvaFoodDatabase(); 
     }
 
     function creaAlimentoDaInput(isSingle = false) {
@@ -557,7 +532,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let vitc100 = parseFloat(builderVitC.value) || 0; 
         let ca100 = parseFloat(builderCa.value) || 0;
 
-        // Se l'alimento esiste già nel database, usa i suoi valori di 100g come fallback
         const existingFood = foodDatabase[desc.toLowerCase()];
         if (existingFood) {
             p100 = p100 || existingFood.prot || 0;
@@ -568,13 +542,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ca100 = ca100 || existingFood.ca || 0;
         }
 
-        // Aggiorna (o aggiungi) il foodDatabase con i valori inseriti dall'utente
         foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
         salvaFoodDatabase();
         aggiornaDatalist();
         
         const foodItem = { 
-            desc: desc.charAt(0).toUpperCase() + desc.slice(1), // Capitalizza la descrizione
+            desc: desc.charAt(0).toUpperCase() + desc.slice(1), 
             qta, 
             prot: (p100 / 100) * qta, 
             cal: (k100 / 100) * qta, 
@@ -596,6 +569,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             datiGiornalieri.log.push(item);
             aggiornaUI();
+            // Salva il giorno DOPO l'aggiunta di un singolo alimento
+            salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             resetInputAlimento();
         }
     });
@@ -617,11 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pastoInCostruzione[index]) {
                 pastoInCostruzione[index].selezionato = e.target.checked;
                 salvaPastoInCostruzione();
-                renderMealBuilder(); // Rerender solo il costruttore pasti per aggiornare i totali
+                renderMealBuilder();
             }
         } else if (e.target.id === 'meal-type-selector') {
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
-            renderMealBuilder(); // Rerender solo il costruttore pasti per aggiornare gli obiettivi
+            renderMealBuilder();
         }
     });
 
@@ -632,7 +607,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const mealName = mealTypeSelector.options[mealTypeSelector.selectedIndex].text;
         const mealId = mealTypeSelector.value;
 
-        // Calcola i totali del pasto solo dagli alimenti selezionati
         const totaliPasto = alimentiSelezionati.reduce((acc, item) => {
             acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0; acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
             return acc;
@@ -643,15 +617,16 @@ document.addEventListener('DOMContentLoaded', () => {
         datiGiornalieri.log.push(newMeal);
         pastoInCostruzione = [];
         salvaPastoInCostruzione();
-        aggiornaUI(); // Aggiorna l'intera UI e salva il giorno
-        renderMealBuilder(); // Renderizza il costruttore pasti vuoto
+        aggiornaUI(); 
+        // Salva il giorno DOPO il salvataggio di un pasto
+        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+        renderMealBuilder();
 
-        // Aggiorna il selettore del pasto al prossimo nella sequenza
         const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
         if (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) {
             mealTypeSelector.value = MEAL_TYPE_SEQUENCE[currentIndex + 1];
         } else {
-            mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0]; // Torna al primo se è l'ultimo
+            mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
         }
         localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
     });
@@ -663,25 +638,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemToEdit = datiGiornalieri.log[index];
             if (!itemToEdit || !confirm("Vuoi modificare questa voce? Verrà spostata nel 'Costruttore Pasto'.")) return;
             
-            // Svuota il costruttore pasto prima di aggiungere nuovi elementi
             pastoInCostruzione = [];
 
             const itemsToMove = itemToEdit.type === 'meal' ? itemToEdit.items : [itemToEdit];
             itemsToMove.forEach(item => item.selezionato = true);
             pastoInCostruzione.push(...itemsToMove);
-            datiGiornalieri.log.splice(index, 1); // Rimuovi l'elemento dal diario
-
-            // Non è necessario salvare pastoInCostruzione e datiGiornalieri qui, lo farà renderMealBuilder e aggiornaUI
-            salvaPastoInCostruzione(); // Salva il pasto in costruzione aggiornato
-            aggiornaUI(); // Aggiorna l'UI del diario e salva il giorno
-            renderMealBuilder(); // Renderizza il costruttore pasti aggiornato
+            datiGiornalieri.log.splice(index, 1); 
+            
+            salvaPastoInCostruzione(); 
+            aggiornaUI(); 
+            // Salva il giorno DOPO la modifica/spostamento di un elemento
+            salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+            renderMealBuilder();
             mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
             
             if (itemToEdit.type === 'meal' && itemToEdit.mealId) {
                 mealTypeSelector.value = itemToEdit.mealId;
             } else if (itemToEdit.type === 'single') {
-                // Per un alimento singolo, potresti voler impostare un pasto predefinito o lasciare la selezione corrente
-                mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0]; // O mantieni il valore attuale
+                mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
         } else if (target.closest('.delete-btn')) {
@@ -694,19 +668,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderMealBuilder();
             } else {
                 datiGiornalieri.log.splice(index, 1);
-                aggiornaUI(); // Aggiorna l'UI e salva il giorno
+                aggiornaUI(); 
+                // Salva il giorno DOPO la cancellazione di un elemento
+                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             }
         } else if (target.closest('.expand-arrow')) {
             const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
             if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
                 datiGiornalieri.log[index].isExpanded = !datiGiornalieri.log[index].isExpanded;
-                aggiornaUI(); // Aggiorna l'UI e salva il giorno
+                aggiornaUI(); 
+                // Salva il giorno DOPO l'espansione/collasso
+                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             }
         }
     });
     
     builderDesc.addEventListener('input', (e) => {
-        const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; // Cerca con trim e lowercase
+        const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; 
         if (foodData) {
             builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || '';
             builderMg.value = foodData.mg || ''; builderK.value = foodData.k || '';
@@ -721,15 +699,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Il prompt è stato invertito per essere più intuitivo: OK per Salvare, Annulla per Caricare
         if (confirm(`Vuoi SALVARE i dati attuali nel diario per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}?
         
 Premi 'OK' per SALVARE i dati attuali per quella data.
 Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il diario attuale).`)) {
-            salvaGiorno(dataSelezionata, datiGiornalieri); // Salva i dati attuali del diario nella data selezionata
+            salvaGiorno(dataSelezionata, datiGiornalieri); 
             alert(`Dati attuali del diario salvati per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}.`);
         } else {
-            caricaGiorno(dataSelezionata); // Carica i dati del giorno selezionato nel diario attuale
+            caricaGiorno(dataSelezionata); 
             alert(`Dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} caricati.`);
         }
     });
@@ -757,10 +734,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                         }
                     });
 
-                    // Lascio commentato per debugging come da richiesta precedente.
-                    // localStorage.removeItem('trackerStorico');
-                    console.log("Migrazione completata (vecchia chiave non rimossa automaticamente per debugging). Controlla la console.");
-                    alert("Lo storico è stato aggiornato al nuovo formato! Controlla la console per i dettagli. Ricarica la pagina per visualizzare tutti i dati.");
+                    // Rimuovi la vecchia chiave dopo la migrazione, se vuoi che sia permanente.
+                    localStorage.removeItem('trackerStorico'); 
+                    console.log("Migrazione completata. La vecchia chiave 'trackerStorico' è stata rimossa.");
+                    alert("Lo storico è stato aggiornato al nuovo formato! Ricarica la pagina per visualizzare tutti i dati.");
                 } else {
                     console.warn("La chiave 'trackerStorico' esiste ma non contiene un array valido. Nessuna migrazione necessaria.");
                 }
@@ -776,14 +753,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
     // --- Chiamata alla funzione di migrazione all'avvio dell'app ---
     eseguiMigrazioneStorico();
 
-    // --- Salva i dati prima che la pagina venga scaricata ---
-    window.addEventListener('beforeunload', () => {
-        // Quando la pagina sta per essere scaricata, salva sempre il giorno attualmente visualizzato.
-        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
-        salvaPastoInCostruzione(); // Salva il pasto in costruzione
-        salvaFoodDatabase(); // Salva il database degli alimenti
-    });
-    // --- Fine salvataggio automatico ---
+    // --- Rimosso: window.addEventListener('beforeunload') ---
+    // Il salvataggio ora avviene solo tramite le azioni utente o il pulsante Carica/Salva.
     
     // Inizializza l'applicazione
     gestisciAvvioApp();
