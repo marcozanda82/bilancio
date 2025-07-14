@@ -249,7 +249,7 @@
             font-size: 1.2em;
             color: #0d47a1;
             margin-bottom: 10px;
-            display: none; /* Inizialmente nascosto */
+            display: none;
         }
 
         /* Nascondi il tracker finché l'utente non è autenticato */
@@ -626,21 +626,25 @@ const firebaseConfig = {
             };
         }
 
-        // Funzione per inizializzare l'app, ora chiamata solo dopo che Firebase è pronto
+        // Renamed from gestisciAvvioApp to initAppUI for clarity
+        // This function sets up the UI and loads initial local data
         function initAppUI() {
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
-            aggiornaDatalist();
+            aggiornaDatalist(); // Aggiorna la datalist con foodDatabase caricato
 
             pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
-            renderMealBuilder();
+            renderMealBuilder(); // Renderizza il costruttore pasti
 
-            caricaGiorno(getTodayString());
+            caricaGiorno(getTodayString()); // Carica i dati per il giorno corrente e aggiorna UI
             
-            const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
-            if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
-                mealTypeSelector.value = lastMealTypeSaved;
-            } else {
-                mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
+            // Assicurati che mealTypeSelector esista prima di tentare di accedervi
+            if (mealTypeSelector) {
+                const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
+                if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
+                    mealTypeSelector.value = lastMealTypeSaved;
+                } else {
+                    mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
+                }
             }
             console.log("Interfaccia app avviata con successo con dati locali.");
         }
@@ -807,10 +811,10 @@ const firebaseConfig = {
             mealProgressProt.value = obiettiviPasto.currentProt;
 
             mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
-            mealCalTarget.textContent = obiettiviPasti.targetCal.toFixed(0);
-            mealCalRemaining.textContent = `${(obiettiviPasti.remainingCal).toFixed(0)} kcal`;
-            mealProgressCal.max = obiettiviPasti.targetCal;
-            mealProgressCal.value = obiettiviPasti.currentCal;
+            mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
+            mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
+            mealProgressCal.max = obiettiviPasto.targetCal;
+            mealProgressCal.value = obiettiviPasto.currentCal;
 
             pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
@@ -1088,11 +1092,9 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     currentUserUID = user.uid;
-                    // Nascondi i campi di input e i pulsanti di login/registrazione
                     authFormFields.style.display = 'none';
                     authHeader.style.display = 'none'; 
 
-                    // Mostra il messaggio di benvenuto e il pulsante Esci
                     welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
                     welcomeMessage.style.display = 'block';
                     btnSignOut.style.display = 'block';
@@ -1107,16 +1109,14 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     
                     console.log("Utente autenticato. UI aggiornata.");
-                    // initAppUI() NON viene chiamata qui per evitare doppi caricamenti o reset UI
-                    // quando l'utente è già loggato e la pagina viene ricaricata.
-                    // L'UI è già inizializzata da DOMContentLoaded.
+                    // L'UI è già stata inizializzata da DOMContentLoaded -> initAppUI.
+                    // Questo blocco ora gestisce solo la VISIBILITÀ e lo stato dei pulsanti.
+
                 } else {
                     currentUserUID = null;
-                    // Mostra i campi di input e i pulsanti di login/registrazione
                     authFormFields.style.display = 'block';
                     authHeader.style.display = 'block'; 
                     
-                    // Nascondi il messaggio di benvenuto e il pulsante Esci
                     welcomeMessage.style.display = 'none';
                     btnSignOut.style.display = 'none';
                     authStatusP.textContent = "Non autenticato";
@@ -1129,7 +1129,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
-                    // initAppUI() NON viene chiamata qui. L'UI è già inizializzata da DOMContentLoaded.
+                    // L'UI è già stata inizializzata da DOMContentLoaded -> initAppUI.
+                    // Questo blocco ora gestisce solo la VISIBILITÀ e lo stato dei pulsanti.
                 }
             });
 
@@ -1300,10 +1301,12 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
+        // Questo è il punto di ingresso quando la pagina è completamente caricata
         document.addEventListener('DOMContentLoaded', () => {
-            eseguiMigrazioneStorico(); // Esegui migrazione locale all'avvio
-            initAppUI(); // Inizializza sempre l'UI con i dati locali all'avvio
-            // onAuthStateChanged gestirà la visibilità di auth-section e main-tracker-content
+            eseguiMigrazioneStorico(); // Prima esegui la migrazione locale
+            // initAppUI() viene ora chiamata all'interno del listener onAuthStateChanged
+            // Questo garantisce che i dati locali vengano caricati e l'UI inizializzata
+            // solo dopo che Firebase ha determinato lo stato di autenticazione.
         });
 
     </script>
