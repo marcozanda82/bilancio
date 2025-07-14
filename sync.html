@@ -9,11 +9,17 @@
         .container { width: 100%; max-width: 600px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
         label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9em; }
-        input[type="text"], input[type="url"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+        input[type="text"], input[type="url"], input[type="email"], input[type="password"] { /* Aggiunto input email e password */
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em;
+        }
         button { width: 100%; background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: background-color 0.3s; margin-bottom: 10px; }
         button:hover { opacity: 0.9; }
         #btn-upload { background-color: #2e7d32; }
         #btn-download { background-color: #d32f2f; }
+        #btn-sign-out { background-color: #607d8b; } /* Nuovo colore per Esci */
+        .auth-buttons { display: flex; gap: 10px; } /* Per affiancare Registrati/Accedi */
+        .auth-buttons button { width: 50%; } /* Distribuzione equa */
+
         #firebase-status { padding: 10px; margin-top: 10px; border-radius: 6px; text-align: center; font-weight: 600; }
         .status-connected { background-color: #e8f5e9; color: #2e7d32; }
         .status-disconnected { background-color: #ffebee; color: #c62828; }
@@ -34,6 +40,20 @@
             <button id="btn-connect">Connetti</button>
             <div id="firebase-status" class="status-disconnected">Disconnesso</div>
         </div>
+
+        <hr style="margin: 30px 0;">
+
+        <div id="auth-section">
+            <h2>Autenticazione Utente</h2>
+            <div><label for="user-email">Email</label><input type="email" id="user-email"></div>
+            <div><label for="user-password">Password</label><input type="password" id="user-password"></div>
+            <div class="auth-buttons">
+                <button id="btn-register">Registrati</button>
+                <button id="btn-login">Accedi</button>
+            </div>
+            <button id="btn-sign-out" style="display: none;">Esci</button>
+            <p id="auth-status" style="text-align: center; font-weight: 600; margin-top: 15px;"></p>
+        </div>
         
         <hr style="margin: 30px 0;">
 
@@ -51,11 +71,17 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        // Nuovo: Import Firebase Auth functions
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
         let db;
+        let auth; // Declare auth variable
+        let firebaseApp; // To store the initialized Firebase app
+
         const fbApiKeyInput = document.getElementById('fb-api-key');
         const fbProjectIdInput = document.getElementById('fb-project-id');
         const fbDatabaseUrlInput = document.getElementById('fb-database-url');
@@ -65,14 +91,21 @@
         const btnUpload = document.getElementById('btn-upload');
         const btnDownload = document.getElementById('btn-download');
 
-        // Le chiavi di localStorage fisse
-        const FIXED_LOCAL_STORAGE_KEYS = [
-            'trackerGiornoCorrente',
-            'trackerFoodDatabase',
-            'trackerPesate',
-            'trackerMealType',
-            'trackerPastoInCostruzione' // Ho aggiunto anche questa, se vuoi sincronizzarla
-        ];
+        // New Auth DOM elements
+        const userEmailInput = document.getElementById('user-email');
+        const userPasswordInput = document.getElementById('user-password');
+        const btnRegister = document.getElementById('btn-register');
+        const btnLogin = document.getElementById('btn-login');
+        const btnSignOut = document.getElementById('btn-sign-out');
+        const authStatusP = document.getElementById('auth-status');
+        const authButtonsDiv = document.querySelector('.auth-buttons');
+
+
+        // IMPORTANT: These keys refer to the structure of your localStorage.
+        // If you migrate trackerStorico to individual day keys (e.g., trackerStorico_YYYY-MM-DD),
+        // this list will need to be dynamically generated or adjusted for cloud sync.
+        // For now, it assumes the original single 'trackerStorico' key and other direct keys.
+        const LOCAL_STORAGE_KEYS = ['trackerGiornoCorrente', 'trackerStorico', 'trackerFoodDatabase', 'trackerPesate', 'trackerMealType'];
 
         document.addEventListener('DOMContentLoaded', () => {
             const savedConfig = localStorage.getItem('firebaseSyncConfig');
@@ -83,9 +116,15 @@
                     fbProjectIdInput.value = config.projectId || '';
                     fbDatabaseUrlInput.value = config.databaseURL || '';
                     initFirebase(config);
-                } catch(e) { console.error("Errore config salvata"); }
+                } catch(e) { console.error("Errore config salvata:", e); }
             }
             btnConnect.addEventListener('click', handleConnectClick);
+            
+            // New Auth Event Listeners
+            btnRegister.addEventListener('click', handleRegister);
+            btnLogin.addEventListener('click', handleLogin);
+            btnSignOut.addEventListener('click', handleSignOut);
+
             btnUpload.addEventListener('click', handleUpload);
             btnDownload.addEventListener('click', handleDownload);
         });
@@ -106,109 +145,159 @@
 
         function initFirebase(config) {
             try {
-                // Inizializza l'app Firebase, se già esistente la recupera
-                const app = getApps().find(app => app.name === "syncApp") || initializeApp(config, "syncApp");
-                db = getDatabase(app);
+                // Ensure only one app instance is created or retrieved
+                if (!getApps().some(app => app.name === "syncApp")) {
+                    firebaseApp = initializeApp(config, "syncApp");
+                } else {
+                    firebaseApp = getApp("syncApp");
+                }
+                
+                db = getDatabase(firebaseApp);
+                auth = getAuth(firebaseApp); // Initialize auth here
+
                 firebaseStatusDiv.textContent = "Connesso";
                 firebaseStatusDiv.className = 'status-connected';
-                syncActionsDiv.classList.remove('disabled');
+                // Sync actions initially disabled until user logs in
+                // syncActionsDiv.classList.remove('disabled'); // Removed, handled by onAuthStateChanged
+
+                // Listen for auth state changes
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        authStatusP.textContent = `Autenticato come: ${user.email}`;
+                        authButtonsDiv.style.display = 'none'; // Hide login/register buttons
+                        btnSignOut.style.display = 'block'; // Show sign out button
+                        syncActionsDiv.classList.remove('disabled'); // Enable sync actions
+                        userPasswordInput.value = ''; // Clear password field on successful login
+                    } else {
+                        authStatusP.textContent = "Non autenticato";
+                        authButtonsDiv.style.display = 'flex'; // Show login/register buttons
+                        btnSignOut.style.display = 'none'; // Hide sign out button
+                        syncActionsDiv.classList.add('disabled'); // Disable sync actions
+                    }
+                });
+
             } catch (error) {
-                firebaseStatusDiv.textContent = `Errore Connessione: ${error.code}`;
+                firebaseStatusDiv.textContent = `Errore Connessione: ${error.message}`;
                 firebaseStatusDiv.className = 'status-disconnected';
                 syncActionsDiv.classList.add('disabled');
-                console.error("Errore connessione Firebase:", error);
+                authStatusP.textContent = "Errore di connessione Firebase. Autenticazione non disponibile.";
             }
         }
 
-        function handleUpload() {
+        async function handleRegister() {
+            const email = userEmailInput.value.trim();
+            const password = userPasswordInput.value.trim();
+            if (!email || !password) {
+                alert("Inserisci email e password per registrarti.");
+                return;
+            }
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("Registrazione completata e accesso effettuato!");
+                // onAuthStateChanged will handle UI update
+            } catch (error) {
+                alert(`Errore di registrazione: ${error.message}`);
+            }
+        }
+
+        async function handleLogin() {
+            const email = userEmailInput.value.trim();
+            const password = userPasswordInput.value.trim();
+            if (!email || !password) {
+                alert("Inserisci email e password per accedere.");
+                return;
+            }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                alert("Accesso effettuato con successo!");
+                // onAuthStateChanged will handle UI update
+            } catch (error) {
+                alert(`Errore di accesso: ${error.message}`);
+            }
+        }
+
+        async function handleSignOut() {
+            try {
+                await signOut(auth);
+                alert("Disconnessione avvenuta.");
+                // onAuthStateChanged will handle UI update
+            } catch (error) {
+                alert(`Errore durante la disconnessione: ${error.message}`);
+            }
+        }
+
+        function getUserDataRef() {
+            if (auth && auth.currentUser) {
+                // IMPORTANT: This path determines where your data is stored for each user.
+                // For now, it points to a common root for all LOCAL_STORAGE_KEYS,
+                // which might need refinement if you have many dates in trackerStorico.
+                // A more robust approach would be to iterate through trackerStorico_YYYY-MM-DD
+                // keys and save them under /users/<UID>/storico/YYYY-MM-DD
+                return ref(db, 'users/' + auth.currentUser.uid + '/all_local_data/');
+            }
+            alert("Devi essere autenticato per sincronizzare i dati.");
+            return null;
+        }
+
+        async function handleUpload() {
+            const dataRef = getUserDataRef();
+            if (!dataRef) return;
+
             if (!confirm("Sei sicuro di voler sovrascrivere i dati sul cloud con quelli locali?")) return;
             
             const localData = {};
-            
-            // 1. Carica le chiavi fisse
-            FIXED_LOCAL_STORAGE_KEYS.forEach(key => {
-                const data = localStorage.getItem(key);
-                if (data) {
-                    try {
-                        localData[key] = JSON.parse(data);
-                    } catch (e) {
-                        console.error(`Errore parsing localStorage key ${key}:`, e);
-                        localData[key] = data; // Carica come stringa se non parsabile
-                    }
-                }
-            });
-
-            // 2. Carica le chiavi dinamiche dello storico
-            const storicoData = {};
+            // Iterate through all localStorage items that start with 'trackerStorico_'
+            // and include other specific LOCAL_STORAGE_KEYS.
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('trackerStorico_')) {
-                    const data = localStorage.getItem(key);
-                    if (data) {
-                        try {
-                            storicoData[key] = JSON.parse(data);
-                        } catch (e) {
-                            console.error(`Errore parsing storico key ${key}:`, e);
-                            storicoData[key] = data; // Carica come stringa se non parsabile
-                        }
+                if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_KEYS.includes(key)) {
+                    try {
+                        localData[key] = JSON.parse(localStorage.getItem(key));
+                    } catch (e) {
+                        console.warn(`Skipping invalid JSON for key ${key}:`, e);
                     }
                 }
             }
-            if (Object.keys(storicoData).length > 0) {
-                localData.storico = storicoData; // Salva lo storico dinamico sotto una sotto-chiave 'storico' su Firebase
+            
+            try {
+                await set(dataRef, localData);
+                alert("Caricamento completato con successo!");
+            } catch(err) {
+                alert(`Errore durante il caricamento: ${err.message}`);
             }
-
-            set(ref(db, '/'), localData) // Carica tutti i dati (fissi + storico) su Firebase
-                .then(() => alert("Caricamento completato con successo!"))
-                .catch(err => alert(`Errore durante il caricamento: ${err.message}`));
         }
 
-        function handleDownload() {
+        async function handleDownload() {
+            const dataRef = getUserDataRef();
+            if (!dataRef) return;
+
             if (!confirm("ATTENZIONE: i dati locali verranno sovrascritti. Continuare?")) return;
 
-            get(ref(db, '/'))
-                .then(snapshot => {
-                    if (snapshot.exists()) {
-                        const cloudData = snapshot.val();
-                        
-                        // Pulisci prima lo storico locale per evitare dati orfani, ma con cautela!
-                        // Potresti voler chiedere conferma prima di una pulizia totale.
-                        // Per ora, sovrascriviamo solo.
-                        for (let i = localStorage.length - 1; i >= 0; i--) {
-                            const key = localStorage.key(i);
-                            if (key.startsWith('trackerStorico_')) {
-                                localStorage.removeItem(key);
-                            }
+            try {
+                const snapshot = await get(dataRef);
+                if (snapshot.exists()) {
+                    const cloudData = snapshot.val();
+                    // Clear only relevant localStorage keys before downloading
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_KEYS.includes(key)) {
+                            localStorage.removeItem(key);
                         }
-
-                        // 1. Scarica le chiavi fisse
-                        FIXED_LOCAL_STORAGE_KEYS.forEach(key => {
-                            if (cloudData[key]) {
-                                // Assicurati di non sovrascrivere l'intera app config di Firebase se non è quella che vuoi gestire
-                                if (key !== 'firebaseSyncConfig') { // Evita di sovrascrivere le credenziali di Firebase con quelle del cloud se diverse
-                                    localStorage.setItem(key, JSON.stringify(cloudData[key]));
-                                }
-                            } else {
-                                // Rimuovi la chiave locale se non presente sul cloud, per pulizia
-                                localStorage.removeItem(key);
-                            }
-                        });
-
-                        // 2. Scarica le chiavi dinamiche dello storico
-                        if (cloudData.storico) {
-                            for (const key in cloudData.storico) {
-                                if (key.startsWith('trackerStorico_')) {
-                                    localStorage.setItem(key, JSON.stringify(cloudData.storico[key]));
-                                }
-                            }
-                        }
-
-                        alert("Download completato! Ricarica la pagina del tracker per vedere le modifiche.");
-                    } else {
-                        alert("Nessun dato trovato sul cloud.");
                     }
-                })
-                .catch(err => alert(`Errore durante il download: ${err.message}`));
+
+                    // Populate localStorage with cloud data
+                    for (const key in cloudData) {
+                        if (Object.prototype.hasOwnProperty.call(cloudData, key)) {
+                            localStorage.setItem(key, JSON.stringify(cloudData[key]));
+                        }
+                    }
+                    alert("Download completato! Ricarica la pagina del tracker per vedere le modifiche.");
+                } else {
+                    alert("Nessun dato trovato sul cloud per questo utente.");
+                }
+            } catch(err) {
+                alert(`Errore durante il download: ${err.message}`);
+            }
         }
     </script>
 </body>
