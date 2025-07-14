@@ -92,7 +92,6 @@
             <a href="storico.html">📊 Storico Giornaliero</a>
             <a href="confronto.html">📈 Confronto Mensile</a>
         </div>
-
         <div id="riepilogo" class="sezione">
             <h2>Riepilogo di Oggi</h2>
             <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
@@ -231,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo'), btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
     const mealBuilderSezione = document.getElementById('meal-builder-sezione'), logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
     const btnSalvaPasto = document.getElementById('btn-salva-pasto');
-    const mealTypeSelector = document.getElementById('meal-type-selector');
+    const mealTypeSelector = document.getElementById('meal-type-selector'); // Spostato qui per essere accessibile prima
 
     const btnCaricaGiorno = document.getElementById('btn-carica-giorno'), dataCaricamentoInput = document.getElementById('data-caricamento');
     const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
@@ -246,6 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const mealProtCurrent = document.getElementById('meal-prot-current'), mealProtTarget = document.getElementById('meal-prot-target'), mealProtRemaining = document.getElementById('meal-prot-remaining');
     const mealCalCurrent = document.getElementById('meal-cal-current'), mealCalTarget = document.getElementById('meal-cal-target'), mealCalRemaining = document.getElementById('meal-cal-remaining');
     const mealProgressProt = document.getElementById('meal-progress-prot'), mealProgressCal = document.getElementById('meal-progress-cal');
+
+    // Elementi per la sezione Allenamento
+    const workoutTypeInput = document.getElementById('workout-type');
+    const workoutCaloriesBurnedInput = document.getElementById('workout-calories-burned');
+    const btnSalvaAllenamento = document.getElementById('btn-salva-allenamento');
 
 
     // --- FUNZIONI DI GESTIONE DATI ---
@@ -265,54 +269,30 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Dati salvati nello storico per il giorno: ${dataDaSalvare}`);
         }
     }
-    
-// Funzione per caricare i dati da una data specifica (o da oggi).
-function caricaGiorno(data) {
-    // RIMUOVI QUESTA RIGA:
-    // salvaGiorno(giornoVisualizzato, datiGiornalieri); 
 
-    giornoVisualizzato = data;
-    dataCaricamentoInput.value = data;
+    // Funzione per caricare i dati da una data specifica (o da oggi).
+    function caricaGiorno(data) {
+        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
 
-    let datiTrovati = null;
-    let rawDataFromLocalStorage = null;
+        giornoVisualizzato = data;
+        dataCaricamentoInput.value = data;
 
-    if (data === getTodayString()) { // Se stiamo caricando il giorno corrente
-        rawDataFromLocalStorage = localStorage.getItem('trackerGiornoCorrente');
-        console.log("DEBUG CARICAMENTO (TODAY): Valore raw da trackerGiornoCorrente:", rawDataFromLocalStorage); //
-        
-        try {
-            const salvataggio = JSON.parse(rawDataFromLocalStorage);
+        let datiTrovati = null;
+        if (data === getTodayString()) {
+            const salvataggio = JSON.parse(localStorage.getItem('trackerGiornoCorrente'));
             if (salvataggio && salvataggio.data === data) {
                 datiTrovati = salvataggio.dati;
-                console.log("DEBUG CARICAMENTO (TODAY): Dati PARSED e CONFERMATI per oggi:", datiTrovati); //
-            } else {
-                console.warn("DEBUG CARICAMENTO (TODAY): Salvataggio trovato ma data non corrisponde o oggetto non valido.", salvataggio); //
             }
-        } catch (e) {
-            console.error("DEBUG CARICAMENTO (TODAY): Errore nel parsing di trackerGiornoCorrente:", e, "Raw data:", rawDataFromLocalStorage); //
+        } else {
+            datiTrovati = JSON.parse(localStorage.getItem(`trackerStorico_${data}`));
         }
-    } else { // Se stiamo caricando un giorno storico
-        rawDataFromLocalStorage = localStorage.getItem(`trackerStorico_${data}`);
-        console.log(`DEBUG CARICAMENTO (STORICO): Valore raw da trackerStorico_${data}:`, rawDataFromLocalStorage); //
-        try {
-            datiTrovati = JSON.parse(rawDataFromLocalStorage);
-            console.log("DEBUG CARICAMENTO (STORICO): Dati PARSED e CONFERMATI per storico:", datiTrovati); //
-        } catch (e) {
-            console.error(`DEBUG CARICAMENTO (STORICO): Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage); //
-        }
+        
+        datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0, workoutType: '' }; // Inizializza anche workoutType
+
+        aggiornaUI();
+        console.log(`Caricato il giorno: ${giornoVisualizzato}`);
     }
     
-    console.log("DEBUG CARICAMENTO FINALE: datiTrovati prima del reset/inizializzazione:", datiTrovati); //
-
-    // Se datiTrovati è null o undefined, inizializza con un oggetto vuoto
-    datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; //
-    
-    console.log("DEBUG CARICAMENTO FINALE: datiGiornalieri dopo reset/inizializzazione:", datiGiornalieri); //
-
-    aggiornaUI();
-    console.log(`Caricato il giorno: ${giornoVisualizzato}`); //
-}
     // Funzione per calcolare gli obiettivi di proteine e calorie per un pasto specifico
     function calcolaObiettiviPasto(mealType, giornoCorrenteString) {
         const dataVisualizzata = new Date(giornoCorrenteString);
@@ -382,11 +362,24 @@ function caricaGiorno(data) {
         }
 
         const dbSalvato = JSON.parse(localStorage.getItem('trackerFoodDatabase'));
-        if (dbSalvato) foodDatabase = dbSalvato;
+        // DEBUG: Aggiunti log per foodDatabase
+        console.log("Valore di trackerFoodDatabase da localStorage:", localStorage.getItem('trackerFoodDatabase'));
+        if (dbSalvato) {
+            foodDatabase = dbSalvato;
+            console.log("foodDatabase caricato all'avvio:", foodDatabase);
+        } else {
+            console.log("trackerFoodDatabase non trovato o vuoto in localStorage. Verrà inizializzato vuoto.");
+        }
+        
         const pastoSalvato = JSON.parse(localStorage.getItem('trackerPastoInCostruzione'));
         if (pastoSalvato) pastoInCostruzione = pastoSalvato;
-        aggiornaDatalist();
-        renderMealBuilder();
+        
+        aggiornaDatalist(); // Chiamata per popolare la datalist
+        renderMealBuilder(); // Chiamata per aggiornare il costruttore pasti
+
+        // Popola i campi input del workout all'avvio
+        workoutTypeInput.value = datiGiornalieri.workoutType || '';
+        workoutCaloriesBurnedInput.value = datiGiornalieri.workoutCalorie !== undefined ? datiGiornalieri.workoutCalorie : '0';
     }
 
     // --- FUNZIONE DI AGGIORNAMENTO UI (COMPLETA E CORRETTA) ---
@@ -433,7 +426,7 @@ function caricaGiorno(data) {
         spanTotaleK.textContent = totali.k.toFixed(0);
         spanTotaleVitC.textContent = totali.vitc.toFixed(1);
         spanTotaleCa.textContent = totali.ca.toFixed(1);
-        spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie || 0;
+        spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie || 0; // Aggiorna le calorie totali del workout
 
         progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
         progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
@@ -556,11 +549,14 @@ function caricaGiorno(data) {
 
     function aggiornaDatalist() {
         foodDatalist.innerHTML = '';
+        // DEBUG: Log per foodDatabase in aggiornaDatalist
+        console.log("aggiornaDatalist: foodDatabase per datalist:", foodDatabase);
         for (const foodName in foodDatabase) {
             const option = document.createElement('option');
             option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1);
             foodDatalist.appendChild(option);
         }
+        console.log("aggiornaDatalist: Datalist popolata.");
     }
 
     function creaAlimentoDaInput(isSingle = false) {
@@ -573,7 +569,7 @@ function caricaGiorno(data) {
         if (p100 > 0 || k100 > 0 || mg100 > 0 || k100_mg > 0 || vitc100 > 0 || ca100 > 0) {
             foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
             salvaFoodDatabase();
-            aggiornaDatalist();
+            aggiornaDatalist(); // Chiama aggiornaDatalist dopo aver salvato un nuovo alimento
         }
         
         const foodItem = { desc, qta, prot: (p100 / 100) * qta, cal: (k100 / 100) * qta, mg: (mg100 / 100) * qta, k: (k100_mg / 100) * qta, vitc: (vitc100 / 100) * qta, ca: (ca100 / 100) * qta };
@@ -697,11 +693,24 @@ function caricaGiorno(data) {
     });
     
     builderDesc.addEventListener('input', (e) => {
+        // DEBUG: Log per l'input e la ricerca nel foodDatabase
+        console.log("builderDesc input event: value =", e.target.value);
+        console.log("Cercando in foodDatabase (case-insensitive):", e.target.value.toLowerCase());
+
         const foodData = foodDatabase[e.target.value.toLowerCase()];
+        console.log("Risultato ricerca foodData:", foodData);
+
         if (foodData) {
             builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || '';
             builderMg.value = foodData.mg || ''; builderK.value = foodData.k || '';
             builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || '';
+            console.log("Campi nutrizionali popolati.");
+        } else {
+            console.log("Alimento non trovato nel foodDatabase.");
+            // Potresti voler resettare i campi qui se l'alimento non è trovato
+            builderProt.value = ''; builderKcal.value = '';
+            builderMg.value = ''; builderK.value = '';
+            builderVitC.value = ''; builderCa.value = '';
         }
     });
 
@@ -776,7 +785,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
     // --- Fine salvataggio automatico ---
     
     // Inizializza l'applicazione
-    //gestisciAvvioApp();
+    gestisciAvvioApp();
 });
 </script>
 </body>
