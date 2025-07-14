@@ -331,7 +331,7 @@
             <div class="warning" style="margin-top: 15px;">
                 <strong>Attenzione:</strong><br>
                 - <strong>Carica:</strong> Sostituisce i dati sul cloud con quelli che hai su questo dispositivo.<br>
-                - <strong>Scarica:k</strong> Sostituisce i dati su questo dispositivo con quelli salvati sul cloud.
+                - <strong>Scarica:</strong> Sostituisce i dati su questo dispositivo con quelli salvati sul cloud.
             </div>
         </div>
         <div class="sync-button-container">
@@ -351,14 +351,14 @@
         // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
         // GLI STESSI CHE HAI MESSO IN sync.html
         // ************************************************************
-       const firebaseConfig = {
-            apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",           // Es: "AIzaSyC0xxxxxxxxxxxxxxxxxxxxxxxxx"
-            authDomain: "mio-tracker.firebaseapp.com", // Es: "tracker-nutrizionale-12345.firebaseapp.com"
-            databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app", // Es: "https://tracker-nutrizionale-12345-default-rtdb.europe-west1.firebasedatabase.app"
-            projectId: "mio-tracker",     // Es: "tracker-nutrizionale-12345"
-            storageBucket: "mio-tracker.firebasestorage.app",
-            messagingSenderId: "382993217593",
-            appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+        const firebaseConfig = {
+            apiKey: "IL_TUO_API_KEY",           // Es: "AIzaSyC0xxxxxxxxxxxxxxxxxxxxxxxxx"
+            authDomain: "IL_TUO_PROJECT_ID.firebaseapp.com", // Es: "tracker-nutrizionale-12345.firebaseapp.com"
+            databaseURL: "https://IL_TUO_PROJECT_ID-default-rtdb.europe-west1.firebasedatabase.app", // Es: "https://tracker-nutrizionale-12345-default-rtdb.europe-west1.firebasedatabase.app"
+            projectId: "IL_TUO_PROJECT_ID",     // Es: "tracker-nutrizionale-12345"
+            storageBucket: "IL_TUO_PROJECT_ID.appspot.com",
+            messagingSenderId: "IL_TUO_MESSAGING_SENDER_ID",
+            appId: "IL_TUO_APP_ID"
         };
         // ************************************************************
         // FINE CONFIGURAZIONE FIREBASE
@@ -370,9 +370,11 @@
         let foodDatabase = {};
         let pastoInCostruzione = [];
         
-        let db; // Firebase Database instance
-        let auth; // Firebase Auth instance
-        let currentUserUID = null; // Store current user UID
+        // Dichiarazione delle variabili Firebase qui per renderle globali nel modulo
+        let db; 
+        let auth; 
+        let firebaseApp; // Questa variabile deve essere dichiarata qui
+        let currentUserUID = null; 
 
         const PIANO_SETTIMANALE = {
             0: { tipo: '💧 Riposo (Deficit)', cal_base: 1700, prot: 110 }, // Domenica
@@ -399,7 +401,6 @@
         const MEAL_TYPE_SEQUENCE = ['merenda1', 'pranzo', 'merenda2', 'cena'];
 
         // Chiavi di localStorage da considerare per la sincronizzazione cloud
-        // Abbiamo bisogno di tutte le chiavi che non iniziano con trackerStorico_
         const LOCAL_STORAGE_SYNC_KEYS = ['trackerFoodDatabase', 'trackerPesate', 'trackerMealType', 'trackerPastoInCostruzione', 'lastMealTypeSelected_' + getTodayString()];
 
 
@@ -550,15 +551,12 @@
         }
 
         function gestisciAvvioApp() {
-            // Carica foodDatabase subito, in quanto è usata per la datalist e non dipende dai dati del giorno corrente
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
             aggiornaDatalist();
 
-            // Carica il pasto in costruzione
             pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
             renderMealBuilder();
 
-            // Carica il giorno corrente (con i dati locali o quelli appena scaricati dal cloud)
             caricaGiorno(getTodayString());
             
             const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
@@ -567,7 +565,7 @@
             } else {
                 mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
             }
-            console.log("App avviata con successo.");
+            console.log("App avviata con successo con dati locali.");
         }
 
         function aggiornaUI() {
@@ -750,7 +748,6 @@
                 option.value = foodName.charAt(0).toUpperCase() + foodName.slice(1); 
                 foodDatalist.appendChild(option);
             }
-            // Non chiamare salvaFoodDatabase qui, viene chiamata dalla funzione stessa dopo aver popolato foodDatabase
         }
 
         function creaAlimentoDaInput(isSingle = false) {
@@ -776,7 +773,7 @@
             }
 
             foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
-            salvaFoodDatabase(); // Questo salverà anche sul cloud
+            salvaFoodDatabase(); 
             aggiornaDatalist();
             
             const foodItem = { 
@@ -1002,7 +999,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
         // Inizializza Firebase all'avvio dello script
         try {
-            if (!getApps().some(app => app.name === "trackerApp")) {
+            // Assicurati di inizializzare l'app solo una volta
+            if (!getApps().some(app => app.name === "trackerApp")) { // Usa un nome diverso per l'app per distinguerla da sync.html
                 firebaseApp = initializeApp(firebaseConfig, "trackerApp");
             } else {
                 firebaseApp = getApp("trackerApp");
@@ -1018,16 +1016,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     console.log("Utente autenticato in index.html:", user.email);
-
-                    // Dopo che l'utente è autenticato e l'UI è stata inizializzata con i dati locali,
-                    // tentiamo di scaricare i dati dal cloud senza sovrascrivere se non necessario.
-                    // Chiamiamo loadAllTrackerDataFromCloud (senza alert di conferma, solo con log)
-                    // per un'operazione di "sync in background" iniziale.
-                    // Però per i pulsanti manuali serve la conferma esplicita.
-                    // Quindi qui chiamiamo una versione 'silent' del download o logghiamo solo.
-                    // Per ora, non facciamo un download automatico all'avvio da index.html
-                    // per evitare sovrascritture inaspettate e mantenere il controllo manuale.
-                    // Se l'utente vuole scaricare, userà il pulsante esplicitamente.
 
                 } else {
                     currentUserUID = null;
@@ -1047,7 +1035,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
         function getUserDataRef() {
             if (!db || !currentUserUID) {
-                // Non mostrare l'alert qui, viene gestito dal chiamante (pulsanti disabilitati)
                 return null;
             }
             return ref(db, 'users/' + currentUserUID + '/tracker_data/'); // Percorso più specifico
@@ -1057,8 +1044,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         async function saveAllTrackerDataToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
-                 console.warn("Non autenticato o Firebase non disponibile per il salvataggio cloud.");
-                 return;
+                 // console.warn("Non autenticato o Firebase non disponibile per il salvataggio cloud.");
+                 return; // Non mostrare un alert qui, dato che i pulsanti sono disabilitati se non loggati
             }
             
             const dataToUpload = {};
@@ -1130,7 +1117,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
 
         // --- FUNZIONE DI MIGRAZIONE VECCHIO STORICO A NUOVO FORMATO ---
-        // (Lasciala inalterata, è un'operazione una tantum per la conversione locale)
         function eseguiMigrazioneStorico() {
             const vecchioStoricoRaw = localStorage.getItem('trackerStorico');
             
