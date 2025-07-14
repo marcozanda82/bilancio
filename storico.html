@@ -72,33 +72,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Funzione per recuperare tutti i dati dallo storico LocalStorage
     function caricaTuttoLoStorico() {
         const storicoDati = [];
+        const dateViste = new Set(); // Per tenere traccia delle date già aggiunte
+
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            // Filtra le chiavi che iniziano con 'trackerStorico_' o 'trackerGiornoCorrente'
+            // Filtra solo le chiavi che iniziano con 'trackerStorico_'
             if (key.startsWith('trackerStorico_')) {
                 try {
                     const dataString = key.replace('trackerStorico_', '');
+                    
+                    // Evita di aggiungere duplicati se per qualche ragione la stessa data è presente più volte
+                    if (dateViste.has(dataString)) {
+                        console.warn(`Saltando potenziale duplicato per la data: ${dataString}`);
+                        continue; // Passa al prossimo elemento del localStorage
+                    }
+
                     const datiGiorno = JSON.parse(localStorage.getItem(key));
-                    storicoDati.push({ data: dataString, ...datiGiorno });
+                    
+                    // Aggiungi solo se i dati del giorno sono validi e la data non è stata vista
+                    if (datiGiorno && datiGiorno.data === dataString) { // Verifica che la data all'interno dell'oggetto sia consistente
+                        storicoDati.push({ data: dataString, ...datiGiorno });
+                        dateViste.add(dataString);
+                    } else if (datiGiorno) {
+                         // Caso in cui la chiave ha una data ma l'oggetto interno no, o è diversa
+                         console.warn(`Inconsistenza data nella chiave ${key}. Usando la data dalla chiave.`);
+                         storicoDati.push({ data: dataString, ...datiGiorno });
+                         dateViste.add(dataString);
+                    }
+
                 } catch (e) {
                     console.error("Errore nel parsing dei dati storici per la chiave:", key, e);
                 }
-            } else if (key === 'trackerGiornoCorrente') {
-                try {
-                    const salvataggioCorrente = JSON.parse(localStorage.getItem(key));
-                    // Assicurati che non sia già stato salvato come trackerStorico_
-                    // o che non sia una data duplicata se già presente
-                    if (salvataggioCorrente && salvataggioCorrente.data) {
-                        const isDuplicate = storicoDati.some(item => item.data === salvataggioCorrente.data);
-                        if (!isDuplicate) {
-                           storicoDati.push({ data: salvataggioCorrente.data, ...salvataggioCorrente.dati });
-                        }
-                    }
-                } catch (e) {
-                    console.error("Errore nel parsing del giorno corrente:", key, e);
-                }
             }
+            // Rimosso il blocco else if (key === 'trackerGiornoCorrente')
         }
+
         // Ordina i dati dal più recente al più vecchio
         storicoDati.sort((a, b) => new Date(b.data) - new Date(a.data));
         return storicoDati;
