@@ -138,6 +138,7 @@
             border: 1px solid #cce7ff;
             border-radius: 8px;
             text-align: center;
+            position: relative; /* Necessario per posizionare il valore dello slider */
         }
 
         #calorie-target-slider-container label {
@@ -145,19 +146,19 @@
             margin-bottom: 10px;
             color: #0d47a1;
             font-size: 1.1em;
-            display: block; /* Make label a block element to properly space */
+            display: block;
         }
 
         #calorie-adjustment-slider {
             width: 90%;
-            -webkit-appearance: none; /* Remove default styling */
+            -webkit-appearance: none;
             appearance: none;
             height: 10px;
-            background: linear-gradient(to right, #d32f2f, #fbc02d, #2e7d32); /* Red-Yellow-Green gradient */
+            background: linear-gradient(to right, #d32f2f, #fbc02d, #2e7d32);
             outline: none;
             border-radius: 5px;
-            margin: 10px 0;
-            cursor: pointer;
+            margin: 25px 0 10px; /* Spazio per il valore sopra */
+            cursor: grab;
         }
 
         #calorie-adjustment-slider::-webkit-slider-thumb {
@@ -165,7 +166,7 @@
             appearance: none;
             width: 24px;
             height: 24px;
-            background: #1976d2; /* Blue thumb */
+            background: #1976d2;
             border: 2px solid #fff;
             border-radius: 50%;
             cursor: grab;
@@ -176,7 +177,7 @@
         #calorie-adjustment-slider::-moz-range-thumb {
             width: 24px;
             height: 24px;
-            background: #1976d2; /* Blue thumb */
+            background: #1976d2;
             border: 2px solid #fff;
             border-radius: 50%;
             cursor: grab;
@@ -185,10 +186,19 @@
         }
         
         #target-adjustment-display {
-            font-size: 1.3em;
+            position: absolute; /* Posizionamento assoluto per muoverlo */
+            top: 60px; /* Distanza dalla cima del contenitore */
+            font-size: 1.2em;
             font-weight: bold;
-            color: #0d47a1;
-            margin-top: 5px;
+            color: #333; /* Colore più neutro per il numero */
+            background-color: #fff;
+            padding: 3px 8px;
+            border-radius: 5px;
+            white-space: nowrap; /* Evita il wrap del testo */
+            transform: translateX(-50%); /* Centra l'elemento stesso */
+            transition: left 0.05s linear; /* Transizione per il movimento orizzontale */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            pointer-events: none; /* Permette di cliccare attraverso l'elemento */
         }
         
         .slider-labels {
@@ -213,13 +223,12 @@
             
             <div id="calorie-target-slider-container">
                 <label for="calorie-adjustment-slider">Imposta Obiettivo Calorico:</label>
-                <input type="range" id="calorie-adjustment-slider" min="-300" max="300" step="10">
+                <span id="target-adjustment-display">0 kcal</span> <input type="range" id="calorie-adjustment-slider" min="-300" max="300" step="10">
                 <div class="slider-labels">
                     <span>Deficit Max (-300kcal)</span>
                     <span>Pareggio (0kcal)</span>
                     <span>Surplus Max (+300kcal)</span>
                 </div>
-                <span id="target-adjustment-display">0 kcal</span>
             </div>
 
             <span id="calorie-balance-text"></span>
@@ -419,11 +428,41 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof datiGiornalieri.calorieAdjustment === 'undefined') datiGiornalieri.calorieAdjustment = 0;
 
         calorieAdjustmentSlider.value = datiGiornalieri.calorieAdjustment;
-        targetAdjustmentDisplay.textContent = `${datiGiornalieri.calorieAdjustment} kcal`;
+        updateSliderDisplay(); // Chiamiamo la nuova funzione per aggiornare posizione e testo
         
         aggiornaUI();
         console.log(`Caricato il giorno: ${giornoVisualizzato}`); 
     }
+
+    // Nuova funzione per aggiornare la posizione e il testo del valore dello slider
+    function updateSliderDisplay() {
+        const sliderValue = parseFloat(calorieAdjustmentSlider.value);
+        targetAdjustmentDisplay.textContent = `${sliderValue} kcal`;
+
+        // Calcola la posizione del thumb per posizionare il numero sopra
+        const min = parseFloat(calorieAdjustmentSlider.min);
+        const max = parseFloat(calorieAdjustmentSlider.max);
+        const val = parseFloat(calorieAdjustmentSlider.value);
+        
+        // Percentuale della posizione del thumb (0 a 1)
+        const percentage = (val - min) / (max - min);
+        
+        // Larghezza del thumb (stimata, o misurata)
+        const thumbWidth = 24; // Da CSS
+        
+        // Larghezza totale della traccia dello slider
+        const sliderWidth = calorieAdjustmentSlider.offsetWidth;
+        
+        // Posizione in pixel lungo la traccia
+        // offsetLeft è la posizione del slider rispetto al suo contenitore
+        // (sliderWidth - thumbWidth) è la larghezza effettiva su cui il thumb può muoversi
+        // (thumbWidth / 2) è per centrare il valore sul thumb
+        const thumbPositionX = percentage * (sliderWidth - thumbWidth) + (thumbWidth / 2);
+        
+        // Posiziona il display del valore
+        targetAdjustmentDisplay.style.left = `${calorieAdjustmentSlider.offsetLeft + thumbPositionX}px`;
+    }
+
 
     function calcolaObiettiviPasto(mealType, giornoCorrenteString) {
         const dataVisualizzata = new Date(giornoCorrenteString);
@@ -640,23 +679,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // Qui usiamo l'obiettivo base + workout, ignorando l'adjustment dello slider
         const targetCaloriesForBalance = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
         const currentCalories = totali.calorie;
-        const calorieDifferenceForBalance = currentCalories - targetCaloriesForBalance; // Positivo per surplus, negativo per deficit
+        const calorieDifferenceForBalance = currentCalories - targetCaloriesForBalance; 
 
         let balanceText = '';
         calorieBalanceText.className = ''; 
         const tolerance = 50; 
 
-        if (calorieDifferenceForBalance < -tolerance) { // Deficit
+        if (calorieDifferenceForBalance < -tolerance) { 
             balanceText = `Deficit: ${Math.abs(calorieDifferenceForBalance).toFixed(0)} kcal`;
             calorieBalanceText.classList.add('balance-deficit');
-        } else if (calorieDifferenceForBalance > tolerance) { // Surplus
+        } else if (calorieDifferenceForBalance > tolerance) { 
             balanceText = `Surplus: ${calorieDifferenceForBalance.toFixed(0)} kcal`;
             calorieBalanceText.classList.add('balance-surplus');
-        } else { // In Pari
+        } else { 
             balanceText = `In Pari`;
             calorieBalanceText.classList.add('balance-even');
         }
         calorieBalanceText.textContent = balanceText;
+
+        // Aggiorna la posizione del display del valore dello slider
+        updateSliderDisplay();
     }
 
     function renderMealBuilder() {
@@ -680,7 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
         mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
         mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
-        mealProgressCal.max = obiettiviPasto.targetCal;
+        mealProgressCal.max = obiettiviPasti.targetCal;
         mealProgressCal.value = obiettiviPasto.currentCal;
 
         pastoInCostruzione.forEach((item, index) => { 
@@ -751,10 +793,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Slider per l'aggiustamento calorico
     calorieAdjustmentSlider.addEventListener('input', () => {
         datiGiornalieri.calorieAdjustment = parseFloat(calorieAdjustmentSlider.value);
-        targetAdjustmentDisplay.textContent = `${datiGiornalieri.calorieAdjustment} kcal`;
-        aggiornaUI();
+        updateSliderDisplay(); // Aggiorna il display del valore
+        aggiornaUI(); // Aggiorna l'intera UI
         salvaGiorno(giornoVisualizzato, datiGiornalieri); 
     });
+
+    // Aggiorna la posizione del valore dello slider anche al ridimensionamento della finestra
+    window.addEventListener('resize', updateSliderDisplay);
 
 
     btnAddWorkout.addEventListener('click', () => {
