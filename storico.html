@@ -173,9 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Costanti per il piano settimanale (COPIA ESATTAMENTE DA INDEX.HTML PER CONSISTENZA)
     const PIANO_SETTIMANALE = {
-        0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 }, // Domenica (usato cal_base per coerenza con index.html)
+        0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 }, // Domenica
         1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Lunedì
-        2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Martedì (corretto a 2300 per coerenza, se in index è 2300)
+        2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Martedì
         3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, // Mercoledì
         4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Giovedì
         5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, // Venerdì
@@ -213,15 +213,15 @@ document.addEventListener('DOMContentLoaded', () => {
             data.setDate(data.getDate() + 4 - dayNum); // Ajusta a Giovedì della settimana ISO
             const weekNumber = Math.ceil((((data - primoGiornoAnno) / 86400000) + 1) / 7);
 
-            const settimanaKey = `${anno}-${String(weekNumber).padStart(2, '0')}`;
+            const settimanaKey = `${anno}-${String(weekNumber).padStart(2, '0')}`; // Correzione qui: settimanaKey
 
-            if (!settimane[settimanaKey]) {
+            if (!settimane[settimanaKey]) { // Correzione qui: settimanaKey
                 const startOfWeek = new Date(data.getFullYear(), data.getMonth(), data.getDate());
                 startOfWeek.setDate(startOfWeek.getDate() - (startOfWeek.getDay() + 6) % 7); // Torna al Lunedì della settimana
                 const endOfWeek = new Date(startOfWeek);
                 endOfWeek.setDate(startOfWeek.getDate() + 6); // Vai alla Domenica della settimana
 
-                settimane[settimanaKey] = {
+                settimane[settimanaKey] = { // Correzione qui: settimanaKey
                     data_inizio: startOfWeek.toISOString().split('T')[0],
                     data_fine: endOfWeek.toISOString().split('T')[0],
                     giorni: [],
@@ -229,27 +229,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     totaleBilancioCalorico: 0,
                     scoreMuscoloAccumulato: 0,
                     conteggioGiorniConDatiMuscolo: 0,
-                    totaleWorkoutCalorie: 0, // Aggiunto per il riepilogo settimanale
+                    totaleWorkoutCalorie: 0, 
                     totaleProteine: 0,
                     totaleCalorieConsumate: 0
                 };
             }
-            settimane[settimaneKey].giorni.push(giorno);
+            settimane[settimanaKey].giorni.push(giorno); // Correzione qui: settimanaKey
 
             // Aggrega i valori per la settimana
-            settimane[settimaneKey].totaleGrassoG += giorno.variazioneGrassoG || 0;
-            settimane[settimaneKey].totaleBilancioCalorico += giorno.bilancioCalorico || 0;
+            settimane[settimanaKey].totaleGrassoG += giorno.variazioneGrassoG || 0; // Correzione qui: settimanaKey
+            settimane[settimanaKey].totaleBilancioCalorico += giorno.bilancioCalorico || 0; // Correzione qui: settimanaKey
             
             if (typeof giorno.scoreMuscolo === 'number') {
-                settimane[settimaneKey].scoreMuscoloAccumulato += giorno.scoreMuscolo;
-                settimane[settimaneKey].conteggioGiorniConDatiMuscolo++;
+                settimane[settimanaKey].scoreMuscoloAccumulato += giorno.scoreMuscolo; // Correzione qui: settimanaKey
+                settimane[settimanaKey].conteggioGiorniConDatiMuscolo++; // Correzione qui: settimanaKey
             }
-            settimane[settimaneKey].totaleWorkoutCalorie += giorno.workoutCalorie || 0; // Somma le calorie degli allenamenti
-            settimane[settimaneKey].totaleProteine += giorno.proteine || 0;
-            settimane[settimaneKey].totaleCalorieConsumate += giorno.calorie || 0; // Calorie consumate, non bilancio
+            settimane[settimanaKey].totaleWorkoutCalorie += giorno.workoutCalorie || 0; // Correzione qui: settimanaKey
+            settimane[settimanaKey].totaleProteine += giorno.proteine || 0; // Correzione qui: settimanaKey
+            settimane[settimanaKey].totaleCalorieConsumate += giorno.calorie || 0; // Correzione qui: settimanaKey
 
             // Assicurati che i giorni all'interno della settimana siano ordinati dal più recente al più vecchio
-            settimane[settimaneKey].giorni.sort((a, b) => new Date(b.data) - new Date(a.data));
+            settimane[settimanaKey].giorni.sort((a, b) => new Date(b.data) - new Date(a.data)); // Correzione qui: settimanaKey
         });
 
         // Converti l'oggetto in array e ordina le settimane dalla più recente alla più vecchia
@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const workoutCalories = giorno.workoutCalorie || 0;
                 const calorieAdjustment = giorno.calorieAdjustment || 0;
                 
-                // Si assume che 'datiGiorno.bilancioCalorico', 'datiGiorno.variazioneGrassoG', 'datiGiorno.scoreMuscolo'
+                // Si assume che 'giorno.bilancioCalorico', 'giorno.variazioneGrassoG', 'giorno.scoreMuscolo'
                 // siano ora salvati e disponibili nell'oggetto 'giorno'
                 const deficitArrotondato = giorno.bilancioCalorico || 0;
                 const variazioneGrasso = giorno.variazioneGrassoG || 0;
