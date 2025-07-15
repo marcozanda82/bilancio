@@ -847,22 +847,31 @@ const firebaseConfig = {
             spanObiettivoCalorie.textContent = OBIETTIVI.cal; 
             spanTotaleProteine.textContent = totali.proteine.toFixed(1);
             spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
-            spanTotaleMg.textContent = totali.mg.toFixed(1);
-            spanTotaleK.textContent = totali.k.toFixed(0);
-            spanTotaleVitC.textContent = totali.vitc.toFixed(1);
-            progressVitC.max = OBIETTIVI.vitc; 
-            progressVitC.value = totali.vitc;
-            spanTotaleCa.textContent = totali.ca.toFixed(1);
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
 
             progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
             progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
-            progressMg.max = OBIETTIVI.mg; progressMg.value = totali.mg;
-            progressK.max = OBIETTIVI.k; progressK.value = totali.k;
-            progressCa.max = OBIETTIVI.ca; progressCa.value = totali.ca;
+            
+            // --- INIZIO BLOCCO CORRETTO PER MICRONUTRIENTI ---
+            spanTotaleMg.textContent = totali.mg.toFixed(1);
+            progressMg.max = OBIETTIVI.mg;
+            progressMg.value = totali.mg;
+
+            spanTotaleK.textContent = totali.k.toFixed(0);
+            progressK.max = OBIETTIVI.k;
+            progressK.value = totali.k;
+
+            spanTotaleVitC.textContent = totali.vitc.toFixed(1);
+            progressVitC.max = OBIETTIVI.vitc;
+            progressVitC.value = totali.vitc;
+
+            spanTotaleCa.textContent = totali.ca.toFixed(1);
+            progressCa.max = OBIETTIVI.ca;
+            progressCa.value = totali.ca;
+            // --- FINE BLOCCO CORRETTO PER MICRONUTRIENTI ---
 
             logBody.innerHTML = ''; 
-            (datiGiornalieri.log || []).forEach((entry, index) => {
+            (datiGiornalieri.log || []).forEach((entry, index) => { 
                 if (entry.type === 'meal') {
                     const rigaPasto = logBody.insertRow();
                     rigaPasto.classList.add('meal-group-row');
