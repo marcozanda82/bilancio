@@ -654,13 +654,31 @@ const firebaseConfig = {
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
 
-            // Se calorieAdjustment non è definito nei dati caricati, usa il valore preimpostato del giorno corrente
-            if (typeof datiGiornalieri.calorieAdjustment === 'undefined') {
-                const dataCorrente = new Date(data);
-                const giornoSettimana = dataCorrente.getDay(); // 0 per domenica, 1 per lunedì, ecc.
-                datiGiornalieri.calorieAdjustment = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
-                console.log(`Calorie adjustment preimpostato a ${datiGiornalieri.calorieAdjustment} per il giorno ${data}`);
+            // ***** INIZIO MODIFICA PER ELIMINARE DATI FARLOCCHI DELL'11 GIUGNO 2025 *****
+            const dataFarlocca = "2025-06-11"; // Formato 'YYYY-MM-DD'
+            if (data === dataFarlocca) {
+                console.warn(`Rilevati dati farlocchi per il giorno ${dataFarlocca}. Azzeramento dati.`);
+                datiGiornalieri = { log: [], workoutCalorie: 0, calorieAdjustment: 0 }; // Resetta completamente
+                localStorage.removeItem(`trackerStorico_${dataFarlocca}`);
             }
+            // ***** FINE MODIFICA *****
+
+            const dataCorrente = new Date(data);
+            const giornoSettimana = dataCorrente.getDay(); // 0 per domenica, 1 per lunedì, ecc.
+            const valorePreimpostatoPerGiorno = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
+
+            // ***** INIZIO NUOVA LOGICA PER CALORIE ADJUSTMENT *****
+            // Se la proprietà non esiste O se il valore salvato è 0,
+            // applichiamo il valore preimpostato.
+            // Questo gestisce sia i casi in cui non c'era il campo, sia i casi in cui il campo è 0.
+            if (typeof datiGiornalieri.calorieAdjustment === 'undefined' || datiGiornalieri.calorieAdjustment === 0) {
+                datiGiornalieri.calorieAdjustment = valorePreimpostatoPerGiorno;
+                console.log(`Calorie adjustment preimpostato a ${datiGiornalieri.calorieAdjustment} per il giorno ${data}`);
+            } else {
+                // Se c'è un valore diverso da 0, lo manteniamo (l'utente lo ha impostato manualmente)
+                console.log(`Calorie adjustment caricato: ${datiGiornalieri.calorieAdjustment} per il giorno ${data}`);
+            }
+            // ***** FINE NUOVA LOGICA *****
 
             aggiornaUI();
             console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
@@ -734,9 +752,9 @@ const firebaseConfig = {
             caricaGiorno(getTodayString());
             
             if (mealTypeSelector) { 
-                const lastMealTypeSaved = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
-                if (lastMealTypeSaved && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSaved)) {
-                    mealTypeSelector.value = lastMealTypeSaved;
+                const lastMealTypeSelected = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
+                if (lastMealTypeSelected && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSelected)) {
+                    mealTypeSelector.value = lastMealTypeSelected;
                 } else {
                     mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
                 }
@@ -775,12 +793,55 @@ const firebaseConfig = {
                 }
             });
             
+            // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
+            // Questo calcolo viene spostato qui per poter salvare il valore
+            const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
+            const deficitArrotondato = Math.round(deficitEffettivo);
+
+            // Calcolo della variazione di grasso
+            let variazioneGrasso = 0; // In grammi
+            // 7.7 kcal per 1g di grasso (1kg = 7700 kcal, 1g = 7.7 kcal)
+            if (deficitArrotondato < 0) { 
+                variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
+            } else if (deficitArrotondato > 0) { 
+                variazioneGrasso = -(deficitArrotondato / 7.7); // Negativo se guadagni grasso
+            } else { 
+                variazioneGrasso = 0;
+            }
+
+            // Logica per il trend muscolare (score numerico)
+            let scoreMuscolo = 0;
+
+            // Condizione 1: Proteine
+            if(totali.proteine >= (pianoDelGiorno.prot * 0.95)) {
+                scoreMuscolo++;
+            } else {
+                scoreMuscolo--;
+            }
+
+            // Condizione 2: Tipo di giornata "Forza" (usando pianoDelGiorno.tipo)
+            if(pianoDelGiorno.tipo.includes('Forza')) {
+                scoreMuscolo++; // Se è giornata di Forza, aggiungi 1 punto
+
+                // Nuova condizione per il deficit in giorni di forza
+                // Se il deficit effettivo è più negativo di -200 kcal (es. -250, -300) in un giorno di Forza
+                if (deficitArrotondato < -200) { 
+                    scoreMuscolo--; // Indice negativo per la massa muscolare se il deficit è troppo elevato in un giorno di forza
+                }
+            }
+
+
+            // Assegna i totali correnti e i nuovi campi all'oggetto datiGiornalieri PRIMA del salvataggio
             datiGiornalieri.proteine = totali.proteine;
             datiGiornalieri.calorie = totali.calorie;
             datiGiornalieri.mg = totali.mg;
             datiGiornalieri.k = totali.k;
             datiGiornalieri.vitc = totali.vitc;
             datiGiornalieri.ca = totali.ca;
+            datiGiornalieri.bilancioCalorico = deficitArrotondato; // Nuovo campo per il bilancio calorico giornaliero
+            datiGiornalieri.variazioneGrassoG = variazioneGrasso; // Nuovo campo per la variazione di grasso in grammi
+            datiGiornalieri.scoreMuscolo = scoreMuscolo; // Nuovo campo per lo score muscolare
+
 
             spanObiettivoProteine.textContent = OBIETTIVI.prot;
             spanObiettivoCalorie.textContent = OBIETTIVI.cal; 
@@ -789,6 +850,8 @@ const firebaseConfig = {
             spanTotaleMg.textContent = totali.mg.toFixed(1);
             spanTotaleK.textContent = totali.k.toFixed(0);
             spanTotaleVitC.textContent = totali.vitc.toFixed(1);
+            progressVitC.max = OBIETTIVI.vitc; 
+            progressVitC.value = totali.vitc;
             spanTotaleCa.textContent = totali.ca.toFixed(1);
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
 
@@ -796,7 +859,6 @@ const firebaseConfig = {
             progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
             progressMg.max = OBIETTIVI.mg; progressMg.value = totali.mg;
             progressK.max = OBIETTIVI.k; progressK.value = totali.k;
-            progressVitC.max = OBIETTIVI.vitc; progressVitC.value = totali.vitc;
             progressCa.max = OBIETTIVI.ca; progressCa.value = totali.ca;
 
             logBody.innerHTML = ''; 
@@ -864,6 +926,7 @@ const firebaseConfig = {
                 }
             });
 
+            // I calcoli per calorieBalanceText rimangono come prima
             const currentCalories = totali.calorie;
             const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
             const calorieDifference = currentCalories - targetCaloriesForBalanceText;
