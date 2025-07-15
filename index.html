@@ -528,6 +528,18 @@ const firebaseConfig = {
             5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
             6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
         };
+
+        // NUOVA COSTANTE: Deficit/Surplus preimpostato per giorno della settimana
+        const DEFICIT_PREIMPOSTATO_SETTIMANALE = {
+            0: -500, // Domenica
+            1: -150, // Lunedì
+            2: -150, // Martedì
+            3: -150, // Mercoledì
+            4: -150, // Giovedì
+            5: -150, // Venerdì
+            6: -500  // Sabato
+        };
+
         const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000 };
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
@@ -638,10 +650,17 @@ const firebaseConfig = {
                 console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
             }
             
-            datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0, calorieAdjustment: 0 }; 
+            datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
-            if (typeof datiGiornalieri.calorieAdjustment === 'undefined') datiGiornalieri.calorieAdjustment = 0;
+
+            // Se calorieAdjustment non è definito nei dati caricati, usa il valore preimpostato del giorno corrente
+            if (typeof datiGiornalieri.calorieAdjustment === 'undefined') {
+                const dataCorrente = new Date(data);
+                const giornoSettimana = dataCorrente.getDay(); // 0 per domenica, 1 per lunedì, ecc.
+                datiGiornalieri.calorieAdjustment = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
+                console.log(`Calorie adjustment preimpostato a ${datiGiornalieri.calorieAdjustment} per il giorno ${data}`);
+            }
 
             aggiornaUI();
             console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
@@ -1148,11 +1167,18 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
         // Event listener per l'input manuale della correzione obiettivo
         calorieAdjustmentInput.addEventListener('input', () => {
-            const value = parseFloat(calorieAdjustmentInput.value);
+            let value = parseFloat(calorieAdjustmentInput.value);
             if (!isNaN(value)) {
+                // Applica il limite di +/- 500 kcal
+                value = Math.max(Math.min(value, 500), -500);
                 datiGiornalieri.calorieAdjustment = value;
+                calorieAdjustmentInput.value = value; // Per mostrare il valore limitato nell'input
             } else {
-                datiGiornalieri.calorieAdjustment = 0; // O mantenere il valore precedente se la digitazione è incompleta
+                // Se l'input non è un numero valido, reimposta al valore predefinito del giorno
+                const dataCorrente = new Date(giornoVisualizzato);
+                const giornoSettimana = dataCorrente.getDay();
+                datiGiornalieri.calorieAdjustment = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
+                calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment; // Aggiorna la UI con il valore predefinito
             }
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
@@ -1160,14 +1186,18 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         });
 
         btnCaloriePlus.addEventListener('click', () => {
-            datiGiornalieri.calorieAdjustment = (datiGiornalieri.calorieAdjustment || 0) + 10;
+            let currentAdjustment = datiGiornalieri.calorieAdjustment || 0;
+            let newValue = currentAdjustment + 10;
+            datiGiornalieri.calorieAdjustment = Math.min(newValue, 500); // Limita a +500
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
         });
 
         btnCalorieMinus.addEventListener('click', () => {
-            datiGiornalieri.calorieAdjustment = (datiGiornalieri.calorieAdjustment || 0) - 10;
+            let currentAdjustment = datiGiornalieri.calorieAdjustment || 0;
+            let newValue = currentAdjustment - 10;
+            datiGiornalieri.calorieAdjustment = Math.max(newValue, -500); // Limita a -500
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
