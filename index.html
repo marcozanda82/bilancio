@@ -654,6 +654,16 @@ const firebaseConfig = {
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
 
+            // ***** INIZIO MODIFICA PER ELIMINARE DATI FARLOCCHI DELL'11 GIUGNO 2025 *****
+            const dataFarlocca = "2025-06-11"; // Formato 'YYYY-MM-DD'
+            if (data === dataFarlocca) {
+                console.warn(`Rilevati dati farlocchi per il giorno ${dataFarlocca}. Azzeramento dati.`);
+                datiGiornalieri = { log: [], workoutCalorie: 0, calorieAdjustment: 0 }; // Resetta completamente
+                // Opzionalmente, puoi anche rimuoverlo dal localStorage per pulizia completa
+                localStorage.removeItem(`trackerStorico_${dataFarlocca}`);
+            }
+            // ***** FINE MODIFICA *****
+
             // Se calorieAdjustment non è definito nei dati caricati, usa il valore preimpostato del giorno corrente
             if (typeof datiGiornalieri.calorieAdjustment === 'undefined') {
                 const dataCorrente = new Date(data);
