@@ -116,13 +116,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Costanti per il piano settimanale (COPIA ESATTAMENTE DA INDEX.HTML PER CONSISTENZA)
     const PIANO_SETTIMANALE = {
-        0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 }, // Domenica
-        1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Lunedì: Modificato da 2400 a 2300 per allinearsi all'index.html
-        2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Martedì - Modificato da 2400 a 2300 per allinearsi all'index.html
-        3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, // Mercoledì
-        4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Giovedì - Modificato da 2400 a 2300 per allinearsi all'index.html
-        5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, // Venerdì
-        6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }  // Sabato
+        0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 }, 
+        1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, 
+        2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, 
+        3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, 
+        4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 }, 
+        5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, 
+        6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }  
     };
 
     function renderStorico() {
@@ -179,18 +179,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcola l'obiettivo calorico TOTALE per questo giorno, replicando la logica dell'index.html
             // Obiettivo: base + workout + aggiustamento_manuale
-            const obiettivoCalorieTotale = pianoDelGiorno.cal_base + workoutCalories + calorieAdjustment; // MODIFICATO QUI
+            const obiettivoCalorieTotale = pianoDelGiorno.cal_base + workoutCalories + calorieAdjustment; 
 
             // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
-            const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale; // MODIFICATO QUI
+            const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale; 
             const deficitArrotondato = Math.round(deficitEffettivo); // Arrotonda all'intero più vicino
 
             // Determina la stringa per Deficit/Surplus
             let deficitSurplusText = '';
             if (deficitArrotondato < 0) {
-                deficitSurplusText = `${deficitArrotondato} kcal (Deficit)`; // Es: -4 kcal (Deficit)
+                deficitSurplusText = `${deficitArrotondato} kcal (Deficit)`; 
             } else if (deficitArrotondato > 0) {
-                deficitSurplusText = `+${deficitArrotondato} kcal (Surplus)`; // Es: +96 kcal (Surplus)
+                deficitSurplusText = `+${deficitArrotondato} kcal (Surplus)`; 
             } else {
                 deficitSurplusText = `0 kcal (Pari)`;
             }
@@ -200,13 +200,13 @@ document.addEventListener('DOMContentLoaded', () => {
             let testoVariazioneGrasso = '';
 
             // 7.7 kcal per 1g di grasso (1kg = 7700 kcal, 1g = 7.7 kcal)
-            if (deficitArrotondato < 0) { // Se il deficit è negativo (stai consumando meno calorie del bisogno), stai perdendo grasso
+            if (deficitArrotondato < 0) { 
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
                 testoVariazioneGrasso = '-' + variazioneGrasso.toFixed(1) + ' g';
-            } else if (deficitArrotondato > 0) { // Se il deficit è positivo (stai consumando più calorie del bisogno), stai guadagnando grasso
+            } else if (deficitArrotondato > 0) { 
                 variazioneGrasso = (deficitArrotondato / 7.7);
                 testoVariazioneGrasso = '+' + variazioneGrasso.toFixed(1) + ' g';
-            } else { // DeficitArrotondato è 0
+            } else { 
                 testoVariazioneGrasso = '0.0 g';
             }
             
@@ -223,12 +223,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Condizione 2: Tipo di giornata "Forza"
             if(pianoDelGiorno.tipo.includes('Forza')) {
-                scoreMuscolo++; // Se è giornata di Forza, aggiungi 1 punto
+                scoreMuscolo++; 
 
                 // Nuova condizione per il deficit in giorni di forza
-                // Se il deficit effettivo è più negativo di -200 kcal (es. -250, -300) in un giorno di Forza
-                if (deficitArrotondato < -200) { // Se il deficit supera il taglio desiderato di 200 kcal (es. -250, -300)
-                    scoreMuscolo--; // Indice negativo per la massa muscolare
+                if (deficitArrotondato < -200) { 
+                    scoreMuscolo--; 
                 }
             }
 
@@ -288,10 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <td>${(item.cal || 0).toFixed(0)} Kcal</td>
                                           </tr>`;
                         });
-                    } else if (entry.type === 'single') { // Alimento singolo
+                    } else if (entry.type === 'single') { 
                         detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${(entry.cal || 0).toFixed(0)} Kcal</td></tr>`;
-                    } else if (entry.type === 'workout') { // Allenamento
-                         // Ho aggiunto " (bruciate)" per chiarezza nel dettaglio
+                    } else if (entry.type === 'workout') { 
                          detailHtml += `<tr><td>${entry.desc}</td><td></td><td></td><td>${(entry.cal || 0).toFixed(0)} Kcal (bruciate)</td></tr>`;
                     }
                 });
