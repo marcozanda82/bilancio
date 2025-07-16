@@ -179,7 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcola l'obiettivo calorico TOTALE per questo giorno, replicando la logica dell'index.html
             // Obiettivo: base + workout + aggiustamento_manuale
-            const obiettivoCalorieTotale = pianoDelGiorno.cal_base + workoutCalories + calorieAdjustment; 
+            //const obiettivoCalorieTotale = pianoDelGiorno.cal_base + workoutCalories + calorieAdjustment;  errata
+            const calorieAdjustment = giorno.calorieAdjustment || 0; // Se presente nel log del giorno
 
             // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale; 
