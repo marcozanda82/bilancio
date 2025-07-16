@@ -544,15 +544,14 @@ const firebaseConfig = {
         let currentUserUID = null; 
 
         const PIANO_SETTIMANALE = {
-            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 }, // Domenica
-            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Lunedì
-            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Martedì - Corretto da 2400 a 2300
-            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, // Mercoledì
-            4: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Giovedì - Corretto da 2400 a 2300
-            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, // Venerdì
-            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 } // Sabato
+            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 },
+            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
+            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
+            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
         };
-
 
         // NUOVA COSTANTE: Deficit/Surplus preimpostato per giorno della settimana
         const DEFICIT_PREIMPOSTATO_SETTIMANALE = {
@@ -1185,7 +1184,7 @@ const firebaseConfig = {
             aggiornaUI(); 
             salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             renderMealBuilder(); 
-            
+
             const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
             if (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) {
                 mealTypeSelector.value = MEAL_TYPE_SEQUENCE[currentIndex + 1];
