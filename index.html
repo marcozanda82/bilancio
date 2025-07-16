@@ -536,7 +536,7 @@ const firebaseConfig = {
         let datiGiornalieri = {};
         let foodDatabase = {};
         let pastoInCostruzione = [];
-        let isDirty = false; // NUOVO: Flag per segnalare modifiche non salvate
+        let isDirty = false; // Flag per segnalare modifiche non salvate
         
         let db; 
         let auth; 
@@ -580,6 +580,8 @@ const firebaseConfig = {
         const MEAL_TYPE_SEQUENCE = ['merenda1', 'pranzo', 'merenda2', 'cena'];
 
         const LOCAL_STORAGE_SYNC_KEYS = ['trackerFoodDatabase', 'trackerPesate', 'trackerMealType', 'trackerPastoInCostruzione'];
+        const LOCAL_LAST_UPDATE_KEY = 'lastLocalUpdateTimestamp';
+        const CLOUD_LAST_UPDATE_PATH = 'lastCloudUpdateTimestamp';
 
 
         // --- ELEMENTI DEL DOM ---
@@ -644,11 +646,13 @@ const firebaseConfig = {
         
         function salvaFoodDatabase() { 
             localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); 
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
             saveAllTrackerDataToCloud(); 
         }
         
         function salvaPastoInCostruzione() { 
             localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); 
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
             saveAllTrackerDataToCloud(); 
         }
         
@@ -657,6 +661,7 @@ const firebaseConfig = {
                 datiDaSalvare = datiGiornalieri;
             }
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
             console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
             isDirty = false; // Resetta il flag isDirty dopo il salvataggio locale
             updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
@@ -707,8 +712,8 @@ const firebaseConfig = {
             // ***** FINE NUOVA LOGICA *****
 
             aggiornaUI();
-            isDirty = false; // NUOVO: Nessuna modifica al caricamento del giorno
-            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona al caricamento
+            isDirty = false; // Nessuna modifica al caricamento del giorno
+            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al caricamento
             console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
         }
 
@@ -1106,8 +1111,8 @@ const firebaseConfig = {
             workoutDescInput.value = '';
             workoutCaloriesInput.value = '';
             renderMealBuilder(); 
-            isDirty = true; // NUOVO: Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+            isDirty = true; // Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
         });
 
         btnAggiungiSingolo.addEventListener('click', () => {
@@ -1118,8 +1123,8 @@ const firebaseConfig = {
                 aggiornaUI();
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 resetInputAlimento();
-                isDirty = true; // NUOVO: Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+                isDirty = true; // Modifica dati, imposta flag
+                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
             }
         });
 
@@ -1131,8 +1136,8 @@ const firebaseConfig = {
                 renderMealBuilder();
                 resetInputAlimento();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true; // NUOVO: Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+                isDirty = true; // Modifica dati, imposta flag
+                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
             }
         });
 
@@ -1143,8 +1148,8 @@ const firebaseConfig = {
                     pastoInCostruzione[index].selezionato = e.target.checked;
                     salvaPastoInCostruzione(); 
                     renderMealBuilder(); 
-                    isDirty = true; // NUOVO: Modifica dati, imposta flag
-                    updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+                    isDirty = true; // Modifica dati, imposta flag
+                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
                 }
             } else if (e.target.id === 'meal-type-selector') {
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
@@ -1188,8 +1193,8 @@ const firebaseConfig = {
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
             saveAllTrackerDataToCloud(); 
-            isDirty = true; // NUOVO: Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+            isDirty = true; // Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
         });
 
         document.body.addEventListener('click', (e) => {
@@ -1207,8 +1212,8 @@ const firebaseConfig = {
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 renderMealBuilder();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true; // NUOVO: Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+                isDirty = true; // Modifica dati, imposta flag
+                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
                 
                 if (itemToEdit.type === 'meal' && itemToEdit.mealId) {
                     mealTypeSelector.value = itemToEdit.mealId;
@@ -1237,8 +1242,8 @@ const firebaseConfig = {
                     aggiornaUI(); 
                     salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 }
-                isDirty = true; // NUOVO: Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+                isDirty = true; // Modifica dati, imposta flag
+                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
             } else if (target.closest('.expand-arrow')) {
                 const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
                 if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
@@ -1275,8 +1280,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 caricaGiorno(dataSelezionata); 
                 alert(`Dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} caricati.`);
             }
-            // Non è necessario impostare isDirty = false qui dopo il "salvaGiorno" condizionale,
-            // perché salvaGiorno già lo fa. Se "Annulla", il flag rimane com'è.
+            // isDirty è già gestito da salvaGiorno() per l'OK, e per Annulla non modifichiamo lo stato di dirty.
         });
         
         dataCaricamentoInput.value = getTodayString('ymd');
@@ -1299,8 +1303,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // NUOVO: Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+            isDirty = true; // Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
         });
 
         btnCaloriePlus.addEventListener('click', () => {
@@ -1310,8 +1314,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // NUOVO: Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+            isDirty = true; // Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
         });
 
         btnCalorieMinus.addEventListener('click', () => {
@@ -1321,8 +1325,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // NUOVO: Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+            isDirty = true; // Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
         });
 
         // --- NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK ---
@@ -1351,7 +1355,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             auth = getAuth(firebaseApp);
             console.log("Firebase inizializzato per il tracker.");
 
-            onAuthStateChanged(auth, (user) => {
+            onAuthStateChanged(auth, async (user) => { // Aggiungi 'async' qui
                 if (user) {
                     currentUserUID = user.uid;
                     authFormFields.style.display = 'none';
@@ -1374,6 +1378,48 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
                     
                     console.log("Utente autenticato. UI aggiornata.");
+
+                    // --- NUOVO: Logica di Sincronizzazione Intelligente all'Accesso ---
+                    // Recupera l'ultimo timestamp locale
+                    const lastLocalUpdate = parseInt(localStorage.getItem(LOCAL_LAST_UPDATE_KEY) || 0);
+                    let lastCloudUpdate = 0;
+
+                    try {
+                        // Recupera l'ultimo timestamp del cloud
+                        const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
+                        if (cloudTimestampSnapshot.exists()) {
+                            lastCloudUpdate = cloudTimestampSnapshot.val();
+                        }
+                    } catch (error) {
+                        console.error("Errore nel recupero del timestamp cloud:", error);
+                        // Continua anche in caso di errore, assumendo cloud non aggiornato
+                    }
+
+                    console.log(`Ultimo aggiornamento locale: ${new Date(lastLocalUpdate).toLocaleString()}`);
+                    console.log(`Ultimo aggiornamento cloud: ${new Date(lastCloudUpdate).toLocaleString()}`);
+
+                    // Aggiungi un piccolo ritardo prima del confronto per dare tempo al DOM di caricarsi
+                    // e per ridurre problemi di "race condition" sui timestamp appena aggiornati.
+                    setTimeout(async () => {
+                        if (lastCloudUpdate > lastLocalUpdate) {
+                            // Il cloud è più recente, suggerisci il download
+                            if (confirm("I tuoi dati sul cloud sono più recenti di quelli locali. Vuoi scaricarli ORA? (Se non scarichi, i dati locali potrebbero sovrascrivere quelli cloud al prossimo salvataggio)")) {
+                                await loadAllTrackerDataFromCloud();
+                            } else {
+                                // Se l'utente rifiuta, avvisa che l'upload sovrascriverà
+                                alert("Attenzione: al prossimo salvataggio i tuoi dati locali (meno recenti) sovrascriveranno quelli sul cloud.");
+                            }
+                        } else if (lastLocalUpdate > lastCloudUpdate) {
+                            // Il locale è più recente, suggerisci l'upload
+                            if (confirm("I tuoi dati locali sono più recenti di quelli sul cloud. Vuoi caricarli ORA per mantenerli aggiornati sul cloud?")) {
+                                await handleManualUploadToCloud();
+                            }
+                        } else {
+                            // Sono uguali o entrambi 0 (nuovi utenti o mai salvato)
+                            console.log("Dati locali e cloud sono sincronizzati o non ci sono differenze significative.");
+                        }
+                    }, 500); // Ritardo di 500ms
+                    // --- FINE NUOVO: Logica di Sincronizzazione Intelligente ---
 
                 } else {
                     currentUserUID = null;
@@ -1480,6 +1526,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                  return; 
             }
             
+            // NUOVO: Ottieni il timestamp corrente PRIMA di inviare i dati
+            const currentTimestamp = Date.now();
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp); // Allinea il locale prima dell'upload
+
             const dataToUpload = {};
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -1496,9 +1546,9 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             
             try {
                 await set(dataRef, dataToUpload);
+                // Dopo un salvataggio riuscito, aggiorna il timestamp del cloud con lo STESSO valore
+                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp); // Usa lo stesso timestamp
                 console.log("Dati caricati automaticamente sul cloud.");
-                // isDirty = false; // Non resettiamo isDirty qui, lo fa già salvaGiorno()
-                // updateFloppyDiskIcon(); // Non aggiorniamo qui, lo fa già salvaGiorno()
             } catch(err) {
                 console.error("Errore durante il caricamento automatico sul cloud:", err);
             }
@@ -1536,6 +1586,13 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                             }
                         }
                     }
+                    // NUOVO: Dopo aver scaricato i dati, allinea il timestamp locale con quello del cloud
+                    const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
+                    if (cloudTimestampSnapshot.exists()) {
+                        localStorage.setItem(LOCAL_LAST_UPDATE_KEY, cloudTimestampSnapshot.val());
+                    } else {
+                        localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Fallback se non c'è timestamp cloud
+                    }
                     alert("Download completato! Ricarica la pagina per vedere le modifiche.");
                     location.reload(); // Ricarica la pagina per inizializzare con i nuovi dati
                 } else {
@@ -1563,6 +1620,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             cloudSyncStatusSpan.className = 'cloud-sync-status'; 
 
             try {
+                // NUOVO: Ottieni il timestamp corrente PRIMA di inviare i dati
+                const currentTimestamp = Date.now();
+                localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp); // Allinea il locale prima dell'upload
+
                 const dataToUpload = {};
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
@@ -1576,10 +1637,12 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     }
                 }
                 await set(dataRef, dataToUpload);
+                // Dopo un salvataggio riuscito, aggiorna il timestamp del cloud con lo STESSO valore
+                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp); // Usa lo stesso timestamp
                 alert("Caricamento completato con successo!");
                 console.log("Caricamento manuale completato!");
-                isDirty = false; // NUOVO: Resetta il flag isDirty dopo il salvataggio manuale
-                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
+                isDirty = false; // Resetta il flag isDirty dopo il salvataggio manuale
+                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
             } catch (error) {
                 alert(`Errore durante il caricamento: ${error.message}`);
                 console.error("Manual Upload error:", error);
