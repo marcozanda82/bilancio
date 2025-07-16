@@ -116,13 +116,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Costanti per il piano settimanale (COPIA ESATTAMENTE DA INDEX.HTML PER CONSISTENZA)
     const PIANO_SETTIMANALE = {
-        0: { tipo: '💧 Riposo (Deficit)', cal: 2300, prot: 140 }, // Domenica
-        1: { tipo: '🔥 Forza (Mantenimento)', cal: 2300, prot: 140 }, // Lunedì: Modificato da 2400 a 2300 per allinearsi all'index.html
-        2: { tipo: '💪 Forza (Mantenimento)', cal: 2300, prot: 140 }, // Martedì
-        3: { tipo: '🏃 Cardio (Deficit)', cal: 2300, prot: 140 }, // Mercoledì
-        4: { tipo: '🏋️ Forza (Mantenimento)', cal: 2300, prot: 140 }, // Giovedì
-        5: { tipo: '🏃 Cardio (Deficit)', cal: 2300, prot: 140 }, // Venerdì
-        6: { tipo: '🥗 Mantenimento (Free)', cal: 2300, prot: 140 }  // Sabato
+        0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 }, // Domenica
+        1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Lunedì: Modificato da 2400 a 2300 per allinearsi all'index.html
+        2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Martedì - Modificato da 2400 a 2300 per allinearsi all'index.html
+        3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, // Mercoledì
+        4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 }, // Giovedì - Modificato da 2400 a 2300 per allinearsi all'index.html
+        5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 }, // Venerdì
+        6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }  // Sabato
     };
 
     function renderStorico() {
@@ -170,7 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Recupera gli obiettivi dal PIANO_SETTIMANALE
             const dataDelGiorno = new Date(giorno.data);
             const giornoSettimana = dataDelGiorno.getDay(); // 0 = Domenica, 6 = Sabato
-            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1]; // Fallback al Lunedì
+            // Utilizza 'cal_base' come in index.html
+            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1]; 
             
             // Recupare l'aggiustamento calorico per questo giorno specifico dallo storico
             // Assicurati che 'giorno.calorieAdjustment' esista e sia corretto nei dati salvati
@@ -178,10 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcola l'obiettivo calorico TOTALE per questo giorno, replicando la logica dell'index.html
             // Obiettivo: base + workout + aggiustamento_manuale
-            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + calorieAdjustment;
+            const obiettivoCalorieTotale = pianoDelGiorno.cal_base + workoutCalories + calorieAdjustment; // MODIFICATO QUI
 
             // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
-            const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
+            const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale; // MODIFICATO QUI
             const deficitArrotondato = Math.round(deficitEffettivo); // Arrotonda all'intero più vicino
 
             // Determina la stringa per Deficit/Surplus
