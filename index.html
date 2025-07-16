@@ -327,6 +327,11 @@
             justify-content: center;
             transition: background-color 0.3s;
             flex-shrink: 0;
+            /* Nuovi stili per il lampeggio */
+            animation-duration: 1.5s;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+            animation-name: none; /* Inizialmente nessuna animazione */
         }
         .floppy-disk-button:hover {
             background-color: #004d40;
@@ -334,8 +339,26 @@
         .floppy-disk-button.disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            animation-name: none !important; /* Disabilita lampeggio se il pulsante è disabilitato */
         }
-
+        /* Definizione dell'animazione di lampeggio */
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
+                background-color: #00796b; /* Colore normale */
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+                background-color: #d32f2f; /* Colore rosso quando lampeggia */
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+                background-color: #00796b; /* Torna normale */
+            }
+        }
+        .floppy-disk-button.unsaved-changes {
+            animation-name: pulse-red;
+        }
     </style>
 </head>
 <body>
@@ -513,6 +536,7 @@ const firebaseConfig = {
         let datiGiornalieri = {};
         let foodDatabase = {};
         let pastoInCostruzione = [];
+        let isDirty = false; // NUOVO: Flag per segnalare modifiche non salvate
         
         let db; 
         let auth; 
@@ -634,7 +658,9 @@ const firebaseConfig = {
             }
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
             console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
-            saveAllTrackerDataToCloud(); 
+            isDirty = false; // Resetta il flag isDirty dopo il salvataggio locale
+            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            saveAllTrackerDataToCloud(); // Avvia la sincronizzazione cloud in background
         }
         
         function caricaGiorno(data) {
@@ -681,6 +707,8 @@ const firebaseConfig = {
             // ***** FINE NUOVA LOGICA *****
 
             aggiornaUI();
+            isDirty = false; // NUOVO: Nessuna modifica al caricamento del giorno
+            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona al caricamento
             console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
         }
 
@@ -1078,6 +1106,8 @@ const firebaseConfig = {
             workoutDescInput.value = '';
             workoutCaloriesInput.value = '';
             renderMealBuilder(); 
+            isDirty = true; // NUOVO: Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
         });
 
         btnAggiungiSingolo.addEventListener('click', () => {
@@ -1088,6 +1118,8 @@ const firebaseConfig = {
                 aggiornaUI();
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 resetInputAlimento();
+                isDirty = true; // NUOVO: Modifica dati, imposta flag
+                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
             }
         });
 
@@ -1099,6 +1131,8 @@ const firebaseConfig = {
                 renderMealBuilder();
                 resetInputAlimento();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
+                isDirty = true; // NUOVO: Modifica dati, imposta flag
+                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
             }
         });
 
@@ -1109,6 +1143,8 @@ const firebaseConfig = {
                     pastoInCostruzione[index].selezionato = e.target.checked;
                     salvaPastoInCostruzione(); 
                     renderMealBuilder(); 
+                    isDirty = true; // NUOVO: Modifica dati, imposta flag
+                    updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
                 }
             } else if (e.target.id === 'meal-type-selector') {
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
@@ -1152,6 +1188,8 @@ const firebaseConfig = {
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
             saveAllTrackerDataToCloud(); 
+            isDirty = true; // NUOVO: Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
         });
 
         document.body.addEventListener('click', (e) => {
@@ -1169,6 +1207,8 @@ const firebaseConfig = {
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 renderMealBuilder();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
+                isDirty = true; // NUOVO: Modifica dati, imposta flag
+                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
                 
                 if (itemToEdit.type === 'meal' && itemToEdit.mealId) {
                     mealTypeSelector.value = itemToEdit.mealId;
@@ -1197,6 +1237,8 @@ const firebaseConfig = {
                     aggiornaUI(); 
                     salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 }
+                isDirty = true; // NUOVO: Modifica dati, imposta flag
+                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
             } else if (target.closest('.expand-arrow')) {
                 const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
                 if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
@@ -1233,6 +1275,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 caricaGiorno(dataSelezionata); 
                 alert(`Dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} caricati.`);
             }
+            // Non è necessario impostare isDirty = false qui dopo il "salvaGiorno" condizionale,
+            // perché salvaGiorno già lo fa. Se "Annulla", il flag rimane com'è.
         });
         
         dataCaricamentoInput.value = getTodayString('ymd');
@@ -1255,6 +1299,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
+            isDirty = true; // NUOVO: Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
         });
 
         btnCaloriePlus.addEventListener('click', () => {
@@ -1264,6 +1310,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
+            isDirty = true; // NUOVO: Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
         });
 
         btnCalorieMinus.addEventListener('click', () => {
@@ -1273,7 +1321,21 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
+            isDirty = true; // NUOVO: Modifica dati, imposta flag
+            updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
         });
+
+        // --- NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK ---
+        function updateFloppyDiskIcon() {
+            if (btnFloppyUpload) {
+                if (isDirty && currentUserUID) { // Lampeggia solo se ci sono modifiche E l'utente è autenticato
+                    btnFloppyUpload.classList.add('unsaved-changes');
+                } else {
+                    btnFloppyUpload.classList.remove('unsaved-changes');
+                }
+            }
+        }
+        // --- FINE NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK ---
 
 
         // --- FUNZIONI DI AUTENTICAZIONE E SINCRONIZZAZIONE CLOUD ---
@@ -1309,6 +1371,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
                     btnFloppyUpload.disabled = false; // Abilita il pulsante floppy
+                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
                     
                     console.log("Utente autenticato. UI aggiornata.");
 
@@ -1329,6 +1392,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
                     btnFloppyUpload.disabled = true; // Disabilita il pulsante floppy
+                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
                 }
@@ -1433,6 +1497,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             try {
                 await set(dataRef, dataToUpload);
                 console.log("Dati caricati automaticamente sul cloud.");
+                // isDirty = false; // Non resettiamo isDirty qui, lo fa già salvaGiorno()
+                // updateFloppyDiskIcon(); // Non aggiorniamo qui, lo fa già salvaGiorno()
             } catch(err) {
                 console.error("Errore durante il caricamento automatico sul cloud:", err);
             }
@@ -1471,7 +1537,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                         }
                     }
                     alert("Download completato! Ricarica la pagina per vedere le modifiche.");
-                    location.reload(); 
+                    location.reload(); // Ricarica la pagina per inizializzare con i nuovi dati
                 } else {
                     alert("Nessun dato trovato sul cloud per questo utente.");
                 }
@@ -1512,6 +1578,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 await set(dataRef, dataToUpload);
                 alert("Caricamento completato con successo!");
                 console.log("Caricamento manuale completato!");
+                isDirty = false; // NUOVO: Resetta il flag isDirty dopo il salvataggio manuale
+                updateFloppyDiskIcon(); // NUOVO: Aggiorna lo stato dell'icona
             } catch (error) {
                 alert(`Errore durante il caricamento: ${error.message}`);
                 console.error("Manual Upload error:", error);
@@ -1570,6 +1638,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             btnFloppyUpload.disabled = true; 
+            updateFloppyDiskIcon(); // Aggiorna lo stato iniziale dell'icona
         });
 
     </script>
