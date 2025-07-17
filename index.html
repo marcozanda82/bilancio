@@ -300,7 +300,7 @@
             flex-shrink: 0;
         }
 
-        /* STILI PER IL PULSANTE FLOPPY DISK */
+        /* STILI PER IL PULSANTE FLOPPY DISK (ORA RIMOSSO O NASCOSTO) */
         .summary-header-row {
             display: flex;
             justify-content: space-between;
@@ -314,6 +314,7 @@
             border-bottom: none;
         }
         .floppy-disk-button {
+            display: none; /* Rimosso l'icona del floppy disk */
             background-color: #00796b;
             color: white;
             border: none;
@@ -322,7 +323,6 @@
             font-size: 1.5em;
             width: 40px;
             height: 40px;
-            display: flex;
             align-items: center;
             justify-content: center;
             transition: background-color 0.3s;
@@ -500,7 +500,7 @@
                 </p>
                 <div class="warning" style="margin-top: 15px;">
                     <strong>Attenzione:</strong><br>
-                    - <strong>Carica (via icona Floppy):</strong> Sostituisce i dati sul cloud con quelli che hai su questo dispositivo.<br>
+                    - <strong>Carica:</strong> Sostituisce i dati sul cloud con quelli che hai su questo dispositivo.<br>
                     - <strong>Scarica:</strong> Sostituisce i dati su questo dispositivo con quelli salvati sul cloud.
                 </div>
             </div>
@@ -1329,15 +1329,9 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
         });
 
-        // --- NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK ---
+        // --- NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK (ORA RIMOSSE/MODIFICATE) ---
         function updateFloppyDiskIcon() {
-            if (btnFloppyUpload) {
-                if (isDirty && currentUserUID) { // Lampeggia solo se ci sono modifiche E l'utente è autenticato
-                    btnFloppyUpload.classList.add('unsaved-changes');
-                } else {
-                    btnFloppyUpload.classList.remove('unsaved-changes');
-                }
-            }
+            // Logica del floppy disk rimossa per questo esperimento
         }
         // --- FINE NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK ---
 
@@ -1374,7 +1368,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
-                    btnFloppyUpload.disabled = false; // Abilita il pulsante floppy
+                    btnFloppyUpload.style.display = 'none'; // Assicurati che il floppy sia nascosto
                     updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
                     
                     console.log("Utente autenticato. UI aggiornata.");
@@ -1402,13 +1396,9 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     // e per ridurre problemi di "race condition" sui timestamp appena aggiornati.
                     setTimeout(async () => {
                         if (lastCloudUpdate > lastLocalUpdate) {
-                            // Il cloud è più recente, suggerisci il download
-                            if (confirm("I tuoi dati sul cloud sono più recenti di quelli locali. Vuoi scaricarli ORA? (Se non scarichi, i dati locali potrebbero sovrascrivere quelli cloud al prossimo salvataggio)")) {
-                                await loadAllTrackerDataFromCloud();
-                            } else {
-                                // Se l'utente rifiuta, avvisa che l'upload sovrascriverà
-                                alert("Attenzione: al prossimo salvataggio i tuoi dati locali (meno recenti) sovrascriveranno quelli sul cloud.");
-                            }
+                            // Il cloud è più recente, scarica automaticamente
+                            console.log("Dati sul cloud più recenti. Download automatico in corso...");
+                            await loadAllTrackerDataFromCloud(true); // true per skipConfirm e reload
                         } else if (lastLocalUpdate > lastCloudUpdate) {
                             // Il locale è più recente, suggerisci l'upload
                             if (confirm("I tuoi dati locali sono più recenti di quelli sul cloud. Vuoi caricarli ORA per mantenerli aggiornati sul cloud?")) {
@@ -1437,7 +1427,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
                     cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-                    btnFloppyUpload.disabled = true; // Disabilita il pulsante floppy
+                    btnFloppyUpload.style.display = 'none'; // Assicurati che il floppy sia nascosto
                     updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
@@ -1450,7 +1440,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             authSection.style.borderColor = '#c62828';
             mainTrackerContent.classList.remove('authenticated');
             cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-            btnFloppyUpload.disabled = true; // Disabilita il pulsante floppy anche in caso di errore Firebase
+            btnFloppyUpload.style.display = 'none'; // Nascondi il floppy anche in caso di errore Firebase
         }
 
         async function handleRegister() {
@@ -1554,14 +1544,14 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        async function loadAllTrackerDataFromCloud() {
+        async function loadAllTrackerDataFromCloud(skipConfirmAndReload = false) { // Aggiunto parametro
             const dataRef = getUserDataRef();
             if (!dataRef) {
                 alert("Devi essere autenticato per scaricare i dati dal cloud.");
                 return;
             }
 
-            if (!confirm("ATTENZIONE: i dati locali verranno SOVRASCRITTI con quelli dal cloud. Continuare?")) return;
+            if (!skipConfirmAndReload && !confirm("ATTENZIONE: i dati locali verranno SOVRASCRITTI con quelli dal cloud. Continuare?")) return;
 
             try {
                 const snapshot = await get(dataRef);
@@ -1593,10 +1583,14 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     } else {
                         localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Fallback se non c'è timestamp cloud
                     }
-                    alert("Download completato! Ricarica la pagina per vedere le modifiche.");
-                    location.reload(); // Ricarica la pagina per inizializzare con i nuovi dati
+                    // alert("Download completato! Ricarica la pagina per vedere le modifiche."); // Rimosso alert
+                    location.reload(); // Ricarica la pagina automaticamente
                 } else {
-                    alert("Nessun dato trovato sul cloud per questo utente.");
+                    if (!skipConfirmAndReload) { // Solo se non è un download automatico silenzioso
+                        alert("Nessun dato trovato sul cloud per questo utente.");
+                    } else {
+                        console.log("Nessun dato trovato sul cloud per il download automatico.");
+                    }
                 }
             } catch (error) {
                 alert(`Errore durante il download dal cloud: ${error.message}`);
@@ -1604,7 +1598,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        // Funzione specifica per l'upload manuale (collegata al pulsante floppy)
+        // Funzione specifica per l'upload manuale (collegata al pulsante floppy - ora nascosto)
         async function handleManualUploadToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
@@ -1612,10 +1606,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 return;
             }
 
-            if (!confirm("Sei sicuro di voler SOVRASCRIVERE i dati sul cloud con quelli locali?")) return;
+            // if (!confirm("Sei sicuro di voler SOVRASCRIVERE i dati sul cloud con quelli locali?")) return; // Rimosso confirm
 
             // Disabilita il pulsante e mostra un messaggio di caricamento
-            btnFloppyUpload.disabled = true;
+            // btnFloppyUpload.disabled = true; // Non più necessario dato che è nascosto
             cloudSyncStatusSpan.textContent = "Caricamento in corso...";
             cloudSyncStatusSpan.className = 'cloud-sync-status'; 
 
@@ -1647,7 +1641,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 alert(`Errore durante il caricamento: ${error.message}`);
                 console.error("Manual Upload error:", error);
             } finally {
-                btnFloppyUpload.disabled = false; // Riabilita il pulsante floppy
+                // btnFloppyUpload.disabled = false; // Non più necessario dato che è nascosto
                 if (auth && auth.currentUser) {
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${auth.currentUser.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
@@ -1659,7 +1653,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         }
 
         btnFloppyUpload.addEventListener('click', handleManualUploadToCloud); 
-        btnDownloadManual.addEventListener('click', loadAllTrackerDataFromCloud);
+        btnDownloadManual.addEventListener('click', () => loadAllTrackerDataFromCloud(false)); // Mantieni la conferma per il download manuale esplicito
 
 
         // --- FUNZIONE DI MIGRAZIONE VECCHIO STORICO A NUOVO FORMATO ---
@@ -1700,7 +1694,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
-            btnFloppyUpload.disabled = true; 
+            btnFloppyUpload.style.display = 'none'; // Nascondi il pulsante floppy all'avvio
             updateFloppyDiskIcon(); // Aggiorna lo stato iniziale dell'icona
         });
 
