@@ -8,7 +8,9 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
         .container { width: 100%; max-width: 950px; }
         h1 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px;}
-        .nav-links a { display: inline-block; margin-bottom: 25px; padding: 10px 15px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        .nav-links { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .nav-links a, .nav-links button { display: inline-block; padding: 10px 15px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; }
+        .nav-links a:hover, .nav-links button:hover { opacity: 0.9; }
 
         .storico-table { width: 100%; border-collapse: collapse; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;}
         th, td { padding: 12px 15px; text-align: left; vertical-align: middle; }
@@ -46,6 +48,9 @@
         <h1>📊 Storico e Trend Giornalieri</h1>
         <div class="nav-links">
             <a href="index.html">⬅️ Torna al Tracker</a>
+            <button id="btn-esporta-excel" style="background-color: #2e7d32; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                ⬇️ Esporta in Excel
+            </button>
         </div>
         <div class="storico-table-container">
             <table class="storico-table">
@@ -324,6 +329,98 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // Nuova funzione per esportare i dati in un file Excel (CSV)
+    function esportaInExcel() {
+        const storico = caricaTuttoLoStorico();
+        if (storico.length === 0) {
+            alert("Nessun dato da esportare.");
+            return;
+        }
+
+        // Creazione dell'header del file CSV
+        let csvContent = "Data,Proteine (g),Calorie (kcal),Workout (kcal),Deficit/Surplus (kcal),Variazione Grasso (g),Trend Muscolare\n";
+
+        storico.forEach(giorno => {
+            const dataDelGiorno = new Date(giorno.data);
+            const dataFormatted = dataDelGiorno.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+            // Recupera gli obiettivi dal piano settimanale (copiato da renderStorico)
+            const giornoSettimana = dataDelGiorno.getDay();
+            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
+
+            // Calcola i totali del giorno per le macro
+            let totaliGiorno = { proteine: 0, calorie: 0 };
+            let totalWorkoutCaloriesLogged = 0;
+            (giorno.log || []).forEach(entry => {
+                if (entry.type === 'meal' && entry.items) {
+                    entry.items.forEach(item => {
+                        totaliGiorno.proteine += item.prot || 0;
+                        totaliGiorno.calorie += item.cal || 0;
+                    });
+                } else if (entry.type === 'single') {
+                    totaliGiorno.proteine += entry.prot || 0;
+                    totaliGiorno.calorie += entry.cal || 0;
+                } else if (entry.type === 'workout') {
+                    totalWorkoutCaloriesLogged += entry.cal || 0;
+                }
+            });
+            const workoutCalories = totalWorkoutCaloriesLogged;
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
+            const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
+            const deficitArrotondato = Math.round(deficitEffettivo);
+
+            // Calcolo della variazione di grasso (copiato da renderStorico)
+            let variazioneGrasso = 0;
+            if (deficitArrotondato < 0) {
+                variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
+            } else if (deficitArrotondato > 0) {
+                variazioneGrasso = -(deficitArrotondato / 7.7);
+            }
+
+            // Trend muscolare (copiato da renderStorico)
+            let scoreMuscolo = 0;
+            if (totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) {
+                scoreMuscolo++;
+            } else {
+                scoreMuscolo--;
+            }
+            if (pianoDelGiorno.tipo.includes('Forza')) {
+                scoreMuscolo++;
+                if (deficitArrotondato < -200) {
+                    scoreMuscolo--;
+                }
+            }
+            let trendMuscolareText = 'Neutrale';
+            if (scoreMuscolo > 0) {
+                trendMuscolareText = 'Positivo';
+            } else if (scoreMuscolo < 0) {
+                trendMuscolareText = 'Negativo';
+            }
+
+            // Aggiunta dei dati del giorno al CSV
+            csvContent += `"${dataFormatted}",${totaliGiorno.proteine.toFixed(1)},${totaliGiorno.calorie.toFixed(0)},${workoutCalories},${deficitArrotondato},${variazioneGrasso.toFixed(1)},"${trendMuscolareText}"\n`;
+        });
+
+        // Creazione del file blob e download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "storico_tracker.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            alert("Il tuo browser non supporta il download diretto. Copia e incolla il contenuto.");
+            // Qui potresti fornire un'area di testo con i dati per la copia manuale
+        }
+    }
+
+    // Aggiungi l'event listener per il nuovo pulsante
+    document.getElementById('btn-esporta-excel').addEventListener('click', esportaInExcel);
 
     // Inizializza il rendering dello storico al caricamento della pagina
     renderStorico();
