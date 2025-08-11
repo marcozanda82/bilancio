@@ -321,7 +321,7 @@
             };
         }
 
-        // Funzione per renderizzare l'interfaccia del builder
+        // Funzione per renderizzare l'interfaccia del builder con correzione
         function renderMealBuilder() {
             mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
             logPastoBuilderBody.innerHTML = '';
@@ -344,6 +344,20 @@
                 mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
                 mealProgressCal.max = obiettiviPasto.targetCal;
                 mealProgressCal.value = obiettiviPasto.currentCal;
+            } else {
+                // Gestione dei valori di fallback per evitare l'errore del progress bar
+                currentMealTypeDisplay.textContent = selectedMealTypeText;
+                mealProtCurrent.textContent = '0';
+                mealProtTarget.textContent = 'N/A';
+                mealProtRemaining.textContent = 'N/A g';
+                mealProgressProt.max = 1;
+                mealProgressProt.value = 0;
+
+                mealCalCurrent.textContent = '0';
+                mealCalTarget.textContent = 'N/A';
+                mealCalRemaining.textContent = 'N/A kcal';
+                mealProgressCal.max = 1;
+                mealProgressCal.value = 0;
             }
 
             pastoInCostruzione.forEach((item, index) => { 
@@ -532,4 +546,3 @@
     </script>
 </body>
 </html>
-
