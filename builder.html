@@ -322,49 +322,51 @@
         }
 
         // Funzione per renderizzare l'interfaccia del builder con correzione
-        function renderMealBuilder() {
-            mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
-            logPastoBuilderBody.innerHTML = '';
-            
-            const selectedMealType = mealTypeSelector.value;
-            const selectedMealTypeText = mealTypeSelector.options[mealTypeSelector.selectedIndex].text;
-            const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
+      function renderMealBuilder() {
+    mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
+    logPastoBuilderBody.innerHTML = '';
+    
+    const selectedMealType = mealTypeSelector.value;
+    const selectedMealTypeText = mealTypeSelector.options[mealTypeSelector.selectedIndex].text;
+    const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
 
-            if (obiettiviPasto) {
-                currentMealTypeDisplay.textContent = selectedMealTypeText;
-                
-                mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1);
-                mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
-                mealProtRemaining.textContent = `${(obiettiviPasto.remainingProt).toFixed(1)} g`;
-                mealProgressProt.max = obiettiviPasto.targetProt;
-                mealProgressProt.value = obiettiviPasto.currentProt;
+    if (obiettiviPasto) {
+        currentMealTypeDisplay.textContent = selectedMealTypeText;
+        
+        mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1);
+        mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
+        mealProtRemaining.textContent = `${(obiettiviPasto.remainingProt).toFixed(1)} g`;
+        // Safe check before assigning max property
+        mealProgressProt.max = isFinite(obiettiviPasto.targetProt) ? obiettiviPasto.targetProt : 1;
+        mealProgressProt.value = obiettiviPasto.currentProt;
 
-                mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
-                mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
-                mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
-                mealProgressCal.max = obiettiviPasto.targetCal;
-                mealProgressCal.value = obiettiviPasto.currentCal;
-            } else {
-                // Gestione dei valori di fallback per evitare l'errore del progress bar
-                currentMealTypeDisplay.textContent = selectedMealTypeText;
-                mealProtCurrent.textContent = '0';
-                mealProtTarget.textContent = 'N/A';
-                mealProtRemaining.textContent = 'N/A g';
-                mealProgressProt.max = 1;
-                mealProgressProt.value = 0;
+        mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
+        mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
+        mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
+        // Safe check before assigning max property
+        mealProgressCal.max = isFinite(obiettiviPasto.targetCal) ? obiettiviPasto.targetCal : 1;
+        mealProgressCal.value = obiettiviPasto.currentCal;
+    } else {
+        // Fallback values for progress bars if obiettiviPasto is not valid
+        currentMealTypeDisplay.textContent = selectedMealTypeText;
+        mealProtCurrent.textContent = '0';
+        mealProtTarget.textContent = 'N/A';
+        mealProtRemaining.textContent = 'N/A g';
+        mealProgressProt.max = 1;
+        mealProgressProt.value = 0;
 
-                mealCalCurrent.textContent = '0';
-                mealCalTarget.textContent = 'N/A';
-                mealCalRemaining.textContent = 'N/A kcal';
-                mealProgressCal.max = 1;
-                mealProgressCal.value = 0;
-            }
+        mealCalCurrent.textContent = '0';
+        mealCalTarget.textContent = 'N/A';
+        mealCalRemaining.textContent = 'N/A kcal';
+        mealProgressCal.max = 1;
+        mealProgressCal.value = 0;
+    }
 
-            pastoInCostruzione.forEach((item, index) => { 
-                const riga = logPastoBuilderBody.insertRow(); 
-                riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
-            });
-        }
+    pastoInCostruzione.forEach((item, index) => { 
+        const riga = logPastoBuilderBody.insertRow(); 
+        riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
+    });
+}
 
         // --- FUNZIONI DI INTEGRAZIONE CON L'IA ---
 
@@ -546,3 +548,4 @@
     </script>
 </body>
 </html>
+
