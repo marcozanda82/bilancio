@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stima Grassi AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
+        .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
+        .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input[type="date"] {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em;
+        }
+        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
+        button:hover { background-color: #1565c0; }
+        #stima-output {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            display: none; /* Inizialmente nascosto */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stima Grassi AI</h1>
+        <div class="nav-links">
+            <a href="index.html">⬅️ Torna al Tracker</a>
+            <a href="builder.html">➕ Costruttore Pasti AI</a>
+            <a href="analisi.html">🧠 Analisi AI</a>
+            <a href="storico.html">📊 Storico</a>
+        </div>
+        
+        <div id="stima-sezione" class="sezione" style="border-left-color: #ff8f00;">
+            <h2>Stima dei Grassi per una data</h2>
+            <p>Seleziona una data per ottenere una stima dettagliata dei grassi, inclusi saturi, monoinsaturi, polinsaturi e omega-3, basata sugli alimenti consumati.</p>
+            <label for="data-stima">Data:</label>
+            <input type="date" id="data-stima">
+            <button id="btn-stima-grassi">Esegui Stima</button>
+        </div>
+        
+        <div id="stima-output">
+            Caricamento...
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        
+        // ************************************************************
+        // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
+        // ************************************************************
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
+            authDomain: "mio-tracker.firebaseapp.com",
+            databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "mio-tracker",
+            storageBucket: "mio-tracker.firebasestorage.app",
+            messagingSenderId: "382993217593",
+            appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+        };
+        // ************************************************************
+        // FINE CONFIGURAZIONE FIREBASE
+        // ************************************************************
+
+        // ************************************************************
+        // CONFIGURAZIONE API GEMINI
+        // INSERISCI LA TUA CHIAVE API QUI
+        // ************************************************************
+        const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
+
+        // --- ELEMENTI DEL DOM ---
+        const dataStimaInput = document.getElementById('data-stima');
+        const btnStimaGrassi = document.getElementById('btn-stima-grassi');
+        const stimaOutput = document.getElementById('stima-output');
+        
+        // --- STATO E COSTANTI ---
+        let db;
+        let auth;
+        let firebaseApp;
+        let currentUserUID = null;
+        
+        // Funzione per caricare i dati di un giorno
+        function caricaGiorno(data) {
+            const rawData = localStorage.getItem(`trackerStorico_${data}`);
+            return rawData ? JSON.parse(rawData) : null;
+        }
+
+        // Funzione per inviare la richiesta all'API di Gemini per la stima dei grassi
+        async function fetchStimaGrassiAI(elencoAlimenti) {
+            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+
+            let prompt = `Ho consumato i seguenti alimenti oggi:
+            ${elencoAlimenti.join('\n')}
+
+            Stima la quantità di grassi totali, grassi saturi, grassi monoinsaturi, grassi polinsaturi e Omega-3.
+            Restituisci solo un elenco schematico, senza testo aggiuntivo, con i valori in grammi.
+            Esempio di formato:
+            - Grassi Totali: 75 g
+            - Grassi Saturi: 25 g
+            - Grassi Monoinsaturi: 30 g
+            - Grassi Polinsaturi: 20 g
+            - Omega-3: 2 g`;
+
+            try {
+                const response = await fetch(geminiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "contents": [{
+                            "parts": [{ "text": prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+
+            } catch (error) {
+                console.error("Errore durante la stima AI:", error);
+                return `Si è verificato un errore durante la stima: ${error.message}.`;
+            }
+        }
+
+        // Gestore del pulsante di stima
+        btnStimaGrassi.addEventListener('click', async () => {
+            const dataSelezionata = dataStimaInput.value;
+            if (!dataSelezionata) {
+                alert("Seleziona una data per la stima.");
+                return;
+            }
+
+            const datiGiornalieri = caricaGiorno(dataSelezionata);
+            if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
+                alert("Nessun dato registrato per la data selezionata.");
+                return;
+            }
+            
+            // Estrai l'elenco completo degli alimenti dal log
+            let elencoAlimenti = [];
+            datiGiornalieri.log.forEach(entry => {
+                if (entry.type === 'meal' && entry.items) {
+                    entry.items.forEach(item => {
+                        elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
+                    });
+                } else if (entry.type === 'single') {
+                    elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
+                }
+            });
+
+            if (elencoAlimenti.length === 0) {
+                alert("Nessun alimento trovato per questa data. Impossibile eseguire la stima.");
+                return;
+            }
+
+            stimaOutput.style.display = 'block';
+            stimaOutput.textContent = "Stima in corso... attendi...";
+            btnStimaGrassi.disabled = true;
+
+            const risultatoStima = await fetchStimaGrassiAI(elencoAlimenti);
+            stimaOutput.textContent = risultatoStima;
+
+            btnStimaGrassi.disabled = false;
+        });
+
+        // Imposta la data di default su quella odierna
+        function getTodayString() {
+            return new Date().toISOString().split('T')[0];
+        }
+        dataStimaInput.value = getTodayString();
+
+        // Inizializza Firebase per la connettività
+        try {
+            if (!getApps().some(app => app.name === "stimaApp")) {
+                firebaseApp = initializeApp(firebaseConfig, "stimaApp");
+            } else {
+                firebaseApp = getApp("stimaApp");
+            }
+            db = getDatabase(firebaseApp);
+            auth = getAuth(firebaseApp);
+            console.log("Firebase inizializzato per la stima dei grassi.");
+        } catch (error) {
+            console.error("Errore durante l'inizializzazione di Firebase:", error);
+        }
+    </script>
+</body>
+</html>
