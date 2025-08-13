@@ -37,7 +37,15 @@
             height: 15px;
             border-radius: 6px;
             margin-top: 2px;
+            background-color: #e0e0e0; /* Sfondo neutro */
         }
+        /* Stili per le barre di progressione */
+        progress.progress-green::-webkit-progress-value { background-color: #4CAF50; }
+        progress.progress-green::-moz-progress-bar { background-color: #4CAF50; }
+        progress.progress-yellow::-webkit-progress-value { background-color: #FFC107; }
+        progress.progress-yellow::-moz-progress-bar { background-color: #FFC107; }
+        progress.progress-red::-webkit-progress-value { background-color: #F44336; }
+        progress.progress-red::-moz-progress-bar { background-color: #F44336; }
     </style>
 </head>
 <body>
@@ -143,7 +151,88 @@
             vitA: 900, // microgrammi
             vitB12: 2.4, // microgrammi
             vitD: 15, // microgrammi
+            tolleranza: 10 // g
         };
+
+        // Funzione per aggiornare le barre di progressione con i colori
+        function updateProgressBars(risultatoStima) {
+            // Logica per i grassi totali
+            const grassiTotali = risultatoStima.grassiTotaliG;
+            spanGrassiTotali.textContent = `${grassiTotali.toFixed(1)} g`;
+            progressGrassiTotali.value = grassiTotali;
+            progressGrassiTotali.max = OBIETTIVI.grassiTotaliMax;
+            if (grassiTotali >= OBIETTIVI.grassiTotaliMin - OBIETTIVI.tolleranza && grassiTotali <= OBIETTIVI.grassiTotaliMax + OBIETTIVI.tolleranza) {
+                progressGrassiTotali.className = 'progress-green';
+            } else if (grassiTotali > OBIETTIVI.grassiTotaliMax) {
+                progressGrassiTotali.className = 'progress-red';
+            } else {
+                progressGrassiTotali.className = 'progress-yellow';
+            }
+
+            // Logica per i grassi saturi
+            const grassiSaturi = risultatoStima.grassiSaturiG;
+            spanGrassiSaturi.textContent = `${grassiSaturi.toFixed(1)} g`;
+            progressGrassiSaturi.value = grassiSaturi;
+            progressGrassiSaturi.max = OBIETTIVI.grassiSaturiMax;
+            if (grassiSaturi < OBIETTIVI.grassiSaturiMax * 0.8) {
+                progressGrassiSaturi.className = 'progress-green';
+            } else if (grassiSaturi < OBIETTIVI.grassiSaturiMax) {
+                progressGrassiSaturi.className = 'progress-yellow';
+            } else {
+                progressGrassiSaturi.className = 'progress-red';
+            }
+
+            // Logica per i grassi insaturi
+            const grassiInsaturi = (risultatoStima.grassiMonoG || 0) + (risultatoStima.grassiPoliG || 0);
+            spanGrassiInsaturi.textContent = `${grassiInsaturi.toFixed(1)} g`;
+            progressGrassiInsaturi.value = grassiInsaturi;
+            progressGrassiInsaturi.max = OBIETTIVI.grassiTotaliMax; // Usiamo il totale come max di riferimento
+            if (grassiInsaturi > OBIETTIVI.grassiInsaturiMin) {
+                progressGrassiInsaturi.className = 'progress-green';
+            } else if (grassiInsaturi > OBIETTIVI.grassiInsaturiMin * 0.8) {
+                progressGrassiInsaturi.className = 'progress-yellow';
+            } else {
+                progressGrassiInsaturi.className = 'progress-red';
+            }
+
+            // Logica per le vitamine
+            const vitA = risultatoStima.vitA_ug;
+            spanVitA.textContent = `${vitA.toFixed(1)} µg`;
+            progressVitA.value = vitA;
+            progressVitA.max = OBIETTIVI.vitA;
+            if (vitA >= OBIETTIVI.vitA * 0.9) {
+                progressVitA.className = 'progress-green';
+            } else if (vitA >= OBIETTIVI.vitA * 0.5) {
+                progressVitA.className = 'progress-yellow';
+            } else {
+                progressVitA.className = 'progress-red';
+            }
+            
+            const vitB12 = risultatoStima.vitB12_ug;
+            spanVitB12.textContent = `${vitB12.toFixed(1)} µg`;
+            progressVitB12.value = vitB12;
+            progressVitB12.max = OBIETTIVI.vitB12;
+            if (vitB12 >= OBIETTIVI.vitB12 * 0.9) {
+                progressVitB12.className = 'progress-green';
+            } else if (vitB12 >= OBIETTIVI.vitB12 * 0.5) {
+                progressVitB12.className = 'progress-yellow';
+            } else {
+                progressVitB12.className = 'progress-red';
+            }
+
+            const vitD = risultatoStima.vitD_ug;
+            spanVitD.textContent = `${vitD.toFixed(1)} µg`;
+            progressVitD.value = vitD;
+            progressVitD.max = OBIETTIVI.vitD;
+            if (vitD >= OBIETTIVI.vitD * 0.9) {
+                progressVitD.className = 'progress-green';
+            } else if (vitD >= OBIETTIVI.vitD * 0.5) {
+                progressVitD.className = 'progress-yellow';
+            } else {
+                progressVitD.className = 'progress-red';
+            }
+        }
+
 
         // Funzione per caricare i dati di un giorno
         function caricaGiorno(data) {
@@ -246,32 +335,7 @@
                 stimaOutput.style.display = 'none';
                 riepilogoStimaSezione.style.display = 'block';
                 
-                const grassiInsaturi = (risultatoStima.grassiMonoG || 0) + (risultatoStima.grassiPoliG || 0);
-
-                // Aggiorna le barre di progressione
-                spanGrassiTotali.textContent = `${risultatoStima.grassiTotaliG.toFixed(1)} g`;
-                progressGrassiTotali.value = risultatoStima.grassiTotaliG;
-                progressGrassiTotali.max = OBIETTIVI.grassiTotaliMax;
-
-                spanGrassiSaturi.textContent = `${risultatoStima.grassiSaturiG.toFixed(1)} g`;
-                progressGrassiSaturi.value = risultatoStima.grassiSaturiG;
-                progressGrassiSaturi.max = OBIETTIVI.grassiSaturiMax;
-
-                spanGrassiInsaturi.textContent = `${grassiInsaturi.toFixed(1)} g`;
-                progressGrassiInsaturi.value = grassiInsaturi;
-                progressGrassiInsaturi.max = OBIETTIVI.grassiTotaliMax; // Usiamo il totale come max
-
-                spanVitA.textContent = `${risultatoStima.vitA_ug.toFixed(1)} µg`;
-                progressVitA.value = risultatoStima.vitA_ug;
-                progressVitA.max = OBIETTIVI.vitA;
-
-                spanVitB12.textContent = `${risultatoStima.vitB12_ug.toFixed(1)} µg`;
-                progressVitB12.value = risultatoStima.vitB12_ug;
-                progressVitB12.max = OBIETTIVI.vitB12;
-                
-                spanVitD.textContent = `${risultatoStima.vitD_ug.toFixed(1)} µg`;
-                progressVitD.value = risultatoStima.vitD_ug;
-                progressVitD.max = OBIETTIVI.vitD;
+                updateProgressBars(risultatoStima);
 
             } else {
                 stimaOutput.textContent = "Impossibile ottenere la stima. Riprova più tardi.";
