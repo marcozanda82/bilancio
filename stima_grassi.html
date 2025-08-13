@@ -56,7 +56,7 @@
             display: inline-block;
             transition: transform 0.3s;
         }
-        .expandable-section .expanded .arrow {
+        .expandable-section.expanded .arrow {
             transform: rotate(90deg);
         }
         .expandable-content {
@@ -314,6 +314,12 @@
         }
 
 
+        // Funzione per caricare i dati di un giorno
+        function caricaGiorno(data) {
+            const rawData = localStorage.getItem(`trackerStorico_${data}`);
+            return rawData ? JSON.parse(rawData) : null;
+        }
+
         // Funzione per inviare la richiesta all'API di Gemini per la stima dei grassi
         async function fetchStimaGrassiAI(elencoAlimenti) {
             const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
@@ -514,107 +520,6 @@
                 }
             });
         });
-
-        // Funzione per caricare i dati di un giorno
-        function caricaGiorno(data) {
-            const rawData = localStorage.getItem(`trackerStorico_${data}`);
-            return rawData ? JSON.parse(rawData) : null;
-        }
-
-        // Funzione per inviare la richiesta all'API di Gemini per la stima dei grassi
-        async function fetchStimaGrassiAI(elencoAlimenti) {
-            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-
-            let prompt = `Ho consumato i seguenti alimenti oggi:
-            ${elencoAlimenti.join('\n')}
-
-            Stima la quantità di grassi totali, grassi saturi, grassi monoinsaturi e grassi polinsaturi, e la quantità di Vitamina A, B12 e D.
-            Restituisci SOLO un oggetto JSON con i seguenti campi e i valori in numeri:
-            {
-                "grassiTotaliG": 0,
-                "grassiSaturiG": 0,
-                "grassiMonoG": 0,
-                "grassiPoliG": 0,
-                "vitA_ug": 0,
-                "vitB12_ug": 0,
-                "vitD_ug": 0
-            }
-            Riempi i valori con le tue stime, senza testo aggiuntivo, note o spiegazioni.`;
-
-            try {
-                const response = await fetch(geminiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "contents": [{
-                            "parts": [{ "text": prompt }]
-                        }]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                const jsonText = data.candidates[0].content.parts[0].text;
-                
-                // Pulisce e analizza la stringa JSON
-                const parsedData = JSON.parse(jsonText.replace(/```json|```/g, '').trim()); 
-                return parsedData;
-
-            } catch (error) {
-                console.error("Errore durante la stima AI:", error);
-                return null;
-            }
-        }
-        
-        // Funzione per generare consigli AI basati sulle carenze
-        async function fetchConsigliAI(risultatoStima) {
-            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-            
-            let carenze = [];
-            if (risultatoStima.vitA_ug < OBIETTIVI.vitA * 0.9) carenze.push('Vitamina A');
-            if (risultatoStima.vitB12_ug < OBIETTIVI.vitB12 * 0.9) carenze.push('Vitamina B12');
-            if (risultatoStima.vitD_ug < OBIETTIVI.vitD * 0.9) carenze.push('Vitamina D');
-            if (risultatoStima.grassiSaturiG > OBIETTIVI.grassiSaturiMax) carenze.push('eccesso di Grassi Saturi');
-            if (risultatoStima.grassiInsaturiG < OBIETTIVI.grassiInsaturiMin) carenze.push('carenza di Grassi Insaturi');
-
-            if (carenze.length === 0) {
-                return "L'alimentazione è ben bilanciata per i nutrienti analizzati. Continua così!";
-            }
-
-            let prompt = `I seguenti nutrienti risultano insufficienti o in eccesso nella mia dieta: ${carenze.join(', ')}.
-            Forniscimi un elenco sintetico e schematico di 5-7 cibi specifici e facilmente reperibili che mi aiutino a integrare o bilanciare questi nutrienti. Organizza i cibi in un elenco puntato e spiega brevemente il motivo di ogni suggerimento. Non includere testo aggiuntivo o saluti.`;
-
-            try {
-                const response = await fetch(geminiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "contents": [{
-                            "parts": [{ "text": prompt }]
-                        }]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
-
-            } catch (error) {
-                console.error("Errore durante la generazione dei consigli AI:", error);
-                return `Si è verificato un errore durante la generazione dei consigli: ${error.message}.`;
-            }
-        }
-
 
         // Imposta la data di default su quella odierna
         function getTodayString() {
