@@ -39,7 +39,6 @@
             margin-top: 2px;
             background-color: #e0e0e0; /* Sfondo neutro */
         }
-        /* Stili per le barre di progressione */
         progress.progress-green::-webkit-progress-value { background-color: #4CAF50; }
         progress.progress-green::-moz-progress-bar { background-color: #4CAF50; }
         progress.progress-yellow::-webkit-progress-value { background-color: #FFC107; }
@@ -84,6 +83,11 @@
             <p>Vitamina D: <span id="span-vit-d">0 µg</span></p>
             <progress id="progress-vit-d" value="0"></progress>
         </div>
+
+        <div id="consigli-sezione" class="sezione" style="display: none; border-left-color: #2e7d32;">
+            <h2>💡 Consigli per l'integrazione</h2>
+            <div id="consigli-output"></div>
+        </div>
         
         <div id="stima-output">
             </div>
@@ -121,6 +125,8 @@
         const btnStimaGrassi = document.getElementById('btn-stima-grassi');
         const stimaOutput = document.getElementById('stima-output');
         const riepilogoStimaSezione = document.getElementById('riepilogo-stima');
+        const consigliSezione = document.getElementById('consigli-sezione');
+        const consigliOutput = document.getElementById('consigli-output');
 
         const spanGrassiTotali = document.getElementById('span-grassi-totali');
         const progressGrassiTotali = document.getElementById('progress-grassi-totali');
@@ -233,6 +239,50 @@
             }
         }
 
+        // Funzione per generare consigli AI basati sulle carenze
+        async function fetchConsigliAI(risultatoStima) {
+            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+            
+            let carenze = [];
+            if (risultatoStima.vitA_ug < OBIETTIVI.vitA * 0.9) carenze.push('Vitamina A');
+            if (risultatoStima.vitB12_ug < OBIETTIVI.vitB12 * 0.9) carenze.push('Vitamina B12');
+            if (risultatoStima.vitD_ug < OBIETTIVI.vitD * 0.9) carenze.push('Vitamina D');
+            if (risultatoStima.grassiSaturiG > OBIETTIVI.grassiSaturiMax) carenze.push('eccesso di Grassi Saturi');
+            if (risultatoStima.grassiInsaturiG < OBIETTIVI.grassiInsaturiMin) carenze.push('carenza di Grassi Insaturi');
+
+            if (carenze.length === 0) {
+                return "L'alimentazione è ben bilanciata per i nutrienti analizzati. Continua così!";
+            }
+
+            let prompt = `I seguenti nutrienti risultano insufficienti o in eccesso nella mia dieta: ${carenze.join(', ')}.
+            Forniscimi un elenco di 5-7 cibi specifici e facilmente reperibili che mi aiutino a integrare o bilanciare questi nutrienti. Organizza i cibi in un elenco puntato e spiega brevemente il motivo di ogni suggerimento.`;
+
+            try {
+                const response = await fetch(geminiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "contents": [{
+                            "parts": [{ "text": prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+
+            } catch (error) {
+                console.error("Errore durante la generazione dei consigli AI:", error);
+                return `Si è verificato un errore durante la generazione dei consigli: ${error.message}.`;
+            }
+        }
+
 
         // Funzione per caricare i dati di un giorno
         function caricaGiorno(data) {
@@ -303,6 +353,7 @@
                 stimaOutput.style.display = 'block';
                 stimaOutput.textContent = "Nessun dato registrato per la data selezionata.";
                 riepilogoStimaSezione.style.display = 'none';
+                consigliSezione.style.display = 'none';
                 return;
             }
             
@@ -321,6 +372,7 @@
                 stimaOutput.style.display = 'block';
                 stimaOutput.textContent = "Nessun alimento trovato per questa data. Impossibile eseguire la stima.";
                 riepilogoStimaSezione.style.display = 'none';
+                consigliSezione.style.display = 'none';
                 return;
             }
 
@@ -328,6 +380,7 @@
             stimaOutput.textContent = "Stima in corso... attendi...";
             btnStimaGrassi.disabled = true;
             riepilogoStimaSezione.style.display = 'none';
+            consigliSezione.style.display = 'none';
 
             const risultatoStima = await fetchStimaGrassiAI(elencoAlimenti);
 
@@ -337,9 +390,16 @@
                 
                 updateProgressBars(risultatoStima);
 
+                // Esegue la seconda chiamata per i consigli
+                consigliSezione.style.display = 'block';
+                consigliOutput.textContent = "Generazione consigli in corso...";
+                const consigli = await fetchConsigliAI(risultatoStima);
+                consigliOutput.textContent = consigli;
+
             } else {
                 stimaOutput.textContent = "Impossibile ottenere la stima. Riprova più tardi.";
                 riepilogoStimaSezione.style.display = 'none';
+                consigliSezione.style.display = 'none';
             }
 
             btnStimaGrassi.disabled = false;
