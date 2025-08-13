@@ -39,13 +39,34 @@
             margin-top: 2px;
             background-color: #e0e0e0; /* Sfondo neutro */
         }
-        /* Stili per le barre di progressione */
         progress.progress-green::-webkit-progress-value { background-color: #4CAF50; }
         progress.progress-green::-moz-progress-bar { background-color: #4CAF50; }
         progress.progress-yellow::-webkit-progress-value { background-color: #FFC107; }
         progress.progress-yellow::-moz-progress-bar { background-color: #FFC107; }
         progress.progress-red::-webkit-progress-value { background-color: #F44336; }
         progress.progress-red::-moz-progress-bar { background-color: #F44336; }
+
+        .expandable-section h4 {
+            cursor: pointer;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+        .expandable-section .arrow {
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        .expandable-section .expanded .arrow {
+            transform: rotate(90deg);
+        }
+        .expandable-content {
+            display: none;
+            padding-left: 20px;
+        }
+        .expandable-content ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
     </style>
 </head>
 <body>
@@ -71,10 +92,16 @@
             <p>Grassi Totali: <span id="span-grassi-totali">0 g</span> (Obiettivo: 75-80 g)</p>
             <progress id="progress-grassi-totali" value="0"></progress>
             <hr>
-            <p>Grassi Saturi: <span id="span-grassi-saturi">0 g</span> (Max: 25 g)</p>
-            <progress id="progress-grassi-saturi" value="0"></progress>
-            <p>Grassi Insaturi: <span id="span-grassi-insaturi">0 g</span> (Min: 50 g)</p>
-            <progress id="progress-grassi-insaturi" value="0"></progress>
+            <div class="expandable-section">
+                <h4 class="expandable-header">Grassi Saturi: <span id="span-grassi-saturi">0 g</span> (Max: 25 g) <span class="arrow">▶</span></h4>
+                <progress id="progress-grassi-saturi" value="0"></progress>
+                <div id="elenco-saturi" class="expandable-content"></div>
+            </div>
+            <div class="expandable-section">
+                <h4 class="expandable-header">Grassi Insaturi: <span id="span-grassi-insaturi">0 g</span> (Min: 50 g) <span class="arrow">▶</span></h4>
+                <progress id="progress-grassi-insaturi" value="0"></progress>
+                <div id="elenco-insaturi" class="expandable-content"></div>
+            </div>
             <hr>
             <h3>Vitamine</h3>
             <p>Vitamina A: <span id="span-vit-a">0 µg</span> (Obiettivo: 900 µg)</p>
@@ -128,6 +155,8 @@
         const riepilogoStimaSezione = document.getElementById('riepilogo-stima');
         const consigliSezione = document.getElementById('consigli-sezione');
         const consigliOutput = document.getElementById('consigli-output');
+        const elencoSaturiDiv = document.getElementById('elenco-saturi');
+        const elencoInsaturiDiv = document.getElementById('elenco-insaturi');
 
         const spanGrassiTotali = document.getElementById('span-grassi-totali');
         const progressGrassiTotali = document.getElementById('progress-grassi-totali');
@@ -285,6 +314,207 @@
         }
 
 
+        // Funzione per inviare la richiesta all'API di Gemini per la stima dei grassi
+        async function fetchStimaGrassiAI(elencoAlimenti) {
+            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+
+            let prompt = `Ho consumato i seguenti alimenti oggi:
+            ${elencoAlimenti.join('\n')}
+
+            Stima la quantità di grassi totali, grassi saturi, grassi monoinsaturi e grassi polinsaturi, e la quantità di Vitamina A, B12 e D.
+            Restituisci SOLO un oggetto JSON con i seguenti campi e i valori in numeri:
+            {
+                "grassiTotaliG": 0,
+                "grassiSaturiG": 0,
+                "grassiMonoG": 0,
+                "grassiPoliG": 0,
+                "vitA_ug": 0,
+                "vitB12_ug": 0,
+                "vitD_ug": 0
+            }
+            Riempi i valori con le tue stime, senza testo aggiuntivo, note o spiegazioni.`;
+
+            try {
+                const response = await fetch(geminiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "contents": [{
+                            "parts": [{ "text": prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const jsonText = data.candidates[0].content.parts[0].text;
+                
+                // Pulisce e analizza la stringa JSON
+                const parsedData = JSON.parse(jsonText.replace(/```json|```/g, '').trim()); 
+                return parsedData;
+
+            } catch (error) {
+                console.error("Errore durante la stima AI:", error);
+                return null;
+            }
+        }
+
+        // Funzione per richiedere all'AI un'analisi dettagliata dei grassi per ogni alimento
+        async function fetchDettaglioGrassiAI(elencoAlimenti) {
+             const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+
+            let prompt = `Ho consumato i seguenti alimenti oggi, con le relative quantità:
+            ${elencoAlimenti.join('\n')}
+            
+            Forniscimi un'analisi dettagliata dei grassi per ogni alimento. Restituisci SOLO un oggetto JSON in questo formato:
+            {
+              "saturi": [
+                {"cibo": "Nome Alimento", "quantita_g": 0, "valore_g": 0},
+                ...
+              ],
+              "insaturi": [
+                {"cibo": "Nome Alimento", "quantita_g": 0, "valore_g": 0},
+                ...
+              ]
+            }`;
+
+            try {
+                const response = await fetch(geminiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "contents": [{
+                            "parts": [{ "text": prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const jsonText = data.candidates[0].content.parts[0].text;
+                const parsedData = JSON.parse(jsonText.replace(/```json|```/g, '').trim()); 
+                return parsedData;
+
+            } catch (error) {
+                console.error("Errore durante la richiesta di dettaglio grassi:", error);
+                return null;
+            }
+        }
+
+        // Funzione per generare e renderizzare gli elenchi espandibili
+        function renderDettaglioGrassi(dettaglioGrassi) {
+            const renderList = (container, list) => {
+                if (!list || list.length === 0) {
+                    container.innerHTML = "<p>Nessun alimento rilevato.</p>";
+                    return;
+                }
+                const ul = document.createElement('ul');
+                list.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = `${item.cibo} (${item.quantita_g}g) - Stima: ${item.valore_g.toFixed(1)}g`;
+                    ul.appendChild(li);
+                });
+                container.innerHTML = '';
+                container.appendChild(ul);
+            };
+
+            renderList(elencoSaturiDiv, dettaglioGrassi.saturi);
+            renderList(elencoInsaturiDiv, dettaglioGrassi.insaturi);
+        }
+
+        // Gestore del pulsante di stima
+        btnStimaGrassi.addEventListener('click', async () => {
+            const dataSelezionata = dataStimaInput.value;
+            if (!dataSelezionata) {
+                alert("Seleziona una data per la stima.");
+                return;
+            }
+
+            const datiGiornalieri = caricaGiorno(dataSelezionata);
+            if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
+                stimaOutput.style.display = 'block';
+                stimaOutput.textContent = "Nessun dato registrato per la data selezionata.";
+                riepilogoStimaSezione.style.display = 'none';
+                consigliSezione.style.display = 'none';
+                return;
+            }
+            
+            let elencoAlimenti = [];
+            datiGiornalieri.log.forEach(entry => {
+                if (entry.type === 'meal' && entry.items) {
+                    entry.items.forEach(item => {
+                        elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
+                    });
+                } else if (entry.type === 'single') {
+                    elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
+                }
+            });
+
+            if (elencoAlimenti.length === 0) {
+                stimaOutput.style.display = 'block';
+                stimaOutput.textContent = "Nessun alimento trovato per questa data. Impossibile eseguire la stima.";
+                riepilogoStimaSezione.style.display = 'none';
+                consigliSezione.style.display = 'none';
+                return;
+            }
+
+            stimaOutput.style.display = 'block';
+            stimaOutput.textContent = "Stima in corso... attendi...";
+            btnStimaGrassi.disabled = true;
+            riepilogoStimaSezione.style.display = 'none';
+            consigliSezione.style.display = 'none';
+
+            // Eseguiamo le chiamate all'AI in parallelo per ottimizzare i tempi
+            const [risultatoStima, dettaglioGrassi] = await Promise.all([
+                fetchStimaGrassiAI(elencoAlimenti),
+                fetchDettaglioGrassiAI(elencoAlimenti)
+            ]);
+
+            if (risultatoStima && dettaglioGrassi) {
+                stimaOutput.style.display = 'none';
+                riepilogoStimaSezione.style.display = 'block';
+                
+                updateProgressBars(risultatoStima);
+                renderDettaglioGrassi(dettaglioGrassi);
+
+                consigliSezione.style.display = 'block';
+                consigliOutput.textContent = "Generazione consigli in corso...";
+                const consigli = await fetchConsigliAI(risultatoStima);
+                consigliOutput.textContent = consigli;
+
+            } else {
+                stimaOutput.textContent = "Impossibile ottenere la stima. Riprova più tardi.";
+                riepilogoStimaSezione.style.display = 'none';
+                consigliSezione.style.display = 'none';
+            }
+
+            btnStimaGrassi.disabled = false;
+        });
+
+        // Gestore per espandere/comprimere le sezioni
+        document.querySelectorAll('.expandable-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const parent = header.closest('.expandable-section');
+                parent.classList.toggle('expanded');
+                const content = parent.querySelector('.expandable-content');
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    content.style.display = 'block';
+                }
+            });
+        });
+
         // Funzione per caricare i dati di un giorno
         function caricaGiorno(data) {
             const rawData = localStorage.getItem(`trackerStorico_${data}`);
@@ -340,71 +570,51 @@
                 return null;
             }
         }
-
-        // Gestore del pulsante di stima
-        btnStimaGrassi.addEventListener('click', async () => {
-            const dataSelezionata = dataStimaInput.value;
-            if (!dataSelezionata) {
-                alert("Seleziona una data per la stima.");
-                return;
-            }
-
-            const datiGiornalieri = caricaGiorno(dataSelezionata);
-            if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
-                stimaOutput.style.display = 'block';
-                stimaOutput.textContent = "Nessun dato registrato per la data selezionata.";
-                riepilogoStimaSezione.style.display = 'none';
-                consigliSezione.style.display = 'none';
-                return;
-            }
+        
+        // Funzione per generare consigli AI basati sulle carenze
+        async function fetchConsigliAI(risultatoStima) {
+            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
             
-            let elencoAlimenti = [];
-            datiGiornalieri.log.forEach(entry => {
-                if (entry.type === 'meal' && entry.items) {
-                    entry.items.forEach(item => {
-                        elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
-                    });
-                } else if (entry.type === 'single') {
-                    elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
+            let carenze = [];
+            if (risultatoStima.vitA_ug < OBIETTIVI.vitA * 0.9) carenze.push('Vitamina A');
+            if (risultatoStima.vitB12_ug < OBIETTIVI.vitB12 * 0.9) carenze.push('Vitamina B12');
+            if (risultatoStima.vitD_ug < OBIETTIVI.vitD * 0.9) carenze.push('Vitamina D');
+            if (risultatoStima.grassiSaturiG > OBIETTIVI.grassiSaturiMax) carenze.push('eccesso di Grassi Saturi');
+            if (risultatoStima.grassiInsaturiG < OBIETTIVI.grassiInsaturiMin) carenze.push('carenza di Grassi Insaturi');
+
+            if (carenze.length === 0) {
+                return "L'alimentazione è ben bilanciata per i nutrienti analizzati. Continua così!";
+            }
+
+            let prompt = `I seguenti nutrienti risultano insufficienti o in eccesso nella mia dieta: ${carenze.join(', ')}.
+            Forniscimi un elenco sintetico e schematico di 5-7 cibi specifici e facilmente reperibili che mi aiutino a integrare o bilanciare questi nutrienti. Organizza i cibi in un elenco puntato e spiega brevemente il motivo di ogni suggerimento. Non includere testo aggiuntivo o saluti.`;
+
+            try {
+                const response = await fetch(geminiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "contents": [{
+                            "parts": [{ "text": prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
                 }
-            });
 
-            if (elencoAlimenti.length === 0) {
-                stimaOutput.style.display = 'block';
-                stimaOutput.textContent = "Nessun alimento trovato per questa data. Impossibile eseguire la stima.";
-                riepilogoStimaSezione.style.display = 'none';
-                consigliSezione.style.display = 'none';
-                return;
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+
+            } catch (error) {
+                console.error("Errore durante la generazione dei consigli AI:", error);
+                return `Si è verificato un errore durante la generazione dei consigli: ${error.message}.`;
             }
+        }
 
-            stimaOutput.style.display = 'block';
-            stimaOutput.textContent = "Stima in corso... attendi...";
-            btnStimaGrassi.disabled = true;
-            riepilogoStimaSezione.style.display = 'none';
-            consigliSezione.style.display = 'none';
-
-            const risultatoStima = await fetchStimaGrassiAI(elencoAlimenti);
-
-            if (risultatoStima) {
-                stimaOutput.style.display = 'none';
-                riepilogoStimaSezione.style.display = 'block';
-                
-                updateProgressBars(risultatoStima);
-
-                // Esegue la seconda chiamata per i consigli
-                consigliSezione.style.display = 'block';
-                consigliOutput.textContent = "Generazione consigli in corso...";
-                const consigli = await fetchConsigliAI(risultatoStima);
-                consigliOutput.textContent = consigli;
-
-            } else {
-                stimaOutput.textContent = "Impossibile ottenere la stima. Riprova più tardi.";
-                riepilogoStimaSezione.style.display = 'none';
-                consigliSezione.style.display = 'none';
-            }
-
-            btnStimaGrassi.disabled = false;
-        });
 
         // Imposta la data di default su quella odierna
         function getTodayString() {
