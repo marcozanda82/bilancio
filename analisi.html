@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi Nutrizionale AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Copia qui gli stili CSS rilevanti dal tuo file index.html */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
+        .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
+        .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input[type="date"] {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em;
+        }
+        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
+        button:hover { background-color: #1565c0; }
+        #report-output {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            white-space: pre-wrap; /* Mantiene la formattazione del testo dell'AI */
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Analisi Nutrizionale AI</h1>
+        <div class="nav-links">
+            <a href="index.html">⬅️ Torna al Tracker</a>
+            <a href="builder.html">➕ Costruttore Pasti AI</a>
+            <a href="storico.html">📊 Storico</a>
+        </div>
+        
+        <div id="analisi-sezione" class="sezione">
+            <h2>Seleziona la data da analizzare</h2>
+            <label for="data-analisi">Data:</label>
+            <input type="date" id="data-analisi">
+            <button id="btn-esegui-analisi">Esegui Analisi AI</button>
+        </div>
+        
+        <div id="report-sezione" class="sezione" style="display:none;">
+            <h2>Report Nutrizionale</h2>
+            <div id="report-output">Caricamento...</div>
+        </div>
+    </div>
+    
+    <script type="module">
+        // Codice JavaScript per l'analisi
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+// ************************************************************
+// INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
+// ************************************************************
+const firebaseConfig = {
+    apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
+    authDomain: "mio-tracker.firebaseapp.com",
+    databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "mio-tracker",
+    storageBucket: "mio-tracker.firebasestorage.app",
+    messagingSenderId: "382993217593",
+    appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+};
+// ************************************************************
+// FINE CONFIGURAZIONE FIREBASE
+// ************************************************************
+
+// ************************************************************
+// CONFIGURAZIONE API GEMINI
+// INSERISCI LA TUA CHIAVE API QUI
+// ************************************************************
+const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
+
+// --- ELEMENTI DEL DOM ---
+const dataAnalisiInput = document.getElementById('data-analisi');
+const btnEseguiAnalisi = document.getElementById('btn-esegui-analisi');
+const reportSezione = document.getElementById('report-sezione');
+const reportOutput = document.getElementById('report-output');
+
+// --- STATO E COSTANTI ---
+let db;
+let auth;
+let firebaseApp;
+let currentUserUID = null;
+
+const PIANO_SETTIMANALE = {
+    0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 },
+    1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+    2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+    3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
+    4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+    5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
+    6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
+};
+
+// Funzione per caricare i dati di un giorno
+function caricaGiorno(data) {
+    const rawData = localStorage.getItem(`trackerStorico_${data}`);
+    return rawData ? JSON.parse(rawData) : null;
+}
+
+// Funzione per formattare i dati per l'AI
+function formattaDatiPerAI(dati) {
+    if (!dati || !dati.log || dati.log.length === 0) {
+        return "Nessun dato registrato per questa data.";
+    }
+
+    const dataDelGiorno = new Date(dataAnalisiInput.value);
+    const giornoSettimana = dataDelGiorno.getDay();
+    const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
+
+    let testo = `Analizza la seguente giornata nutrizionale.
+Obiettivo Calorico: ${pianoDelGiorno.cal_base} kcal
+Obiettivo Proteico: ${pianoDelGiorno.prot} g
+Obiettivi Micronutrienti: Magnesio (420 mg), Potassio (3400 mg), Vitamina C (90 mg), Calcio (1000 mg).
+
+Diario giornaliero:\n`;
+
+    dati.log.forEach(entry => {
+        if (entry.type === 'meal' && entry.items) {
+            testo += `\nPASTO: ${entry.desc}\n`;
+            entry.items.forEach(item => {
+                testo += `- ${item.desc} (${item.qta} g) - Proteine: ${item.prot.toFixed(1)} g, Kcal: ${item.cal.toFixed(0)}, Grassi: ${item.fat.toFixed(1)} g, Fibre: ${item.fiber.toFixed(1)} g, Mg: ${item.mg.toFixed(1)} mg, K: ${item.k.toFixed(0)} mg, VitC: ${item.vitc.toFixed(1)} mg, Ca: ${item.ca.toFixed(1)} mg\n`;
+            });
+        } else if (entry.type === 'single') {
+             testo += `- ${entry.desc} (${entry.qta} g) - Proteine: ${entry.prot.toFixed(1)} g, Kcal: ${entry.cal.toFixed(0)}, Grassi: ${entry.fat.toFixed(1)} g, Fibre: ${entry.fiber.toFixed(1)} g, Mg: ${entry.mg.toFixed(1)} mg, K: ${entry.k.toFixed(0)} mg, VitC: ${entry.vitc.toFixed(1)} mg, Ca: ${entry.ca.toFixed(1)} mg\n`;
+        } else if (entry.type === 'workout') {
+            testo += `\nALLENAMENTO: ${entry.desc} - Calorie bruciate: ${entry.cal.toFixed(0)} kcal\n`;
+        }
+    });
+
+    testo += `\n
+Sulla base di questi dati, fornisci un'analisi completa che includa:
+1. Un riassunto generale.
+2. Un elenco puntato di cosa è stato fatto bene.
+3. Un elenco puntato di cosa può essere migliorato.
+4. Suggerimenti specifici su quali alimenti aggiungere o sostituire per raggiungere gli obiettivi, con particolare attenzione alle carenze di micronutrienti (Magnesio, Potassio, Vitamina C, Calcio, Fibre).`;
+
+    return testo;
+}
+
+// Funzione per inviare la richiesta all'API di Gemini
+async function fetchAnalisiAI(prompt) {
+    const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+
+    try {
+        const response = await fetch(geminiEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "contents": [{
+                    "parts": [{ "text": prompt }]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+
+    } catch (error) {
+        console.error("Errore durante l'analisi AI:", error);
+        return `Si è verificato un errore durante l'analisi: ${error.message}. Controlla la console per i dettagli.`;
+    }
+}
+
+// Gestore del pulsante di analisi
+btnEseguiAnalisi.addEventListener('click', async () => {
+    const dataSelezionata = dataAnalisiInput.value;
+    if (!dataSelezionata) {
+        alert("Seleziona una data per l'analisi.");
+        return;
+    }
+
+    const datiGiornalieri = caricaGiorno(dataSelezionata);
+    if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
+        alert("Nessun dato registrato per la data selezionata.");
+        return;
+    }
+
+    // Abilita la sezione del report e mostra un messaggio di caricamento
+    reportSezione.style.display = 'block';
+    reportOutput.textContent = "Caricamento dell'analisi in corso... attendi...";
+    btnEseguiAnalisi.disabled = true;
+    btnEseguiAnalisi.textContent = "Analisi in corso...";
+
+    // Prepara il prompt per l'AI
+    const promptPerAI = formattaDatiPerAI(datiGiornalieri);
+
+    // Esegui la richiesta all'AI
+    const reportAI = await fetchAnalisiAI(promptPerAI);
+
+    // Mostra il report
+    reportOutput.textContent = reportAI;
+
+    // Riattiva il pulsante
+    btnEseguiAnalisi.disabled = false;
+    btnEseguiAnalisi.textContent = "Esegui Analisi AI";
+});
+
+// Imposta la data di default su quella odierna
+function getTodayString() {
+    return new Date().toISOString().split('T')[0];
+}
+dataAnalisiInput.value = getTodayString();
+
+// Inizializza Firebase per la connettività
+try {
+    if (!getApps().some(app => app.name === "analisiApp")) {
+        firebaseApp = initializeApp(firebaseConfig, "analisiApp");
+    } else {
+        firebaseApp = getApp("analisiApp");
+    }
+    db = getDatabase(firebaseApp);
+    auth = getAuth(firebaseApp);
+    console.log("Firebase inizializzato per l'analisi.");
+} catch (error) {
+    console.error("Errore durante l'inizializzazione di Firebase:", error);
+}
+
+    </script>
+</body>
+</html>
