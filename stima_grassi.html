@@ -39,6 +39,7 @@
             margin-top: 2px;
             background-color: #e0e0e0; /* Sfondo neutro */
         }
+        /* Stili per le barre di progressione */
         progress.progress-green::-webkit-progress-value { background-color: #4CAF50; }
         progress.progress-green::-moz-progress-bar { background-color: #4CAF50; }
         progress.progress-yellow::-webkit-progress-value { background-color: #FFC107; }
@@ -67,20 +68,20 @@
         
         <div id="riepilogo-stima" class="sezione" style="display: none;">
             <h2>Riepilogo Stimato</h2>
-            <p>Grassi Totali: <span id="span-grassi-totali">0 g</span></p>
+            <p>Grassi Totali: <span id="span-grassi-totali">0 g</span> (Obiettivo: 75-80 g)</p>
             <progress id="progress-grassi-totali" value="0"></progress>
             <hr>
-            <p>Grassi Saturi: <span id="span-grassi-saturi">0 g</span></p>
+            <p>Grassi Saturi: <span id="span-grassi-saturi">0 g</span> (Max: 25 g)</p>
             <progress id="progress-grassi-saturi" value="0"></progress>
-            <p>Grassi Insaturi: <span id="span-grassi-insaturi">0 g</span></p>
+            <p>Grassi Insaturi: <span id="span-grassi-insaturi">0 g</span> (Min: 50 g)</p>
             <progress id="progress-grassi-insaturi" value="0"></progress>
             <hr>
             <h3>Vitamine</h3>
-            <p>Vitamina A: <span id="span-vit-a">0 µg</span></p>
+            <p>Vitamina A: <span id="span-vit-a">0 µg</span> (Obiettivo: 900 µg)</p>
             <progress id="progress-vit-a" value="0"></progress>
-            <p>Vitamina B12: <span id="span-vit-b12">0 µg</span></p>
+            <p>Vitamina B12: <span id="span-vit-b12">0 µg</span> (Obiettivo: 2.4 µg)</p>
             <progress id="progress-vit-b12" value="0"></progress>
-            <p>Vitamina D: <span id="span-vit-d">0 µg</span></p>
+            <p>Vitamina D: <span id="span-vit-d">0 µg</span> (Obiettivo: 15 µg)</p>
             <progress id="progress-vit-d" value="0"></progress>
         </div>
 
@@ -255,7 +256,7 @@
             }
 
             let prompt = `I seguenti nutrienti risultano insufficienti o in eccesso nella mia dieta: ${carenze.join(', ')}.
-            Forniscimi un elenco di 5-7 cibi specifici e facilmente reperibili che mi aiutino a integrare o bilanciare questi nutrienti. Organizza i cibi in un elenco puntato e spiega brevemente il motivo di ogni suggerimento.`;
+            Forniscimi un elenco sintetico e schematico di 5-7 cibi specifici e facilmente reperibili che mi aiutino a integrare o bilanciare questi nutrienti. Organizza i cibi in un elenco puntato e spiega brevemente il motivo di ogni suggerimento. Non includere testo aggiuntivo o saluti.`;
 
             try {
                 const response = await fetch(geminiEndpoint, {
