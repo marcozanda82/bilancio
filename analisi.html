@@ -25,7 +25,7 @@
             background-color: #e8f5e9;
             border: 1px solid #c8e6c9;
             border-radius: 8px;
-            white-space: pre-wrap; /* Mantiene la formattazione del testo dell'AI */
+            white-space: pre-wrap;
             line-height: 1.6;
         }
     </style>
@@ -53,185 +53,208 @@
     </div>
     
     <script type="module">
-        // Codice JavaScript per l'analisi
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-// ************************************************************
-// INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
-// ************************************************************
-const firebaseConfig = {
-    apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
-    authDomain: "mio-tracker.firebaseapp.com",
-    databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "mio-tracker",
-    storageBucket: "mio-tracker.firebasestorage.app",
-    messagingSenderId: "382993217593",
-    appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
-};
-// ************************************************************
-// FINE CONFIGURAZIONE FIREBASE
-// ************************************************************
+        // ************************************************************
+        // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
+        // ************************************************************
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
+            authDomain: "mio-tracker.firebaseapp.com",
+            databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "mio-tracker",
+            storageBucket: "mio-tracker.firebasestorage.app",
+            messagingSenderId: "382993217593",
+            appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+        };
+        // ************************************************************
+        // FINE CONFIGURAZIONE FIREBASE
+        // ************************************************************
 
-// ************************************************************
-// CONFIGURAZIONE API GEMINI
-// INSERISCI LA TUA CHIAVE API QUI
-// ************************************************************
-const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
+        // ************************************************************
+        // CONFIGURAZIONE API GEMINI
+        // INSERISCI LA TUA CHIAVE API QUI
+        // ************************************************************
+        const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
 
-// --- ELEMENTI DEL DOM ---
-const dataAnalisiInput = document.getElementById('data-analisi');
-const btnEseguiAnalisi = document.getElementById('btn-esegui-analisi');
-const reportSezione = document.getElementById('report-sezione');
-const reportOutput = document.getElementById('report-output');
+        // --- ELEMENTI DEL DOM ---
+        const dataAnalisiInput = document.getElementById('data-analisi');
+        const btnEseguiAnalisi = document.getElementById('btn-esegui-analisi');
+        const reportSezione = document.getElementById('report-sezione');
+        const reportOutput = document.getElementById('report-output');
 
-// --- STATO E COSTANTI ---
-let db;
-let auth;
-let firebaseApp;
-let currentUserUID = null;
+        // --- STATO E COSTANTI ---
+        let db;
+        let auth;
+        let firebaseApp;
+        let currentUserUID = null;
 
-const PIANO_SETTIMANALE = {
-    0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 },
-    1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-    2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-    3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
-    4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-    5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
-    6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
-};
+        const PIANO_SETTIMANALE = {
+            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 },
+            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
+            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
+            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
+        };
 
-// Funzione per caricare i dati di un giorno
-function caricaGiorno(data) {
-    const rawData = localStorage.getItem(`trackerStorico_${data}`);
-    return rawData ? JSON.parse(rawData) : null;
-}
-
-// Funzione per formattare i dati per l'AI
-function formattaDatiPerAI(dati) {
-    if (!dati || !dati.log || dati.log.length === 0) {
-        return "Nessun dato registrato per questa data.";
-    }
-
-    const dataDelGiorno = new Date(dataAnalisiInput.value);
-    const giornoSettimana = dataDelGiorno.getDay();
-    const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
-
-    let testo = `Analizza la seguente giornata nutrizionale.
-Obiettivo Calorico: ${pianoDelGiorno.cal_base} kcal
-Obiettivo Proteico: ${pianoDelGiorno.prot} g
-Obiettivi Micronutrienti: Magnesio (420 mg), Potassio (3400 mg), Vitamina C (90 mg), Calcio (1000 mg).
-
-Diario giornaliero:\n`;
-
-    dati.log.forEach(entry => {
-        if (entry.type === 'meal' && entry.items) {
-            testo += `\nPASTO: ${entry.desc}\n`;
-            entry.items.forEach(item => {
-                testo += `- ${item.desc} (${item.qta} g) - Proteine: ${item.prot.toFixed(1)} g, Kcal: ${item.cal.toFixed(0)}, Grassi: ${item.fat.toFixed(1)} g, Fibre: ${item.fiber.toFixed(1)} g, Mg: ${item.mg.toFixed(1)} mg, K: ${item.k.toFixed(0)} mg, VitC: ${item.vitc.toFixed(1)} mg, Ca: ${item.ca.toFixed(1)} mg\n`;
-            });
-        } else if (entry.type === 'single') {
-             testo += `- ${entry.desc} (${entry.qta} g) - Proteine: ${entry.prot.toFixed(1)} g, Kcal: ${entry.cal.toFixed(0)}, Grassi: ${entry.fat.toFixed(1)} g, Fibre: ${entry.fiber.toFixed(1)} g, Mg: ${entry.mg.toFixed(1)} mg, K: ${entry.k.toFixed(0)} mg, VitC: ${entry.vitc.toFixed(1)} mg, Ca: ${entry.ca.toFixed(1)} mg\n`;
-        } else if (entry.type === 'workout') {
-            testo += `\nALLENAMENTO: ${entry.desc} - Calorie bruciate: ${entry.cal.toFixed(0)} kcal\n`;
+        // Funzione per caricare i dati di un giorno
+        function caricaGiorno(data) {
+            const rawData = localStorage.getItem(`trackerStorico_${data}`);
+            return rawData ? JSON.parse(rawData) : null;
         }
-    });
 
-    testo += `\n
-Sulla base di questi dati, fornisci un'analisi completa che includa:
-1. Un riassunto generale.
-2. Un elenco puntato di cosa è stato fatto bene.
-3. Un elenco puntato di cosa può essere migliorato.
-4. Suggerimenti specifici su quali alimenti aggiungere o sostituire per raggiungere gli obiettivi, con particolare attenzione alle carenze di micronutrienti (Magnesio, Potassio, Vitamina C, Calcio, Fibre).`;
+        // Funzione per formattare i dati per l'AI
+        function formattaDatiPerAI(dati) {
+            if (!dati || !dati.log || dati.log.length === 0) {
+                return "Nessun dato registrato per questa data.";
+            }
 
-    return testo;
-}
+            const dataDelGiorno = new Date(dataAnalisiInput.value);
+            const giornoSettimana = dataDelGiorno.getDay();
+            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
-// Funzione per inviare la richiesta all'API di Gemini
-async function fetchAnalisiAI(prompt) {
-    const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+            // Calcola i totali giornalieri per macronutrienti e micronutrienti di base
+            let totaliGiornalieri = { prot: 0, cal: 0, fat: 0, fiber: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
+            dati.log.forEach(entry => {
+                if (entry.type === 'meal' && entry.items) {
+                    entry.items.forEach(item => {
+                        totaliGiornalieri.prot += item.prot || 0;
+                        totaliGiornalieri.cal += item.cal || 0;
+                        totaliGiornalieri.fat += item.fat || 0;
+                        totaliGiornalieri.fiber += item.fiber || 0;
+                        totaliGiornalieri.mg += item.mg || 0;
+                        totaliGiornalieri.k += item.k || 0;
+                        totaliGiornalieri.vitc += item.vitc || 0;
+                        totaliGiornalieri.ca += item.ca || 0;
+                    });
+                } else if (entry.type === 'single') {
+                    totaliGiornalieri.prot += entry.prot || 0;
+                    totaliGiornalieri.cal += entry.cal || 0;
+                    totaliGiornalieri.fat += entry.fat || 0;
+                    totaliGiornalieri.fiber += entry.fiber || 0;
+                    totaliGiornalieri.mg += entry.mg || 0;
+                    totaliGiornalieri.k += entry.k || 0;
+                    totaliGiornalieri.vitc += entry.vitc || 0;
+                    totaliGiornalieri.ca += entry.ca || 0;
+                }
+            });
 
-    try {
-        const response = await fetch(geminiEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                "contents": [{
-                    "parts": [{ "text": prompt }]
-                }]
-            })
+            // Aggiungiamo i totali al prompt in modo conciso
+            let testo = `Analizza la seguente giornata nutrizionale.
+Obiettivi giornalieri:
+- Calorie: circa ${pianoDelGiorno.cal_base + (dati.workoutCalorie || 0) + (dati.calorieAdjustment || 0)} kcal
+- Proteine: circa ${pianoDelGiorno.prot} g
+- Macronutrienti e Micronutrienti: equilibrati.
+
+Totali consumati in questa giornata:
+- Kcal: ${totaliGiornalieri.cal.toFixed(0)}
+- Proteine: ${totaliGiornalieri.prot.toFixed(1)} g
+- Grassi: ${totaliGiornalieri.fat.toFixed(1)} g
+- Fibre: ${totaliGiornalieri.fiber.toFixed(1)} g
+- Magnesio: ${totaliGiornalieri.mg.toFixed(1)} mg
+- Potassio: ${totaliGiornalieri.k.toFixed(0)} mg
+- Vitamina C: ${totaliGiornalieri.vitc.toFixed(1)} mg
+- Calcio: ${totaliGiornalieri.ca.toFixed(1)} mg
+
+Sulla base di questi totali e della tua conoscenza nutrizionale, forniscimi un report dettagliato e completo che includa:
+1.  **Analisi Globale:** Un riassunto di come i totali macronutrienti e micronutrienti si confrontano con gli obiettivi.
+2.  **Dettaglio Grassi:** Un'analisi approfondita sulla tipologia di grassi (saturi, insaturi, polinsaturi come gli omega-3) che potrebbero essere stati assunti, e un commento sulla loro qualità e quantità.
+3.  **Dettaglio Vitamine:** Un'analisi dettagliata di vitamine importanti non elencate (es. Vitamine del gruppo B come B12, B2, Vitamina D, etc.). Commenta le possibili carenze e suggerisci alimenti per colmarle.
+4.  **Carenze e Suggerimenti:** Un elenco puntato di cosa è mancato o è in eccesso e dei suggerimenti specifici su quali alimenti aggiungere o sostituire per migliorare l'equilibrio complessivo, con focus anche su alimenti che contengono fibre e micronutrienti non tracciati esplicitamente.
+
+Usa un tono chiaro e professionale. Non restituire codice, ma solo testo formattato in modo leggibile.
+`;
+
+            return testo;
+        }
+
+        // Funzione per inviare la richiesta all'API di Gemini
+        async function fetchAnalisiAI(prompt) {
+            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+
+            try {
+                const response = await fetch(geminiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "contents": [{
+                            "parts": [{ "text": prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+
+            } catch (error) {
+                console.error("Errore durante l'analisi AI:", error);
+                return `Si è verificato un errore durante l'analisi: ${error.message}. Controlla la console per i dettagli.`;
+            }
+        }
+
+        // Gestore del pulsante di analisi
+        btnEseguiAnalisi.addEventListener('click', async () => {
+            const dataSelezionata = dataAnalisiInput.value;
+            if (!dataSelezionata) {
+                alert("Seleziona una data per l'analisi.");
+                return;
+            }
+
+            const datiGiornalieri = caricaGiorno(dataSelezionata);
+            if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
+                alert("Nessun dato registrato per la data selezionata.");
+                return;
+            }
+
+            // Abilita la sezione del report e mostra un messaggio di caricamento
+            reportSezione.style.display = 'block';
+            reportOutput.textContent = "Caricamento dell'analisi in corso... attendi...";
+            btnEseguiAnalisi.disabled = true;
+            btnEseguiAnalisi.textContent = "Analisi in corso...";
+
+            // Prepara il prompt per l'AI
+            const promptPerAI = formattaDatiPerAI(datiGiornalieri);
+
+            // Esegui la richiesta all'AI
+            const reportAI = await fetchAnalisiAI(promptPerAI);
+
+            // Mostra il report
+            reportOutput.textContent = reportAI;
+
+            // Riattiva il pulsante
+            btnEseguiAnalisi.disabled = false;
+            btnEseguiAnalisi.textContent = "Esegui Analisi AI";
         });
 
-        if (!response.ok) {
-            throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
+        // Imposta la data di default su quella odierna
+        function getTodayString() {
+            return new Date().toISOString().split('T')[0];
         }
+        dataAnalisiInput.value = getTodayString();
 
-        const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
-
-    } catch (error) {
-        console.error("Errore durante l'analisi AI:", error);
-        return `Si è verificato un errore durante l'analisi: ${error.message}. Controlla la console per i dettagli.`;
-    }
-}
-
-// Gestore del pulsante di analisi
-btnEseguiAnalisi.addEventListener('click', async () => {
-    const dataSelezionata = dataAnalisiInput.value;
-    if (!dataSelezionata) {
-        alert("Seleziona una data per l'analisi.");
-        return;
-    }
-
-    const datiGiornalieri = caricaGiorno(dataSelezionata);
-    if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
-        alert("Nessun dato registrato per la data selezionata.");
-        return;
-    }
-
-    // Abilita la sezione del report e mostra un messaggio di caricamento
-    reportSezione.style.display = 'block';
-    reportOutput.textContent = "Caricamento dell'analisi in corso... attendi...";
-    btnEseguiAnalisi.disabled = true;
-    btnEseguiAnalisi.textContent = "Analisi in corso...";
-
-    // Prepara il prompt per l'AI
-    const promptPerAI = formattaDatiPerAI(datiGiornalieri);
-
-    // Esegui la richiesta all'AI
-    const reportAI = await fetchAnalisiAI(promptPerAI);
-
-    // Mostra il report
-    reportOutput.textContent = reportAI;
-
-    // Riattiva il pulsante
-    btnEseguiAnalisi.disabled = false;
-    btnEseguiAnalisi.textContent = "Esegui Analisi AI";
-});
-
-// Imposta la data di default su quella odierna
-function getTodayString() {
-    return new Date().toISOString().split('T')[0];
-}
-dataAnalisiInput.value = getTodayString();
-
-// Inizializza Firebase per la connettività
-try {
-    if (!getApps().some(app => app.name === "analisiApp")) {
-        firebaseApp = initializeApp(firebaseConfig, "analisiApp");
-    } else {
-        firebaseApp = getApp("analisiApp");
-    }
-    db = getDatabase(firebaseApp);
-    auth = getAuth(firebaseApp);
-    console.log("Firebase inizializzato per l'analisi.");
-} catch (error) {
-    console.error("Errore durante l'inizializzazione di Firebase:", error);
-}
-
+        // Inizializza Firebase per la connettività
+        try {
+            if (!getApps().some(app => app.name === "analisiApp")) {
+                firebaseApp = initializeApp(firebaseConfig, "analisiApp");
+            } else {
+                firebaseApp = getApp("analisiApp");
+            }
+            db = getDatabase(firebaseApp);
+            auth = getAuth(firebaseApp);
+            console.log("Firebase inizializzato per l'analisi.");
+        } catch (error) {
+            console.error("Errore durante l'inizializzazione di Firebase:", error);
+        }
     </script>
 </body>
 </html>
