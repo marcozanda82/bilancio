@@ -6,7 +6,7 @@
     <title>Costruttore Pasti AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Copia qui gli stili CSS rilevanti dal tuo file index.html */
+        /* Stili CSS */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
@@ -34,8 +34,6 @@
         .action-buttons { display: flex; justify-content: center; align-items: center; gap: 8px; }
         .action-buttons button { background: none; border: none; padding: 4px; font-size: 1.3em; line-height: 1; cursor: pointer; }
         .delete-btn { color: #d32f2f; }
-        
-        /* Stili per il riepilogo del costruttore pasti (copia da index.html) */
         #meal-builder-summary {
             margin-bottom: 20px;
             padding: 15px;
@@ -65,7 +63,6 @@
             height: 18px;
             border-radius: 4px;
         }
-
     </style>
 </head>
 <body>
@@ -73,8 +70,21 @@
         <h1>Costruttore Pasti AI</h1>
         <div class="nav-links">
             <a href="index.html">⬅️ Torna al Tracker</a>
+            <a href="analisi.html">🧠 Analisi AI</a>
+            <a href="storico.html">📊 Storico</a>
         </div>
         
+        <div id="ai-suggerimenti-sezione" class="sezione" style="border-left-color: #0d47a1;">
+            <h2>Consiglio AI per un pasto equilibrato</h2>
+            <p>
+                L'AI analizzerà i tuoi dati storici per suggerirti un pasto personalizzato.
+            </p>
+            <button id="btn-suggerisci-pasto-ai" style="background-color: #0d47a1;">Ottieni Suggerimento AI</button>
+            <div id="suggerimento-output" style="margin-top: 15px; padding: 15px; background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; display: none;">
+                Caricamento...
+            </div>
+        </div>
+
         <div id="food-adder" class="sezione">
             <h2>Aggiungi Alimento</h2>
             <div class="builder-grid">
@@ -155,7 +165,7 @@
         // CONFIGURAZIONE API GEMINI
         // INSERISCI LA TUA CHIAVE API QUI
         // ************************************************************
-        const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac"; // Sostituisci questo placeholder
+        const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
 
         // --- ELEMENTI DEL DOM ---
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
@@ -322,53 +332,53 @@
         }
 
         // Funzione per renderizzare l'interfaccia del builder con correzione
-      function renderMealBuilder() {
-    mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
-    logPastoBuilderBody.innerHTML = '';
-    
-    const selectedMealType = mealTypeSelector.value;
-    const selectedMealTypeText = mealTypeSelector.options[mealTypeSelector.selectedIndex].text;
-    const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
+        function renderMealBuilder() {
+            mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
+            logPastoBuilderBody.innerHTML = '';
+            
+            const selectedMealType = mealTypeSelector.value;
+            const selectedMealTypeText = mealTypeSelector.options[mealTypeSelector.selectedIndex].text;
+            const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
 
-    if (obiettiviPasto) {
-        currentMealTypeDisplay.textContent = selectedMealTypeText;
-        
-        mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1);
-        mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
-        mealProtRemaining.textContent = `${(obiettiviPasto.remainingProt).toFixed(1)} g`;
-        // Safe check before assigning max property
-        mealProgressProt.max = isFinite(obiettiviPasto.targetProt) ? obiettiviPasto.targetProt : 1;
-        mealProgressProt.value = obiettiviPasto.currentProt;
+            if (obiettiviPasto) {
+                currentMealTypeDisplay.textContent = selectedMealTypeText;
+                
+                mealProtCurrent.textContent = obiettiviPasto.currentProt.toFixed(1);
+                mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
+                mealProtRemaining.textContent = `${(obiettiviPasto.remainingProt).toFixed(1)} g`;
+                // Correzione del bug: controlla se il valore è un numero finito prima di assegnarlo
+                mealProgressProt.max = isFinite(obiettiviPasto.targetProt) ? obiettiviPasto.targetProt : 1;
+                mealProgressProt.value = obiettiviPasto.currentProt;
 
-        mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
-        mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
-        mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
-        // Safe check before assigning max property
-        mealProgressCal.max = isFinite(obiettiviPasto.targetCal) ? obiettiviPasto.targetCal : 1;
-        mealProgressCal.value = obiettiviPasto.currentCal;
-    } else {
-        // Fallback values for progress bars if obiettiviPasto is not valid
-        currentMealTypeDisplay.textContent = selectedMealTypeText;
-        mealProtCurrent.textContent = '0';
-        mealProtTarget.textContent = 'N/A';
-        mealProtRemaining.textContent = 'N/A g';
-        mealProgressProt.max = 1;
-        mealProgressProt.value = 0;
+                mealCalCurrent.textContent = obiettiviPasto.currentCal.toFixed(0);
+                mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
+                mealCalRemaining.textContent = `${(obiettiviPasto.remainingCal).toFixed(0)} kcal`;
+                // Correzione del bug: controlla se il valore è un numero finito prima di assegnarlo
+                mealProgressCal.max = isFinite(obiettiviPasto.targetCal) ? obiettiviPasto.targetCal : 1;
+                mealProgressCal.value = obiettiviPasto.currentCal;
+            } else {
+                // Valori di fallback se i dati non sono disponibili
+                currentMealTypeDisplay.textContent = selectedMealTypeText;
+                mealProtCurrent.textContent = '0';
+                mealProtTarget.textContent = 'N/A';
+                mealProtRemaining.textContent = 'N/A g';
+                mealProgressProt.max = 1;
+                mealProgressProt.value = 0;
 
-        mealCalCurrent.textContent = '0';
-        mealCalTarget.textContent = 'N/A';
-        mealCalRemaining.textContent = 'N/A kcal';
-        mealProgressCal.max = 1;
-        mealProgressCal.value = 0;
-    }
+                mealCalCurrent.textContent = '0';
+                mealCalTarget.textContent = 'N/A';
+                mealCalRemaining.textContent = 'N/A kcal';
+                mealProgressCal.max = 1;
+                mealProgressCal.value = 0;
+            }
 
-    pastoInCostruzione.forEach((item, index) => { 
-        const riga = logPastoBuilderBody.insertRow(); 
-        riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
-    });
-}
+            pastoInCostruzione.forEach((item, index) => { 
+                const riga = logPastoBuilderBody.insertRow(); 
+                riga.innerHTML = `<td>${item.desc}</td><td>${item.qta}g</td><td>${item.prot.toFixed(1)}</td><td>${item.cal.toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
+            });
+        }
 
-        // --- FUNZIONI DI INTEGRAZIONE CON L'IA ---
+        // --- FUNZIONI DI INTEGRAZIONE CON L'AI PER LA COMPILAZIONE ---
 
         async function fetchNutrientData(foodName) {
             const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
@@ -508,6 +518,103 @@
             alert("Pasto salvato nel diario giornaliero!");
         });
 
+
+        // --- NUOVE FUNZIONI PER I SUGGERIMENTI AI ---
+
+        function getAbitudiniAlimentari() {
+            const abitudini = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('trackerStorico_')) {
+                    const datiGiorno = caricaGiorno(key.replace('trackerStorico_', ''));
+                    if (datiGiorno && datiGiorno.log) {
+                        datiGiorno.log.forEach(entry => {
+                            if (entry.type === 'meal' && entry.items) {
+                                entry.items.forEach(item => {
+                                    const nomeCibo = item.desc.toLowerCase();
+                                    abitudini[nomeCibo] = (abitudini[nomeCibo] || 0) + 1;
+                                });
+                            } else if (entry.type === 'single') {
+                                const nomeCibo = entry.desc.toLowerCase();
+                                abitudini[nomeCibo] = (abitudini[nomeCibo] || 0) + 1;
+                            }
+                        });
+                    }
+                }
+            }
+            // Ordina gli alimenti più consumati
+            const alimentiPreferiti = Object.keys(abitudini).sort((a, b) => abitudini[b] - abitudini[a]).slice(0, 10);
+            return alimentiPreferiti;
+        }
+
+        // Funzione per inviare la richiesta di suggerimento all'AI
+        async function fetchSuggerimentoPastoAI(alimentiPreferiti) {
+            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+
+            let prompt = `Sono un utente di un tracker nutrizionale. Ho bisogno di un suggerimento per un pasto sano ed equilibrato. Ecco alcuni degli alimenti che mangio più spesso: ${alimentiPreferiti.join(', ')}.
+            
+            Il mio obiettivo nutrizionale per un pasto tipico è:
+            - Circa 30-40g di Proteine
+            - Circa 400-600 kcal
+            - Equilibrato anche per grassi e fibre.
+
+            Tenendo conto di questi alimenti preferiti e degli obiettivi, suggeriscimi un pasto specifico. Includi nel suggerimento:
+            - Il nome del pasto (es. "Insalata di pollo mediterranea").
+            - Gli ingredienti con le rispettive quantità approssimative in grammi.
+            - Un breve riepilogo dei valori nutrizionali totali del pasto (proteine, calorie, grassi, fibre).
+            - Non restituire un oggetto JSON, ma un testo ben formattato e di facile lettura.`;
+
+            try {
+                const response = await fetch(geminiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "contents": [{
+                            "parts": [{ "text": prompt }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+
+            } catch (error) {
+                console.error("Errore durante il suggerimento AI:", error);
+                return `Si è verificato un errore durante il suggerimento: ${error.message}.`;
+            }
+        }
+
+        // Gestore del pulsante per il suggerimento AI
+        document.getElementById('btn-suggerisci-pasto-ai').addEventListener('click', async () => {
+            const alimentiPreferiti = getAbitudiniAlimentari();
+            const suggerimentoOutput = document.getElementById('suggerimento-output');
+            const btnSuggerisci = document.getElementById('btn-suggerisci-pasto-ai');
+
+            if (alimentiPreferiti.length === 0) {
+                suggerimentoOutput.style.display = 'block';
+                suggerimentoOutput.textContent = "Nessun dato storico trovato per generare un suggerimento.";
+                return;
+            }
+
+            btnSuggerisci.disabled = true;
+            btnSuggerisci.textContent = "Generazione suggerimento...";
+            suggerimentoOutput.style.display = 'block';
+            suggerimentoOutput.textContent = "Caricamento...";
+
+            const suggerimento = await fetchSuggerimentoPastoAI(alimentiPreferiti);
+            suggerimentoOutput.textContent = suggerimento;
+
+            btnSuggerisci.disabled = false;
+            btnSuggerisci.textContent = "Ottieni Suggerimento AI";
+        });
+
+
         // Funzione di inizializzazione
         function initBuilderApp() {
             pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
@@ -548,4 +655,3 @@
     </script>
 </body>
 </html>
-
