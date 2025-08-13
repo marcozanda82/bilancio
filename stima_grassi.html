@@ -362,7 +362,7 @@
                 return null;
             }
         }
-
+        
         // Funzione per generare e renderizzare gli elenchi espandibili
         function renderDettaglioGrassi(dettaglioGrassi) {
             const renderList = (container, list) => {
@@ -384,8 +384,8 @@
             renderList(elencoInsaturiDiv, dettaglioGrassi.insaturi);
         }
 
-        // Gestore del pulsante di stima
-        btnStimaGrassi.addEventListener('click', async () => {
+        // Funzione principale che esegue le richieste all'AI
+        async function runStimaGrassi() {
             const dataSelezionata = dataStimaInput.value;
             if (!dataSelezionata) {
                 alert("Seleziona una data per la stima.");
@@ -451,7 +451,10 @@
             }
 
             btnStimaGrassi.disabled = false;
-        });
+        }
+
+        // Gestore del pulsante di stima
+        btnStimaGrassi.addEventListener('click', runStimaGrassi);
 
         // Gestore per espandere/comprimere le sezioni
         document.querySelectorAll('.expandable-header').forEach(header => {
