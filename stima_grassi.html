@@ -26,7 +26,17 @@
             border-radius: 8px;
             white-space: pre-wrap;
             line-height: 1.6;
-            display: none; /* Inizialmente nascosto */
+            display: none;
+        }
+        .riepilogo-stima p {
+            margin: 8px 0;
+            font-weight: 600;
+        }
+        progress {
+            width: 100%;
+            height: 15px;
+            border-radius: 6px;
+            margin-top: 2px;
         }
     </style>
 </head>
@@ -48,9 +58,27 @@
             <button id="btn-stima-grassi">Esegui Stima</button>
         </div>
         
-        <div id="stima-output">
-            Caricamento...
+        <div id="riepilogo-stima" class="sezione" style="display: none;">
+            <h2>Riepilogo Stimato</h2>
+            <p>Grassi Totali: <span id="span-grassi-totali">0 g</span></p>
+            <progress id="progress-grassi-totali" value="0"></progress>
+            <hr>
+            <p>Grassi Saturi: <span id="span-grassi-saturi">0 g</span></p>
+            <progress id="progress-grassi-saturi" value="0"></progress>
+            <p>Grassi Insaturi: <span id="span-grassi-insaturi">0 g</span></p>
+            <progress id="progress-grassi-insaturi" value="0"></progress>
+            <hr>
+            <h3>Vitamine</h3>
+            <p>Vitamina A: <span id="span-vit-a">0 µg</span></p>
+            <progress id="progress-vit-a" value="0"></progress>
+            <p>Vitamina B12: <span id="span-vit-b12">0 µg</span></p>
+            <progress id="progress-vit-b12" value="0"></progress>
+            <p>Vitamina D: <span id="span-vit-d">0 µg</span></p>
+            <progress id="progress-vit-d" value="0"></progress>
         </div>
+        
+        <div id="stima-output">
+            </div>
     </div>
     
     <script type="module">
@@ -84,13 +112,39 @@
         const dataStimaInput = document.getElementById('data-stima');
         const btnStimaGrassi = document.getElementById('btn-stima-grassi');
         const stimaOutput = document.getElementById('stima-output');
-        
+        const riepilogoStimaSezione = document.getElementById('riepilogo-stima');
+
+        const spanGrassiTotali = document.getElementById('span-grassi-totali');
+        const progressGrassiTotali = document.getElementById('progress-grassi-totali');
+        const spanGrassiSaturi = document.getElementById('span-grassi-saturi');
+        const progressGrassiSaturi = document.getElementById('progress-grassi-saturi');
+        const spanGrassiInsaturi = document.getElementById('span-grassi-insaturi');
+        const progressGrassiInsaturi = document.getElementById('progress-grassi-insaturi');
+
+        const spanVitA = document.getElementById('span-vit-a');
+        const progressVitA = document.getElementById('progress-vit-a');
+        const spanVitB12 = document.getElementById('span-vit-b12');
+        const progressVitB12 = document.getElementById('progress-vit-b12');
+        const spanVitD = document.getElementById('span-vit-d');
+        const progressVitD = document.getElementById('progress-vit-d');
+
         // --- STATO E COSTANTI ---
         let db;
         let auth;
         let firebaseApp;
         let currentUserUID = null;
         
+        // Raccomandazioni basate sui dati dell'utente (43 anni, 72 kg, 2300 kcal)
+        const OBIETTIVI = {
+            grassiTotaliMin: 75,
+            grassiTotaliMax: 80,
+            grassiSaturiMax: 25, // <10% di 2300 kcal = 25.5g
+            grassiInsaturiMin: 50, // Stima per raggiungere il totale
+            vitA: 900, // microgrammi
+            vitB12: 2.4, // microgrammi
+            vitD: 15, // microgrammi
+        };
+
         // Funzione per caricare i dati di un giorno
         function caricaGiorno(data) {
             const rawData = localStorage.getItem(`trackerStorico_${data}`);
@@ -104,14 +158,18 @@
             let prompt = `Ho consumato i seguenti alimenti oggi:
             ${elencoAlimenti.join('\n')}
 
-            Stima la quantità di grassi totali, grassi saturi, grassi monoinsaturi, grassi polinsaturi e Omega-3.
-            Restituisci solo un elenco schematico, senza testo aggiuntivo, con i valori in grammi.
-            Esempio di formato:
-            - Grassi Totali: 75 g
-            - Grassi Saturi: 25 g
-            - Grassi Monoinsaturi: 30 g
-            - Grassi Polinsaturi: 20 g
-            - Omega-3: 2 g`;
+            Stima la quantità di grassi totali, grassi saturi, grassi monoinsaturi e grassi polinsaturi, e la quantità di Vitamina A, B12 e D.
+            Restituisci SOLO un oggetto JSON con i seguenti campi e i valori in numeri:
+            {
+                "grassiTotaliG": 0,
+                "grassiSaturiG": 0,
+                "grassiMonoG": 0,
+                "grassiPoliG": 0,
+                "vitA_ug": 0,
+                "vitB12_ug": 0,
+                "vitD_ug": 0
+            }
+            Riempi i valori con le tue stime, senza testo aggiuntivo, note o spiegazioni.`;
 
             try {
                 const response = await fetch(geminiEndpoint, {
@@ -131,11 +189,15 @@
                 }
 
                 const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
+                const jsonText = data.candidates[0].content.parts[0].text;
+                
+                // Pulisce e analizza la stringa JSON
+                const parsedData = JSON.parse(jsonText.replace(/```json|```/g, '').trim()); 
+                return parsedData;
 
             } catch (error) {
                 console.error("Errore durante la stima AI:", error);
-                return `Si è verificato un errore durante la stima: ${error.message}.`;
+                return null;
             }
         }
 
@@ -149,11 +211,12 @@
 
             const datiGiornalieri = caricaGiorno(dataSelezionata);
             if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
-                alert("Nessun dato registrato per la data selezionata.");
+                stimaOutput.style.display = 'block';
+                stimaOutput.textContent = "Nessun dato registrato per la data selezionata.";
+                riepilogoStimaSezione.style.display = 'none';
                 return;
             }
             
-            // Estrai l'elenco completo degli alimenti dal log
             let elencoAlimenti = [];
             datiGiornalieri.log.forEach(entry => {
                 if (entry.type === 'meal' && entry.items) {
@@ -166,16 +229,54 @@
             });
 
             if (elencoAlimenti.length === 0) {
-                alert("Nessun alimento trovato per questa data. Impossibile eseguire la stima.");
+                stimaOutput.style.display = 'block';
+                stimaOutput.textContent = "Nessun alimento trovato per questa data. Impossibile eseguire la stima.";
+                riepilogoStimaSezione.style.display = 'none';
                 return;
             }
 
             stimaOutput.style.display = 'block';
             stimaOutput.textContent = "Stima in corso... attendi...";
             btnStimaGrassi.disabled = true;
+            riepilogoStimaSezione.style.display = 'none';
 
             const risultatoStima = await fetchStimaGrassiAI(elencoAlimenti);
-            stimaOutput.textContent = risultatoStima;
+
+            if (risultatoStima) {
+                stimaOutput.style.display = 'none';
+                riepilogoStimaSezione.style.display = 'block';
+                
+                const grassiInsaturi = (risultatoStima.grassiMonoG || 0) + (risultatoStima.grassiPoliG || 0);
+
+                // Aggiorna le barre di progressione
+                spanGrassiTotali.textContent = `${risultatoStima.grassiTotaliG.toFixed(1)} g`;
+                progressGrassiTotali.value = risultatoStima.grassiTotaliG;
+                progressGrassiTotali.max = OBIETTIVI.grassiTotaliMax;
+
+                spanGrassiSaturi.textContent = `${risultatoStima.grassiSaturiG.toFixed(1)} g`;
+                progressGrassiSaturi.value = risultatoStima.grassiSaturiG;
+                progressGrassiSaturi.max = OBIETTIVI.grassiSaturiMax;
+
+                spanGrassiInsaturi.textContent = `${grassiInsaturi.toFixed(1)} g`;
+                progressGrassiInsaturi.value = grassiInsaturi;
+                progressGrassiInsaturi.max = OBIETTIVI.grassiTotaliMax; // Usiamo il totale come max
+
+                spanVitA.textContent = `${risultatoStima.vitA_ug.toFixed(1)} µg`;
+                progressVitA.value = risultatoStima.vitA_ug;
+                progressVitA.max = OBIETTIVI.vitA;
+
+                spanVitB12.textContent = `${risultatoStima.vitB12_ug.toFixed(1)} µg`;
+                progressVitB12.value = risultatoStima.vitB12_ug;
+                progressVitB12.max = OBIETTIVI.vitB12;
+                
+                spanVitD.textContent = `${risultatoStima.vitD_ug.toFixed(1)} µg`;
+                progressVitD.value = risultatoStima.vitD_ug;
+                progressVitD.max = OBIETTIVI.vitD;
+
+            } else {
+                stimaOutput.textContent = "Impossibile ottenere la stima. Riprova più tardi.";
+                riepilogoStimaSezione.style.display = 'none';
+            }
 
             btnStimaGrassi.disabled = false;
         });
@@ -185,8 +286,8 @@
             return new Date().toISOString().split('T')[0];
         }
         dataStimaInput.value = getTodayString();
-
-        // Inizializza Firebase per la connettività
+        
+        // Inizializza Firebase per la connettività (senza API key di Gemini)
         try {
             if (!getApps().some(app => app.name === "stimaApp")) {
                 firebaseApp = initializeApp(firebaseConfig, "stimaApp");
