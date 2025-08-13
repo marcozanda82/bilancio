@@ -565,46 +565,44 @@
             return alimentiPreferiti;
         }
 
-        // Funzione per inviare la richiesta di suggerimento all'AI
-        async function fetchSuggerimentoPastoAI(alimentiPreferiti, pastoSelezionato) {
-            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+// Funzione per inviare la richiesta di suggerimento all'AI
+async function fetchSuggerimentoPastoAI(alimentiPreferiti, pastoSelezionato) {
+    const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
 
-            const obiettiviPasto = OBIETTIVI_MACRO_PASTO[pastoSelezionato] || { prot: 30, cal: 500 };
-            const obiettiviMicro = `Magnesio (420 mg), Potassio (3400 mg), Vitamina C (90 mg), Calcio (1000 mg), Fibre (30 g).`;
+    const obiettiviPasto = OBIETTIVI_MACRO_PASTO[pastoSelezionato] || { prot: 30, cal: 500 };
 
-            let prompt = `Sono un utente di un tracker nutrizionale e sto cercando un suggerimento per il mio prossimo pasto. L'obiettivo è consumare circa ${obiettiviPasto.prot}g di proteine e ${obiettiviPasto.cal} kcal. I miei obiettivi giornalieri per i micronutrienti sono: ${obiettiviMicro}.
-
+    let prompt = `Sono un utente di un tracker nutrizionale. Ho bisogno di un suggerimento per un pasto sano ed equilibrato. L'obiettivo è consumare circa ${obiettiviPasto.prot}g di proteine e ${obiettiviPasto.cal} kcal.
+    
 I miei alimenti preferiti, che consumo abitualmente, sono: ${alimentiPreferiti.join(', ')}.
 
-Suggeriscimi un elenco di alimenti per un pasto equilibrato (solo elenco), includendo le quantità in grammi e una stima dei valori nutrizionali totali del pasto (proteine, calorie, grassi, fibre, Mg, K, Vit.C, Ca). Cerca di utilizzare i miei alimenti preferiti quando possibile e di aiutarmi a rispettare gli obiettivi.
+Suggeriscimi un elenco schematico di alimenti per un pasto equilibrato, includendo la quantità approssimativa in grammi per ogni alimento. Cerca di utilizzare i miei alimenti preferiti quando possibile e di aiutarmi a rispettare gli obiettivi nutrizionali.
+Non includere ricette, riepiloghi nutrizionali o testo aggiuntivo. Fornisci la risposta solo come un elenco puntato.`;
 
-Restituisci la risposta in formato testuale schematico, senza ricette o procedure, ma con un semplice elenco di alimenti e un riepilogo finale.`;
+    try {
+        const response = await fetch(geminiEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "contents": [{
+                    "parts": [{ "text": prompt }]
+                }]
+            })
+        });
 
-            try {
-                const response = await fetch(geminiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "contents": [{
-                            "parts": [{ "text": prompt }]
-                        }]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
-
-            } catch (error) {
-                console.error("Errore durante il suggerimento AI:", error);
-                return `Si è verificato un errore durante il suggerimento: ${error.message}.`;
-            }
+        if (!response.ok) {
+            throw new Error(`Errore di rete: ${response.status} ${response.statusText}`);
         }
+
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+
+    } catch (error) {
+        console.error("Errore durante il suggerimento AI:", error);
+        return `Si è verificato un errore durante il suggerimento: ${error.message}.`;
+    }
+}
 
         // Gestore del pulsante per il suggerimento AI
         document.getElementById('btn-suggerisci-pasto-ai').addEventListener('click', async () => {
@@ -672,3 +670,4 @@ Restituisci la risposta in formato testuale schematico, senza ricette o procedur
     </script>
 </body>
 </html>
+
