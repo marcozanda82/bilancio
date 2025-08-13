@@ -116,17 +116,6 @@
             const giornoSettimana = dataDelGiorno.getDay();
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
-            let elencoAlimenti = [];
-            dati.log.forEach(entry => {
-                if (entry.type === 'meal' && entry.items) {
-                    entry.items.forEach(item => {
-                        elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
-                    });
-                } else if (entry.type === 'single') {
-                    elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
-                }
-            });
-
             // Calcola i totali per il prompt
             const totali = dati.log.reduce((acc, entry) => {
                 if (entry.type === 'meal' && entry.items) {
@@ -156,13 +145,27 @@
                 magnesio: 0, potassio: 0, vitaminaC: 0, calcio: 0
             });
 
+            // Formatta l'elenco completo degli alimenti in una stringa
+            let elencoAlimentiStringa = '';
+            dati.log.forEach(entry => {
+                if (entry.type === 'meal' && entry.items) {
+                    elencoAlimentiStringa += `PASTO: ${entry.desc}\n`;
+                    entry.items.forEach(item => {
+                        elencoAlimentiStringa += `- ${item.desc} (${item.qta}g)\n`;
+                    });
+                } else if (entry.type === 'single') {
+                    elencoAlimentiStringa += `Alimento singolo: ${entry.desc} (${entry.qta}g)\n`;
+                } else if (entry.type === 'workout') {
+                    elencoAlimentiStringa += `Allenamento: ${entry.desc} (${entry.cal} kcal)\n`;
+                }
+            });
+
             let testo = `Analizza la seguente giornata nutrizionale.
 Obiettivi giornalieri:
 - Calorie: circa ${pianoDelGiorno.cal_base + (dati.workoutCalorie || 0) + (dati.calorieAdjustment || 0)} kcal
 - Proteine: circa ${pianoDelGiorno.prot} g
-- Macronutrienti e Micronutrienti: equilibrati.
 
-Dati consumati in questa giornata:
+Totali macronutrienti e micronutrienti tracciati:
 - Kcal totali: ${totali.calorie.toFixed(0)}
 - Proteine totali: ${totali.proteine.toFixed(1)} g
 - Grassi totali: ${totali.grassi.toFixed(1)} g
@@ -170,20 +173,19 @@ Dati consumati in questa giornata:
 - Magnesio totale: ${totali.magnesio.toFixed(1)} mg
 - Potassio totale: ${totali.potassio.toFixed(0)} mg
 - Vitamina C totale: ${totali.vitaminaC.toFixed(1)} mg
-- Calcio totale: ${totali.calcio.toFixed(1)} mg
+- Calcio totale: ${totali.ca.toFixed(1)} mg
 
-Ecco l'elenco completo degli alimenti consumati:
-${elencoAlimenti.join('\n')}
+Ecco l'elenco completo degli alimenti consumati in questa giornata, con le rispettive quantità:
+${elencoAlimentiStringa}
 
 Sulla base di questi dati e della tua conoscenza nutrizionale, forniscimi un report dettagliato e completo che includa:
 1.  **Analisi Globale:** Un riassunto di come i totali macronutrienti e micronutrienti si confrontano con gli obiettivi.
 2.  **Dettaglio Grassi:** Un'analisi approfondita sulla tipologia di grassi (saturi, insaturi, polinsaturi come gli omega-3), sulla loro qualità e quantità in base agli alimenti consumati.
-3.  **Dettaglio Vitamine e Minerali:** Un'analisi dettagliata di vitamine importanti non elencate (es. Vitamine del gruppo B come B12, B2, Vitamina D, etc.). Commenta le possibili carenze e suggerisci alimenti per colmarle, facendo riferimento all'elenco dei cibi.
+3.  **Dettaglio Vitamine e Minerali:** Un'analisi dettagliata di vitamine importanti non elencate (es. Vitamine del gruppo B come B12, B2, Vitamina D, etc.) e altri minerali. Commenta le possibili carenze e suggerisci alimenti per colmarle, facendo riferimento all'elenco dei cibi.
 4.  **Carenze e Suggerimenti:** Un elenco puntato di cosa è mancato o è in eccesso e dei suggerimenti specifici su quali alimenti aggiungere o sostituire per migliorare l'equilibrio complessivo, con focus anche su alimenti che contengono fibre e micronutrienti non tracciati esplicitamente.
 
 Usa un tono chiaro e professionale. Non restituire codice, ma solo testo formattato in modo leggibile.
 `;
-
             return testo;
         }
 
