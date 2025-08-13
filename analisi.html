@@ -6,7 +6,6 @@
     <title>Analisi Nutrizionale AI</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Copia qui gli stili CSS rilevanti dal tuo file index.html */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
@@ -107,7 +106,7 @@
             return rawData ? JSON.parse(rawData) : null;
         }
 
-        // Funzione per formattare i dati per l'AI
+        // Funzione per formattare i dati per l'AI, includendo l'elenco degli alimenti
         function formattaDatiPerAI(dati) {
             if (!dati || !dati.log || dati.log.length === 0) {
                 return "Nessun dato registrato per questa data.";
@@ -117,53 +116,69 @@
             const giornoSettimana = dataDelGiorno.getDay();
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
-            // Calcola i totali giornalieri per macronutrienti e micronutrienti di base
-            let totaliGiornalieri = { prot: 0, cal: 0, fat: 0, fiber: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
+            let elencoAlimenti = [];
             dati.log.forEach(entry => {
                 if (entry.type === 'meal' && entry.items) {
                     entry.items.forEach(item => {
-                        totaliGiornalieri.prot += item.prot || 0;
-                        totaliGiornalieri.cal += item.cal || 0;
-                        totaliGiornalieri.fat += item.fat || 0;
-                        totaliGiornalieri.fiber += item.fiber || 0;
-                        totaliGiornalieri.mg += item.mg || 0;
-                        totaliGiornalieri.k += item.k || 0;
-                        totaliGiornalieri.vitc += item.vitc || 0;
-                        totaliGiornalieri.ca += item.ca || 0;
+                        elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
                     });
                 } else if (entry.type === 'single') {
-                    totaliGiornalieri.prot += entry.prot || 0;
-                    totaliGiornalieri.cal += entry.cal || 0;
-                    totaliGiornalieri.fat += entry.fat || 0;
-                    totaliGiornalieri.fiber += entry.fiber || 0;
-                    totaliGiornalieri.mg += entry.mg || 0;
-                    totaliGiornalieri.k += entry.k || 0;
-                    totaliGiornalieri.vitc += entry.vitc || 0;
-                    totaliGiornalieri.ca += entry.ca || 0;
+                    elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
                 }
             });
 
-            // Aggiungiamo i totali al prompt in modo conciso
+            // Calcola i totali per il prompt
+            const totali = dati.log.reduce((acc, entry) => {
+                if (entry.type === 'meal' && entry.items) {
+                    entry.items.forEach(item => {
+                        acc.proteine += item.prot || 0;
+                        acc.calorie += item.cal || 0;
+                        acc.grassi += item.fat || 0;
+                        acc.fibre += item.fiber || 0;
+                        acc.magnesio += item.mg || 0;
+                        acc.potassio += item.k || 0;
+                        acc.vitaminaC += item.vitc || 0;
+                        acc.calcio += item.ca || 0;
+                    });
+                } else if (entry.type === 'single') {
+                    acc.proteine += entry.prot || 0;
+                    acc.calorie += entry.cal || 0;
+                    acc.grassi += entry.fat || 0;
+                    acc.fibre += entry.fiber || 0;
+                    acc.magnesio += entry.mg || 0;
+                    acc.potassio += entry.k || 0;
+                    acc.vitaminaC += entry.vitc || 0;
+                    acc.calcio += entry.ca || 0;
+                }
+                return acc;
+            }, {
+                proteine: 0, calorie: 0, grassi: 0, fibre: 0,
+                magnesio: 0, potassio: 0, vitaminaC: 0, calcio: 0
+            });
+
             let testo = `Analizza la seguente giornata nutrizionale.
 Obiettivi giornalieri:
 - Calorie: circa ${pianoDelGiorno.cal_base + (dati.workoutCalorie || 0) + (dati.calorieAdjustment || 0)} kcal
 - Proteine: circa ${pianoDelGiorno.prot} g
 - Macronutrienti e Micronutrienti: equilibrati.
 
-Totali consumati in questa giornata:
-- Kcal: ${totaliGiornalieri.cal.toFixed(0)}
-- Proteine: ${totaliGiornalieri.prot.toFixed(1)} g
-- Grassi: ${totaliGiornalieri.fat.toFixed(1)} g
-- Fibre: ${totaliGiornalieri.fiber.toFixed(1)} g
-- Magnesio: ${totaliGiornalieri.mg.toFixed(1)} mg
-- Potassio: ${totaliGiornalieri.k.toFixed(0)} mg
-- Vitamina C: ${totaliGiornalieri.vitc.toFixed(1)} mg
-- Calcio: ${totaliGiornalieri.ca.toFixed(1)} mg
+Dati consumati in questa giornata:
+- Kcal totali: ${totali.calorie.toFixed(0)}
+- Proteine totali: ${totali.proteine.toFixed(1)} g
+- Grassi totali: ${totali.grassi.toFixed(1)} g
+- Fibre totali: ${totali.fibre.toFixed(1)} g
+- Magnesio totale: ${totali.magnesio.toFixed(1)} mg
+- Potassio totale: ${totali.potassio.toFixed(0)} mg
+- Vitamina C totale: ${totali.vitaminaC.toFixed(1)} mg
+- Calcio totale: ${totali.calcio.toFixed(1)} mg
 
-Sulla base di questi totali e della tua conoscenza nutrizionale, forniscimi un report dettagliato e completo che includa:
+Ecco l'elenco completo degli alimenti consumati:
+${elencoAlimenti.join('\n')}
+
+Sulla base di questi dati e della tua conoscenza nutrizionale, forniscimi un report dettagliato e completo che includa:
 1.  **Analisi Globale:** Un riassunto di come i totali macronutrienti e micronutrienti si confrontano con gli obiettivi.
-2.  **Dettaglio Grassi:** Un'analisi approfondita sulla tipologia di grassi (saturi, insaturi, polinsaturi come gli omega-3) che potrebbero essere stati assunti, e un commento sulla loro qualità e quantità.
-3.  **Dettaglio Vitamine:** Un'analisi dettagliata di vitamine importanti non elencate (es. Vitamine del gruppo B come B12, B2, Vitamina D, etc.). Commenta le possibili carenze e suggerisci alimenti per colmarle.
+2.  **Dettaglio Grassi:** Un'analisi approfondita sulla tipologia di grassi (saturi, insaturi, polinsaturi come gli omega-3), sulla loro qualità e quantità in base agli alimenti consumati.
+3.  **Dettaglio Vitamine e Minerali:** Un'analisi dettagliata di vitamine importanti non elencate (es. Vitamine del gruppo B come B12, B2, Vitamina D, etc.). Commenta le possibili carenze e suggerisci alimenti per colmarle, facendo riferimento all'elenco dei cibi.
 4.  **Carenze e Suggerimenti:** Un elenco puntato di cosa è mancato o è in eccesso e dei suggerimenti specifici su quali alimenti aggiungere o sostituire per migliorare l'equilibrio complessivo, con focus anche su alimenti che contengono fibre e micronutrienti non tracciati esplicitamente.
 
 Usa un tono chiaro e professionale. Non restituire codice, ma solo testo formattato in modo leggibile.
@@ -216,22 +231,16 @@ Usa un tono chiaro e professionale. Non restituire codice, ma solo testo formatt
                 return;
             }
 
-            // Abilita la sezione del report e mostra un messaggio di caricamento
             reportSezione.style.display = 'block';
             reportOutput.textContent = "Caricamento dell'analisi in corso... attendi...";
             btnEseguiAnalisi.disabled = true;
             btnEseguiAnalisi.textContent = "Analisi in corso...";
 
-            // Prepara il prompt per l'AI
             const promptPerAI = formattaDatiPerAI(datiGiornalieri);
-
-            // Esegui la richiesta all'AI
             const reportAI = await fetchAnalisiAI(promptPerAI);
 
-            // Mostra il report
             reportOutput.textContent = reportAI;
 
-            // Riattiva il pulsante
             btnEseguiAnalisi.disabled = false;
             btnEseguiAnalisi.textContent = "Esegui Analisi AI";
         });
