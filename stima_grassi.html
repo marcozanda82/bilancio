@@ -405,54 +405,114 @@
 
         // Funzione principale che esegue le richieste all'AI
         async function runStimaGrassi() {
-            const dataSelezionata = dataStimaInput.value;
-            if (!dataSelezionata) {
-                alert("Seleziona una data per la stima.");
-                return;
-            }
+            try {
+                const dataSelezionata = dataStimaInput.value;
+                if (!dataSelezionata) {
+                    alert("Seleziona una data per la stima.");
+                    return;
+                }
 
-            const datiGiornalieri = caricaGiorno(dataSelezionata);
-            if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
+                const datiGiornalieri = caricaGiorno(dataSelezionata);
+                if (!datiGiornalieri || !datiGiornalieri.log || datiGiornalieri.log.length === 0) {
+                    stimaOutput.style.display = 'block';
+                    stimaOutput.textContent = "Nessun dato registrato per la data selezionata.";
+                    riepilogoStimaSezione.style.display = 'none';
+                    consigliSezione.style.display = 'none';
+                    return;
+                }
+                
+                let elencoAlimenti = [];
+                datiGiornalieri.log.forEach(entry => {
+                    if (entry.type === 'meal' && entry.items) {
+                        entry.items.forEach(item => {
+                            elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
+                        });
+                    } else if (entry.type === 'single') {
+                        elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
+                    } else if (entry.type === 'workout') {
+                        // Non includere gli allenamenti nell'elenco degli alimenti
+                    }
+                });
+
+                if (elencoAlimenti.length === 0) {
+                    stimaOutput.style.display = 'block';
+                    stimaOutput.textContent = "Nessun alimento trovato per questa data. Impossibile eseguire la stima.";
+                    riepilogoStimaSezione.style.display = 'none';
+                    consigliSezione.style.display = 'none';
+                    return;
+                }
+
                 stimaOutput.style.display = 'block';
-                stimaOutput.textContent = "Nessun dato registrato per la data selezionata.";
+                stimaOutput.textContent = "Stima in corso... attendi...";
+                btnStimaGrassi.disabled = true;
                 riepilogoStimaSezione.style.display = 'none';
                 consigliSezione.style.display = 'none';
-                return;
+
+                // Eseguiamo un'unica chiamata all'AI
+                const datiStimaCompleti = await fetchDatiStimaCompletiAI(elencoAlimenti);
+
+                if (datiStimaCompleti) {
+                    stimaOutput.style.display = 'none';
+                    riepilogoStimaSezione.style.display = 'block';
+                    
+                    updateProgressBars(datiStimaCompleti);
+                    renderDettaglioGrassi(datiStimaCompleti.dettaglioGrassi);
+
+                    consigliSezione.style.display = 'block';
+                    consigliOutput.textContent = "Generazione consigli in corso...";
+                    const consigli = await fetchConsigliAI(datiStimaCompleti);
+                    consigliOutput.textContent = consigli;
+
+                } else {
+                    stimaOutput.textContent = "Impossibile ottenere la stima. Riprova più tardi.";
+                    riepilogoStimaSezione.style.display = 'none';
+                    consigliSezione.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Errore critico durante l'esecuzione della stima:", error);
+                stimaOutput.style.display = 'block';
+                stimaOutput.textContent = `Si è verificato un errore critico: ${error.message}. Controlla la console per i dettagli.`;
+            } finally {
+                btnStimaGrassi.disabled = false;
             }
-            
-            let elencoAlimenti = [];
-            datiGiornalieri.log.forEach(entry => {
-                if (entry.type === 'meal' && entry.items) {
-                    entry.items.forEach(item => {
-                        elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
-                    });
-                } else if (entry.type === 'single') {
-                    elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
-                } else if (entry.type === 'workout') {
-                    // Non includere gli allenamenti nell'elenco degli alimenti
+        }
+
+        // Gestore del pulsante di stima
+        btnStimaGrassi.addEventListener('click', runStimaGrassi);
+
+        // Gestore per espandere/comprimere le sezioni
+        document.querySelectorAll('.expandable-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const parent = header.closest('.expandable-section');
+                parent.classList.toggle('expanded');
+                const content = parent.querySelector('.expandable-content');
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    content.style.display = 'block';
                 }
             });
+        });
 
-            if (elencoAlimenti.length === 0) {
-                stimaOutput.style.display = 'block';
-                stimaOutput.textContent = "Nessun alimento trovato per questa data. Impossibile eseguire la stima.";
-                riepilogoStimaSezione.style.display = 'none';
-                consigliSezione.style.display = 'none';
-                return;
+        // Imposta la data di default su quella odierna
+        function getTodayString() {
+            return new Date().toISOString().split('T')[0];
+        }
+        dataStimaInput.value = getTodayString();
+        
+        // Inizializza Firebase per la connettività (senza API key di Gemini)
+        try {
+            if (!getApps().some(app => app.name === "stimaApp")) {
+                firebaseApp = initializeApp(firebaseConfig, "stimaApp");
+            } else {
+                firebaseApp = getApp("stimaApp");
             }
-
-            stimaOutput.style.display = 'block';
-            stimaOutput.textContent = "Stima in corso... attendi...";
-            btnStimaGrassi.disabled = true;
-            riepilogoStimaSezione.style.display = 'none';
-            consigliSezione.style.display = 'none';
-
-            // Eseguiamo un'unica chiamata all'AI
-            const datiStimaCompleti = await fetchDatiStimaCompletiAI(elencoAlimenti);
-
-            if (datiStimaCompleti) {
-                stimaOutput.style.display = 'none';
-                riepilogoStimaSezione.style.display = 'block';
-                
-                updateProgressBars(datiStimaCompleti);
-                renderDettaglioGrassi(datiStimaCompleti.dettaglioGrassi);
+            db = getDatabase(firebaseApp);
+            auth = getAuth(firebaseApp);
+            console.log("Firebase inizializzato per la stima dei grassi.");
+        } catch (error) {
+            console.error("Errore durante l'inizializzazione di Firebase:", error);
+        }
+    </script>
+</body>
+</html>
