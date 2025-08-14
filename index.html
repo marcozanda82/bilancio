@@ -51,6 +51,53 @@
         .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
         .sub-item-row td:last-child { visibility: hidden; }
 
+// Aggiungi questo stile nel tag <style> in cima al file
+.nutrients-warning {
+    color: #d32f2f !important; /* Rosso scuro per l'avviso */
+}
+
+// All'interno del tuo script <script type="module">, aggiungi questa nuova funzione
+function aggiornaColoreNutrienti() {
+    const nutrientsHeader = document.getElementById('nutrients-header');
+    const nutrientsInputs = document.querySelectorAll('#nutrients-content input[type="number"]');
+    let hasEmptyFields = false;
+
+    nutrientsInputs.forEach(input => {
+        if (input.value === '') {
+            hasEmptyFields = true;
+        }
+    });
+
+    if (hasEmptyFields) {
+        nutrientsHeader.classList.add('nutrients-warning');
+    } else {
+        nutrientsHeader.classList.remove('nutrients-warning');
+    }
+}
+
+// Modifica il listener sull'input del nome dell'alimento
+builderDesc.addEventListener('input', (e) => {
+    const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; 
+    if (foodData) {
+        // ... (il resto del tuo codice qui)
+    }
+    aggiornaColoreNutrienti(); // Chiama la funzione anche dopo aver compilato con dati esistenti
+});
+
+// Aggiungi un listener generico su tutti gli input numerici dei dettagli nutrizionali
+const nutrientsInputs = document.querySelectorAll('#nutrients-content input[type="number"]');
+nutrientsInputs.forEach(input => {
+    input.addEventListener('input', aggiornaColoreNutrienti);
+});
+
+// Modifica la funzione creaAlimentoDaInput per aggiungere la chiamata
+function creaAlimentoDaInput(isSingle = false) {
+    // ... (il resto del tuo codice qui)
+    // A fine funzione, dopo aver resettato gli input, aggiungi la chiamata
+    resetInputAlimento();
+    aggiornaColoreNutrienti();
+}
+        
         /* Stili per il riepilogo del costruttore pasti */
         #meal-builder-summary {
             margin-bottom: 20px;
@@ -1878,3 +1925,4 @@ document.getElementById('nutrients-header').addEventListener('click', () => {
     </script>
 </body>
 </html>
+
