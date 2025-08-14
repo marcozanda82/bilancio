@@ -451,20 +451,20 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
                         <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
-                        <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
-                        <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
-                        <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
-                    </div>
-                    <div>
                         <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
                         <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
+                        <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
+                    </div>
+                    <div>
                         <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
+                        <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
                     </div>
                 </div>
                 <hr>
                 <h3>Vitamine</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
+                        <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
                         <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p>
                         <progress id="progress-vit-a" value="0" max="900"></progress>
                     </div>
@@ -712,7 +712,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         const spanTotaleVitA = document.getElementById('totale-vit-a'), spanTotaleVitB12 = document.getElementById('totale-vit-b12'), spanTotaleVitD = document.getElementById('totale-vit-d');
         // Nuovi span
         const spanTotaleFe = document.getElementById('totale-fe'), spanTotaleZn = document.getElementById('totale-zn'), spanTotaleCu = document.getElementById('totale-cu');
-        // Nuovi span per i grassi totali
         const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total');
 
         const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
@@ -722,7 +721,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         const progressVitA = document.getElementById('progress-vit-a'), progressVitB12 = document.getElementById('progress-vit-b12'), progressVitD = document.getElementById('progress-vit-d');
         // Nuovi progress
         const progressFe = document.getElementById('progress-fe'), progressZn = document.getElementById('progress-zn'), progressCu = document.getElementById('progress-cu');
-        // Nuovi progress per i grassi totali
         const progressFatsTotal = document.getElementById('progress-fats-total');
 
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
@@ -750,7 +748,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
         const cloudSyncSection = document.querySelector('.cloud-sync-section');
 
-        // Elementi per la compilazione manuale
         const btnCopyPrompt = document.getElementById('btn-copy-prompt');
         const manualJsonInput = document.getElementById('manual-json-input');
         const btnConfirmJson = document.getElementById('btn-confirm-json');
@@ -760,13 +757,13 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         
         function salvaFoodDatabase() { 
             localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); 
-            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
             saveAllTrackerDataToCloud(); 
         }
         
         function salvaPastoInCostruzione() { 
             localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); 
-            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
             saveAllTrackerDataToCloud(); 
         }
         
@@ -775,11 +772,11 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                 datiDaSalvare = datiGiornalieri;
             }
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
-            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
             console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
-            isDirty = false; // Resetta il flag isDirty dopo il salvataggio locale
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
-            saveAllTrackerDataToCloud(); // Avvia la sincronizzazione cloud in background
+            isDirty = false; 
+            updateFloppyDiskIcon(); 
+            saveAllTrackerDataToCloud(); 
         }
         
         function caricaGiorno(data) {
@@ -799,35 +796,27 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
 
-            // ***** INIZIO MODIFICA PER ELIMINARE DATI FARLOCCHI DELL'11 GIUGNO 2025 *****
-            const dataFarlocca = "2025-06-11"; // Formato 'YYYY-MM-DD'
+            const dataFarlocca = "2025-06-11"; 
             if (data === dataFarlocca) {
                 console.warn(`Rilevati dati farlocchi per il giorno ${dataFarlocca}. Azzeramento dati.`);
-                datiGiornalieri = { log: [], workoutCalorie: 0, calorieAdjustment: 0 }; // Resetta completamente
+                datiGiornalieri = { log: [], workoutCalorie: 0, calorieAdjustment: 0 }; 
                 localStorage.removeItem(`trackerStorico_${dataFarlocca}`);
             }
-            // ***** FINE MODIFICA *****
 
             const dataCorrente = new Date(data);
-            const giornoSettimana = dataCorrente.getDay(); // 0 per domenica, 1 per lunedì, ecc.
+            const giornoSettimana = dataCorrente.getDay(); 
             const valorePreimpostatoPerGiorno = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
 
-            // ***** INIZIO NUOVA LOGICA PER CALORIE ADJUSTMENT *****
-            // Se la proprietà non esiste O se il valore salvato è 0,
-            // applichiamo il valore preimpostato.
-            // Questo gestisce sia i casi in cui non c'era il campo, sia i casi in cui il campo è 0.
             if (typeof datiGiornalieri.calorieAdjustment === 'undefined' || datiGiornalieri.calorieAdjustment === 0) {
                 datiGiornalieri.calorieAdjustment = valorePreimpostatoPerGiorno;
                 console.log(`Calorie adjustment preimpostato a ${datiGiornalieri.calorieAdjustment} per il giorno ${data}`);
             } else {
-                // Se c'è un valore diverso da 0, lo manteniamo (l'utente lo ha impostato manualmente)
                 console.log(`Calorie adjustment caricato: ${datiGiornalieri.calorieAdjustment} per il giorno ${data}`);
             }
-            // ***** FINE NUOVA LOGICA *****
 
             aggiornaUI();
-            isDirty = false; // Nessuna modifica al caricamento del giorno
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al caricamento
+            isDirty = false; 
+            updateFloppyDiskIcon(); 
             console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
         }
 
@@ -1020,7 +1009,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
             progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
 
-            // Aggiornamento grassi
             spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal;
             spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1);
             progressFatsTotal.max = OBIETTIVI_FAT.fatTotal;
@@ -1034,7 +1022,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             progressFatUnsat.max   = OBIETTIVI_FAT.fatUnsat;
             progressFatUnsat.value = totali.fatUnsat;
             
-            // Logica colori per la barra dei grassi saturi
             progressFatSat.classList.remove('green', 'orange', 'red');
             if (totali.fatSat < OBIETTIVI_FAT.fatSat) {
                 progressFatSat.classList.add('green');
@@ -1052,10 +1039,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             progressK.max = OBIETTIVI.k;
             progressK.value = totali.k;
 
-            spanTotaleVitC.textContent = totali.vitc.toFixed(1);
-            progressVitC.max = OBIETTIVI.vitc;
-            progressVitC.value = totali.vitc;
-
             spanTotaleCa.textContent = totali.ca.toFixed(1);
             progressCa.max = OBIETTIVI.ca;
             progressCa.value = totali.ca;
@@ -1068,6 +1051,14 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             progressZn.max = OBIETTIVI.zn;
             progressZn.value = totali.zn;
 
+            spanTotaleCu.textContent     = totali.cu.toFixed(2);
+            progressCu.max   = OBIETTIVI.cu;
+            progressCu.value = totali.cu;
+
+            spanTotaleVitC.textContent = totali.vitc.toFixed(1);
+            progressVitC.max = OBIETTIVI.vitc;
+            progressVitC.value = totali.vitc;
+
             spanTotaleVitA.textContent     = totali.vitA.toFixed(1);
             progressVitA.max   = OBIETTIVI.vitA;
             progressVitA.value = totali.vitA;
@@ -1079,10 +1070,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             spanTotaleVitD.textContent     = totali.vitD.toFixed(1);
             progressVitD.max   = OBIETTIVI.vitD;
             progressVitD.value = totali.vitD;
-            
-            spanTotaleCu.textContent     = totali.cu.toFixed(2);
-            progressCu.max   = OBIETTIVI.cu;
-            progressCu.value = totali.cu;
 
             logBody.innerHTML = ''; 
             (datiGiornalieri.log || []).forEach((entry, index) => { 
@@ -1624,7 +1611,6 @@ Se un valore non è disponibile usa 0.
         });
 
         function updateFloppyDiskIcon() {
-            // Logica del floppy disk rimossa per questo esperimento
         }
 
         try {
