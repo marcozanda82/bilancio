@@ -462,6 +462,7 @@
                 <div class="button-group">
                     <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
                     <button id="btn-aggiungi-singolo">Aggiungi al Diario</button>
+                    <button id="btn-compila-ai" style="background-color: #0d47a1;">Compila AI</button>
                 </div>
             </div>
             <div id="meal-builder-sezione" class="sezione" data-visible="false">
@@ -599,6 +600,11 @@ const firebaseConfig = {
         const LOCAL_LAST_UPDATE_KEY = 'lastLocalUpdateTimestamp';
         const CLOUD_LAST_UPDATE_PATH = 'lastCloudUpdateTimestamp';
 
+        // ************************************************************
+// CONFIGURAZIONE API GEMINI
+// ************************************************************
+const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
 
         // --- ELEMENTI DEL DOM ---
         const authSection = document.getElementById('auth-section');
@@ -1381,6 +1387,47 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
             // isDirty è già gestito da salvaGiorno() per l'OK, e per Annulla non modifichiamo lo stato di dirty.
         });
+
+        document.getElementById('btn-compila-ai').addEventListener('click', async () => {
+    const nome = builderDesc.value.trim();
+    if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
+
+    document.getElementById('btn-compila-ai').disabled = true;
+    document.getElementById('btn-compila-ai').textContent = 'Caricamento…';
+
+    try {
+        const res = await fetch(GEMINI_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: `Fornisci SOLO un oggetto JSON con i valori nutrizionali stimati per 100 g di "${nome}". Usa queste chiavi esatte:
+{"prot":valore,"kcal":valore,"mg":valore,"k":valore,"vitc":valore,"ca":valore,"fatSat":valore,"fatUnsat":valore,"vitA":valore,"vitB12":valore,"vitD":valore}
+Non aggiungere testo extra.`
+                    }]
+                }]
+            })
+        });
+
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await res.json();
+        const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+        ['prot','kcal','mg','k','vitc','ca','fatSat','fatUnsat','vitA','vitB12','vitD'].forEach(k=>{
+            const elId = 'builder-' + k.replace('fat','fat-').toLowerCase();
+            const el = document.getElementById(elId);
+            if (el && resObj[k] != null) el.value = resObj[k];
+        });
+
+    } catch (err) {
+        alert('Errore compilazione AI: ' + err.message);
+    } finally {
+        document.getElementById('btn-compila-ai').disabled = false;
+        document.getElementById('btn-compila-ai').textContent = 'Compila AI';
+    }
+});
         
         dataCaricamentoInput.value = getTodayString('ymd');
 
@@ -1795,3 +1842,4 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
     </script>
 </body>
 </html>
+
