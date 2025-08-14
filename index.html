@@ -1373,21 +1373,25 @@ function aggiornaColoreNutrienti() {
             }
         });
         
-        builderDesc.addEventListener('input', (e) => {
-            const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; 
-            if (foodData) {
-                builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || '';
-                builderMg.value = foodData.mg || ''; builderK.value = foodData.k || '';
-                builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || '';
-                // Nuovi campi
-                builderFatSat.value   = foodData.fatSat   || '';
-                builderFatUnsat.value = foodData.fatUnsat || '';
-                builderVitA.value     = foodData.vitA     || '';
-                builderVitB12.value   = foodData.vitB12   || '';
-                builderVitD.value     = foodData.vitD     || '';
-            }
-            aggiornaColoreNutrienti(); // Chiamata aggiunta
-        });
+builderDesc.addEventListener('input', (e) => {
+    const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; 
+    if (foodData) {
+        // Assegna il valore direttamente, usando 0 se il valore è null o undefined
+        builderProt.value = foodData.prot ?? 0;
+        builderKcal.value = foodData.kcal ?? 0;
+        builderMg.value = foodData.mg ?? 0;
+        builderK.value = foodData.k ?? 0;
+        builderVitC.value = foodData.vitc ?? 0;
+        builderCa.value = foodData.ca ?? 0;
+        // Nuovi campi
+        builderFatSat.value   = foodData.fatSat ?? 0;
+        builderFatUnsat.value = foodData.fatUnsat ?? 0;
+        builderVitA.value     = foodData.vitA ?? 0;
+        builderVitB12.value   = foodData.vitB12 ?? 0;
+        builderVitD.value     = foodData.vitD ?? 0;
+    }
+    aggiornaColoreNutrienti();
+});
 
         const nutrientsInputs = document.querySelectorAll('#nutrients-content input[type="number"]');
         nutrientsInputs.forEach(input => {
@@ -1896,5 +1900,6 @@ document.getElementById('nutrients-header').addEventListener('click', () => {
     </script>
 </body>
 </html>
+
 
 
