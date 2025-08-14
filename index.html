@@ -51,7 +51,6 @@
         .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
         .sub-item-row td:last-child { visibility: hidden; }
 
-        /* Stili per il riepilogo del costruttore pasti */
         #meal-builder-summary {
             margin-bottom: 20px;
             padding: 15px;
@@ -81,8 +80,6 @@
             height: 18px;
             border-radius: 4px;
         }
-
-        /* Stili per l'indicatore testuale deficit/surplus */
         #calorie-balance-text {
             display: block;
             text-align: center;
@@ -93,12 +90,9 @@
             padding: 8px 0;
             border-radius: 5px;
         }
-        /* Colori per lo stato */
         .balance-deficit { background-color: #ffebee; color: #d32f2f; }
         .balance-surplus { background-color: #e8f5e9; color: #2e7d32; }
         .balance-even { background-color: #e3f2fd; color: #1976d2; }
-
-        /* Stili per l'area allenamento a scomparsa */
         .collapsible-header {
             cursor: pointer;
             padding: 10px 0;
@@ -130,8 +124,6 @@
         .collapsible-header.expanded .arrow {
             transform: rotate(90deg);
         }
-
-        /* Stili per il regolatore deficit/surplus */
         #calorie-adjuster {
             display: flex;
             align-items: center;
@@ -159,27 +151,12 @@
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            /* Rimosso -moz-appearance e -webkit-appearance per permettere frecce del browser */
-            /* Se si desidera rimuovere le frecce, è necessario reimpostare queste proprietà */
         }
-        /* Se si desidera rimuovere le frecce per l'input number, decommentare: */
-        /* #calorie-adjuster input::-webkit-outer-spin-button,
-        #calorie-adjuster input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        #calorie-adjuster input[type="number"] {
-            -moz-appearance: textfield;
-        } */
-
-
         #calorie-adjuster label {
             margin-bottom: 0;
             font-weight: normal;
             color: #333;
         }
-
-        /* Stili per i pulsanti di sincronizzazione manuale */
         .cloud-sync-section {
             display: flex;
             gap: 10px;
@@ -216,8 +193,6 @@
             color: #c62828;
             font-weight: bold;
         }
-
-        /* Stili per la sezione di autenticazione */
         #auth-section {
             margin-bottom: 25px;
             padding: 20px;
@@ -258,16 +233,12 @@
             margin-bottom: 10px;
             display: none;
         }
-
-        /* Nascondi il tracker finché l'utente non è autenticato */
         #main-tracker-content {
             display: none;
         }
         #main-tracker-content.authenticated {
             display: block;
         }
-
-        /* NUOVI STILI per il riquadro di benvenuto minimizzato */
         #auth-section.logged-in {
             padding: 10px 20px;
             background-color: #e3f2fd;
@@ -299,8 +270,6 @@
             margin: 0;
             flex-shrink: 0;
         }
-
-        /* STILI PER IL PULSANTE FLOPPY DISK (ORA RIMOSSO O NASCOSTO) */
         .summary-header-row {
             display: flex;
             justify-content: space-between;
@@ -314,7 +283,7 @@
             border-bottom: none;
         }
         .floppy-disk-button {
-            display: none; /* Rimosso l'icona del floppy disk */
+            display: none;
             background-color: #00796b;
             color: white;
             border: none;
@@ -327,11 +296,10 @@
             justify-content: center;
             transition: background-color 0.3s;
             flex-shrink: 0;
-            /* Nuovi stili per il lampeggio */
             animation-duration: 1.5s;
             animation-iteration-count: infinite;
             animation-timing-function: ease-in-out;
-            animation-name: none; /* Inizialmente nessuna animazione */
+            animation-name: none;
         }
         .floppy-disk-button:hover {
             background-color: #004d40;
@@ -339,21 +307,20 @@
         .floppy-disk-button.disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            animation-name: none !important; /* Disabilita lampeggio se il pulsante è disabilitato */
+            animation-name: none !important;
         }
-        /* Definizione dell'animazione di lampeggio */
         @keyframes pulse-red {
             0% {
                 box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
-                background-color: #00796b; /* Colore normale */
+                background-color: #00796b;
             }
             70% {
                 box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
-                background-color: #d32f2f; /* Colore rosso quando lampeggia */
+                background-color: #d32f2f;
             }
             100% {
                 box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
-                background-color: #00796b; /* Torna normale */
+                background-color: #00796b;
             }
         }
         .floppy-disk-button.unsaved-changes {
@@ -381,12 +348,12 @@
         </div>
         <div id="main-tracker-content">
             <h2 id="titolo-giornata"></h2>
-<div class="nav-links">
-    <a href="builder.html">➕ Costruttore Pasti AI</a>
-    <a href="analisi.html">🧠 Analisi AI</a>
-    <a href="storico.html">📊 Storico</a>
-    <a href="stima_grassi.html">🫙 Stima Grassi</a>
-</div>
+            <div class="nav-links">
+                <a href="builder.html">➕ Costruttore Pasti AI</a>
+                <a href="analisi.html">🧠 Analisi AI</a>
+                <a href="storico.html">📊 Storico Giornaliero</a>
+                <a href="confronto.html">📈 Confronto Mensile</a>
+            </div>
             <div id="riepilogo" class="sezione">
                 <div class="summary-header-row">
                     <h2>Riepilogo di Oggi</h2>
@@ -407,6 +374,10 @@
                 <progress id="progress-proteine" class="macro-progress" value="0"></progress>
                 <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
+                <p>Grassi: <span id="totale-grassi">0</span> / <span id="obiettivo-grassi"></span> g</p>
+                <progress id="progress-grassi" class="macro-progress" value="0"></progress>
+                <p>Fibre: <span id="totale-fibre">0</span> / <span id="obiettivo-fibre"></span> g</p>
+                <progress id="progress-fibre" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
                 <hr>
                 <h3>Micronutrienti</h3>
@@ -414,10 +385,13 @@
                     <div>
                         <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
                         <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
+                        <p>Vitamina B12: <span id="totale-vitb12">0</span> / 2.4 µg</p><progress id="progress-vitb12" value="0"></progress>
                     </div>
                     <div>
                         <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
                         <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
+                        <p>Vitamina D: <span id="totale-vitd">0</span> / 15 µg</p><progress id="progress-vitd" value="0"></progress>
+                        <p>Vitamina A: <span id="totale-vita">0</span> / 900 µg</p><progress id="progress-vita" value="0"></progress>
                     </div>
                 </div>
             </div>
@@ -440,10 +414,15 @@
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
                 </div>
                 <div class="builder-grid" style="margin-top: 10px;">
+                    <div><label>Grassi/100g</label><input type="number" id="builder-fat" step="0.1"></div>
+                    <div><label>Fibre/100g</label><input type="number" id="builder-fiber" step="0.1"></div>
                     <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
                     <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
                     <div><label>Vit. C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
                     <div><label>Calcio (mg)/100g</label><input type="number" id="builder-ca" min="0"></div>
+                    <div><label>Vit. B12 (µg)/100g</label><input type="number" id="builder-vitb12" step="0.1"></div>
+                    <div><label>Vit. D (µg)/100g</label><input type="number" id="builder-vitd" step="0.1"></div>
+                    <div><label>Vit. A (µg)/100g</label><input type="number" id="builder-vita" step="0.1"></div>
                 </div>
                 <datalist id="food-database-list"></datalist>
                 <div class="button-group">
@@ -480,7 +459,7 @@
             </div>
             <div class="sezione">
                 <h2>Diario Giornaliero</h2>
-                <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
+                <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th><th>Vit.B12</th><th>Vit.D</th><th>Vit.A</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
                 <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
                     <h3 style="margin:0 0 10px 0; font-size:1em;">Carica/Salva Giorno Specifico</h3>
                     <div>
@@ -520,15 +499,15 @@
         // ************************************************************
         // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
         // ************************************************************
-const firebaseConfig = {
-  apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
-  authDomain: "mio-tracker.firebaseapp.com",
-  databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mio-tracker",
-  storageBucket: "mio-tracker.firebasestorage.app",
-  messagingSenderId: "382993217593",
-  appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
-};
+        const firebaseConfig = {
+          apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
+          authDomain: "mio-tracker.firebaseapp.com",
+          databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+          projectId: "mio-tracker",
+          storageBucket: "mio-tracker.firebasestorage.app",
+          messagingSenderId: "382993217593",
+          appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+        };
         // ************************************************************
         // FINE CONFIGURAZIONE FIREBASE
         // ************************************************************
@@ -538,7 +517,7 @@ const firebaseConfig = {
         let datiGiornalieri = {};
         let foodDatabase = {};
         let pastoInCostruzione = [];
-        let isDirty = false; // Flag per segnalare modifiche non salvate
+        let isDirty = false;
         
         let db; 
         let auth; 
@@ -546,27 +525,34 @@ const firebaseConfig = {
         let currentUserUID = null; 
 
         const PIANO_SETTIMANALE = {
-            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 },
-            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
-            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
-            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
+            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140, grassi: 77, fibre: 30 },
+            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140, grassi: 77, fibre: 30 },
+            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140, grassi: 77, fibre: 30 },
+            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, grassi: 77, fibre: 30 },
+            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140, grassi: 77, fibre: 30 },
+            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, grassi: 77, fibre: 30 },
+            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140, grassi: 77, fibre: 30 }
         };
 
-        // NUOVA COSTANTE: Deficit/Surplus preimpostato per giorno della settimana
         const DEFICIT_PREIMPOSTATO_SETTIMANALE = {
-            0: -500, // Domenica
-            1: -150, // Lunedì
-            2: -150, // Martedì
-            3: -150, // Mercoledì
-            4: -150, // Giovedì
-            5: -150, // Venerdì
-            6: -500  // Sabato
+            0: -500,
+            1: -150,
+            2: -150,
+            3: -150,
+            4: -150,
+            5: -150,
+            6: -500
         };
 
-        const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000 };
+        const OBIETTIVI_MICRO = {
+            mg: 420,
+            k: 3400,
+            vitc: 90,
+            ca: 1000,
+            vitb12: 2.4, // µg
+            vitd: 15, // µg
+            vita: 900 // µg
+        };
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
             merenda1: { prot: 30, cal_perc: 0.20 },
@@ -604,7 +590,9 @@ const firebaseConfig = {
         const logBody = document.getElementById('log-body');
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
+        const builderFat = document.getElementById('builder-fat'), builderFiber = document.getElementById('builder-fiber');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
+        const builderVitB12 = document.getElementById('builder-vitb12'), builderVitD = document.getElementById('builder-vitd'), builderVitA = document.getElementById('builder-vita');
         const foodDatalist = document.getElementById('food-database-list');
         const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo'), btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
         const mealBuilderSezione = document.getElementById('meal-builder-sezione'), logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
@@ -614,25 +602,26 @@ const firebaseConfig = {
         const btnCaricaGiorno = document.getElementById('btn-carica-giorno'), dataCaricamentoInput = document.getElementById('data-caricamento');
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
         const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
+        const spanTotaleGrassi = document.getElementById('totale-grassi'), spanObiettivoGrassi = document.getElementById('obiettivo-grassi');
+        const spanTotaleFibre = document.getElementById('totale-fibre'), spanObiettivoFibre = document.getElementById('obiettivo-fibre');
         const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
+        const spanTotaleVitB12 = document.getElementById('totale-vitb12'), spanTotaleVitD = document.getElementById('totale-vitd'), spanTotaleVitA = document.getElementById('totale-vita');
         const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
+        const progressGrassi = document.getElementById('progress-grassi'), progressFibre = document.getElementById('progress-fibre');
         const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
+        const progressVitB12 = document.getElementById('progress-vitb12'), progressVitD = document.getElementById('progress-vitd'), progressVitA = document.getElementById('progress-vita');
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
 
         const currentMealTypeDisplay = document.getElementById('current-meal-type-display');
         const mealProtCurrent = document.getElementById('meal-prot-current'), mealProtTarget = document.getElementById('meal-prot-target'), mealProtRemaining = document.getElementById('meal-prot-remaining');
         const mealCalCurrent = document.getElementById('meal-cal-current'), mealCalTarget = document.getElementById('meal-cal-target'), mealCalRemaining = document.getElementById('meal-cal-remaining');
         const mealProgressProt = document.getElementById('meal-progress-prot'), mealProgressCal = document.getElementById('meal-progress-cal');
-        
+        const calorieBalanceText = document.getElementById('calorie-balance-text');
+        const workoutHeader = document.getElementById('workout-header');
+        const workoutContent = document.getElementById('workout-content');
         const workoutDescInput = document.getElementById('workout-desc');
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
-
-        const calorieBalanceText = document.getElementById('calorie-balance-text');
-
-        const workoutHeader = document.getElementById('workout-header');
-        const workoutContent = document.getElementById('workout-content');
-
         const calorieAdjustmentInput = document.getElementById('calorie-adjustment-input');
         const btnCalorieMinus = document.getElementById('btn-calorie-minus');
         const btnCaloriePlus = document.getElementById('btn-calorie-plus');
@@ -645,31 +634,31 @@ const firebaseConfig = {
 
         // --- FUNZIONI DI GESTIONE DATI ---
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
-        
+
         function salvaFoodDatabase() { 
             localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); 
-            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now());
             saveAllTrackerDataToCloud(); 
         }
-        
+
         function salvaPastoInCostruzione() { 
             localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); 
-            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now());
             saveAllTrackerDataToCloud(); 
         }
-        
+
         function salvaGiorno(dataDaSalvare, datiDaSalvare) {
             if (!datiDaSalvare) {
                 datiDaSalvare = datiGiornalieri;
             }
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
-            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Aggiorna timestamp locale
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now());
             console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
-            isDirty = false; // Resetta il flag isDirty dopo il salvataggio locale
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
-            saveAllTrackerDataToCloud(); // Avvia la sincronizzazione cloud in background
+            isDirty = false;
+            updateFloppyDiskIcon();
+            saveAllTrackerDataToCloud();
         }
-        
+
         function caricaGiorno(data) {
             giornoVisualizzato = data;
             dataCaricamentoInput.value = data;
@@ -683,39 +672,31 @@ const firebaseConfig = {
                 console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
             }
             
-            datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 }; 
+            datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0 };
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
 
-            // ***** INIZIO MODIFICA PER ELIMINARE DATI FARLOCCHI DELL'11 GIUGNO 2025 *****
-            const dataFarlocca = "2025-06-11"; // Formato 'YYYY-MM-DD'
+            const dataFarlocca = "2025-06-11";
             if (data === dataFarlocca) {
                 console.warn(`Rilevati dati farlocchi per il giorno ${dataFarlocca}. Azzeramento dati.`);
-                datiGiornalieri = { log: [], workoutCalorie: 0, calorieAdjustment: 0 }; // Resetta completamente
+                datiGiornalieri = { log: [], workoutCalorie: 0, calorieAdjustment: 0 };
                 localStorage.removeItem(`trackerStorico_${dataFarlocca}`);
             }
-            // ***** FINE MODIFICA *****
 
             const dataCorrente = new Date(data);
-            const giornoSettimana = dataCorrente.getDay(); // 0 per domenica, 1 per lunedì, ecc.
+            const giornoSettimana = dataCorrente.getDay();
             const valorePreimpostatoPerGiorno = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
 
-            // ***** INIZIO NUOVA LOGICA PER CALORIE ADJUSTMENT *****
-            // Se la proprietà non esiste O se il valore salvato è 0,
-            // applichiamo il valore preimpostato.
-            // Questo gestisce sia i casi in cui non c'era il campo, sia i casi in cui il campo è 0.
             if (typeof datiGiornalieri.calorieAdjustment === 'undefined' || datiGiornalieri.calorieAdjustment === 0) {
                 datiGiornalieri.calorieAdjustment = valorePreimpostatoPerGiorno;
                 console.log(`Calorie adjustment preimpostato a ${datiGiornalieri.calorieAdjustment} per il giorno ${data}`);
             } else {
-                // Se c'è un valore diverso da 0, lo manteniamo (l'utente lo ha impostato manualmente)
                 console.log(`Calorie adjustment caricato: ${datiGiornalieri.calorieAdjustment} per il giorno ${data}`);
             }
-            // ***** FINE NUOVA LOGICA *****
 
             aggiornaUI();
-            isDirty = false; // Nessuna modifica al caricamento del giorno
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al caricamento
+            isDirty = false;
+            updateFloppyDiskIcon();
             console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
         }
 
@@ -726,7 +707,7 @@ const firebaseConfig = {
 
             const obiettivoCalTotaleGiornaliero = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
             const obiettivoProtTotaleGiornaliero = pianoDelGiorno.prot;
-
+            
             let obiettivoPastoProt = 0;
             let obiettivoPastoCal = 0;
 
@@ -769,11 +750,11 @@ const firebaseConfig = {
             return {
                 currentProt: totaliPastoInCostruzione.prot,
                 targetProt: obiettivoPastoProt,
-                remainingProt: obiettivoPastoProt - totaliPastoInCostruzione.prot,
+                remainingProt: obiettivoPastoProt - totaliPastoCorrenteSelezionati.prot,
                 
                 currentCal: totaliPastoInCostruzione.cal,
                 targetCal: obiettivoPastoCal,
-                remainingCal: obiettivoPastoCal - totaliPastoInCostruzione.cal
+                remainingCal: obiettivoPastoCal - totaliPastoCorrenteSelezionati.cal
             };
         }
 
@@ -803,91 +784,104 @@ const firebaseConfig = {
             
             const obiettivoCalorieBaseWorkout = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
             const obiettivoCalorieTotale = obiettivoCalorieBaseWorkout + (datiGiornalieri.calorieAdjustment || 0);
-            const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO };
+            const OBIETTIVI = { 
+                prot: pianoDelGiorno.prot, 
+                cal: obiettivoCalorieTotale,
+                grassi: pianoDelGiorno.grassi,
+                fibre: pianoDelGiorno.fibre,
+                ...OBIETTIVI_MICRO 
+            };
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
+            let totali = { proteine: 0, calorie: 0, grassi: 0, fibre: 0, mg: 0, k: 0, vitc: 0, ca: 0, vitb12: 0, vitd: 0, vita: 0 };
             (datiGiornalieri.log || []).forEach(entry => { 
                 if (entry.type === 'meal') {
                     entry.items.forEach(item => {
                         totali.proteine += item.prot || 0;
                         totali.calorie += item.cal || 0;
+                        totali.grassi += item.fat || 0;
+                        totali.fibre += item.fiber || 0;
                         totali.mg += item.mg || 0;
                         totali.k += item.k || 0;
                         totali.vitc += item.vitc || 0;
                         totali.ca += item.ca || 0;
+                        totali.vitb12 += item.vitb12 || 0;
+                        totali.vitd += item.vitd || 0;
+                        totali.vita += item.vita || 0;
                     });
                 } else if (entry.type === 'single') { 
                     totali.proteine += entry.prot || 0;
                     totali.calorie += entry.cal || 0;
+                    totali.grassi += entry.fat || 0;
+                    totali.fibre += entry.fiber || 0;
                     totali.mg += entry.mg || 0;
                     totali.k += entry.k || 0;
                     totali.vitc += entry.vitc || 0;
                     totali.ca += entry.ca || 0;
+                    totali.vitb12 += entry.vitb12 || 0;
+                    totali.vitd += entry.vitd || 0;
+                    totali.vita += entry.vita || 0;
                 }
             });
             
-            // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
-            // Questo calcolo viene spostato qui per poter salvare il valore
             const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
 
-            // Calcolo della variazione di grasso
-            let variazioneGrasso = 0; // In grammi
-            // 7.7 kcal per 1g di grasso (1kg = 7700 kcal, 1g = 7.7 kcal)
+            let variazioneGrasso = 0;
             if (deficitArrotondato < 0) { 
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
             } else if (deficitArrotondato > 0) { 
-                variazioneGrasso = -(deficitArrotondato / 7.7); // Negativo se guadagni grasso
+                variazioneGrasso = -(deficitArrotondato / 7.7);
             } else { 
                 variazioneGrasso = 0;
             }
 
-            // Logica per il trend muscolare (score numerico)
             let scoreMuscolo = 0;
-
-            // Condizione 1: Proteine
             if(totali.proteine >= (pianoDelGiorno.prot * 0.95)) {
                 scoreMuscolo++;
             } else {
                 scoreMuscolo--;
             }
 
-            // Condizione 2: Tipo di giornata "Forza" (usando pianoDelGiorno.tipo)
             if(pianoDelGiorno.tipo.includes('Forza')) {
-                scoreMuscolo++; // Se è giornata di Forza, aggiungi 1 punto
-
-                // Nuova condizione per il deficit in giorni di forza
-                // Se il deficit effettivo è più negativo di -200 kcal (es. -250, -300) in un giorno di Forza
+                scoreMuscolo++;
                 if (deficitArrotondato < -200) { 
-                    scoreMuscolo--; // Indice negativo per la massa muscolare se il deficit è troppo elevato in un giorno di forza
+                    scoreMuscolo--;
                 }
             }
 
-
-            // Assegna i totali correnti e i nuovi campi all'oggetto datiGiornalieri PRIMA del salvataggio
             datiGiornalieri.proteine = totali.proteine;
             datiGiornalieri.calorie = totali.calorie;
+            datiGiornalieri.grassi = totali.grassi;
+            datiGiornalieri.fibre = totali.fibre;
             datiGiornalieri.mg = totali.mg;
             datiGiornalieri.k = totali.k;
             datiGiornalieri.vitc = totali.vitc;
             datiGiornalieri.ca = totali.ca;
-            datiGiornalieri.bilancioCalorico = deficitArrotondato; // Nuovo campo per il bilancio calorico giornaliero
-            datiGiornalieri.variazioneGrassoG = variazioneGrasso; // Nuovo campo per la variazione di grasso in grammi
-            datiGiornalieri.scoreMuscolo = scoreMuscolo; // Nuovo campo per lo score muscolare
-
+            datiGiornalieri.vitb12 = totali.vitb12;
+            datiGiornalieri.vitd = totali.vitd;
+            datiGiornalieri.vita = totali.vita;
+            datiGiornalieri.bilancioCalorico = deficitArrotondato;
+            datiGiornalieri.variazioneGrassoG = variazioneGrasso;
+            datiGiornalieri.scoreMuscolo = scoreMuscolo;
 
             spanObiettivoProteine.textContent = OBIETTIVI.prot;
-            spanObiettivoCalorie.textContent = OBIETTIVI.cal; 
+            spanObiettivoCalorie.textContent = OBIETTIVI.cal;
+            spanObiettivoGrassi.textContent = OBIETTIVI.grassi;
+            spanObiettivoFibre.textContent = OBIETTIVI.fibre;
+
             spanTotaleProteine.textContent = totali.proteine.toFixed(1);
             spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
+            spanTotaleGrassi.textContent = totali.grassi.toFixed(1);
+            spanTotaleFibre.textContent = totali.fibre.toFixed(1);
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
 
             progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
             progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
+            progressGrassi.max = OBIETTIVI.grassi; progressGrassi.value = totali.grassi;
+            progressFibre.max = OBIETTIVI.fibre; progressFibre.value = totali.fibre;
             
-            // --- INIZIO BLOCCO CORRETTO PER MICRONUTRIENTI ---
             spanTotaleMg.textContent = totali.mg.toFixed(1);
             progressMg.max = OBIETTIVI.mg;
             progressMg.value = totali.mg;
@@ -903,7 +897,19 @@ const firebaseConfig = {
             spanTotaleCa.textContent = totali.ca.toFixed(1);
             progressCa.max = OBIETTIVI.ca;
             progressCa.value = totali.ca;
-            // --- FINE BLOCCO CORRETTO PER MICRONUTRIENTI ---
+
+            spanTotaleVitB12.textContent = totali.vitb12.toFixed(1);
+            progressVitB12.max = OBIETTIVI_MICRO.vitb12;
+            progressVitB12.value = totali.vitb12;
+
+            spanTotaleVitD.textContent = totali.vitd.toFixed(1);
+            progressVitD.max = OBIETTIVI_MICRO.vitd;
+            progressVitD.value = totali.vitd;
+
+            spanTotaleVitA.textContent = totali.vita.toFixed(1);
+            progressVitA.max = OBIETTIVI_MICRO.vita;
+            progressVitA.value = totali.vita;
+
 
             logBody.innerHTML = ''; 
             (datiGiornalieri.log || []).forEach((entry, index) => { 
@@ -913,8 +919,9 @@ const firebaseConfig = {
                     const totaliPastoCorrente = (entry.items || []).reduce((acc, item) => {
                         acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0;
                         acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
+                        acc.vitb12 += item.vitb12 || 0; acc.vitd += item.vitd || 0; acc.vita += item.vita || 0;
                         return acc;
-                    }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0 });
+                    }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, vitb12: 0, vitd: 0, vita: 0 });
 
                     rigaPasto.innerHTML = `
                         <td>
@@ -928,6 +935,9 @@ const firebaseConfig = {
                         <td>${totaliPastoCorrente.k.toFixed(0)}</td>
                         <td>${totaliPastoCorrente.vitc.toFixed(1)}</td>
                         <td>${totaliPastoCorrente.ca.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.vitb12.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.vitd.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.vita.toFixed(1)}</td>
                         <td class="action-buttons">
                             <button class="edit-btn" data-index="${index}">✏️</button>
                             <button class="delete-btn" data-index="${index}">&times;</button>
@@ -947,6 +957,9 @@ const firebaseConfig = {
                                 <td>${subItem.k.toFixed(0)}</td>
                                 <td>${subItem.vitc.toFixed(1)}</td>
                                 <td>${subItem.ca.toFixed(1)}</td>
+                                <td>${subItem.vitb12.toFixed(1)}</td>
+                                <td>${subItem.vitd.toFixed(1)}</td>
+                                <td>${subItem.vita.toFixed(1)}</td>
                                 <td></td>
                             `;
                         });
@@ -959,6 +972,7 @@ const firebaseConfig = {
                         <td></td>
                         <td>${entry.cal.toFixed(0)} kcal</td>
                         <td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td>
                         <td class="action-buttons">
                             <button class="delete-btn" data-index="${index}">&times;</button>
                         </td>
@@ -966,11 +980,10 @@ const firebaseConfig = {
                 }
                 else { 
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
+                    riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td>${(entry.vitb12||0).toFixed(1)}</td><td>${(entry.vitd||0).toFixed(1)}</td><td>${(entry.vita||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
                 }
             });
 
-            // I calcoli per calorieBalanceText rimangono come prima
             const currentCalories = totali.calorie;
             const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
             const calorieDifference = currentCalories - targetCaloriesForBalanceText;
@@ -1047,22 +1060,32 @@ const firebaseConfig = {
 
             let p100 = parseFloat(builderProt.value) || 0; 
             let k100 = parseFloat(builderKcal.value) || 0;
+            let fat100 = parseFloat(builderFat.value) || 0;
+            let fiber100 = parseFloat(builderFiber.value) || 0;
             let mg100 = parseFloat(builderMg.value) || 0; 
             let k100_mg = parseFloat(builderK.value) || 0;
             let vitc100 = parseFloat(builderVitC.value) || 0; 
             let ca100 = parseFloat(builderCa.value) || 0;
+            let vitb12_100 = parseFloat(builderVitB12.value) || 0;
+            let vitd_100 = parseFloat(builderVitD.value) || 0;
+            let vita_100 = parseFloat(builderVitA.value) || 0;
 
             const existingFood = foodDatabase[desc.toLowerCase()];
             if (existingFood) {
                 p100 = (builderProt.value === '' || isNaN(p100)) ? existingFood.prot || 0 : p100;
                 k100 = (builderKcal.value === '' || isNaN(k100)) ? existingFood.kcal || 0 : k100;
+                fat100 = (builderFat.value === '' || isNaN(fat100)) ? existingFood.fat || 0 : fat100;
+                fiber100 = (builderFiber.value === '' || isNaN(fiber100)) ? existingFood.fiber || 0 : fiber100;
                 mg100 = (builderMg.value === '' || isNaN(mg100)) ? existingFood.mg || 0 : mg100;
                 k100_mg = (builderK.value === '' || isNaN(k100_mg)) ? existingFood.k || 0 : k100_mg;
                 vitc100 = (builderVitC.value === '' || isNaN(vitc100)) ? existingFood.vitc || 0 : vitc100;
                 ca100 = (builderCa.value === '' || isNaN(ca100)) ? existingFood.ca || 0 : ca100;
+                vitb12_100 = (builderVitB12.value === '' || isNaN(vitb12_100)) ? existingFood.vitb12 || 0 : vitb12_100;
+                vitd_100 = (builderVitD.value === '' || isNaN(vitd_100)) ? existingFood.vitd || 0 : vitd_100;
+                vita_100 = (builderVitA.value === '' || isNaN(vita_100)) ? existingFood.vita || 0 : vita_100;
             }
 
-            foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
+            foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, fat: fat100, fiber: fiber100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100, vitb12: vitb12_100, vitd: vitd_100, vita: vita_100 };
             salvaFoodDatabase(); 
             aggiornaDatalist();
             
@@ -1071,16 +1094,21 @@ const firebaseConfig = {
                 qta, 
                 prot: (p100 / 100) * qta, 
                 cal: (k100 / 100) * qta, 
+                fat: (fat100 / 100) * qta,
+                fiber: (fiber100 / 100) * qta, 
                 mg: (mg100 / 100) * qta, 
                 k: (k100_mg / 100) * qta, 
                 vitc: (vitc100 / 100) * qta, 
-                ca: (ca100 / 100) * qta 
+                ca: (ca100 / 100) * qta,
+                vitb12: (vitb12_100 / 100) * qta,
+                vitd: (vitd_100 / 100) * qta,
+                vita: (vita_100 / 100) * qta
             };
             if (isSingle) { foodItem.type = 'single'; } else { foodItem.selezionato = true; }
             return foodItem;
         }
 
-        function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = ''); builderDesc.focus(); }
+        function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderFat, builderFiber, builderMg, builderK, builderVitC, builderCa, builderVitB12, builderVitD, builderVitA].forEach(el => el.value = ''); builderDesc.focus(); }
 
         // --- EVENT LISTENERS ---
         workoutHeader.addEventListener('click', () => {
@@ -1113,8 +1141,8 @@ const firebaseConfig = {
             workoutDescInput.value = '';
             workoutCaloriesInput.value = '';
             renderMealBuilder(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
         btnAggiungiSingolo.addEventListener('click', () => {
@@ -1125,12 +1153,12 @@ const firebaseConfig = {
                 aggiornaUI();
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 resetInputAlimento();
-                isDirty = true; // Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = true;
+                updateFloppyDiskIcon();
             }
         });
 
-       btnCostruisciPasto.addEventListener('click', () => {
+        btnCostruisciPasto.addEventListener('click', () => {
             const item = creaAlimentoDaInput(false);
             if (item) {
                 pastoInCostruzione.push(item);
@@ -1138,8 +1166,8 @@ const firebaseConfig = {
                 renderMealBuilder();
                 resetInputAlimento();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true; // Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = true;
+                updateFloppyDiskIcon();
             }
         });
 
@@ -1150,8 +1178,8 @@ const firebaseConfig = {
                     pastoInCostruzione[index].selezionato = e.target.checked;
                     salvaPastoInCostruzione(); 
                     renderMealBuilder(); 
-                    isDirty = true; // Modifica dati, imposta flag
-                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                    isDirty = true;
+                    updateFloppyDiskIcon();
                 }
             } else if (e.target.id === 'meal-type-selector') {
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
@@ -1173,8 +1201,9 @@ const firebaseConfig = {
 
             const totaliPasto = alimentiSelezionatiPerDiario.reduce((acc, item) => {
                 acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0; acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
+                acc.fat += item.fat || 0; acc.fiber += item.fiber || 0; acc.vitb12 += item.vitb12 || 0; acc.vitd += item.vitd || 0; acc.vita += item.vita || 0;
                 return acc;
-            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0});
+            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fat: 0, fiber: 0, vitb12: 0, vitd: 0, vita: 0});
 
             const newMeal = { type: 'meal', desc: mealName, mealId: mealId, isExpanded: false, items: alimentiSelezionatiPerDiario, ...totaliPasto };
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
@@ -1195,8 +1224,8 @@ const firebaseConfig = {
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
             saveAllTrackerDataToCloud(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
         document.body.addEventListener('click', (e) => {
@@ -1214,8 +1243,8 @@ const firebaseConfig = {
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 renderMealBuilder();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true; // Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = true;
+                updateFloppyDiskIcon();
                 
                 if (itemToEdit.type === 'meal' && itemToEdit.mealId) {
                     mealTypeSelector.value = itemToEdit.mealId;
@@ -1244,8 +1273,8 @@ const firebaseConfig = {
                     aggiornaUI(); 
                     salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 }
-                isDirty = true; // Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = true;
+                updateFloppyDiskIcon();
             } else if (target.closest('.expand-arrow')) {
                 const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
                 if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
@@ -1255,13 +1284,15 @@ const firebaseConfig = {
                 }
             }
         });
-        
+
         builderDesc.addEventListener('input', (e) => {
             const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; 
             if (foodData) {
                 builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || '';
+                builderFat.value = foodData.fat || ''; builderFiber.value = foodData.fiber || '';
                 builderMg.value = foodData.mg || ''; builderK.value = foodData.k || '';
                 builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || '';
+                builderVitB12.value = foodData.vitb12 || ''; builderVitD.value = foodData.vitd || ''; builderVitA.value = foodData.vita || '';
             }
         });
 
@@ -1282,65 +1313,55 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 caricaGiorno(dataSelezionata); 
                 alert(`Dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} caricati.`);
             }
-            // isDirty è già gestito da salvaGiorno() per l'OK, e per Annulla non modifichiamo lo stato di dirty.
         });
-        
+
         dataCaricamentoInput.value = getTodayString('ymd');
 
-        // Event listener per l'input manuale della correzione obiettivo
         calorieAdjustmentInput.addEventListener('input', () => {
             let value = parseFloat(calorieAdjustmentInput.value);
             if (!isNaN(value)) {
-                // Applica il limite di +/- 500 kcal
                 value = Math.max(Math.min(value, 500), -500);
                 datiGiornalieri.calorieAdjustment = value;
-                calorieAdjustmentInput.value = value; // Per mostrare il valore limitato nell'input
+                calorieAdjustmentInput.value = value;
             } else {
-                // Se l'input non è un numero valido, reimposta al valore predefinito del giorno
                 const dataCorrente = new Date(giornoVisualizzato);
                 const giornoSettimana = dataCorrente.getDay();
                 datiGiornalieri.calorieAdjustment = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
-                calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment; // Aggiorna la UI con il valore predefinito
+                calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment;
             }
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
         btnCaloriePlus.addEventListener('click', () => {
             let currentAdjustment = datiGiornalieri.calorieAdjustment || 0;
             let newValue = currentAdjustment + 10;
-            datiGiornalieri.calorieAdjustment = Math.min(newValue, 500); // Limita a +500
+            datiGiornalieri.calorieAdjustment = Math.min(newValue, 500);
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
         btnCalorieMinus.addEventListener('click', () => {
             let currentAdjustment = datiGiornalieri.calorieAdjustment || 0;
             let newValue = currentAdjustment - 10;
-            datiGiornalieri.calorieAdjustment = Math.max(newValue, -500); // Limita a -500
+            datiGiornalieri.calorieAdjustment = Math.max(newValue, -500);
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
-        // --- NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK (ORA RIMOSSE/MODIFICATE) ---
         function updateFloppyDiskIcon() {
-            // Logica del floppy disk rimossa per questo esperimento
         }
-        // --- FINE NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK ---
-
 
         // --- FUNZIONI DI AUTENTICAZIONE E SINCRONIZZAZIONE CLOUD ---
-
-        // Inizializza Firebase all'avvio dello script
         try {
             if (!getApps().some(app => app.name === "globalTrackerApp")) {
                 firebaseApp = initializeApp(firebaseConfig, "globalTrackerApp");
@@ -1351,87 +1372,65 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             auth = getAuth(firebaseApp);
             console.log("Firebase inizializzato per il tracker.");
 
-            onAuthStateChanged(auth, async (user) => { // Aggiungi 'async' qui
+            onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     currentUserUID = user.uid;
                     authFormFields.style.display = 'none';
                     authHeader.style.display = 'none'; 
-
                     welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
                     welcomeMessage.style.display = 'block';
                     btnSignOut.style.display = 'block';
                     authStatusP.textContent = ''; 
-
                     authSection.style.borderColor = '#2e7d32'; 
                     authSection.classList.add('logged-in'); 
-
                     mainTrackerContent.classList.add('authenticated'); 
-                    
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
-                    btnFloppyUpload.style.display = 'none'; // Assicurati che il floppy sia nascosto
-                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
-                    
+                    btnFloppyUpload.style.display = 'none';
+                    updateFloppyDiskIcon();
                     console.log("Utente autenticato. UI aggiornata.");
 
-                    // --- NUOVO: Logica di Sincronizzazione Intelligente all'Accesso ---
-                    // Recupera l'ultimo timestamp locale
                     const lastLocalUpdate = parseInt(localStorage.getItem(LOCAL_LAST_UPDATE_KEY) || 0);
                     let lastCloudUpdate = 0;
 
                     try {
-                        // Recupera l'ultimo timestamp del cloud
                         const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
                         if (cloudTimestampSnapshot.exists()) {
                             lastCloudUpdate = cloudTimestampSnapshot.val();
                         }
                     } catch (error) {
                         console.error("Errore nel recupero del timestamp cloud:", error);
-                        // Continua anche in caso di errore, assumendo cloud non aggiornato
                     }
 
-                    console.log(`Ultimo aggiornamento locale: ${new Date(lastLocalUpdate).toLocaleString()}`);
-                    console.log(`Ultimo aggiornamento cloud: ${new Date(lastCloudUpdate).toLocaleString()}`);
-
-                    // Aggiungi un piccolo ritardo prima del confronto per dare tempo al DOM di caricarsi
-                    // e per ridurre problemi di "race condition" sui timestamp appena aggiornati.
                     setTimeout(async () => {
                         if (lastCloudUpdate > lastLocalUpdate) {
-                            // Il cloud è più recente, scarica automaticamente
                             console.log("Dati sul cloud più recenti. Download automatico in corso...");
-                            await loadAllTrackerDataFromCloud(true); // true per skipConfirm e reload
+                            await loadAllTrackerDataFromCloud(true);
                         } else if (lastLocalUpdate > lastCloudUpdate) {
-                            // Il locale è più recente, suggerisci l'upload
                             if (confirm("I tuoi dati locali sono più recenti di quelli sul cloud. Vuoi caricarli ORA per mantenerli aggiornati sul cloud?")) {
                                 await handleManualUploadToCloud();
                             }
                         } else {
-                            // Sono uguali o entrambi 0 (nuovi utenti o mai salvato)
                             console.log("Dati locali e cloud sono sincronizzati o non ci sono differenze significative.");
                         }
-                    }, 500); // Ritardo di 500ms
-                    // --- FINE NUOVO: Logica di Sincronizzazione Intelligente ---
+                    }, 500);
 
                 } else {
                     currentUserUID = null;
                     authFormFields.style.display = 'block';
                     authHeader.style.display = 'block'; 
-                    
                     welcomeMessage.style.display = 'none';
                     btnSignOut.style.display = 'none';
                     authStatusP.textContent = "Non autenticato";
-
                     authSection.style.borderColor = '#c62828'; 
                     authSection.classList.remove('logged-in'); 
                     mainTrackerContent.classList.remove('authenticated'); 
-                    
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
                     cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-                    btnFloppyUpload.style.display = 'none'; // Assicurati che il floppy sia nascosto
-                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
-                    
+                    btnFloppyUpload.style.display = 'none';
+                    updateFloppyDiskIcon();
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
                 }
             });
@@ -1442,7 +1441,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             authSection.style.borderColor = '#c62828';
             mainTrackerContent.classList.remove('authenticated');
             cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-            btnFloppyUpload.style.display = 'none'; // Nascondi il floppy anche in caso di errore Firebase
+            btnFloppyUpload.style.display = 'none';
         }
 
         async function handleRegister() {
@@ -1501,7 +1500,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             return ref(db, 'users/' + currentUserUID + '/tracker_data/');
         }
 
-        // Funzione helper per determinare se una stringa è un JSON valido
         function isJsonString(str) {
             try {
                 JSON.parse(str);
@@ -1511,22 +1509,18 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             return true;
         }
 
-        // Questa funzione è per gli upload AUTOMATICI in background
         async function saveAllTrackerDataToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
                  return; 
             }
             
-            // NUOVO: Ottieni il timestamp corrente PRIMA di inviare i dati
             const currentTimestamp = Date.now();
-            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp); // Allinea il locale prima dell'upload
-
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp);
             const dataToUpload = {};
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 const value = localStorage.getItem(key);
-
                 if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key) || key.startsWith('lastMealTypeSelected_')) { 
                     if (isJsonString(value)) {
                         dataToUpload[key] = JSON.parse(value);
@@ -1538,15 +1532,14 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             
             try {
                 await set(dataRef, dataToUpload);
-                // Dopo un salvataggio riuscito, aggiorna il timestamp del cloud con lo STESSO valore
-                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp); // Usa lo stesso timestamp
+                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp);
                 console.log("Dati caricati automaticamente sul cloud.");
             } catch(err) {
                 console.error("Errore durante il caricamento automatico sul cloud:", err);
             }
         }
 
-        async function loadAllTrackerDataFromCloud(skipConfirmAndReload = false) { // Aggiunto parametro
+        async function loadAllTrackerDataFromCloud(skipConfirmAndReload = false) {
             const dataRef = getUserDataRef();
             if (!dataRef) {
                 alert("Devi essere autenticato per scaricare i dati dal cloud.");
@@ -1578,17 +1571,15 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                             }
                         }
                     }
-                    // NUOVO: Dopo aver scaricato i dati, allinea il timestamp locale con quello del cloud
                     const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
                     if (cloudTimestampSnapshot.exists()) {
                         localStorage.setItem(LOCAL_LAST_UPDATE_KEY, cloudTimestampSnapshot.val());
                     } else {
-                        localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Fallback se non c'è timestamp cloud
+                        localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now());
                     }
-                    // alert("Download completato! Ricarica la pagina per vedere le modifiche."); // Rimosso alert
-                    location.reload(); // Ricarica la pagina automaticamente
+                    location.reload();
                 } else {
-                    if (!skipConfirmAndReload) { // Solo se non è un download automatico silenzioso
+                    if (!skipConfirmAndReload) {
                         alert("Nessun dato trovato sul cloud per questo utente.");
                     } else {
                         console.log("Nessun dato trovato sul cloud per il download automatico.");
@@ -1600,7 +1591,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        // Funzione specifica per l'upload manuale (collegata al pulsante floppy - ora nascosto)
         async function handleManualUploadToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
@@ -1608,18 +1598,12 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 return;
             }
 
-            // if (!confirm("Sei sicuro di voler SOVRASCRIVERE i dati sul cloud con quelli locali?")) return; // Rimosso confirm
-
-            // Disabilita il pulsante e mostra un messaggio di caricamento
-            // btnFloppyUpload.disabled = true; // Non più necessario dato che è nascosto
             cloudSyncStatusSpan.textContent = "Caricamento in corso...";
             cloudSyncStatusSpan.className = 'cloud-sync-status'; 
 
             try {
-                // NUOVO: Ottieni il timestamp corrente PRIMA di inviare i dati
                 const currentTimestamp = Date.now();
-                localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp); // Allinea il locale prima dell'upload
-
+                localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp);
                 const dataToUpload = {};
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
@@ -1633,17 +1617,15 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                     }
                 }
                 await set(dataRef, dataToUpload);
-                // Dopo un salvataggio riuscito, aggiorna il timestamp del cloud con lo STESSO valore
-                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp); // Usa lo stesso timestamp
+                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp);
                 alert("Caricamento completato con successo!");
                 console.log("Caricamento manuale completato!");
-                isDirty = false; // Resetta il flag isDirty dopo il salvataggio manuale
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = false;
+                updateFloppyDiskIcon();
             } catch (error) {
                 alert(`Errore durante il caricamento: ${error.message}`);
                 console.error("Manual Upload error:", error);
             } finally {
-                // btnFloppyUpload.disabled = false; // Non più necessario dato che è nascosto
                 if (auth && auth.currentUser) {
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${auth.currentUser.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
@@ -1654,11 +1636,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             }
         }
 
-        btnFloppyUpload.addEventListener('click', handleManualUploadToCloud); 
-        btnDownloadManual.addEventListener('click', () => loadAllTrackerDataFromCloud(false)); // Mantieni la conferma per il download manuale esplicito
+        btnFloppyUpload.addEventListener('click', handleManualUploadToCloud);
+        btnDownloadManual.addEventListener('click', () => loadAllTrackerDataFromCloud(false));
 
 
-        // --- FUNZIONE DI MIGRAZIONE VECCHIO STORICO A NUOVO FORMATO ---
         function eseguiMigrazioneStorico() {
             const vecchioStoricoRaw = localStorage.getItem('trackerStorico');
             
@@ -1696,15 +1677,9 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
-            btnFloppyUpload.style.display = 'none'; // Nascondi il pulsante floppy all'avvio
-            updateFloppyDiskIcon(); // Aggiorna lo stato iniziale dell'icona
+            btnFloppyUpload.style.display = 'none';
+            updateFloppyDiskIcon();
         });
-
     </script>
 </body>
 </html>
-
-
-
-
-
