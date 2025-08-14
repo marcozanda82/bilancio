@@ -489,11 +489,9 @@
     <div id="manual-fill-section">
         <div class="button-group">
             <button id="btn-copy-prompt">Copia Richiesta AI</button>
+            <button id="btn-confirm-json" style="background-color: #2e7d32;">Conferma Dati da JSON</button>
         </div>
         <textarea id="manual-json-input" placeholder="Incolla qui l'oggetto JSON con i valori nutrizionali, come da richiesta."></textarea>
-        <div class="button-group">
-            <button id="btn-confirm-json" style="background-color: #2e7d32; width:100%;">Conferma Dati da JSON</button>
-        </div>
     </div>
 </div>
                 <datalist id="food-database-list"></datalist>
@@ -1205,7 +1203,7 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             let fatSat100 = builderFatSat.value === '' ? null : parseFloat(builderFatSat.value);
             let fatUnsat100 = builderFatUnsat.value === '' ? null : parseFloat(builderFatUnsat.value);
             let vitA100 = builderVitA.value === '' ? null : parseFloat(builderVitA.value);
-            let vitB12100 = builderVitB12.value === '' ? null : parseFloat(builderB12.value);
+            let vitB12100 = builderVitB12.value === '' ? null : parseFloat(builderVitB12.value);
             let vitD100 = builderVitD.value === '' ? null : parseFloat(builderVitD.value);
             let fe100 = builderFe.value === '' ? null : parseFloat(builderFe.value);
             let zn100 = builderZn.value === '' ? null : parseFloat(builderZn.value);
@@ -1999,7 +1997,6 @@ btnConfirmJson.addEventListener('click', () => {
     try {
         const resObj = JSON.parse(jsonText);
         
-        // Mappa i campi del JSON ai rispettivi ID degli input
         const fieldsToUpdate = {
             'prot': 'builder-prot',
             'kcal': 'builder-kcal',
