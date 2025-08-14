@@ -859,7 +859,7 @@ const firebaseConfig = {
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fat: 0, satfat: 0, unsatfat: 0, vitA: 0, vitD: 0, vitB12: 0 };
+            let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fat: 0, satfat: 0, vitA: 0, vitD: 0, vitB12: 0 };
             (datiGiornalieri.log || []).forEach(entry => { 
                 if (entry.type === 'meal') {
                     entry.items.forEach(item => {
@@ -871,7 +871,6 @@ const firebaseConfig = {
                         totali.ca += item.ca || 0;
                         totali.fat += item.fat || 0;
                         totali.satfat += item.satfat || 0;
-                        totali.unsatfat += item.unsatfat || 0;
                         totali.vitA += item.vitA || 0;
                         totali.vitD += item.vitD || 0;
                         totali.vitB12 += item.vitB12 || 0;
@@ -885,50 +884,14 @@ const firebaseConfig = {
                     totali.ca += entry.ca || 0;
                     totali.fat += entry.fat || 0;
                     totali.satfat += entry.satfat || 0;
-                    totali.unsatfat += entry.unsatfat || 0;
                     totali.vitA += entry.vitA || 0;
                     totali.vitD += entry.vitD || 0;
                     totali.vitB12 += entry.vitB12 || 0;
                 }
             });
-            
-            // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
-            // Questo calcolo viene spostato qui per poter salvare il valore
-            const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
-            const deficitArrotondato = Math.round(deficitEffettivo);
 
-            // Calcolo della variazione di grasso
-            let variazioneGrasso = 0; // In grammi
-            // 7.7 kcal per 1g di grasso (1kg = 7700 kcal, 1g = 7.7 kcal)
-            if (deficitArrotondato < 0) { 
-                variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
-            } else if (deficitArrotondato > 0) { 
-                variazioneGrasso = -(deficitArrotondato / 7.7); // Negativo se guadagni grasso
-            } else { 
-                variazioneGrasso = 0;
-            }
-
-            // Logica per il trend muscolare (score numerico)
-            let scoreMuscolo = 0;
-
-            // Condizione 1: Proteine
-            if(totali.proteine >= (pianoDelGiorno.prot * 0.95)) {
-                scoreMuscolo++;
-            } else {
-                scoreMuscolo--;
-            }
-
-            // Condizione 2: Tipo di giornata "Forza" (usando pianoDelGiorno.tipo)
-            if(pianoDelGiorno.tipo.includes('Forza')) {
-                scoreMuscolo++; // Se è giornata di Forza, aggiungi 1 punto
-
-                // Nuova condizione per il deficit in giorni di forza
-                // Se il deficit effettivo è più negativo di -200 kcal (es. -250, -300) in un giorno di Forza
-                if (deficitArrotondato < -200) { 
-                    scoreMuscolo--; // Indice negativo per la massa muscolare se il deficit è troppo elevato in un giorno di forza
-                }
-            }
-
+            // Calcolo dei grassi insaturi dopo aver sommato i totali
+            const totalUnsatFat = totali.fat - totali.satfat;
 
             // Assegna i totali correnti e i nuovi campi all'oggetto datiGiornalieri PRIMA del salvataggio
             datiGiornalieri.proteine = totali.proteine;
@@ -939,7 +902,7 @@ const firebaseConfig = {
             datiGiornalieri.ca = totali.ca;
             datiGiornalieri.fat = totali.fat;
             datiGiornalieri.satfat = totali.satfat;
-            datiGiornalieri.unsatfat = totali.unsatfat;
+            datiGiornalieri.unsatfat = totalUnsatFat;
             datiGiornalieri.vitA = totali.vitA;
             datiGiornalieri.vitD = totali.vitD;
             datiGiornalieri.vitB12 = totali.vitB12;
@@ -947,7 +910,25 @@ const firebaseConfig = {
             datiGiornalieri.variazioneGrassoG = variazioneGrasso; // Nuovo campo per la variazione di grasso in grammi
             datiGiornalieri.scoreMuscolo = scoreMuscolo; // Nuovo campo per lo score muscolare
 
+            // ... logica per il bilancio calorico e il trend muscolare ...
+            const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
+            const deficitArrotondato = Math.round(deficitEffettivo);
+            let variazioneGrasso = 0; 
+            if (deficitArrotondato < 0) { 
+                variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
+            } else if (deficitArrotondato > 0) { 
+                variazioneGrasso = -(deficitArrotondato / 7.7);
+            } else { 
+                variazioneGrasso = 0;
+            }
 
+            let scoreMuscolo = 0;
+            if(totali.proteine >= (pianoDelGiorno.prot * 0.95)) { scoreMuscolo++; } else { scoreMuscolo--; }
+            if(pianoDelGiorno.tipo.includes('Forza')) {
+                scoreMuscolo++;
+                if (deficitArrotondato < -200) { scoreMuscolo--; }
+            }
+            
             spanObiettivoProteine.textContent = OBIETTIVI_CORRENTI.prot;
             spanObiettivoCalorie.textContent = OBIETTIVI_CORRENTI.cal; 
             spanTotaleProteine.textContent = totali.proteine.toFixed(1);
@@ -976,7 +957,6 @@ const firebaseConfig = {
             spanTotaleSatFat.textContent = totali.satfat.toFixed(1);
             progressSatFat.max = OBIETTIVI_CORRENTI.grassiSaturi; progressSatFat.value = totali.satfat;
             
-            const totalUnsatFat = totali.fat - totali.satfat;
             spanObiettivoUnsatFat.textContent = OBIETTIVI_CORRENTI.grassiInsaturi;
             spanTotaleUnsatFat.textContent = totalUnsatFat.toFixed(1);
             progressUnsatFat.max = OBIETTIVI_CORRENTI.grassiInsaturi; progressUnsatFat.value = totalUnsatFat;
@@ -1002,10 +982,12 @@ const firebaseConfig = {
                     const totaliPastoCorrente = (entry.items || []).reduce((acc, item) => {
                         acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0;
                         acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
-                        acc.fat += item.fat || 0; acc.satfat += item.satfat || 0; acc.unsatfat += item.unsatfat || 0;
+                        acc.fat += item.fat || 0; acc.satfat += item.satfat || 0;
                         acc.vitA += item.vitA || 0; acc.vitD += item.vitD || 0; acc.vitB12 += item.vitB12 || 0;
                         return acc;
-                    }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fat: 0, satfat: 0, unsatfat: 0, vitA: 0, vitD: 0, vitB12: 0});
+                    }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fat: 0, satfat: 0, vitA: 0, vitD: 0, vitB12: 0});
+
+                    const totaliPastoUnsatFat = (totaliPastoCorrente.fat || 0) - (totaliPastoCorrente.satfat || 0);
 
                     rigaPasto.innerHTML = `
                         <td>
@@ -1015,12 +997,12 @@ const firebaseConfig = {
                         <td>${entry.items.reduce((sum, item) => sum + item.qta, 0).toFixed(0)}g</td>
                         <td>${totaliPastoCorrente.prot.toFixed(1)}</td>
                         <td>${totaliPastoCorrente.cal.toFixed(0)}</td>
-                        <td>${totaliPastoCorrente.fat.toFixed(1)}</td>
-                        <td>${totaliPastoCorrente.satfat.toFixed(1)}</td>
-                        <td>${totaliPastoCorrente.unsatfat.toFixed(1)}</td>
-                        <td>${totaliPastoCorrente.vitA.toFixed(1)}</td>
-                        <td>${totaliPastoCorrente.vitD.toFixed(1)}</td>
-                        <td>${totaliPastoCorrente.vitB12.toFixed(1)}</td>
+                        <td>${(totaliPastoCorrente.fat || 0).toFixed(1)}</td>
+                        <td>${(totaliPastoCorrente.satfat || 0).toFixed(1)}</td>
+                        <td>${totaliPastoUnsatFat.toFixed(1)}</td>
+                        <td>${(totaliPastoCorrente.vitA || 0).toFixed(1)}</td>
+                        <td>${(totaliPastoCorrente.vitD || 0).toFixed(1)}</td>
+                        <td>${(totaliPastoCorrente.vitB12 || 0).toFixed(1)}</td>
                         <td class="action-buttons">
                             <button class="edit-btn" data-index="${index}">✏️</button>
                             <button class="delete-btn" data-index="${index}">&times;</button>
@@ -1031,17 +1013,18 @@ const firebaseConfig = {
                         entry.items.forEach(subItem => {
                             const rigaSubItem = logBody.insertRow();
                             rigaSubItem.classList.add('sub-item-row');
+                            const subItemUnsatFat = (subItem.fat || 0) - (subItem.satfat || 0);
                             rigaSubItem.innerHTML = `
                                 <td>${subItem.desc}</td>
                                 <td>${subItem.qta.toFixed(0)}g</td>
-                                <td>${subItem.prot.toFixed(1)}</td>
-                                <td>${subItem.cal.toFixed(0)}</td>
-                                <td>${subItem.fat.toFixed(1)}</td>
-                                <td>${subItem.satfat.toFixed(1)}</td>
-                                <td>${subItem.unsatfat.toFixed(1)}</td>
-                                <td>${subItem.vitA.toFixed(1)}</td>
-                                <td>${subItem.vitD.toFixed(1)}</td>
-                                <td>${subItem.vitB12.toFixed(1)}</td>
+                                <td>${(subItem.prot || 0).toFixed(1)}</td>
+                                <td>${(subItem.cal || 0).toFixed(0)}</td>
+                                <td>${(subItem.fat || 0).toFixed(1)}</td>
+                                <td>${(subItem.satfat || 0).toFixed(1)}</td>
+                                <td>${subItemUnsatFat.toFixed(1)}</td>
+                                <td>${(subItem.vitA || 0).toFixed(1)}</td>
+                                <td>${(subItem.vitD || 0).toFixed(1)}</td>
+                                <td>${(subItem.vitB12 || 0).toFixed(1)}</td>
                                 <td></td>
                             `;
                         });
@@ -1059,9 +1042,10 @@ const firebaseConfig = {
                         </td>
                     `;
                 }
-                else { 
+                else { // 'single' entry
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.fat||0).toFixed(1)}</td><td>${(entry.satfat||0).toFixed(1)}</td><td>${(entry.unsatfat||0).toFixed(1)}</td><td>${(entry.vitA||0).toFixed(1)}</td><td>${(entry.vitD||0).toFixed(1)}</td><td>${(entry.vitB12||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
+                    const singleItemUnsatFat = (entry.fat || 0) - (entry.satfat || 0);
+                    riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.fat||0).toFixed(1)}</td><td>${(entry.satfat||0).toFixed(1)}</td><td>${singleItemUnsatFat.toFixed(1)}</td><td>${(entry.vitA||0).toFixed(1)}</td><td>${(entry.vitD||0).toFixed(1)}</td><td>${(entry.vitB12||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
                 }
             });
 
@@ -1325,7 +1309,7 @@ const firebaseConfig = {
                 const itemToEdit = datiGiornalieri.log[index];
                 if (!itemToEdit || itemToEdit.type === 'workout' || itemToEdit.type === 'single' || !confirm("Vuoi modificare questa voce? Verrà spostata nel 'Costruttore Pasto'.")) return;
                 
-                pastoInostruzione = itemToEdit.type === 'meal' ? itemToEdit.items.map(item => ({...item, selezionato: true})) : [{...itemToEdit, selezionato: true}];
+                pastoInCostruzione = itemToEdit.type === 'meal' ? itemToEdit.items.map(item => ({...item, selezionato: true})) : [{...itemToEdit, selezionato: true}];
                 datiGiornalieri.log.splice(index, 1); 
                 
                 salvaPastoInCostruzione(); 
