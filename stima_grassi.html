@@ -315,10 +315,31 @@
             const rawData = localStorage.getItem(`trackerStorico_${data}`);
             return rawData ? JSON.parse(rawData) : null;
         }
+        
+        // Funzione per generare e renderizzare gli elenchi espandibili
+        function renderDettaglioGrassi(dettaglioGrassi) {
+            const renderList = (container, list) => {
+                if (!list || list.length === 0) {
+                    container.innerHTML = "<p>Nessun alimento rilevato.</p>";
+                    return;
+                }
+                const ul = document.createElement('ul');
+                list.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = `${item.cibo} (${item.quantita_g}g) - Stima: ${item.valore_g.toFixed(1)}g`;
+                    ul.appendChild(li);
+                });
+                container.innerHTML = '';
+                container.appendChild(ul);
+            };
 
-        // Funzione per richiedere all'AI l'analisi completa
-        async function fetchDatiStimaAI(elencoAlimenti) {
-             const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+            renderList(elencoSaturiDiv, dettaglioGrassi.saturi);
+            renderList(elencoInsaturiDiv, dettaglioGrassi.insaturi);
+        }
+
+        // Funzione per unire le chiamate all'AI e gestire le risposte
+        async function fetchDatiStimaCompletiAI(elencoAlimenti) {
+            const geminiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
 
             let prompt = `Ho consumato i seguenti alimenti oggi, con le relative quantità:
             ${elencoAlimenti.join('\n')}
@@ -376,27 +397,6 @@
                 return null;
             }
         }
-        
-        // Funzione per generare e renderizzare gli elenchi espandibili
-        function renderDettaglioGrassi(dettaglioGrassi) {
-            const renderList = (container, list) => {
-                if (!list || list.length === 0) {
-                    container.innerHTML = "<p>Nessun alimento rilevato.</p>";
-                    return;
-                }
-                const ul = document.createElement('ul');
-                list.forEach(item => {
-                    const li = document.createElement('li');
-                    li.textContent = `${item.cibo} (${item.quantita_g}g) - Stima: ${item.valore_g.toFixed(1)}g`;
-                    ul.appendChild(li);
-                });
-                container.innerHTML = '';
-                container.appendChild(ul);
-            };
-
-            renderList(elencoSaturiDiv, dettaglioGrassi.saturi);
-            renderList(elencoInsaturiDiv, dettaglioGrassi.insaturi);
-        }
 
         // Funzione principale che esegue le richieste all'AI
         async function runStimaGrassi() {
@@ -424,6 +424,8 @@
                 } else if (entry.type === 'single') {
                     // Correzione: usa entry.qta per gli alimenti singoli
                     elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
+                } else if (entry.type === 'workout') {
+                    // Non includere gli allenamenti nell'elenco degli alimenti
                 }
             });
 
@@ -442,7 +444,7 @@
             consigliSezione.style.display = 'none';
 
             // Eseguiamo un'unica chiamata all'AI
-            const datiStimaCompleti = await fetchDatiStimaAI(elencoAlimenti);
+            const datiStimaCompleti = await fetchDatiStimaCompletiAI(elencoAlimenti);
 
             if (datiStimaCompleti) {
                 stimaOutput.style.display = 'none';
