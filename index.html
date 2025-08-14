@@ -452,11 +452,11 @@
                     <div>
                         <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
                         <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
-                        <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
                         <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
                     </div>
                     <div>
                         <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
+                        <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
                         <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
                     </div>
                 </div>
@@ -633,15 +633,14 @@ const firebaseConfig = {
             6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
         };
 
-        // NUOVA COSTANTE: Deficit/Surplus preimpostato per giorno della settimana
         const DEFICIT_PREIMPOSTATO_SETTIMANALE = {
-            0: -500, // Domenica
-            1: -150, // Lunedì
-            2: -150, // Martedì
-            3: -150, // Mercoledì
-            4: -150, // Giovedì
-            5: -150, // Venerdì
-            6: -500  // Sabato
+            0: -500, 
+            1: -150, 
+            2: -150, 
+            3: -150, 
+            4: -150, 
+            5: -150, 
+            6: -500  
         };
 
         const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9 };
@@ -665,14 +664,10 @@ const firebaseConfig = {
         const LOCAL_LAST_UPDATE_KEY = 'lastLocalUpdateTimestamp';
         const CLOUD_LAST_UPDATE_PATH = 'lastCloudUpdateTimestamp';
 
-        // ************************************************************
-// CONFIGURAZIONE API GEMINI
-// ************************************************************
-const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"fe":mg,"zn":mg,"cu":mg}`;
+        const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
+        const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"fe":mg,"zn":mg,"cu":mg}`;
 
-        // --- ELEMENTI DEL DOM ---
         const authSection = document.getElementById('auth-section');
         const userEmailInput = document.getElementById('user-email');
         const userPasswordInput = document.getElementById('user-password');
@@ -691,10 +686,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
-        // Nuovi campi extra
         const builderFatSat = document.getElementById('builder-fat-sat'), builderFatUnsat = document.getElementById('builder-fat-unsat');
         const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
-        // Nuovi campi
         const builderFe = document.getElementById('builder-fe'), builderZn = document.getElementById('builder-zn'), builderCu = document.getElementById('builder-cu');
 
         const foodDatalist = document.getElementById('food-database-list');
@@ -707,19 +700,15 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
         const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
         const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
-        // Nuovi span extra
         const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanTotaleFatUnsat = document.getElementById('totale-fat-unsat');
         const spanTotaleVitA = document.getElementById('totale-vit-a'), spanTotaleVitB12 = document.getElementById('totale-vit-b12'), spanTotaleVitD = document.getElementById('totale-vit-d');
-        // Nuovi span
         const spanTotaleFe = document.getElementById('totale-fe'), spanTotaleZn = document.getElementById('totale-zn'), spanTotaleCu = document.getElementById('totale-cu');
         const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total');
 
         const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
         const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
-        // Nuovi progress extra
         const progressFatSat = document.getElementById('progress-fat-sat'), progressFatUnsat = document.getElementById('progress-fat-unsat');
         const progressVitA = document.getElementById('progress-vit-a'), progressVitB12 = document.getElementById('progress-vit-b12'), progressVitD = document.getElementById('progress-vit-d');
-        // Nuovi progress
         const progressFe = document.getElementById('progress-fe'), progressZn = document.getElementById('progress-zn'), progressCu = document.getElementById('progress-cu');
         const progressFatsTotal = document.getElementById('progress-fats-total');
 
@@ -752,7 +741,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         const manualJsonInput = document.getElementById('manual-json-input');
         const btnConfirmJson = document.getElementById('btn-confirm-json');
 
-        // --- FUNZIONI DI GESTIONE DATI ---
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
         
         function salvaFoodDatabase() { 
@@ -1312,8 +1300,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             workoutDescInput.value = '';
             workoutCaloriesInput.value = '';
             renderMealBuilder(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true; 
+            updateFloppyDiskIcon(); 
         });
 
         btnAggiungiSingolo.addEventListener('click', () => {
@@ -1325,8 +1313,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 resetInputAlimento();
                 aggiornaColoreNutrienti();
-                isDirty = true; // Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = true; 
+                updateFloppyDiskIcon(); 
             }
         });
 
@@ -1339,8 +1327,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                 resetInputAlimento();
                 aggiornaColoreNutrienti();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true; // Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = true; 
+                updateFloppyDiskIcon(); 
             }
         });
 
@@ -1351,8 +1339,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                     pastoInCostruzione[index].selezionato = e.target.checked;
                     salvaPastoInCostruzione(); 
                     renderMealBuilder(); 
-                    isDirty = true; // Modifica dati, imposta flag
-                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                    isDirty = true; 
+                    updateFloppyDiskIcon(); 
                 }
             } else if (e.target.id === 'meal-type-selector') {
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
@@ -1399,8 +1387,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
             saveAllTrackerDataToCloud(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true; 
+            updateFloppyDiskIcon(); 
         });
 
         document.body.addEventListener('click', (e) => {
@@ -1418,8 +1406,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 renderMealBuilder();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true; // Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = true; 
+                updateFloppyDiskIcon(); 
                 
                 if (itemToEdit.type === 'meal' && itemToEdit.mealId) {
                     mealTypeSelector.value = itemToEdit.mealId;
@@ -1448,8 +1436,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                     aggiornaUI(); 
                     salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 }
-                isDirty = true; // Modifica dati, imposta flag
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = true; 
+                updateFloppyDiskIcon(); 
             } else if (target.closest('.expand-arrow')) {
                 const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
                 if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
@@ -1678,7 +1666,7 @@ Se un valore non è disponibile usa 0.
                     currentUserUID = null;
                     authFormFields.style.display = 'block';
                     authHeader.style.display = 'block'; 
-                    
+
                     welcomeMessage.style.display = 'none';
                     btnSignOut.style.display = 'none';
                     authStatusP.textContent = "Non autenticato";
@@ -1686,7 +1674,7 @@ Se un valore non è disponibile usa 0.
                     authSection.style.borderColor = '#c62828'; 
                     authSection.classList.remove('logged-in'); 
                     mainTrackerContent.classList.remove('authenticated'); 
-                    
+
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
                     cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
