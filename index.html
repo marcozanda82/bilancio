@@ -447,11 +447,12 @@
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
                 </div>
-               <h2 class="collapsible-header" id="nutrients-header">
+<h2 class="collapsible-header" id="nutrients-header">
     Dettagli Nutrizionali <span class="arrow">▶</span>
 </h2>
-<div class="collapsible-content" id="nutrients-content" style="display: none;">
+<div class="collapsible-content" id="nutrients-content" style="display:none;">
     <div class="builder-grid">
+        <!-- tutti i campi extra -->
         <div><label>Grassi saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
         <div><label>Grassi insaturi/100g</label><input type="number" id="builder-fat-unsat" min="0" step="0.1"></div>
         <div><label>Vit. A (µg)/100g</label><input type="number" id="builder-vit-a" min="0"></div>
@@ -1854,6 +1855,7 @@ document.getElementById('nutrients-header').addEventListener('click', () => {
     </script>
 </body>
 </html>
+
 
 
 
