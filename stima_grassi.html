@@ -422,6 +422,7 @@
                         elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
                     });
                 } else if (entry.type === 'single') {
+                    // Correzione: usa entry.qta per gli alimenti singoli
                     elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
                 } else if (entry.type === 'workout') {
                     // Non includere gli allenamenti nell'elenco degli alimenti
