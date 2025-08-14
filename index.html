@@ -349,6 +349,20 @@
         .floppy-disk-button.unsaved-changes {
             animation-name: pulse-red;
         }
+        #manual-fill-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+        }
+        #manual-fill-section textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            resize: vertical;
+        }
+        #manual-fill-section .button-group {
+            justify-content: space-between;
+        }
     </style>
 </head>
 <body>
@@ -471,6 +485,15 @@
         <div><label>Ferro (mg)/100g</label><input type="number" id="builder-fe" min="0" step="0.1"></div>
         <div><label>Zinco (mg)/100g</label><input type="number" id="builder-zn" min="0" step="0.1"></div>
         <div><label>Rame (mg)/100g</label><input type="number" id="builder-cu" min="0" step="0.01"></div>
+    </div>
+    <div id="manual-fill-section">
+        <div class="button-group">
+            <button id="btn-copy-prompt">Copia Richiesta AI</button>
+        </div>
+        <textarea id="manual-json-input" placeholder="Incolla qui l'oggetto JSON con i valori nutrizionali, come da richiesta."></textarea>
+        <div class="button-group">
+            <button id="btn-confirm-json" style="background-color: #2e7d32; width:100%;">Conferma Dati da JSON</button>
+        </div>
     </div>
 </div>
                 <datalist id="food-database-list"></datalist>
@@ -621,6 +644,7 @@ const firebaseConfig = {
 // ************************************************************
 const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"fe":mg,"zn":mg,"cu":mg}`;
 
         // --- ELEMENTI DEL DOM ---
         const authSection = document.getElementById('auth-section');
@@ -696,6 +720,10 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
         const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
         const cloudSyncSection = document.querySelector('.cloud-sync-section');
 
+        // Elementi per la compilazione manuale
+        const btnCopyPrompt = document.getElementById('btn-copy-prompt');
+        const manualJsonInput = document.getElementById('manual-json-input');
+        const btnConfirmJson = document.getElementById('btn-confirm-json');
 
         // --- FUNZIONI DI GESTIONE DATI ---
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
@@ -1163,62 +1191,55 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
             }
         }
 
-function creaAlimentoDaInput(isSingle = false) {
-    const desc = builderDesc.value.trim(); 
-    const qta = parseFloat(builderQta.value);
-    if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return null; }
+        function creaAlimentoDaInput(isSingle = false) {
+            const desc = builderDesc.value.trim(); 
+            const qta = parseFloat(builderQta.value);
+            if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return null; }
 
-    // Raccoglie tutti i valori dei campi di input, usando null come valore predefinito se sono vuoti
-    let p100 = builderProt.value === '' ? null : parseFloat(builderProt.value); 
-    let k100 = builderKcal.value === '' ? null : parseFloat(builderKcal.value);
-    let mg100 = builderMg.value === '' ? null : parseFloat(builderMg.value); 
-    let k100_mg = builderK.value === '' ? null : parseFloat(builderK.value);
-    let vitc100 = builderVitC.value === '' ? null : parseFloat(builderVitC.value); 
-    let ca100 = builderCa.value === '' ? null : parseFloat(builderCa.value);
-    let fatSat100 = builderFatSat.value === '' ? null : parseFloat(builderFatSat.value);
-    let fatUnsat100 = builderFatUnsat.value === '' ? null : parseFloat(builderFatUnsat.value);
-    let vitA100 = builderVitA.value === '' ? null : parseFloat(builderVitA.value);
-    let vitB12100 = builderVitB12.value === '' ? null : parseFloat(builderB12.value);
-    let vitD100 = builderVitD.value === '' ? null : parseFloat(builderVitD.value);
-    let fe100 = builderFe.value === '' ? null : parseFloat(builderFe.value);
-    let zn100 = builderZn.value === '' ? null : parseFloat(builderZn.value);
-    let cu100 = builderCu.value === '' ? null : parseFloat(builderCu.value);
+            let p100 = builderProt.value === '' ? null : parseFloat(builderProt.value);
+            let k100 = builderKcal.value === '' ? null : parseFloat(builderKcal.value);
+            let mg100 = builderMg.value === '' ? null : parseFloat(builderMg.value); 
+            let k100_mg = builderK.value === '' ? null : parseFloat(builderK.value);
+            let vitc100 = builderVitC.value === '' ? null : parseFloat(builderVitC.value); 
+            let ca100 = builderCa.value === '' ? null : parseFloat(builderCa.value);
+            let fatSat100 = builderFatSat.value === '' ? null : parseFloat(builderFatSat.value);
+            let fatUnsat100 = builderFatUnsat.value === '' ? null : parseFloat(builderFatUnsat.value);
+            let vitA100 = builderVitA.value === '' ? null : parseFloat(builderVitA.value);
+            let vitB12100 = builderVitB12.value === '' ? null : parseFloat(builderB12.value);
+            let vitD100 = builderVitD.value === '' ? null : parseFloat(builderVitD.value);
+            let fe100 = builderFe.value === '' ? null : parseFloat(builderFe.value);
+            let zn100 = builderZn.value === '' ? null : parseFloat(builderZn.value);
+            let cu100 = builderCu.value === '' ? null : parseFloat(builderCu.value);
 
-    // Sovrascrivi sempre l'alimento esistente con i nuovi dati.
-    foodDatabase[desc.toLowerCase()] = { 
-        prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100,
-        fatSat: fatSat100, fatUnsat: fatUnsat100, vitA: vitA100, vitB12: vitB12100, vitD: vitD100,
-        fe: fe100, zn: zn100, cu: cu100
-    };
-    salvaFoodDatabase(); 
-    aggiornaDatalist();
-    
-    // Calcola le quantità totali per l'alimento aggiunto al diario/pasto
-    const foodItem = { 
-        desc: desc.charAt(0).toUpperCase() + desc.slice(1), 
-        qta, 
-        prot: ((p100 ?? 0) / 100) * qta, 
-        cal: ((k100 ?? 0) / 100) * qta, 
-        mg: ((mg100 ?? 0) / 100) * qta, 
-        k: ((k100_mg ?? 0) / 100) * qta, 
-        vitc: ((vitc100 ?? 0) / 100) * qta, 
-        ca: ((ca100 ?? 0) / 100) * qta,
-        fatSat: ((fatSat100 ?? 0) / 100) * qta,
-        fatUnsat: ((fatUnsat100 ?? 0) / 100) * qta,
-        vitA: ((vitA100 ?? 0) / 100) * qta,
-        vitB12: ((vitB12100 ?? 0) / 100) * qta,
-        vitD: ((vitD100 ?? 0) / 100) * qta,
-        fe: ((fe100 ?? 0) / 100) * qta,
-        zn: ((zn100 ?? 0) / 100) * qta,
-        cu: ((cu100 ?? 0) / 100) * qta
-    };
-    if (isSingle) { foodItem.type = 'single'; } else { foodItem.selezionato = true; }
-
-    resetInputAlimento();
-    aggiornaColoreNutrienti(); 
-    
-    return foodItem;
-}
+            foodDatabase[desc.toLowerCase()] = { 
+                prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100,
+                fatSat: fatSat100, fatUnsat: fatUnsat100, vitA: vitA100, vitB12: vitB12100, vitD: vitD100,
+                fe: fe100, zn: zn100, cu: cu100
+            };
+            salvaFoodDatabase(); 
+            aggiornaDatalist();
+            
+            const foodItem = { 
+                desc: desc.charAt(0).toUpperCase() + desc.slice(1), 
+                qta, 
+                prot: ((p100 ?? 0) / 100) * qta, 
+                cal: ((k100 ?? 0) / 100) * qta, 
+                mg: ((mg100 ?? 0) / 100) * qta, 
+                k: ((k100_mg ?? 0) / 100) * qta, 
+                vitc: ((vitc100 ?? 0) / 100) * qta, 
+                ca: ((ca100 ?? 0) / 100) * qta,
+                fatSat: ((fatSat100 ?? 0) / 100) * qta,
+                fatUnsat: ((fatUnsat100 ?? 0) / 100) * qta,
+                vitA: ((vitA100 ?? 0) / 100) * qta,
+                vitB12: ((vitB12100 ?? 0) / 100) * qta,
+                vitD: ((vitD100 ?? 0) / 100) * qta,
+                fe: ((fe100 ?? 0) / 100) * qta,
+                zn: ((zn100 ?? 0) / 100) * qta,
+                cu: ((cu100 ?? 0) / 100) * qta
+            };
+            if (isSingle) { foodItem.type = 'single'; } else { foodItem.selezionato = true; }
+            return foodItem;
+        }
 
         function resetInputAlimento() { 
             [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa, 
@@ -1288,6 +1309,7 @@ function creaAlimentoDaInput(isSingle = false) {
                 aggiornaUI();
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 resetInputAlimento();
+                aggiornaColoreNutrienti();
                 isDirty = true; // Modifica dati, imposta flag
                 updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
             }
@@ -1300,6 +1322,7 @@ function creaAlimentoDaInput(isSingle = false) {
                 salvaPastoInCostruzione(); 
                 renderMealBuilder();
                 resetInputAlimento();
+                aggiornaColoreNutrienti();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
                 isDirty = true; // Modifica dati, imposta flag
                 updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
@@ -1421,29 +1444,28 @@ function creaAlimentoDaInput(isSingle = false) {
             }
         });
         
-builderDesc.addEventListener('input', (e) => {
-    const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; 
-    if (foodData) {
-        // Assegna il valore direttamente, usando una stringa vuota se il valore è null o undefined
-        builderProt.value = foodData.prot ?? '';
-        builderKcal.value = foodData.kcal ?? '';
-        builderMg.value = foodData.mg ?? '';
-        builderK.value = foodData.k ?? '';
-        builderVitC.value = foodData.vitc ?? '';
-        builderCa.value = foodData.ca ?? '';
-        // Nuovi campi
-        builderFatSat.value   = foodData.fatSat   ?? '';
-        builderFatUnsat.value = foodData.fatUnsat ?? '';
-        builderVitA.value     = foodData.vitA     ?? '';
-        builderVitB12.value   = foodData.vitB12   ?? '';
-        builderVitD.value     = foodData.vitD     ?? '';
-        // Nuovi campi
-        builderFe.value       = foodData.fe       ?? '';
-        builderZn.value       = foodData.zn       ?? '';
-        builderCu.value       = foodData.cu       ?? '';
-    }
-    aggiornaColoreNutrienti();
-});
+        builderDesc.addEventListener('input', (e) => {
+            const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; 
+            if (foodData) {
+                builderProt.value = foodData.prot ?? '';
+                builderKcal.value = foodData.kcal ?? '';
+                builderMg.value = foodData.mg ?? '';
+                builderK.value = foodData.k ?? '';
+                builderVitC.value = foodData.vitc ?? '';
+                builderCa.value = foodData.ca ?? '';
+                // Nuovi campi
+                builderFatSat.value   = foodData.fatSat   ?? '';
+                builderFatUnsat.value = foodData.fatUnsat ?? '';
+                builderVitA.value     = foodData.vitA     ?? '';
+                builderVitB12.value   = foodData.vitB12   ?? '';
+                builderVitD.value     = foodData.vitD     ?? '';
+                // Nuovi campi
+                builderFe.value       = foodData.fe       ?? '';
+                builderZn.value       = foodData.zn       ?? '';
+                builderCu.value       = foodData.cu       ?? '';
+            }
+            aggiornaColoreNutrienti();
+        });
 
         const nutrientsInputs = document.querySelectorAll('#nutrients-content input[type="number"]');
         nutrientsInputs.forEach(input => {
@@ -1949,8 +1971,74 @@ document.getElementById('nutrients-header').addEventListener('click', () => {
     content.classList.toggle('expanded');
     arrow.textContent = header.classList.contains('expanded') ? '▼' : '▶';
 });
+
+// Listener per la compilazione manuale
+btnCopyPrompt.addEventListener('click', async () => {
+    const nome = builderDesc.value.trim();
+    if (!nome) {
+        alert('Scrivi prima il nome dell\'alimento.');
+        return;
+    }
+    const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". Se un valore non è disponibile usa 0. ${GEMINI_PROMPT_FORMAT}`;
+    try {
+        await navigator.clipboard.writeText(promptText);
+        alert('Richiesta AI copiata negli appunti!');
+    } catch (err) {
+        console.error('Errore durante la copia negli appunti:', err);
+        alert('Impossibile copiare. Copia manualmente il testo: \n\n' + promptText);
+    }
+});
+
+btnConfirmJson.addEventListener('click', () => {
+    const jsonText = manualJsonInput.value.trim();
+    if (!jsonText) {
+        alert('Incolla prima il testo JSON nel campo.');
+        return;
+    }
+
+    try {
+        const resObj = JSON.parse(jsonText);
+        
+        // Mappa i campi del JSON ai rispettivi ID degli input
+        const fieldsToUpdate = {
+            'prot': 'builder-prot',
+            'kcal': 'builder-kcal',
+            'mg': 'builder-mg',
+            'k': 'builder-k',
+            'vitc': 'builder-vitc',
+            'ca': 'builder-ca',
+            'fatSat': 'builder-fat-sat',
+            'fatUnsat': 'builder-fat-unsat',
+            'vitA': 'builder-vit-a',
+            'vitB12': 'builder-vit-b12',
+            'vitD': 'builder-vit-d',
+            'fe': 'builder-fe',
+            'zn': 'builder-zn',
+            'cu': 'builder-cu'
+        };
+
+        let updatedCount = 0;
+        for (const key in fieldsToUpdate) {
+            const el = document.getElementById(fieldsToUpdate[key]);
+            if (el && el.value === '' && typeof resObj[key] !== 'undefined' && resObj[key] !== null) {
+                el.value = resObj[key];
+                updatedCount++;
+            }
+        }
+        
+        if (updatedCount > 0) {
+            alert(`Dati caricati con successo per ${updatedCount} campi.`);
+            manualJsonInput.value = ''; // Pulisci il campo dopo il successo
+            aggiornaColoreNutrienti(); // Aggiorna lo stato della scritta
+        } else {
+            alert('Nessun campo vuoto da aggiornare trovato nel JSON.');
+        }
+
+    } catch (err) {
+        alert('Errore nel formato JSON. Assicurati di aver incollato un JSON valido.');
+        console.error('Errore nel parsing JSON:', err);
+    }
+});
     </script>
 </body>
 </html>
-
-
