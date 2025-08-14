@@ -447,17 +447,22 @@
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
                 </div>
-                <div class="builder-grid" style="margin-top: 10px;">
-                    <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
-                    <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
-                    <div><label>Vit. C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
-                    <div><label>Calcio (mg)/100g</label><input type="number" id="builder-ca" min="0"></div>
-                    <div><label>Grassi saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
-                    <div><label>Grassi insaturi/100g</label><input type="number" id="builder-fat-unsat" min="0" step="0.1"></div>
-                    <div><label>Vit. A (µg)/100g</label><input type="number" id="builder-vit-a" min="0"></div>
-                    <div><label>Vit. B12 (µg)/100g</label><input type="number" id="builder-vit-b12" min="0" step="0.01"></div>
-                    <div><label>Vit. D (µg)/100g</label><input type="number" id="builder-vit-d" min="0" step="0.01"></div>
-                </div>
+               <h2 class="collapsible-header" id="nutrients-header">
+    Dettagli Nutrizionali <span class="arrow">▶</span>
+</h2>
+<div class="collapsible-content" id="nutrients-content" style="display: none;">
+    <div class="builder-grid">
+        <div><label>Grassi saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
+        <div><label>Grassi insaturi/100g</label><input type="number" id="builder-fat-unsat" min="0" step="0.1"></div>
+        <div><label>Vit. A (µg)/100g</label><input type="number" id="builder-vit-a" min="0"></div>
+        <div><label>Vit. B12 (µg)/100g</label><input type="number" id="builder-vit-b12" min="0" step="0.01"></div>
+        <div><label>Vit. D (µg)/100g</label><input type="number" id="builder-vit-d" min="0" step="0.01"></div>
+        <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
+        <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
+        <div><label>Vit. C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
+        <div><label>Calcio (mg)/100g</label><input type="number" id="builder-ca" min="0"></div>
+    </div>
+</div>
                 <datalist id="food-database-list"></datalist>
                 <div class="button-group">
                     <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
@@ -1838,9 +1843,17 @@ Se un valore non è disponibile usa 0.
             btnFloppyUpload.style.display = 'none'; // Nascondi il pulsante floppy all'avvio
             updateFloppyDiskIcon(); // Aggiorna lo stato iniziale dell'icona
         });
-
+        // Comprimi/espandi area nutrienti
+document.getElementById('nutrients-header').addEventListener('click', () => {
+    const content = document.getElementById('nutrients-content');
+    const arrow   = document.querySelector('#nutrients-header .arrow');
+    const isHidden = content.style.display === 'none';
+    content.style.display = isHidden ? 'block' : 'none';
+    arrow.textContent = isHidden ? '▼' : '▶';
+});
     </script>
 </body>
 </html>
+
 
 
