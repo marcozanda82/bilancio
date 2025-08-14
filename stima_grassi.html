@@ -75,7 +75,7 @@
             <a href="storico.html">📊 Storico</a>
         </div>
         
-        <div id="stima-sezione" class="sezione" style="border-left-color: #ff8f00;">
+        <div id="stima-sezione" class'sezione' style="border-left-color: #ff8f00;">
             <h2>Stima dei Grassi per una data</h2>
             <p>Seleziona una data per ottenere una stima dettagliata dei grassi, inclusi saturi, monoinsaturi, polinsaturi e omega-3, basata sugli alimenti consumati.</p>
             <label for="data-stima">Data:</label>
@@ -422,6 +422,7 @@
                         elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
                     });
                 } else if (entry.type === 'single') {
+                    // Correzione: usa entry.qta per gli alimenti singoli
                     elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
                 }
             });
