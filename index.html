@@ -906,21 +906,18 @@ const firebaseConfig = {
             datiGiornalieri.vitA = totali.vitA;
             datiGiornalieri.vitD = totali.vitD;
             datiGiornalieri.vitB12 = totali.vitB12;
-            datiGiornalieri.bilancioCalorico = deficitArrotondato; // Nuovo campo per il bilancio calorico giornaliero
-            datiGiornalieri.variazioneGrassoG = variazioneGrasso; // Nuovo campo per la variazione di grasso in grammi
-            datiGiornalieri.scoreMuscolo = scoreMuscolo; // Nuovo campo per lo score muscolare
-
-            // ... logica per il bilancio calorico e il trend muscolare ...
+            
             const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
-            let variazioneGrasso = 0; 
+            datiGiornalieri.bilancioCalorico = deficitArrotondato;
+
+            let variazioneGrasso = 0;
             if (deficitArrotondato < 0) { 
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
             } else if (deficitArrotondato > 0) { 
                 variazioneGrasso = -(deficitArrotondato / 7.7);
-            } else { 
-                variazioneGrasso = 0;
             }
+            datiGiornalieri.variazioneGrassoG = variazioneGrasso;
 
             let scoreMuscolo = 0;
             if(totali.proteine >= (pianoDelGiorno.prot * 0.95)) { scoreMuscolo++; } else { scoreMuscolo--; }
@@ -928,7 +925,8 @@ const firebaseConfig = {
                 scoreMuscolo++;
                 if (deficitArrotondato < -200) { scoreMuscolo--; }
             }
-            
+            datiGiornalieri.scoreMuscolo = scoreMuscolo;
+
             spanObiettivoProteine.textContent = OBIETTIVI_CORRENTI.prot;
             spanObiettivoCalorie.textContent = OBIETTIVI_CORRENTI.cal; 
             spanTotaleProteine.textContent = totali.proteine.toFixed(1);
@@ -957,9 +955,11 @@ const firebaseConfig = {
             spanTotaleSatFat.textContent = totali.satfat.toFixed(1);
             progressSatFat.max = OBIETTIVI_CORRENTI.grassiSaturi; progressSatFat.value = totali.satfat;
             
-            spanObiettivoUnsatFat.textContent = OBIETTIVI_CORRENTI.grassiInsaturi;
-            spanTotaleUnsatFat.textContent = totalUnsatFat.toFixed(1);
-            progressUnsatFat.max = OBIETTIVI_CORRENTI.grassiInsaturi; progressUnsatFat.value = totalUnsatFat;
+            if (spanTotaleUnsatFat) { // Controlla se l'elemento esiste prima di usarlo
+                spanObiettivoUnsatFat.textContent = OBIETTIVI_CORRENTI.grassiInsaturi;
+                spanTotaleUnsatFat.textContent = totalUnsatFat.toFixed(1);
+                progressUnsatFat.max = OBIETTIVI_CORRENTI.grassiInsaturi; progressUnsatFat.value = totalUnsatFat;
+            }
 
             spanObiettivoVitA.textContent = OBIETTIVI_CORRENTI.vitA;
             spanTotaleVitA.textContent = totali.vitA.toFixed(1);
@@ -1520,8 +1520,8 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
 
                 } else {
                     currentUserUID = null;
-                    authFormFields.style.display = 'block';
-                    authHeader.style.display = 'block'; 
+                    authFormFields.style.display = 'none';
+                    authHeader.style.display = 'none'; 
                     
                     welcomeMessage.style.display = 'none';
                     btnSignOut.style.display = 'none';
