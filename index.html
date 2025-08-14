@@ -527,7 +527,7 @@ const firebaseConfig = {
 };
         // ************************************************************
         // FINE CONFIGURAZIONE FIREBASE
-        // ************************************************************
+        // *********************************-***************************
 
         // --- STATO E COSTANTI ---
         let giornoVisualizzato = getTodayString('ymd');
@@ -928,52 +928,67 @@ const firebaseConfig = {
             }
             datiGiornalieri.scoreMuscolo = scoreMuscolo;
 
-            spanObiettivoProteine.textContent = OBIETTIVI_CORRENTI.prot;
-            spanObiettivoCalorie.textContent = OBIETTIVI_CORRENTI.cal; 
-            spanTotaleProteine.textContent = totali.proteine.toFixed(1);
-            spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
-            spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
+            // --- Inizio Blocco Corretto ---
+            document.getElementById('obiettivo-proteine').textContent = OBIETTIVI_CORRENTI.prot;
+            document.getElementById('totale-proteine').textContent = totali.proteine.toFixed(1);
+            progressProteine.max = OBIETTIVI_CORRENTI.prot; 
+            progressProteine.value = totali.proteine;
 
-            progressProteine.max = OBIETTIVI_CORRENTI.prot; progressProteine.value = totali.proteine;
-            progressCalorie.max = OBIETTIVI_CORRENTI.cal; progressCalorie.value = totali.calorie;
+            document.getElementById('obiettivo-calorie').textContent = OBIETTIVI_CORRENTI.cal; 
+            document.getElementById('totale-calorie').textContent = totali.calorie.toFixed(0);
+            progressCalorie.max = OBIETTIVI_CORRENTI.cal; 
+            progressCalorie.value = totali.calorie;
+
+            spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
             
-            // Micronutrienti originali
-            spanTotaleMg.textContent = totali.mg.toFixed(1);
-            progressMg.max = OBIETTIVI_CORRENTI.mg; progressMg.value = totali.mg;
-            spanTotaleK.textContent = totali.k.toFixed(0);
-            progressK.max = OBIETTIVI_CORRENTI.k; progressK.value = totali.k;
-            spanTotaleVitC.textContent = totali.vitc.toFixed(1);
-            progressVitC.max = OBIETTIVI_CORRENTI.vitc; progressVitC.value = totali.vitc;
-            spanTotaleCa.textContent = totali.ca.toFixed(1);
-            progressCa.max = OBIETTIVI_CORRENTI.ca; progressCa.value = totali.ca;
+            document.getElementById('totale-mg').textContent = totali.mg.toFixed(1);
+            progressMg.max = OBIETTIVI_CORRENTI.mg; 
+            progressMg.value = totali.mg;
+
+            document.getElementById('totale-k').textContent = totali.k.toFixed(0);
+            progressK.max = OBIETTIVI_CORRENTI.k; 
+            progressK.value = totali.k;
+
+            document.getElementById('totale-vitc').textContent = totali.vitc.toFixed(1);
+            progressVitC.max = OBIETTIVI_CORRENTI.vitc; 
+            progressVitC.value = totali.vitc;
+
+            document.getElementById('totale-ca').textContent = totali.ca.toFixed(1);
+            progressCa.max = OBIETTIVI_CORRENTI.ca; 
+            progressCa.value = totali.ca;
 
             // Nuovi nutrienti
-            spanObiettivoFat.textContent = OBIETTIVI_CORRENTI.grassiTotali;
-            spanTotaleFat.textContent = totali.fat.toFixed(1);
-            progressFat.max = OBIETTIVI_CORRENTI.grassiTotali; progressFat.value = totali.fat;
+            document.getElementById('obiettivo-fat').textContent = OBIETTIVI_CORRENTI.grassiTotali;
+            document.getElementById('totale-fat').textContent = totali.fat.toFixed(1);
+            progressFat.max = OBIETTIVI_CORRENTI.grassiTotali; 
+            progressFat.value = totali.fat;
 
-            spanObiettivoSatFat.textContent = OBIETTIVI_CORRENTI.grassiSaturi;
-            spanTotaleSatFat.textContent = totali.satfat.toFixed(1);
-            progressSatFat.max = OBIETTIVI_CORRENTI.grassiSaturi; progressSatFat.value = totali.satfat;
+            document.getElementById('obiettivo-satfat').textContent = OBIETTIVI_CORRENTI.grassiSaturi;
+            document.getElementById('totale-satfat').textContent = totali.satfat.toFixed(1);
+            progressSatFat.max = OBIETTIVI_CORRENTI.grassiSaturi; 
+            progressSatFat.value = totali.satfat;
             
-            if (spanTotaleUnsatFat) {
-                spanObiettivoUnsatFat.textContent = OBIETTIVI_CORRENTI.grassiInsaturi;
-                spanTotaleUnsatFat.textContent = totalUnsatFat.toFixed(1);
-                progressUnsatFat.max = OBIETTIVI_CORRENTI.grassiInsaturi; progressUnsatFat.value = totalUnsatFat;
-            }
+            document.getElementById('obiettivo-unsatfat').textContent = OBIETTIVI_CORRENTI.grassiInsaturi;
+            document.getElementById('totale-unsatfat').textContent = totalUnsatFat.toFixed(1);
+            progressUnsatFat.max = OBIETTIVI_CORRENTI.grassiInsaturi; 
+            progressUnsatFat.value = totalUnsatFat;
 
-            spanObiettivoVitA.textContent = OBIETTIVI_CORRENTI.vitA;
-            spanTotaleVitA.textContent = totali.vitA.toFixed(1);
-            progressVitA.max = OBIETTIVI_CORRENTI.vitA; progressVitA.value = totali.vitA;
+            document.getElementById('obiettivo-vitA').textContent = OBIETTIVI_CORRENTI.vitA;
+            document.getElementById('totale-vitA').textContent = totali.vitA.toFixed(1);
+            progressVitA.max = OBIETTIVI_CORRENTI.vitA; 
+            progressVitA.value = totali.vitA;
 
-            spanObiettivoVitD.textContent = OBIETTIVI_CORRENTI.vitD;
-            spanTotaleVitD.textContent = totali.vitD.toFixed(1);
-            progressVitD.max = OBIETTIVI_CORRENTI.vitD; progressVitD.value = totali.vitD;
+            document.getElementById('obiettivo-vitD').textContent = OBIETTIVI_CORRENTI.vitD;
+            document.getElementById('totale-vitD').textContent = totali.vitD.toFixed(1);
+            progressVitD.max = OBIETTIVI_CORRENTI.vitD; 
+            progressVitD.value = totali.vitD;
 
-            spanObiettivoVitB12.textContent = OBIETTIVI_CORRENTI.vitB12;
-            spanTotaleVitB12.textContent = totali.vitB12.toFixed(1);
-            progressVitB12.max = OBIETTIVI_CORRENTI.vitB12; progressVitB12.value = totali.vitB12;
+            document.getElementById('obiettivo-vitB12').textContent = OBIETTIVI_CORRENTI.vitB12;
+            document.getElementById('totale-vitB12').textContent = totali.vitB12.toFixed(1);
+            progressVitB12.max = OBIETTIVI_CORRENTI.vitB12; 
+            progressVitB12.value = totali.vitB12;
 
+            // --- Fine Blocco Corretto ---
 
             logBody.innerHTML = ''; 
             (datiGiornalieri.log || []).forEach((entry, index) => { 
