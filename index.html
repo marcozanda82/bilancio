@@ -159,20 +159,7 @@
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            /* Rimosso -moz-appearance e -webkit-appearance per permettere frecce del browser */
-            /* Se si desidera rimuovere le frecce, è necessario reimpostare queste proprietà */
         }
-        /* Se si desidera rimuovere le frecce per l'input number, decommentare: */
-        /* #calorie-adjuster input::-webkit-outer-spin-button,
-        #calorie-adjuster input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        #calorie-adjuster input[type="number"] {
-            -moz-appearance: textfield;
-        } */
-
-
         #calorie-adjuster label {
             margin-bottom: 0;
             font-weight: normal;
@@ -420,6 +407,27 @@
                         <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
                     </div>
                 </div>
+                <hr>
+                <h3>Grassi & Vitamine</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <p>Grassi Saturi: <span id="totale-fat-sat">0</span> / 20 g</p>
+                        <progress id="progress-fat-sat" value="0" max="20"></progress>
+
+                        <p>Grassi Insaturi: <span id="totale-fat-unsat">0</span> / 50 g</p>
+                        <progress id="progress-fat-unsat" value="0" max="50"></progress>
+                    </div>
+                    <div>
+                        <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p>
+                        <progress id="progress-vit-a" value="0" max="900"></progress>
+
+                        <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p>
+                        <progress id="progress-vit-b12" value="0" max="2.4"></progress>
+
+                        <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p>
+                        <progress id="progress-vit-d" value="0" max="15"></progress>
+                    </div>
+                </div>
             </div>
             <div id="form-allenamento" class="sezione">
                 <h2 class="collapsible-header" id="workout-header">Registra Allenamento <span class="arrow">▶</span></h2>
@@ -444,6 +452,11 @@
                     <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
                     <div><label>Vit. C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
                     <div><label>Calcio (mg)/100g</label><input type="number" id="builder-ca" min="0"></div>
+                    <div><label>Grassi saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
+                    <div><label>Grassi insaturi/100g</label><input type="number" id="builder-fat-unsat" min="0" step="0.1"></div>
+                    <div><label>Vit. A (µg)/100g</label><input type="number" id="builder-vit-a" min="0"></div>
+                    <div><label>Vit. B12 (µg)/100g</label><input type="number" id="builder-vit-b12" min="0" step="0.01"></div>
+                    <div><label>Vit. D (µg)/100g</label><input type="number" id="builder-vit-d" min="0" step="0.01"></div>
                 </div>
                 <datalist id="food-database-list"></datalist>
                 <div class="button-group">
@@ -567,6 +580,7 @@ const firebaseConfig = {
         };
 
         const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000 };
+        const OBIETTIVI_EXTRA = { fatSat: 20, fatUnsat: 50, vitA: 900, vitB12: 2.4, vitD: 15 };
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
             merenda1: { prot: 30, cal_perc: 0.20 },
@@ -605,6 +619,10 @@ const firebaseConfig = {
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
+        // Nuovi campi extra
+        const builderFatSat = document.getElementById('builder-fat-sat'), builderFatUnsat = document.getElementById('builder-fat-unsat');
+        const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
+
         const foodDatalist = document.getElementById('food-database-list');
         const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo'), btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
         const mealBuilderSezione = document.getElementById('meal-builder-sezione'), logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
@@ -615,8 +633,16 @@ const firebaseConfig = {
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
         const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
         const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
+        // Nuovi span extra
+        const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanTotaleFatUnsat = document.getElementById('totale-fat-unsat');
+        const spanTotaleVitA = document.getElementById('totale-vit-a'), spanTotaleVitB12 = document.getElementById('totale-vit-b12'), spanTotaleVitD = document.getElementById('totale-vit-d');
+
         const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
         const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
+        // Nuovi progress extra
+        const progressFatSat = document.getElementById('progress-fat-sat'), progressFatUnsat = document.getElementById('progress-fat-unsat');
+        const progressVitA = document.getElementById('progress-vit-a'), progressVitB12 = document.getElementById('progress-vit-b12'), progressVitD = document.getElementById('progress-vit-d');
+
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
 
         const currentMealTypeDisplay = document.getElementById('current-meal-type-display');
@@ -803,11 +829,16 @@ const firebaseConfig = {
             
             const obiettivoCalorieBaseWorkout = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
             const obiettivoCalorieTotale = obiettivoCalorieBaseWorkout + (datiGiornalieri.calorieAdjustment || 0);
-            const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO };
+            const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO, ...OBIETTIVI_EXTRA };
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
+            let totali = { 
+                proteine: 0, calorie: 0, 
+                mg: 0, k: 0, vitc: 0, ca: 0,
+                fatSat: 0, fatUnsat: 0,
+                vitA: 0, vitB12: 0, vitD: 0
+            };
             (datiGiornalieri.log || []).forEach(entry => { 
                 if (entry.type === 'meal') {
                     entry.items.forEach(item => {
@@ -817,6 +848,11 @@ const firebaseConfig = {
                         totali.k += item.k || 0;
                         totali.vitc += item.vitc || 0;
                         totali.ca += item.ca || 0;
+                        totali.fatSat += item.fatSat || 0;
+                        totali.fatUnsat += item.fatUnsat || 0;
+                        totali.vitA += item.vitA || 0;
+                        totali.vitB12 += item.vitB12 || 0;
+                        totali.vitD += item.vitD || 0;
                     });
                 } else if (entry.type === 'single') { 
                     totali.proteine += entry.prot || 0;
@@ -825,6 +861,11 @@ const firebaseConfig = {
                     totali.k += entry.k || 0;
                     totali.vitc += entry.vitc || 0;
                     totali.ca += entry.ca || 0;
+                    totali.fatSat += entry.fatSat || 0;
+                    totali.fatUnsat += entry.fatUnsat || 0;
+                    totali.vitA += entry.vitA || 0;
+                    totali.vitB12 += entry.vitB12 || 0;
+                    totali.vitD += entry.vitD || 0;
                 }
             });
             
@@ -873,6 +914,11 @@ const firebaseConfig = {
             datiGiornalieri.k = totali.k;
             datiGiornalieri.vitc = totali.vitc;
             datiGiornalieri.ca = totali.ca;
+            datiGiornalieri.fatSat = totali.fatSat;
+            datiGiornalieri.fatUnsat = totali.fatUnsat;
+            datiGiornalieri.vitA = totali.vitA;
+            datiGiornalieri.vitB12 = totali.vitB12;
+            datiGiornalieri.vitD = totali.vitD;
             datiGiornalieri.bilancioCalorico = deficitArrotondato; // Nuovo campo per il bilancio calorico giornaliero
             datiGiornalieri.variazioneGrassoG = variazioneGrasso; // Nuovo campo per la variazione di grasso in grammi
             datiGiornalieri.scoreMuscolo = scoreMuscolo; // Nuovo campo per lo score muscolare
@@ -887,7 +933,7 @@ const firebaseConfig = {
             progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
             progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
             
-            // --- INIZIO BLOCCO CORRETTO PER MICRONUTRIENTI ---
+            // Micronutrienti
             spanTotaleMg.textContent = totali.mg.toFixed(1);
             progressMg.max = OBIETTIVI.mg;
             progressMg.value = totali.mg;
@@ -903,7 +949,27 @@ const firebaseConfig = {
             spanTotaleCa.textContent = totali.ca.toFixed(1);
             progressCa.max = OBIETTIVI.ca;
             progressCa.value = totali.ca;
-            // --- FINE BLOCCO CORRETTO PER MICRONUTRIENTI ---
+
+            // Grassi & Vitamine
+            spanTotaleFatSat.textContent   = totali.fatSat.toFixed(1);
+            progressFatSat.max   = OBIETTIVI.fatSat;
+            progressFatSat.value = totali.fatSat;
+
+            spanTotaleFatUnsat.textContent = totali.fatUnsat.toFixed(1);
+            progressFatUnsat.max   = OBIETTIVI.fatUnsat;
+            progressFatUnsat.value = totali.fatUnsat;
+
+            spanTotaleVitA.textContent     = totali.vitA.toFixed(1);
+            progressVitA.max   = OBIETTIVI.vitA;
+            progressVitA.value = totali.vitA;
+
+            spanTotaleVitB12.textContent   = totali.vitB12.toFixed(1);
+            progressVitB12.max   = OBIETTIVI.vitB12;
+            progressVitB12.value = totali.vitB12;
+
+            spanTotaleVitD.textContent     = totali.vitD.toFixed(1);
+            progressVitD.max   = OBIETTIVI.vitD;
+            progressVitD.value = totali.vitD;
 
             logBody.innerHTML = ''; 
             (datiGiornalieri.log || []).forEach((entry, index) => { 
@@ -1051,6 +1117,12 @@ const firebaseConfig = {
             let k100_mg = parseFloat(builderK.value) || 0;
             let vitc100 = parseFloat(builderVitC.value) || 0; 
             let ca100 = parseFloat(builderCa.value) || 0;
+            // Nuovi campi
+            let fatSat100 = parseFloat(builderFatSat.value) || 0;
+            let fatUnsat100 = parseFloat(builderFatUnsat.value) || 0;
+            let vitA100 = parseFloat(builderVitA.value) || 0;
+            let vitB12100 = parseFloat(builderVitB12.value) || 0;
+            let vitD100 = parseFloat(builderVitD.value) || 0;
 
             const existingFood = foodDatabase[desc.toLowerCase()];
             if (existingFood) {
@@ -1060,9 +1132,18 @@ const firebaseConfig = {
                 k100_mg = (builderK.value === '' || isNaN(k100_mg)) ? existingFood.k || 0 : k100_mg;
                 vitc100 = (builderVitC.value === '' || isNaN(vitc100)) ? existingFood.vitc || 0 : vitc100;
                 ca100 = (builderCa.value === '' || isNaN(ca100)) ? existingFood.ca || 0 : ca100;
+                // Nuovi campi
+                fatSat100   = (builderFatSat.value   === '' || isNaN(fatSat100))   ? existingFood.fatSat   || 0 : fatSat100;
+                fatUnsat100 = (builderFatUnsat.value === '' || isNaN(fatUnsat100)) ? existingFood.fatUnsat || 0 : fatUnsat100;
+                vitA100     = (builderVitA.value     === '' || isNaN(vitA100))     ? existingFood.vitA     || 0 : vitA100;
+                vitB12100   = (builderVitB12.value   === '' || isNaN(vitB12100))   ? existingFood.vitB12   || 0 : vitB12100;
+                vitD100     = (builderVitD.value     === '' || isNaN(vitD100))     ? existingFood.vitD     || 0 : vitD100;
             }
 
-            foodDatabase[desc.toLowerCase()] = { prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100 };
+            foodDatabase[desc.toLowerCase()] = { 
+                prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100,
+                fatSat: fatSat100, fatUnsat: fatUnsat100, vitA: vitA100, vitB12: vitB12100, vitD: vitD100
+            };
             salvaFoodDatabase(); 
             aggiornaDatalist();
             
@@ -1074,13 +1155,22 @@ const firebaseConfig = {
                 mg: (mg100 / 100) * qta, 
                 k: (k100_mg / 100) * qta, 
                 vitc: (vitc100 / 100) * qta, 
-                ca: (ca100 / 100) * qta 
+                ca: (ca100 / 100) * qta,
+                fatSat: (fatSat100 / 100) * qta,
+                fatUnsat: (fatUnsat100 / 100) * qta,
+                vitA: (vitA100 / 100) * qta,
+                vitB12: (vitB12100 / 100) * qta,
+                vitD: (vitD100 / 100) * qta
             };
             if (isSingle) { foodItem.type = 'single'; } else { foodItem.selezionato = true; }
             return foodItem;
         }
 
-        function resetInputAlimento() { [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa].forEach(el => el.value = ''); builderDesc.focus(); }
+        function resetInputAlimento() { 
+            [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa, 
+             builderFatSat, builderFatUnsat, builderVitA, builderVitB12, builderVitD].forEach(el => el.value = ''); 
+            builderDesc.focus(); 
+        }
 
         // --- EVENT LISTENERS ---
         workoutHeader.addEventListener('click', () => {
@@ -1173,8 +1263,9 @@ const firebaseConfig = {
 
             const totaliPasto = alimentiSelezionatiPerDiario.reduce((acc, item) => {
                 acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0; acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
+                acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.vitA += item.vitA || 0; acc.vitB12 += item.vitB12 || 0; acc.vitD += item.vitD || 0;
                 return acc;
-            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0});
+            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, fatUnsat: 0, vitA: 0, vitB12: 0, vitD: 0});
 
             const newMeal = { type: 'meal', desc: mealName, mealId: mealId, isExpanded: false, items: alimentiSelezionatiPerDiario, ...totaliPasto };
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
@@ -1262,6 +1353,12 @@ const firebaseConfig = {
                 builderProt.value = foodData.prot || ''; builderKcal.value = foodData.kcal || '';
                 builderMg.value = foodData.mg || ''; builderK.value = foodData.k || '';
                 builderVitC.value = foodData.vitc || ''; builderCa.value = foodData.ca || '';
+                // Nuovi campi
+                builderFatSat.value   = foodData.fatSat   || '';
+                builderFatUnsat.value = foodData.fatUnsat || '';
+                builderVitA.value     = foodData.vitA     || '';
+                builderVitB12.value   = foodData.vitB12   || '';
+                builderVitD.value     = foodData.vitD     || '';
             }
         });
 
@@ -1309,10 +1406,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
         });
 
-        btnCaloriePlus.addEventListener('click', () => {
+        btnCalorieMinus.addEventListener('click', () => {
             let currentAdjustment = datiGiornalieri.calorieAdjustment || 0;
-            let newValue = currentAdjustment + 10;
-            datiGiornalieri.calorieAdjustment = Math.min(newValue, 500); // Limita a +500
+            let newValue = currentAdjustment - 10;
+            datiGiornalieri.calorieAdjustment = Math.max(newValue, -500); // Limita a -500
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
@@ -1320,10 +1417,10 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
         });
 
-        btnCalorieMinus.addEventListener('click', () => {
+        btnCaloriePlus.addEventListener('click', () => {
             let currentAdjustment = datiGiornalieri.calorieAdjustment || 0;
-            let newValue = currentAdjustment - 10;
-            datiGiornalieri.calorieAdjustment = Math.max(newValue, -500); // Limita a -500
+            let newValue = currentAdjustment + 10;
+            datiGiornalieri.calorieAdjustment = Math.min(newValue, 500); // Limita a +500
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
@@ -1488,11 +1585,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 console.error("Sign out error:", error);
             }
         }
-
-        btnRegister.addEventListener('click', handleRegister);
-        btnLogin.addEventListener('click', handleLogin);
-        btnSignOut.addEventListener('click', handleSignOut);
-
 
         function getUserDataRef() {
             if (!db || !currentUserUID) {
