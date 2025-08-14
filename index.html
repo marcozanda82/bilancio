@@ -890,24 +890,6 @@ const firebaseConfig = {
                 }
             });
 
-            // Calcolo dei grassi insaturi dopo aver sommato i totali
-            const totalUnsatFat = totali.fat - totali.satfat;
-
-            // Assegna i totali correnti e i nuovi campi all'oggetto datiGiornalieri PRIMA del salvataggio
-            datiGiornalieri.proteine = totali.proteine;
-            datiGiornalieri.calorie = totali.calorie;
-            datiGiornalieri.mg = totali.mg;
-            datiGiornalieri.k = totali.k;
-            datiGiornalieri.vitc = totali.vitc;
-            datiGiornalieri.ca = totali.ca;
-            datiGiornalieri.fat = totali.fat;
-            datiGiornalieri.satfat = totali.satfat;
-            datiGiornalieri.unsatfat = totalUnsatFat;
-            datiGiornalieri.vitA = totali.vitA;
-            datiGiornalieri.vitD = totali.vitD;
-            datiGiornalieri.vitB12 = totali.vitB12;
-            
-            // Definisci le variabili prima di utilizzarle
             const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
             datiGiornalieri.bilancioCalorico = deficitArrotondato;
@@ -956,7 +938,8 @@ const firebaseConfig = {
             spanTotaleSatFat.textContent = totali.satfat.toFixed(1);
             progressSatFat.max = OBIETTIVI_CORRENTI.grassiSaturi; progressSatFat.value = totali.satfat;
             
-            if (spanTotaleUnsatFat) {
+            const totalUnsatFat = totali.fat - totali.satfat;
+            if (spanTotaleUnsatFat) { // Controlla se l'elemento esiste prima di usarlo
                 spanObiettivoUnsatFat.textContent = OBIETTIVI_CORRENTI.grassiInsaturi;
                 spanTotaleUnsatFat.textContent = totalUnsatFat.toFixed(1);
                 progressUnsatFat.max = OBIETTIVI_CORRENTI.grassiInsaturi; progressUnsatFat.value = totalUnsatFat;
