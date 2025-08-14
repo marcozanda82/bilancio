@@ -1396,7 +1396,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
             // isDirty è già gestito da salvaGiorno() per l'OK, e per Annulla non modifichiamo lo stato di dirty.
         });
 
-        document.getElementById('btn-compila-ai').addEventListener('click', async () => {
+document.getElementById('btn-compila-ai').addEventListener('click', async () => {
     const nome = builderDesc.value.trim();
     if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
 
@@ -1413,7 +1413,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                         text: `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}".  
 Se un valore non è disponibile usa 0.
 {"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg}`
-
                     }]
                 }]
             })
@@ -1424,11 +1423,31 @@ Se un valore non è disponibile usa 0.
         const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
         const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
-['prot','kcal','mg','k','vitc','ca','fatSat','fatUnsat','vitA','vitB12','vitD'].forEach(k=>{
-    const elId = 'builder-' + k.replace('fat','fat-').toLowerCase();
-    const el = document.getElementById(elId);
-    if (el) el.value = resObj[k] ?? 0;
-});
+        const fieldsToUpdate = {
+            'prot': 'builder-prot',
+            'kcal': 'builder-kcal',
+            'mg': 'builder-mg',
+            'k': 'builder-k',
+            'vitc': 'builder-vitc',
+            'ca': 'builder-ca',
+            'fatSat': 'builder-fat-sat',
+            'fatUnsat': 'builder-fat-unsat',
+            'vitA': 'builder-vit-a',
+            'vitB12': 'builder-vit-b12',
+            'vitD': 'builder-vit-d'
+        };
+
+        for (const key in fieldsToUpdate) {
+            const el = document.getElementById(fieldsToUpdate[key]);
+            if (el) {
+                // Modifica solo se il campo è vuoto o se il valore dall'IA è diverso da 0.
+                // Ciò evita di sovrascrivere un valore inserito manualmente (anche se è 0)
+                // e permette di correggere un campo vuoto o uno 0 predefinito.
+                if (el.value === '' || (parseFloat(el.value) === 0 && resObj[key] !== 0)) {
+                    el.value = resObj[key] ?? 0;
+                }
+            }
+        }
     } catch (err) {
         alert('Errore compilazione AI: ' + err.message);
     } finally {
@@ -1859,8 +1878,3 @@ document.getElementById('nutrients-header').addEventListener('click', () => {
     </script>
 </body>
 </html>
-
-
-
-
-
