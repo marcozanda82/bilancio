@@ -1190,23 +1190,25 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
             builderDesc.focus(); 
         }
 
-        function aggiornaColoreNutrienti() {
-            const nutrientsHeader = document.getElementById('nutrients-header');
-            const nutrientsInputs = document.querySelectorAll('#nutrients-content input[type="number"]');
-            let hasEmptyFields = false;
+function aggiornaColoreNutrienti() {
+    const nutrientsHeader = document.getElementById('nutrients-header');
+    const nutrientsInputs = document.querySelectorAll('#nutrients-content input[type="number"]');
+    let hasEmptyFields = false;
 
-            nutrientsInputs.forEach(input => {
-                if (input.value === '') {
-                    hasEmptyFields = true;
-                }
-            });
-
-            if (hasEmptyFields) {
-                nutrientsHeader.classList.add('nutrients-warning');
-            } else {
-                nutrientsHeader.classList.remove('nutrients-warning');
-            }
+    // Controlla se c'è almeno un campo vuoto
+    nutrientsInputs.forEach(input => {
+        if (input.value === '') {
+            hasEmptyFields = true;
         }
+    });
+
+    // Aggiunge o rimuove la classe CSS in base al risultato del controllo
+    if (hasEmptyFields) {
+        nutrientsHeader.classList.add('nutrients-warning');
+    } else {
+        nutrientsHeader.classList.remove('nutrients-warning');
+    }
+}
 
         // --- EVENT LISTENERS ---
         workoutHeader.addEventListener('click', () => {
@@ -1906,3 +1908,4 @@ document.getElementById('nutrients-header').addEventListener('click', () => {
     </script>
 </body>
 </html>
+
