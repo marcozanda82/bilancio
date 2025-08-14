@@ -1999,7 +1999,6 @@ btnConfirmJson.addEventListener('click', () => {
     try {
         const resObj = JSON.parse(jsonText);
         
-        // Mappa i campi del JSON ai rispettivi ID degli input
         const fieldsToUpdate = {
             'prot': 'builder-prot',
             'kcal': 'builder-kcal',
@@ -2017,23 +2016,26 @@ btnConfirmJson.addEventListener('click', () => {
             'cu': 'builder-cu'
         };
 
-        let updatedCount = 0;
         for (const key in fieldsToUpdate) {
             const el = document.getElementById(fieldsToUpdate[key]);
-            if (el && el.value === '' && typeof resObj[key] !== 'undefined' && resObj[key] !== null) {
+            if (el && typeof resObj[key] !== 'undefined' && resObj[key] !== null) {
+                // Riempi tutti i campi, anche se non sono vuoti,
+                // perché l'utente sta sovrascrivendo con dati manuali.
                 el.value = resObj[key];
-                updatedCount++;
             }
         }
         
-        if (updatedCount > 0) {
-            alert(`Dati caricati con successo per ${updatedCount} campi.`);
-            manualJsonInput.value = ''; // Pulisci il campo dopo il successo
-            aggiornaColoreNutrienti(); // Aggiorna lo stato della scritta
+        // Chiamata alla funzione principale per salvare i dati
+        const nome = builderDesc.value.trim();
+        if (nome) {
+            creaAlimentoDaInput();
+            alert(`Dati di "${nome}" aggiornati con successo nel database locale.`);
+            manualJsonInput.value = '';
         } else {
-            alert('Nessun campo vuoto da aggiornare trovato nel JSON.');
+            alert('Alimento non specificato. Non è possibile salvare i dati.');
         }
 
+        aggiornaColoreNutrienti();
     } catch (err) {
         alert('Errore nel formato JSON. Assicurati di aver incollato un JSON valido.');
         console.error('Errore nel parsing JSON:', err);
