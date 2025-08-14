@@ -1121,68 +1121,56 @@ const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models
             }
         }
 
-        function creaAlimentoDaInput(isSingle = false) {
-            const desc = builderDesc.value.trim(); 
-            const qta = parseFloat(builderQta.value);
-            if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return null; }
+function creaAlimentoDaInput(isSingle = false) {
+    const desc = builderDesc.value.trim(); 
+    const qta = parseFloat(builderQta.value);
+    if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return null; }
 
-            let p100 = parseFloat(builderProt.value) || 0; 
-            let k100 = parseFloat(builderKcal.value) || 0;
-            let mg100 = parseFloat(builderMg.value) || 0; 
-            let k100_mg = parseFloat(builderK.value) || 0;
-            let vitc100 = parseFloat(builderVitC.value) || 0; 
-            let ca100 = parseFloat(builderCa.value) || 0;
-            // Nuovi campi
-            let fatSat100 = parseFloat(builderFatSat.value) || 0;
-            let fatUnsat100 = parseFloat(builderFatUnsat.value) || 0;
-            let vitA100 = parseFloat(builderVitA.value) || 0;
-            let vitB12100 = parseFloat(builderVitB12.value) || 0;
-            let vitD100 = parseFloat(builderVitD.value) || 0;
+    // Raccoglie tutti i valori dei campi di input, usando 0 come valore predefinito se sono vuoti
+    let p100 = parseFloat(builderProt.value) || 0; 
+    let k100 = parseFloat(builderKcal.value) || 0;
+    let mg100 = parseFloat(builderMg.value) || 0; 
+    let k100_mg = parseFloat(builderK.value) || 0;
+    let vitc100 = parseFloat(builderVitC.value) || 0; 
+    let ca100 = parseFloat(builderCa.value) || 0;
+    let fatSat100 = parseFloat(builderFatSat.value) || 0;
+    let fatUnsat100 = parseFloat(builderFatUnsat.value) || 0;
+    let vitA100 = parseFloat(builderVitA.value) || 0;
+    let vitB12100 = parseFloat(builderVitB12.value) || 0;
+    let vitD100 = parseFloat(builderVitD.value) || 0;
 
-            const existingFood = foodDatabase[desc.toLowerCase()];
-            if (existingFood) {
-                p100 = (builderProt.value === '' || isNaN(p100)) ? existingFood.prot || 0 : p100;
-                k100 = (builderKcal.value === '' || isNaN(k100)) ? existingFood.kcal || 0 : k100;
-                mg100 = (builderMg.value === '' || isNaN(mg100)) ? existingFood.mg || 0 : mg100;
-                k100_mg = (builderK.value === '' || isNaN(k100_mg)) ? existingFood.k || 0 : k100_mg;
-                vitc100 = (builderVitC.value === '' || isNaN(vitc100)) ? existingFood.vitc || 0 : vitc100;
-                ca100 = (builderCa.value === '' || isNaN(ca100)) ? existingFood.ca || 0 : ca100;
-                // Nuovi campi
-                fatSat100   = (builderFatSat.value   === '' || isNaN(fatSat100))   ? existingFood.fatSat   || 0 : fatSat100;
-                fatUnsat100 = (builderFatUnsat.value === '' || isNaN(fatUnsat100)) ? existingFood.fatUnsat || 0 : fatUnsat100;
-                vitA100     = (builderVitA.value     === '' || isNaN(vitA100))     ? existingFood.vitA     || 0 : vitA100;
-                vitB12100   = (builderVitB12.value   === '' || isNaN(vitB12100))   ? existingFood.vitB12   || 0 : vitB12100;
-                vitD100     = (builderVitD.value     === '' || isNaN(vitD100))     ? existingFood.vitD     || 0 : vitD100;
-            }
-
-            foodDatabase[desc.toLowerCase()] = { 
-                prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100,
-                fatSat: fatSat100, fatUnsat: fatUnsat100, vitA: vitA100, vitB12: vitB12100, vitD: vitD100
-            };
-            salvaFoodDatabase(); 
-            aggiornaDatalist();
-            
-            const foodItem = { 
-                desc: desc.charAt(0).toUpperCase() + desc.slice(1), 
-                qta, 
-                prot: (p100 / 100) * qta, 
-                cal: (k100 / 100) * qta, 
-                mg: (mg100 / 100) * qta, 
-                k: (k100_mg / 100) * qta, 
-                vitc: (vitc100 / 100) * qta, 
-                ca: (ca100 / 100) * qta,
-                fatSat: (fatSat100 / 100) * qta,
-                fatUnsat: (fatUnsat100 / 100) * qta,
-                vitA: (vitA100 / 100) * qta,
-                vitB12: (vitB12100 / 100) * qta,
-                vitD: (vitD100 / 100) * qta
-            };
-            if (isSingle) { foodItem.type = 'single'; } else { foodItem.selezionato = true; }
-
-            resetInputAlimento();
-            aggiornaColoreNutrienti(); // Chiamata aggiunta
-            return foodItem;
-        }
+    // Sovrascrivi sempre l'alimento esistente con i nuovi dati.
+    // In questo modo, qualsiasi campo compilato (anche con 0) verrà salvato.
+    foodDatabase[desc.toLowerCase()] = { 
+        prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100,
+        fatSat: fatSat100, fatUnsat: fatUnsat100, vitA: vitA100, vitB12: vitB12100, vitD: vitD100
+    };
+    salvaFoodDatabase(); 
+    aggiornaDatalist();
+    
+    // Calcola le quantità totali per l'alimento aggiunto al diario/pasto
+    const foodItem = { 
+        desc: desc.charAt(0).toUpperCase() + desc.slice(1), 
+        qta, 
+        prot: (p100 / 100) * qta, 
+        cal: (k100 / 100) * qta, 
+        mg: (mg100 / 100) * qta, 
+        k: (k100_mg / 100) * qta, 
+        vitc: (vitc100 / 100) * qta, 
+        ca: (ca100 / 100) * qta,
+        fatSat: (fatSat100 / 100) * qta,
+        fatUnsat: (fatUnsat100 / 100) * qta,
+        vitA: (vitA100 / 100) * qta,
+        vitB12: (vitB12100 / 100) * qta,
+        vitD: (vitD100 / 100) * qta
+    };
+    if (isSingle) { foodItem.type = 'single'; } else { foodItem.selezionato = true; }
+    
+    resetInputAlimento();
+    aggiornaColoreNutrienti(); 
+    
+    return foodItem;
+}
 
         function resetInputAlimento() { 
             [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa, 
@@ -1908,4 +1896,5 @@ document.getElementById('nutrients-header').addEventListener('click', () => {
     </script>
 </body>
 </html>
+
 
