@@ -363,6 +363,26 @@
         #manual-fill-section .button-group {
             justify-content: space-between;
         }
+        
+        /* Stili per le nuove barre di progressione */
+        .fats-bar-container {
+            margin-top: 15px;
+        }
+        .fats-sub-bars-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .fats-sub-bars-container div {
+            flex-grow: 1;
+        }
+        /* Colori dinamici per la barra dei grassi saturi */
+        .progress-fat-sat.green::-webkit-progress-value { background-color: #4CAF50; }
+        .progress-fat-sat.green::-moz-progress-bar { background-color: #4CAF50; }
+        .progress-fat-sat.orange::-webkit-progress-value { background-color: #ff9800; }
+        .progress-fat-sat.orange::-moz-progress-bar { background-color: #ff9800; }
+        .progress-fat-sat.red::-webkit-progress-value { background-color: #f44336; }
+        .progress-fat-sat.red::-moz-progress-bar { background-color: #f44336; }
     </style>
 </head>
 <body>
@@ -386,8 +406,6 @@
         <div id="main-tracker-content">
             <h2 id="titolo-giornata"></h2>
 <div class="nav-links">
-    <a href="builder.html">➕ Costruttore Pasti AI</a>
-    <a href="analisi.html">🧠 Analisi AI</a>
     <a href="storico.html">📊 Storico</a>
     <a href="stima_grassi.html">🫙 Stima Grassi</a>
 </div>
@@ -413,12 +431,29 @@
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
                 <hr>
+                <h3>Grassi</h3>
+                <div class="fats-bar-container">
+                    <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
+                    <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
+                    <div class="fats-sub-bars-container">
+                        <div>
+                            <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat">20</span> g</p>
+                            <progress id="progress-fat-sat" class="progress-fat-sat" value="0" max="20"></progress>
+                        </div>
+                        <div>
+                            <p>Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat">50</span> g</p>
+                            <progress id="progress-fat-unsat" class="progress-fat-unsat" value="0" max="50"></progress>
+                        </div>
+                    </div>
+                </div>
+                <hr>
                 <h3>Micronutrienti</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
                         <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
                         <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
                         <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
+                        <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
                     </div>
                     <div>
                         <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
@@ -427,20 +462,13 @@
                     </div>
                 </div>
                 <hr>
-                <h3>Grassi & Vitamine</h3>
+                <h3>Vitamine</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <p>Grassi Saturi: <span id="totale-fat-sat">0</span> / 20 g</p>
-                        <progress id="progress-fat-sat" value="0" max="20"></progress>
-
-                        <p>Grassi Insaturi: <span id="totale-fat-unsat">0</span> / 50 g</p>
-                        <progress id="progress-fat-unsat" value="0" max="50"></progress>
-                        <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
-                    </div>
                     <div>
                         <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p>
                         <progress id="progress-vit-a" value="0" max="900"></progress>
-
+                    </div>
+                    <div>
                         <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p>
                         <progress id="progress-vit-b12" value="0" max="2.4"></progress>
 
@@ -616,8 +644,8 @@ const firebaseConfig = {
             6: -500  // Sabato
         };
 
-        // Aggiornamento con i nuovi obiettivi per Ferro, Zinco e Rame
         const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9 };
+        const OBIETTIVI_FAT = { fatTotal: 70, fatSat: 20, fatUnsat: 50 };
         const OBIETTIVI_EXTRA = { fatSat: 20, fatUnsat: 50, vitA: 900, vitB12: 2.4, vitD: 15 };
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
@@ -684,6 +712,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         const spanTotaleVitA = document.getElementById('totale-vit-a'), spanTotaleVitB12 = document.getElementById('totale-vit-b12'), spanTotaleVitD = document.getElementById('totale-vit-d');
         // Nuovi span
         const spanTotaleFe = document.getElementById('totale-fe'), spanTotaleZn = document.getElementById('totale-zn'), spanTotaleCu = document.getElementById('totale-cu');
+        // Nuovi span per i grassi totali
+        const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total');
 
         const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
         const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
@@ -692,6 +722,8 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
         const progressVitA = document.getElementById('progress-vit-a'), progressVitB12 = document.getElementById('progress-vit-b12'), progressVitD = document.getElementById('progress-vit-d');
         // Nuovi progress
         const progressFe = document.getElementById('progress-fe'), progressZn = document.getElementById('progress-zn'), progressCu = document.getElementById('progress-cu');
+        // Nuovi progress per i grassi totali
+        const progressFatsTotal = document.getElementById('progress-fats-total');
 
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
 
@@ -883,14 +915,14 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             
             const obiettivoCalorieBaseWorkout = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
             const obiettivoCalorieTotale = obiettivoCalorieBaseWorkout + (datiGiornalieri.calorieAdjustment || 0);
-            const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO, ...OBIETTIVI_EXTRA };
+            const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_EXTRA };
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
             let totali = { 
                 proteine: 0, calorie: 0, 
                 mg: 0, k: 0, vitc: 0, ca: 0,
-                fatSat: 0, fatUnsat: 0,
+                fatSat: 0, fatUnsat: 0, fatTotal: 0,
                 vitA: 0, vitB12: 0, vitD: 0,
                 fe: 0, zn: 0, cu: 0
             };
@@ -905,10 +937,10 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                         totali.ca += item.ca || 0;
                         totali.fatSat += item.fatSat || 0;
                         totali.fatUnsat += item.fatUnsat || 0;
+                        totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
                         totali.vitA += item.vitA || 0;
                         totali.vitB12 += item.vitB12 || 0;
                         totali.vitD += item.vitD || 0;
-                        // Nuovi campi
                         totali.fe += item.fe || 0;
                         totali.zn += item.zn || 0;
                         totali.cu += item.cu || 0;
@@ -922,55 +954,43 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                     totali.ca += entry.ca || 0;
                     totali.fatSat += entry.fatSat || 0;
                     totali.fatUnsat += entry.fatUnsat || 0;
+                    totali.fatTotal += (entry.fatSat || 0) + (entry.fatUnsat || 0);
                     totali.vitA += entry.vitA || 0;
                     totali.vitB12 += entry.vitB12 || 0;
                     totali.vitD += entry.vitD || 0;
-                    // Nuovi campi
                     totali.fe += entry.fe || 0;
                     totali.zn += entry.zn || 0;
                     totali.cu += entry.cu || 0;
                 }
             });
             
-            // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
-            // Questo calcolo viene spostato qui per poter salvare il valore
             const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
 
-            // Calcolo della variazione di grasso
-            let variazioneGrasso = 0; // In grammi
-            // 7.7 kcal per 1g di grasso (1kg = 7700 kcal, 1g = 7.7 kcal)
+            let variazioneGrasso = 0; 
             if (deficitArrotondato < 0) { 
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
             } else if (deficitArrotondato > 0) { 
-                variazioneGrasso = -(deficitArrotondato / 7.7); // Negativo se guadagni grasso
+                variazioneGrasso = -(deficitArrotondato / 7.7);
             } else { 
                 variazioneGrasso = 0;
             }
 
-            // Logica per il trend muscolare (score numerico)
             let scoreMuscolo = 0;
 
-            // Condizione 1: Proteine
             if(totali.proteine >= (pianoDelGiorno.prot * 0.95)) {
                 scoreMuscolo++;
             } else {
                 scoreMuscolo--;
             }
 
-            // Condizione 2: Tipo di giornata "Forza" (usando pianoDelGiorno.tipo)
             if(pianoDelGiorno.tipo.includes('Forza')) {
-                scoreMuscolo++; // Se è giornata di Forza, aggiungi 1 punto
-
-                // Nuova condizione per il deficit in giorni di forza
-                // Se il deficit effettivo è più negativo di -200 kcal (es. -250, -300) in un giorno di Forza
+                scoreMuscolo++;
                 if (deficitArrotondato < -200) { 
-                    scoreMuscolo--; // Indice negativo per la massa muscolare se il deficit è troppo elevato in un giorno di forza
+                    scoreMuscolo--;
                 }
             }
 
-
-            // Assegna i totali correnti e i nuovi campi all'oggetto datiGiornalieri PRIMA del salvataggio
             datiGiornalieri.proteine = totali.proteine;
             datiGiornalieri.calorie = totali.calorie;
             datiGiornalieri.mg = totali.mg;
@@ -979,18 +999,17 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             datiGiornalieri.ca = totali.ca;
             datiGiornalieri.fatSat = totali.fatSat;
             datiGiornalieri.fatUnsat = totali.fatUnsat;
+            datiGiornalieri.fatTotal = totali.fatTotal;
             datiGiornalieri.vitA = totali.vitA;
             datiGiornalieri.vitB12 = totali.vitB12;
             datiGiornalieri.vitD = totali.vitD;
-            // Nuovi campi
             datiGiornalieri.fe = totali.fe;
             datiGiornalieri.zn = totali.zn;
             datiGiornalieri.cu = totali.cu;
 
-            datiGiornalieri.bilancioCalorico = deficitArrotondato; // Nuovo campo per il bilancio calorico giornaliero
-            datiGiornalieri.variazioneGrassoG = variazioneGrasso; // Nuovo campo per la variazione di grasso in grammi
-            datiGiornalieri.scoreMuscolo = scoreMuscolo; // Nuovo campo per lo score muscolare
-
+            datiGiornalieri.bilancioCalorico = deficitArrotondato;
+            datiGiornalieri.variazioneGrassoG = variazioneGrasso;
+            datiGiornalieri.scoreMuscolo = scoreMuscolo;
 
             spanObiettivoProteine.textContent = OBIETTIVI.prot;
             spanObiettivoCalorie.textContent = OBIETTIVI.cal; 
@@ -1000,8 +1019,31 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
 
             progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
             progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
+
+            // Aggiornamento grassi
+            spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal;
+            spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1);
+            progressFatsTotal.max = OBIETTIVI_FAT.fatTotal;
+            progressFatsTotal.value = totali.fatTotal;
             
-            // Micronutrienti
+            spanTotaleFatSat.textContent   = totali.fatSat.toFixed(1);
+            progressFatSat.max   = OBIETTIVI_FAT.fatSat;
+            progressFatSat.value = totali.fatSat;
+
+            spanTotaleFatUnsat.textContent = totali.fatUnsat.toFixed(1);
+            progressFatUnsat.max   = OBIETTIVI_FAT.fatUnsat;
+            progressFatUnsat.value = totali.fatUnsat;
+            
+            // Logica colori per la barra dei grassi saturi
+            progressFatSat.classList.remove('green', 'orange', 'red');
+            if (totali.fatSat < OBIETTIVI_FAT.fatSat) {
+                progressFatSat.classList.add('green');
+            } else if (totali.fatSat >= OBIETTIVI_FAT.fatSat && totali.fatSat <= OBIETTIVI_FAT.fatSat + 5) {
+                progressFatSat.classList.add('orange');
+            } else {
+                progressFatSat.classList.add('red');
+            }
+
             spanTotaleMg.textContent = totali.mg.toFixed(1);
             progressMg.max = OBIETTIVI.mg;
             progressMg.value = totali.mg;
@@ -1018,7 +1060,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             progressCa.max = OBIETTIVI.ca;
             progressCa.value = totali.ca;
 
-            // Nuovi micronutrienti
             spanTotaleFe.textContent = totali.fe.toFixed(1);
             progressFe.max = OBIETTIVI.fe;
             progressFe.value = totali.fe;
@@ -1026,15 +1067,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             spanTotaleZn.textContent = totali.zn.toFixed(1);
             progressZn.max = OBIETTIVI.zn;
             progressZn.value = totali.zn;
-
-            // Grassi & Vitamine
-            spanTotaleFatSat.textContent   = totali.fatSat.toFixed(1);
-            progressFatSat.max   = OBIETTIVI.fatSat;
-            progressFatSat.value = totali.fatSat;
-
-            spanTotaleFatUnsat.textContent = totali.fatUnsat.toFixed(1);
-            progressFatUnsat.max   = OBIETTIVI.fatUnsat;
-            progressFatUnsat.value = totali.fatUnsat;
 
             spanTotaleVitA.textContent     = totali.vitA.toFixed(1);
             progressVitA.max   = OBIETTIVI.vitA;
@@ -1048,7 +1080,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
             progressVitD.max   = OBIETTIVI.vitD;
             progressVitD.value = totali.vitD;
             
-            // Nuovo micronutriente
             spanTotaleCu.textContent     = totali.cu.toFixed(2);
             progressCu.max   = OBIETTIVI.cu;
             progressCu.value = totali.cu;
@@ -1119,7 +1150,6 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                 }
             });
 
-            // I calcoli per calorieBalanceText rimangono come prima
             const currentCalories = totali.calorie;
             const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
             const calorieDifference = currentCalories - targetCaloriesForBalanceText;
@@ -1357,10 +1387,11 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
 
             const totaliPasto = alimentiSelezionatiPerDiario.reduce((acc, item) => {
                 acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0; acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
-                acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.vitA += item.vitA || 0; acc.vitB12 += item.vitB12 || 0; acc.vitD += item.vitD || 0;
+                acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
+                acc.vitA += item.vitA || 0; acc.vitB12 += item.vitB12 || 0; acc.vitD += item.vitD || 0;
                 acc.fe += item.fe || 0; acc.zn += item.zn || 0; acc.cu += item.cu || 0;
                 return acc;
-            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, fatUnsat: 0, vitA: 0, vitB12: 0, vitD: 0, fe: 0, zn: 0, cu: 0});
+            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, fatUnsat: 0, fatTotal: 0, vitA: 0, vitB12: 0, vitD: 0, fe: 0, zn: 0, cu: 0});
 
             const newMeal = { type: 'meal', desc: mealName, mealId: mealId, isExpanded: false, items: alimentiSelezionatiPerDiario, ...totaliPasto };
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
@@ -1451,13 +1482,11 @@ const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca
                 builderK.value = foodData.k ?? '';
                 builderVitC.value = foodData.vitc ?? '';
                 builderCa.value = foodData.ca ?? '';
-                // Nuovi campi
                 builderFatSat.value   = foodData.fatSat   ?? '';
                 builderFatUnsat.value = foodData.fatUnsat ?? '';
                 builderVitA.value     = foodData.vitA     ?? '';
                 builderVitB12.value   = foodData.vitB12   ?? '';
                 builderVitD.value     = foodData.vitD     ?? '';
-                // Nuovi campi
                 builderFe.value       = foodData.fe       ?? '';
                 builderZn.value       = foodData.zn       ?? '';
                 builderCu.value       = foodData.cu       ?? '';
@@ -1487,7 +1516,6 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
                 caricaGiorno(dataSelezionata); 
                 alert(`Dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} caricati.`);
             }
-            // isDirty è già gestito da salvaGiorno() per l'OK, e per Annulla non modifichiamo lo stato di dirty.
         });
 
 document.getElementById('btn-compila-ai').addEventListener('click', async () => {
@@ -1542,6 +1570,7 @@ Se un valore non è disponibile usa 0.
                 }
             }
         }
+        aggiornaColoreNutrienti();
     } catch (err) {
         alert('Errore compilazione AI: ' + err.message);
     } finally {
@@ -1556,56 +1585,48 @@ Se un valore non è disponibile usa 0.
         calorieAdjustmentInput.addEventListener('input', () => {
             let value = parseFloat(calorieAdjustmentInput.value);
             if (!isNaN(value)) {
-                // Applica il limite di +/- 500 kcal
                 value = Math.max(Math.min(value, 500), -500);
                 datiGiornalieri.calorieAdjustment = value;
-                calorieAdjustmentInput.value = value; // Per mostrare il valore limitato nell'input
+                calorieAdjustmentInput.value = value;
             } else {
-                // Se l'input non è un numero valido, reimposta al valore predefinito del giorno
                 const dataCorrente = new Date(giornoVisualizzato);
                 const giornoSettimana = dataCorrente.getDay();
                 datiGiornalieri.calorieAdjustment = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
-                calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment; // Aggiorna la UI con il valore predefinito
+                calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment;
             }
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
         btnCalorieMinus.addEventListener('click', () => {
             let currentAdjustment = datiGiornalieri.calorieAdjustment || 0;
             let newValue = currentAdjustment - 10;
-            datiGiornalieri.calorieAdjustment = Math.max(newValue, -500); // Limita a -500
+            datiGiornalieri.calorieAdjustment = Math.max(newValue, -500);
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
         btnCaloriePlus.addEventListener('click', () => {
             let currentAdjustment = datiGiornalieri.calorieAdjustment || 0;
             let newValue = currentAdjustment + 10;
-            datiGiornalieri.calorieAdjustment = Math.min(newValue, 500); // Limita a +500
+            datiGiornalieri.calorieAdjustment = Math.min(newValue, 500);
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
             renderMealBuilder(); 
-            isDirty = true; // Modifica dati, imposta flag
-            updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
-        // --- NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK (ORA RIMOSSE/MODIFICATE) ---
         function updateFloppyDiskIcon() {
             // Logica del floppy disk rimossa per questo esperimento
         }
-        // --- FINE NUOVE FUNZIONI PER ANIMAZIONE FLOPPY DISK ---
 
-
-        // --- FUNZIONI DI AUTENTICAZIONE E SINCRONIZZAZIONE CLOUD ---
-
-        // Inizializza Firebase all'avvio dello script
         try {
             if (!getApps().some(app => app.name === "globalTrackerApp")) {
                 firebaseApp = initializeApp(firebaseConfig, "globalTrackerApp");
@@ -1616,7 +1637,7 @@ Se un valore non è disponibile usa 0.
             auth = getAuth(firebaseApp);
             console.log("Firebase inizializzato per il tracker.");
 
-            onAuthStateChanged(auth, async (user) => { // Aggiungi 'async' qui
+            onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     currentUserUID = user.uid;
                     authFormFields.style.display = 'none';
@@ -1635,49 +1656,38 @@ Se un valore non è disponibile usa 0.
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
-                    btnFloppyUpload.style.display = 'none'; // Assicurati che il floppy sia nascosto
-                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
+                    btnFloppyUpload.style.display = 'none';
+                    updateFloppyDiskIcon();
                     
                     console.log("Utente autenticato. UI aggiornata.");
 
-                    // --- NUOVO: Logica di Sincronizzazione Intelligente all'Accesso ---
-                    // Recupera l'ultimo timestamp locale
                     const lastLocalUpdate = parseInt(localStorage.getItem(LOCAL_LAST_UPDATE_KEY) || 0);
                     let lastCloudUpdate = 0;
 
                     try {
-                        // Recupera l'ultimo timestamp del cloud
                         const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
                         if (cloudTimestampSnapshot.exists()) {
                             lastCloudUpdate = cloudTimestampSnapshot.val();
                         }
                     } catch (error) {
                         console.error("Errore nel recupero del timestamp cloud:", error);
-                        // Continua anche in caso di errore, assumendo cloud non aggiornato
                     }
 
                     console.log(`Ultimo aggiornamento locale: ${new Date(lastLocalUpdate).toLocaleString()}`);
                     console.log(`Ultimo aggiornamento cloud: ${new Date(lastCloudUpdate).toLocaleString()}`);
 
-                    // Aggiungi un piccolo ritardo prima del confronto per dare tempo al DOM di caricarsi
-                    // e per ridurre problemi di "race condition" sui timestamp appena aggiornati.
                     setTimeout(async () => {
                         if (lastCloudUpdate > lastLocalUpdate) {
-                            // Il cloud è più recente, scarica automaticamente
                             console.log("Dati sul cloud più recenti. Download automatico in corso...");
-                            await loadAllTrackerDataFromCloud(true); // true per skipConfirm e reload
+                            await loadAllTrackerDataFromCloud(true);
                         } else if (lastLocalUpdate > lastCloudUpdate) {
-                            // Il locale è più recente, suggerisci l'upload
                             if (confirm("I tuoi dati locali sono più recenti di quelli sul cloud. Vuoi caricarli ORA per mantenerli aggiornati sul cloud?")) {
                                 await handleManualUploadToCloud();
                             }
                         } else {
-                            // Sono uguali o entrambi 0 (nuovi utenti o mai salvato)
                             console.log("Dati locali e cloud sono sincronizzati o non ci sono differenze significative.");
                         }
-                    }, 500); // Ritardo di 500ms
-                    // --- FINE NUOVO: Logica di Sincronizzazione Intelligente ---
-
+                    }, 500);
                 } else {
                     currentUserUID = null;
                     authFormFields.style.display = 'block';
@@ -1694,8 +1704,8 @@ Se un valore non è disponibile usa 0.
                     cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
                     cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
                     cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-                    btnFloppyUpload.style.display = 'none'; // Assicurati che il floppy sia nascosto
-                    updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona al cambio stato di autenticazione
+                    btnFloppyUpload.style.display = 'none';
+                    updateFloppyDiskIcon();
                     
                     console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
                 }
@@ -1707,7 +1717,7 @@ Se un valore non è disponibile usa 0.
             authSection.style.borderColor = '#c62828';
             mainTrackerContent.classList.remove('authenticated');
             cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-            btnFloppyUpload.style.display = 'none'; // Nascondi il floppy anche in caso di errore Firebase
+            btnFloppyUpload.style.display = 'none';
         }
 
         async function handleRegister() {
@@ -1761,7 +1771,6 @@ Se un valore non è disponibile usa 0.
             return ref(db, 'users/' + currentUserUID + '/tracker_data/');
         }
 
-        // Funzione helper per determinare se una stringa è un JSON valido
         function isJsonString(str) {
             try {
                 JSON.parse(str);
@@ -1771,16 +1780,14 @@ Se un valore non è disponibile usa 0.
             return true;
         }
 
-        // Questa funzione è per gli upload AUTOMATICI in background
         async function saveAllTrackerDataToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
                  return; 
             }
             
-            // NUOVO: Ottieni il timestamp corrente PRIMA di inviare i dati
             const currentTimestamp = Date.now();
-            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp); // Allinea il locale prima dell'upload
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp);
 
             const dataToUpload = {};
             for (let i = 0; i < localStorage.length; i++) {
@@ -1798,15 +1805,14 @@ Se un valore non è disponibile usa 0.
             
             try {
                 await set(dataRef, dataToUpload);
-                // Dopo un salvataggio riuscito, aggiorna il timestamp del cloud con lo STESSO valore
-                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp); // Usa lo stesso timestamp
+                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp);
                 console.log("Dati caricati automaticamente sul cloud.");
             } catch(err) {
                 console.error("Errore durante il caricamento automatico sul cloud:", err);
             }
         }
 
-        async function loadAllTrackerDataFromCloud(skipConfirmAndReload = false) { // Aggiunto parametro
+        async function loadAllTrackerDataFromCloud(skipConfirmAndReload = false) {
             const dataRef = getUserDataRef();
             if (!dataRef) {
                 alert("Devi essere autenticato per scaricare i dati dal cloud.");
@@ -1838,17 +1844,15 @@ Se un valore non è disponibile usa 0.
                             }
                         }
                     }
-                    // NUOVO: Dopo aver scaricato i dati, allinea il timestamp locale con quello del cloud
                     const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
                     if (cloudTimestampSnapshot.exists()) {
                         localStorage.setItem(LOCAL_LAST_UPDATE_KEY, cloudTimestampSnapshot.val());
                     } else {
-                        localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); // Fallback se non c'è timestamp cloud
+                        localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now());
                     }
-                    // alert("Download completato! Ricarica la pagina per vedere le modifiche."); // Rimosso alert
-                    location.reload(); // Ricarica la pagina automaticamente
+                    location.reload();
                 } else {
-                    if (!skipConfirmAndReload) { // Solo se non è un download automatico silenzioso
+                    if (!skipConfirmAndReload) {
                         alert("Nessun dato trovato sul cloud per questo utente.");
                     } else {
                         console.log("Nessun dato trovato sul cloud per il download automatico.");
@@ -1860,7 +1864,6 @@ Se un valore non è disponibile usa 0.
             }
         }
 
-        // Funzione specifica per l'upload manuale (collegata al pulsante floppy - ora nascosto)
         async function handleManualUploadToCloud() {
             const dataRef = getUserDataRef();
             if (!dataRef) {
@@ -1868,17 +1871,12 @@ Se un valore non è disponibile usa 0.
                 return;
             }
 
-            // if (!confirm("Sei sicuro di voler SOVRASCRIVERE i dati sul cloud con quelli locali?")) return; // Rimosso confirm
-
-            // Disabilita il pulsante e mostra un messaggio di caricamento
-            // btnFloppyUpload.disabled = true; // Non più necessario dato che è nascosto
             cloudSyncStatusSpan.textContent = "Caricamento in corso...";
             cloudSyncStatusSpan.className = 'cloud-sync-status'; 
 
             try {
-                // NUOVO: Ottieni il timestamp corrente PRIMA di inviare i dati
                 const currentTimestamp = Date.now();
-                localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp); // Allinea il locale prima dell'upload
+                localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp);
 
                 const dataToUpload = {};
                 for (let i = 0; i < localStorage.length; i++) {
@@ -1893,17 +1891,15 @@ Se un valore non è disponibile usa 0.
                     }
                 }
                 await set(dataRef, dataToUpload);
-                // Dopo un salvataggio riuscito, aggiorna il timestamp del cloud con lo STESSO valore
-                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp); // Usa lo stesso timestamp
+                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), currentTimestamp);
                 alert("Caricamento completato con successo!");
                 console.log("Caricamento manuale completato!");
-                isDirty = false; // Resetta il flag isDirty dopo il salvataggio manuale
-                updateFloppyDiskIcon(); // Aggiorna lo stato dell'icona
+                isDirty = false;
+                updateFloppyDiskIcon();
             } catch (error) {
                 alert(`Errore durante il caricamento: ${error.message}`);
                 console.error("Manual Upload error:", error);
             } finally {
-                // btnFloppyUpload.disabled = false; // Non più necessario dato che è nascosto
                 if (auth && auth.currentUser) {
                     cloudSyncStatusSpan.textContent = `Connesso Cloud: ${auth.currentUser.email}`;
                     cloudSyncStatusSpan.className = 'cloud-sync-status connected';
@@ -1915,10 +1911,8 @@ Se un valore non è disponibile usa 0.
         }
 
         btnFloppyUpload.addEventListener('click', handleManualUploadToCloud); 
-        btnDownloadManual.addEventListener('click', () => loadAllTrackerDataFromCloud(false)); // Mantieni la conferma per il download manuale esplicito
+        btnDownloadManual.addEventListener('click', () => loadAllTrackerDataFromCloud(false));
 
-
-        // --- FUNZIONE DI MIGRAZIONE VECCHIO STORICO A NUOVO FORMATO ---
         function eseguiMigrazioneStorico() {
             const vecchioStoricoRaw = localStorage.getItem('trackerStorico');
             
@@ -1956,10 +1950,10 @@ Se un valore non è disponibile usa 0.
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
-            btnFloppyUpload.style.display = 'none'; // Nascondi il pulsante floppy all'avvio
-            updateFloppyDiskIcon(); // Aggiorna lo stato iniziale dell'icona
+            btnFloppyUpload.style.display = 'none';
+            updateFloppyDiskIcon();
         });
-        // Comprimi/espandi area nutrienti
+
 document.getElementById('nutrients-header').addEventListener('click', () => {
     const header = document.getElementById('nutrients-header');
     const content = document.getElementById('nutrients-content');
@@ -1970,7 +1964,6 @@ document.getElementById('nutrients-header').addEventListener('click', () => {
     arrow.textContent = header.classList.contains('expanded') ? '▼' : '▶';
 });
 
-// Listener per la compilazione manuale
 btnCopyPrompt.addEventListener('click', async () => {
     const nome = builderDesc.value.trim();
     if (!nome) {
@@ -1998,39 +1991,30 @@ btnConfirmJson.addEventListener('click', () => {
         const resObj = JSON.parse(jsonText);
         
         const fieldsToUpdate = {
-            'prot': 'builder-prot',
-            'kcal': 'builder-kcal',
-            'mg': 'builder-mg',
-            'k': 'builder-k',
-            'vitc': 'builder-vitc',
-            'ca': 'builder-ca',
-            'fatSat': 'builder-fat-sat',
-            'fatUnsat': 'builder-fat-unsat',
-            'vitA': 'builder-vit-a',
-            'vitB12': 'builder-vit-b12',
-            'vitD': 'builder-vit-d',
-            'fe': 'builder-fe',
-            'zn': 'builder-zn',
-            'cu': 'builder-cu'
+            'prot': 'builder-prot', 'kcal': 'builder-kcal', 'mg': 'builder-mg', 'k': 'builder-k',
+            'vitc': 'builder-vitc', 'ca': 'builder-ca', 'fatSat': 'builder-fat-sat',
+            'fatUnsat': 'builder-fat-unsat', 'vitA': 'builder-vit-a',
+            'vitB12': 'builder-vit-b12', 'vitD': 'builder-vit-d',
+            'fe': 'builder-fe', 'zn': 'builder-zn', 'cu': 'builder-cu'
         };
 
-        let updatedCount = 0;
         for (const key in fieldsToUpdate) {
             const el = document.getElementById(fieldsToUpdate[key]);
             if (el && typeof resObj[key] !== 'undefined' && resObj[key] !== null) {
                 el.value = resObj[key];
-                updatedCount++;
             }
         }
         
-        if (updatedCount > 0) {
-            alert(`Dati caricati con successo per ${updatedCount} campi.`);
-            manualJsonInput.value = ''; // Pulisci il campo dopo il successo
-            aggiornaColoreNutrienti(); // Aggiorna lo stato della scritta
+        const nome = builderDesc.value.trim();
+        if (nome) {
+            creaAlimentoDaInput();
+            alert(`Dati di "${nome}" aggiornati con successo nel database locale.`);
+            manualJsonInput.value = '';
         } else {
-            alert('Nessun campo da aggiornare trovato nel JSON.');
+            alert('Alimento non specificato. Non è possibile salvare i dati.');
         }
 
+        aggiornaColoreNutrienti();
     } catch (err) {
         alert('Errore nel formato JSON. Assicurati di aver incollato un JSON valido.');
         console.error('Errore nel parsing JSON:', err);
