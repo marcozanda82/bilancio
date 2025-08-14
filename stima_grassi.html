@@ -368,7 +368,12 @@
 
                 const data = await response.json();
                 const jsonText = data.candidates[0].content.parts[0].text;
-                const parsedData = JSON.parse(jsonText.replace(/```json|```/g, '').trim()); 
+                // Nuovo parsing più robusto
+                const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) {
+                    throw new Error("La risposta dell'AI non contiene un oggetto JSON valido.");
+                }
+                const parsedData = JSON.parse(jsonMatch[0]);
                 return parsedData;
 
             } catch (error) {
@@ -422,7 +427,6 @@
                         elencoAlimenti.push(`${item.desc} (${item.qta} g)`);
                     });
                 } else if (entry.type === 'single') {
-                    // Correzione: usa entry.qta per gli alimenti singoli
                     elencoAlimenti.push(`${entry.desc} (${entry.qta} g)`);
                 } else if (entry.type === 'workout') {
                     // Non includere gli allenamenti nell'elenco degli alimenti
@@ -452,57 +456,3 @@
                 
                 updateProgressBars(datiStimaCompleti);
                 renderDettaglioGrassi(datiStimaCompleti.dettaglioGrassi);
-
-                consigliSezione.style.display = 'block';
-                consigliOutput.textContent = "Generazione consigli in corso...";
-                const consigli = await fetchConsigliAI(datiStimaCompleti);
-                consigliOutput.textContent = consigli;
-
-            } else {
-                stimaOutput.textContent = "Impossibile ottenere la stima. Riprova più tardi.";
-                riepilogoStimaSezione.style.display = 'none';
-                consigliSezione.style.display = 'none';
-            }
-
-            btnStimaGrassi.disabled = false;
-        }
-
-        // Gestore del pulsante di stima
-        btnStimaGrassi.addEventListener('click', runStimaGrassi);
-
-        // Gestore per espandere/comprimere le sezioni
-        document.querySelectorAll('.expandable-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const parent = header.closest('.expandable-section');
-                parent.classList.toggle('expanded');
-                const content = parent.querySelector('.expandable-content');
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    content.style.display = 'block';
-                }
-            });
-        });
-
-        // Imposta la data di default su quella odierna
-        function getTodayString() {
-            return new Date().toISOString().split('T')[0];
-        }
-        dataStimaInput.value = getTodayString();
-        
-        // Inizializza Firebase per la connettività (senza API key di Gemini)
-        try {
-            if (!getApps().some(app => app.name === "stimaApp")) {
-                firebaseApp = initializeApp(firebaseConfig, "stimaApp");
-            } else {
-                firebaseApp = getApp("stimaApp");
-            }
-            db = getDatabase(firebaseApp);
-            auth = getAuth(firebaseApp);
-            console.log("Firebase inizializzato per la stima dei grassi.");
-        } catch (error) {
-            console.error("Errore durante l'inizializzazione di Firebase:", error);
-        }
-    </script>
-</body>
-</html>
