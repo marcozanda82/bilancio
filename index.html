@@ -383,6 +383,24 @@
         .progress-fat-sat.orange::-moz-progress-bar { background-color: #ff9800; }
         .progress-fat-sat.red::-webkit-progress-value { background-color: #f44336; }
         .progress-fat-sat.red::-moz-progress-bar { background-color: #f44336; }
+
+        .food-adder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #btn-clear-nutrients {
+            background-color: transparent;
+            color: #d32f2f;
+            border: none;
+            padding: 5px 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        #btn-clear-nutrients:hover {
+            color: #ff1744;
+        }
     </style>
 </head>
 <body>
@@ -504,7 +522,10 @@
                 </div>
             </div>
             <div id="food-adder" class="sezione">
-                <h2>Aggiungi Alimento</h2>
+                <div class="food-adder-header">
+                    <h2>Aggiungi Alimento</h2>
+                    <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
+                </div>
                 <div class="builder-grid">
                     <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
                     <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
@@ -608,7 +629,7 @@
     <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
@@ -748,6 +769,8 @@
         const btnCopyPrompt = document.getElementById('btn-copy-prompt');
         const manualJsonInput = document.getElementById('manual-json-input');
         const btnConfirmJson = document.getElementById('btn-confirm-json');
+
+        const btnClearNutrients = document.getElementById('btn-clear-nutrients');
 
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
         
@@ -1313,6 +1336,11 @@
         document.getElementById('vit-header').addEventListener('click', () => toggleCollapsible('vit-header', 'vit-content'));
         document.getElementById('workout-header').addEventListener('click', () => toggleCollapsible('workout-header', 'workout-content'));
         document.getElementById('nutrients-header').addEventListener('click', () => toggleCollapsible('nutrients-header', 'nutrients-content'));
+        btnClearNutrients.addEventListener('click', () => {
+            resetInputAlimento();
+            aggiornaColoreNutrienti();
+        });
+
 
         btnAddWorkout.addEventListener('click', () => {
             const desc = workoutDescInput.value.trim();
@@ -1426,8 +1454,8 @@
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
             saveAllTrackerDataToCloud(); 
-            isDirty = true;
-            updateFloppyDiskIcon();
+            isDirty = true; 
+            updateFloppyDiskIcon(); 
         });
 
         document.body.addEventListener('click', (e) => {
@@ -1445,8 +1473,8 @@
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 renderMealBuilder();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true;
-                updateFloppyDiskIcon();
+                isDirty = true; 
+                updateFloppyDiskIcon(); 
                 
                 if (itemToEdit.type === 'meal' && itemToEdit.mealId) {
                     mealTypeSelector.value = itemToEdit.mealId;
@@ -1475,8 +1503,8 @@
                     aggiornaUI(); 
                     salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 }
-                isDirty = true;
-                updateFloppyDiskIcon();
+                isDirty = true; 
+                updateFloppyDiskIcon(); 
             } else if (target.closest('.expand-arrow')) {
                 const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
                 if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
