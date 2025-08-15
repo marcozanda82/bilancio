@@ -401,13 +401,6 @@
         #btn-clear-nutrients:hover {
             color: #ff1744;
         }
-
-        /* MODIFICA PER MOBILE: layout a singola colonna per i nutrienti */
-        @media (max-width: 600px) {
-            .builder-grid {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
@@ -1210,7 +1203,7 @@
             mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
             
             logPastoBuilderBody.innerHTML = ''; 
-            
+
             const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
             const selectedMealTypeText = (mealTypeSelector && mealTypeSelector.options && mealTypeSelector.options[mealTypeSelector.selectedIndex]) ? mealTypeSelector.options[mealTypeSelector.selectedIndex].text : '';
             
@@ -1452,7 +1445,7 @@
             aggiornaUI(); 
             salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             renderMealBuilder(); 
-            
+
             const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
             if (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) {
                 mealTypeSelector.value = MEAL_TYPE_SEQUENCE[currentIndex + 1];
@@ -2060,3 +2053,5 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
+
+
