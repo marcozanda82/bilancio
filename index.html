@@ -523,7 +523,7 @@
         <div><label>Vit. D (μg)/100g</label><input type="number" id="builder-vit-d" min="0" step="0.01"></div>
         <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
         <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
-        <div><label>Vit. C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
+        <div><label>Vitamina C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
         <div><label>Calcio (mg)/100g</label><input type="number" id="builder-ca" min="0"></div>
         <div><label>Ferro (mg)/100g</label><input type="number" id="builder-fe" min="0" step="0.1"></div>
         <div><label>Zinco (mg)/100g</label><input type="number" id="builder-zn" min="0" step="0.1"></div>
@@ -610,23 +610,16 @@
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-        // ************************************************************
-        // INSERISCI QUI I TUOI PARAMETRI DI CONFIGURAZIONE FIREBASE
-        // ************************************************************
-const firebaseConfig = {
-  apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
-  authDomain: "mio-tracker.firebaseapp.com",
-  databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "mio-tracker",
-  storageBucket: "mio-tracker.firebasestorage.app",
-  messagingSenderId: "382993217593",
-  appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
-};
-        // ************************************************************
-        // FINE CONFIGURAZIONE FIREBASE
-        // ************************************************************
+        const firebaseConfig = {
+          apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
+          authDomain: "mio-tracker.firebaseapp.com",
+          databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+          projectId: "mio-tracker",
+          storageBucket: "mio-tracker.firebasestorage.app",
+          messagingSenderId: "382993217593",
+          appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+        };
 
-        // --- STATO E COSTANTI ---
         let giornoVisualizzato = getTodayString('ymd');
         let datiGiornalieri = {};
         let foodDatabase = {};
@@ -1034,10 +1027,9 @@ const firebaseConfig = {
                 progressFatSat.classList.add('red');
             }
             
-            // Logica colori per la barra dei grassi totali
             const fatsHeader = document.getElementById('fats-header');
             fatsHeader.classList.remove('nutrients-warning');
-            if (totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTotal > OBIETTIVI_FAT.fatTotal) {
+            if (totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTotal > OBIETTIVI_FAT.fatTotal || totali.fatTotal < OBIETTIVI_FAT.fatTotal * 0.5) {
                 fatsHeader.classList.add('nutrients-warning');
             }
             
@@ -1082,14 +1074,12 @@ const firebaseConfig = {
             progressVitD.max   = OBIETTIVI.vitD;
             progressVitD.value = totali.vitD;
             
-            // Logica colori per le barre di micronutrienti
             const microHeader = document.getElementById('micro-header');
             microHeader.classList.remove('nutrients-warning');
             if (totali.mg < OBIETTIVI.mg * 0.5 || totali.k < OBIETTIVI.k * 0.5 || totali.ca < OBIETTIVI.ca * 0.5 || totali.fe < OBIETTIVI.fe * 0.5 || totali.zn < OBIETTIVI.zn * 0.5 || totali.cu < OBIETTIVI.cu * 0.5) {
                 microHeader.classList.add('nutrients-warning');
             }
 
-            // Logica colori per le barre delle vitamine
             const vitHeader = document.getElementById('vit-header');
             vitHeader.classList.remove('nutrients-warning');
             if (totali.vitc < OBIETTIVI.vitc * 0.5 || totali.vitA < OBIETTIVI.vitA * 0.5 || totali.vitB12 < OBIETTIVI.vitB12 * 0.5 || totali.vitD < OBIETTIVI.vitD * 0.5) {
@@ -1436,8 +1426,8 @@ const firebaseConfig = {
             }
             localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
             saveAllTrackerDataToCloud(); 
-            isDirty = true; 
-            updateFloppyDiskIcon(); 
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
         document.body.addEventListener('click', (e) => {
@@ -1455,8 +1445,8 @@ const firebaseConfig = {
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 renderMealBuilder();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true; 
-                updateFloppyDiskIcon(); 
+                isDirty = true;
+                updateFloppyDiskIcon();
                 
                 if (itemToEdit.type === 'meal' && itemToEdit.mealId) {
                     mealTypeSelector.value = itemToEdit.mealId;
@@ -1485,8 +1475,8 @@ const firebaseConfig = {
                     aggiornaUI(); 
                     salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 }
-                isDirty = true; 
-                updateFloppyDiskIcon(); 
+                isDirty = true;
+                updateFloppyDiskIcon();
             } else if (target.closest('.expand-arrow')) {
                 const index = parseInt(target.closest('.expand-arrow').dataset.index, 10);
                 if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
