@@ -431,52 +431,68 @@
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
                 <hr>
-                <h3>Grassi</h3>
-                <div class="fats-bar-container">
-                    <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
-                    <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
-                    <div class="fats-sub-bars-container">
-                        <div>
-                            <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat">20</span> g</p>
-                            <progress id="progress-fat-sat" class="progress-fat-sat" value="0" max="20"></progress>
-                        </div>
-                        <div>
-                            <p>Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat">50</span> g</p>
-                            <progress id="progress-fat-unsat" class="progress-fat-unsat" value="0" max="50"></progress>
+                
+                <h3 class="collapsible-header" id="fats-header">
+                    Grassi <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="fats-content">
+                    <div class="fats-bar-container">
+                        <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
+                        <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
+                        <div class="fats-sub-bars-container">
+                            <div>
+                                <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat">20</span> g</p>
+                                <progress id="progress-fat-sat" class="progress-fat-sat" value="0" max="20"></progress>
+                            </div>
+                            <div>
+                                <p>Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat">50</span> g</p>
+                                <progress id="progress-fat-unsat" class="progress-fat-unsat" value="0" max="50"></progress>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <hr>
-                <h3>Micronutrienti</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
-                        <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
-                        <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
-                    </div>
-                    <div>
-                        <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
-                        <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
-                        <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
+                
+                <h3 class="collapsible-header" id="micro-header">
+                    Micronutrienti <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="micro-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
+                            <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
+                            <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
+                        </div>
+                        <div>
+                            <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
+                            <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
+                            <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
+                        </div>
                     </div>
                 </div>
                 <hr>
-                <h3>Vitamine</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
-                        <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p>
-                        <progress id="progress-vit-a" value="0" max="900"></progress>
-                    </div>
-                    <div>
-                        <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p>
-                        <progress id="progress-vit-b12" value="0" max="2.4"></progress>
 
-                        <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p>
-                        <progress id="progress-vit-d" value="0" max="15"></progress>
+                <h3 class="collapsible-header" id="vit-header">
+                    Vitamine <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="vit-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
+                            <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p>
+                            <progress id="progress-vit-a" value="0" max="900"></progress>
+                        </div>
+                        <div>
+                            <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p>
+                            <progress id="progress-vit-b12" value="0" max="2.4"></progress>
+
+                            <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p>
+                            <progress id="progress-vit-d" value="0" max="15"></progress>
+                        </div>
                     </div>
                 </div>
             </div>
+
             <div id="form-allenamento" class="sezione">
                 <h2 class="collapsible-header" id="workout-header">Registra Allenamento <span class="arrow">▶</span></h2>
                 <div class="collapsible-content" id="workout-content">
@@ -498,7 +514,6 @@
 <h2 class="collapsible-header" id="nutrients-header">
     Dettagli Nutrizionali <span class="arrow">▶</span>
 </h2>
-
 <div class="collapsible-content" id="nutrients-content">
     <div class="builder-grid">
         <div><label>Grassi saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
@@ -616,7 +631,7 @@ const firebaseConfig = {
         let datiGiornalieri = {};
         let foodDatabase = {};
         let pastoInCostruzione = [];
-        let isDirty = false; // Flag per segnalare modifiche non salvate
+        let isDirty = false;
         
         let db; 
         let auth; 
@@ -1011,13 +1026,21 @@ const firebaseConfig = {
             progressFatUnsat.value = totali.fatUnsat;
             
             progressFatSat.classList.remove('green', 'orange', 'red');
-            if (totali.fatSat < OBIETTIVI_FAT.fatSat) {
+            if (totali.fatSat < OBIETTIVI_FAT.fatSat * 0.95) {
                 progressFatSat.classList.add('green');
-            } else if (totali.fatSat >= OBIETTIVI_FAT.fatSat && totali.fatSat <= OBIETTIVI_FAT.fatSat + 5) {
+            } else if (totali.fatSat <= OBIETTIVI_FAT.fatSat) {
                 progressFatSat.classList.add('orange');
             } else {
                 progressFatSat.classList.add('red');
             }
+            
+            // Logica colori per la barra dei grassi totali
+            const fatsHeader = document.getElementById('fats-header');
+            fatsHeader.classList.remove('nutrients-warning');
+            if (totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTotal > OBIETTIVI_FAT.fatTotal) {
+                fatsHeader.classList.add('nutrients-warning');
+            }
+            
 
             spanTotaleMg.textContent = totali.mg.toFixed(1);
             progressMg.max = OBIETTIVI.mg;
@@ -1058,6 +1081,21 @@ const firebaseConfig = {
             spanTotaleVitD.textContent     = totali.vitD.toFixed(1);
             progressVitD.max   = OBIETTIVI.vitD;
             progressVitD.value = totali.vitD;
+            
+            // Logica colori per le barre di micronutrienti
+            const microHeader = document.getElementById('micro-header');
+            microHeader.classList.remove('nutrients-warning');
+            if (totali.mg < OBIETTIVI.mg * 0.5 || totali.k < OBIETTIVI.k * 0.5 || totali.ca < OBIETTIVI.ca * 0.5 || totali.fe < OBIETTIVI.fe * 0.5 || totali.zn < OBIETTIVI.zn * 0.5 || totali.cu < OBIETTIVI.cu * 0.5) {
+                microHeader.classList.add('nutrients-warning');
+            }
+
+            // Logica colori per le barre delle vitamine
+            const vitHeader = document.getElementById('vit-header');
+            vitHeader.classList.remove('nutrients-warning');
+            if (totali.vitc < OBIETTIVI.vitc * 0.5 || totali.vitA < OBIETTIVI.vitA * 0.5 || totali.vitB12 < OBIETTIVI.vitB12 * 0.5 || totali.vitD < OBIETTIVI.vitD * 0.5) {
+                vitHeader.classList.add('nutrients-warning');
+            }
+
 
             logBody.innerHTML = ''; 
             (datiGiornalieri.log || []).forEach((entry, index) => { 
@@ -1268,12 +1306,23 @@ const firebaseConfig = {
                 nutrientsHeader.classList.remove('nutrients-warning');
             }
         }
+        
+        function toggleCollapsible(headerId, contentId) {
+            const header = document.getElementById(headerId);
+            const content = document.getElementById(contentId);
+            const arrow = header.querySelector('.arrow');
+            
+            header.classList.toggle('expanded');
+            content.classList.toggle('expanded');
+            arrow.textContent = header.classList.contains('expanded') ? '▼' : '▶';
+        }
 
         // --- EVENT LISTENERS ---
-        workoutHeader.addEventListener('click', () => {
-            workoutContent.classList.toggle('expanded');
-            workoutHeader.classList.toggle('expanded');
-        });
+        document.getElementById('fats-header').addEventListener('click', () => toggleCollapsible('fats-header', 'fats-content'));
+        document.getElementById('micro-header').addEventListener('click', () => toggleCollapsible('micro-header', 'micro-content'));
+        document.getElementById('vit-header').addEventListener('click', () => toggleCollapsible('vit-header', 'vit-content'));
+        document.getElementById('workout-header').addEventListener('click', () => toggleCollapsible('workout-header', 'workout-content'));
+        document.getElementById('nutrients-header').addEventListener('click', () => toggleCollapsible('nutrients-header', 'nutrients-content'));
 
         btnAddWorkout.addEventListener('click', () => {
             const desc = workoutDescInput.value.trim();
@@ -1300,8 +1349,8 @@ const firebaseConfig = {
             workoutDescInput.value = '';
             workoutCaloriesInput.value = '';
             renderMealBuilder(); 
-            isDirty = true; 
-            updateFloppyDiskIcon(); 
+            isDirty = true;
+            updateFloppyDiskIcon();
         });
 
         btnAggiungiSingolo.addEventListener('click', () => {
@@ -1313,8 +1362,8 @@ const firebaseConfig = {
                 salvaGiorno(giornoVisualizzato, datiGiornalieri); 
                 resetInputAlimento();
                 aggiornaColoreNutrienti();
-                isDirty = true; 
-                updateFloppyDiskIcon(); 
+                isDirty = true;
+                updateFloppyDiskIcon();
             }
         });
 
@@ -1327,8 +1376,8 @@ const firebaseConfig = {
                 resetInputAlimento();
                 aggiornaColoreNutrienti();
                 mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true; 
-                updateFloppyDiskIcon(); 
+                isDirty = true;
+                updateFloppyDiskIcon();
             }
         });
 
@@ -1339,8 +1388,8 @@ const firebaseConfig = {
                     pastoInCostruzione[index].selezionato = e.target.checked;
                     salvaPastoInCostruzione(); 
                     renderMealBuilder(); 
-                    isDirty = true; 
-                    updateFloppyDiskIcon(); 
+                    isDirty = true;
+                    updateFloppyDiskIcon();
                 }
             } else if (e.target.id === 'meal-type-selector') {
                 localStorage.setItem('lastMealTypeSelected_' + getTodayString(), e.target.value);
@@ -1908,7 +1957,6 @@ Se un valore non è disponibile usa 0.
                         });
 
                         localStorage.removeItem('trackerStorico'); 
-                        console.log("Migrazione completata. La vecchia chiave 'trackerStorico' è stata rimossa.");
                         alert("Lo storico è stato aggiornato al nuovo formato! Ricarica la pagina per visualizzare tutti i dati.");
                     } else {
                         console.warn("La chiave 'trackerStorico' esiste ma non contiene un array valido. Nessuna migrazione necessaria.");
@@ -1927,16 +1975,6 @@ Se un valore non è disponibile usa 0.
             btnFloppyUpload.style.display = 'none';
             updateFloppyDiskIcon();
         });
-
-document.getElementById('nutrients-header').addEventListener('click', () => {
-    const header = document.getElementById('nutrients-header');
-    const content = document.getElementById('nutrients-content');
-    const arrow = header.querySelector('.arrow');
-
-    header.classList.toggle('expanded');
-    content.classList.toggle('expanded');
-    arrow.textContent = header.classList.contains('expanded') ? '▼' : '▶';
-});
 
 btnCopyPrompt.addEventListener('click', async () => {
     const nome = builderDesc.value.trim();
