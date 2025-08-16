@@ -953,7 +953,6 @@
                         totali.fatSat += item.fatSat || 0;
                         totali.fatUnsat += item.fatUnsat || 0;
                         totali.fatTrans += item.fatTrans || 0;
-                        totali.fatTotal += (item.fatTotal || 0);
                         totali.vitA += item.vitA || 0;
                         totali.vitB12 += item.vitB12 || 0;
                         totali.vitD += item.vitD || 0;
@@ -972,7 +971,6 @@
                     totali.fatSat += entry.fatSat || 0;
                     totali.fatUnsat += entry.fatUnsat || 0;
                     totali.fatTrans += entry.fatTrans || 0;
-                    totali.fatTotal += entry.fatTotal || 0;
                     totali.vitA += entry.vitA || 0;
                     totali.vitB12 += entry.vitB12 || 0;
                     totali.vitD += entry.vitD || 0;
@@ -983,6 +981,9 @@
                 }
             });
             
+            // Correzione: ricalcolo del fatTotal come somma di saturi e insaturi
+            totali.fatTotal = totali.fatSat + totali.fatUnsat;
+
             const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
 
@@ -1316,7 +1317,6 @@
             let zn100 = builderZn.value === '' ? null : parseFloat(builderZn.value);
             let cu100 = builderCu.value === '' ? null : parseFloat(builderCu.value);
 
-            // Calcolo dei grassi insaturi
             const fatUnsat100 = (fatTotal100 !== null && fatSat100 !== null) ? Math.max(0, fatTotal100 - fatSat100 - (fatTrans100 ?? 0)) : null;
 
             foodDatabase[desc.toLowerCase()] = { 
@@ -1336,7 +1336,6 @@
                 k: ((k100_mg ?? 0) / 100) * qta, 
                 vitc: ((vitc100 ?? 0) / 100) * qta, 
                 ca: ((ca100 ?? 0) / 100) * qta,
-                fatTotal: ((fatTotal100 ?? 0) / 100) * qta,
                 fatSat: ((fatSat100 ?? 0) / 100) * qta,
                 fatUnsat: ((fatUnsat100 ?? 0) / 100) * qta,
                 fatTrans: ((fatTrans100 ?? 0) / 100) * qta,
@@ -1486,11 +1485,11 @@
 
             const totaliPasto = alimentiSelezionatiPerDiario.reduce((acc, item) => {
                 acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0; acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
-                acc.fatTotal += item.fatTotal || 0; acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.fatTrans += item.fatTrans || 0;
+                acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.fatTrans += item.fatTrans || 0; acc.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
                 acc.vitA += item.vitA || 0; acc.vitB12 += item.vitB12 || 0; acc.vitD += item.vitD || 0; acc.vitE += item.vitE || 0;
                 acc.fe += item.fe || 0; acc.zn += item.zn || 0; acc.cu += item.cu || 0;
                 return acc;
-            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, fatTotal: 0, fatSat: 0, fatUnsat: 0, fatTrans: 0, vitE: 0});
+            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, fatSat: 0, fatUnsat: 0, fatTrans: 0, fatTotal: 0, vitE: 0});
 
             const newMeal = { type: 'meal', desc: mealName, mealId: mealId, isExpanded: false, items: alimentiSelezionatiPerDiario, ...totaliPasto };
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
