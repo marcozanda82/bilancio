@@ -82,7 +82,7 @@
         }
         #meal-builder-summary .progress-item progress {
             height: 18px;
-            border-radius: 4px;
+            border-radius: 4-px;
         }
 
         /* Stili per l'indicatore testuale deficit/surplus */
@@ -501,17 +501,22 @@
                             <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
                             <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p>
                             <progress id="progress-vit-a" value="0" max="900"></progress>
+                            <p>Vitamina B2: <span id="totale-vit-b2">0</span> / <span id="obiettivo-vit-b2">1.3</span> mg</p>
+                            <progress id="progress-vit-b2" class="progress-vit-b2" value="0" max="1.3"></progress>
                         </div>
                         <div>
                             <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p>
                             <progress id="progress-vit-b12" value="0" max="2.4"></progress>
-
                             <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p>
                             <progress id="progress-vit-d" value="0" max="15"></progress>
+                            <p>Vitamina B6: <span id="totale-vit-b6">0</span> / <span id="obiettivo-vit-b6">1.3</span> mg</p>
+                            <progress id="progress-vit-b6" class="progress-vit-b6" value="0" max="1.3"></progress>
                         </div>
                     </div>
                     <p style="margin-top: 15px;">Vitamina E: <span id="totale-vit-e">0</span> / <span id="obiettivo-vit-e">15</span> mg</p>
                     <progress id="progress-vit-e" class="progress-vit-e" value="0" max="15"></progress>
+                    <p style="margin-top: 15px;">Vitamina K: <span id="totale-vit-k">0</span> / <span id="obiettivo-vit-k">120</span> µg</p>
+                    <progress id="progress-vit-k" class="progress-vit-k" value="0" max="120"></progress>
                 </div>
             </div>
 
@@ -543,11 +548,15 @@
     <div class="builder-grid">
         <div><label>Grassi (totali)/100g</label><input type="number" id="builder-fat-total" min="0" step="0.1"></div>
         <div><label>Grassi saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
+        <div><label>Grassi polinsaturi/100g</label><input type="number" id="builder-fat-poly" min="0" step="0.1"></div>
         <div><label>Grassi trans/100g</label><input type="number" id="builder-fat-trans" min="0" step="0.01"></div>
+        <div><label>Vitamina K (µg)/100g</label><input type="number" id="builder-vit-k" min="0"></div>
         <div><label>Vitamina E (mg)/100g</label><input type="number" id="builder-vit-e" min="0" step="0.1"></div>
         <div><label>Vit. A (μg)/100g</label><input type="number" id="builder-vit-a" min="0"></div>
         <div><label>Vit. B12 (μg)/100g</label><input type="number" id="builder-vit-b12" min="0" step="0.01"></div>
         <div><label>Vit. D (μg)/100g</label><input type="number" id="builder-vit-d" min="0" step="0.01"></div>
+        <div><label>Vit. B2 (mg)/100g</label><input type="number" id="builder-vit-b2" min="0" step="0.01"></div>
+        <div><label>Vit. B6 (mg)/100g</label><input type="number" id="builder-vit-b6" min="0" step="0.01"></div>
         <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
         <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
         <div><label>Vitamina C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
@@ -600,7 +609,7 @@
             </div>
             <div class="sezione">
                 <h2>Diario Giornaliero</h2>
-                <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Proteine</th><th>Calorie</th><th>Grassi Sat</th><th>Grassi Insat</th><th>Grassi Trans</th><th>Vitamina E</th><th>Magnesio</th><th>Potassio</th><th>Vitamina C</th><th>Calcio</th><th>Ferro</th><th>Zinco</th><th>Rame</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
+                <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Proteine</th><th>Calorie</th><th>Grassi Sat</th><th>Grassi Insat</th><th>Grassi Trans</th><th>Vit.E</th><th>Vit.K</th><th>Vit.B2</th><th>Vit.B6</th><th>Magnesio</th><th>Potassio</th><th>Vit.C</th><th>Calcio</th><th>Ferro</th><th>Zinco</th><th>Rame</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
                 <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
                     <h3 style="margin:0 0 10px 0; font-size:1em;">Carica/Salva Giorno Specifico</h3>
                     <div>
@@ -680,7 +689,7 @@
 
         const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9 };
         const OBIETTIVI_FAT = { fatTotal: 70, fatSat: 20, fatUnsat: 50 };
-        const OBIETTIVI_EXTRA = { fatSat: 20, fatUnsat: 50, vitA: 900, vitB12: 2.4, vitD: 15, vitE: 15, fatTrans: 2 };
+        const OBIETTIVI_EXTRA = { fatSat: 20, fatUnsat: 50, vitA: 900, vitB12: 2.4, vitD: 15, vitE: 15, fatTrans: 2, vitK: 120, vitB2: 1.3, vitB6: 1.3 };
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
             merenda1: { prot: 30, cal_perc: 0.20 },
@@ -701,7 +710,7 @@
 
         const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"fatTotal":g,"fatSat":g,"fatTrans":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"fe":mg,"zn":mg,"cu":mg}`;
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"fatTotal":g,"fatSat":g,"fatMono":g,"fatPoly":g,"fatTrans":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitB2":mg,"vitB6":mg,"vitD":µg,"vitE":mg,"vitK":µg,"fe":mg,"zn":mg,"cu":mg}`;
 
         const authSection = document.getElementById('auth-section');
         const userEmailInput = document.getElementById('user-email');
@@ -721,8 +730,9 @@
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
-        const builderFatTotal = document.getElementById('builder-fat-total'), builderFatSat = document.getElementById('builder-fat-sat'), builderFatTrans = document.getElementById('builder-fat-trans');
-        const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d'), builderVitE = document.getElementById('builder-vit-e');
+        const builderFatTotal = document.getElementById('builder-fat-total'), builderFatSat = document.getElementById('builder-fat-sat'), builderFatPoly = document.getElementById('builder-fat-poly'), builderFatTrans = document.getElementById('builder-fat-trans');
+        const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d'), builderVitE = document.getElementById('builder-vit-e'), builderVitK = document.getElementById('builder-vit-k');
+        const builderVitB2 = document.getElementById('builder-vit-b2'), builderVitB6 = document.getElementById('builder-vit-b6');
         const builderFe = document.getElementById('builder-fe'), builderZn = document.getElementById('builder-zn'), builderCu = document.getElementById('builder-cu');
 
         const foodDatalist = document.getElementById('food-database-list');
@@ -736,15 +746,18 @@
         const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
         const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
         const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanTotaleFatUnsat = document.getElementById('totale-fat-unsat'), spanTotaleFatTrans = document.getElementById('totale-fat-trans');
-        const spanTotaleVitA = document.getElementById('totale-vit-a'), spanTotaleVitB12 = document.getElementById('totale-vit-b12'), spanTotaleVitD = document.getElementById('totale-vit-d'), spanTotaleVitE = document.getElementById('totale-vit-e');
+        const spanTotaleVitA = document.getElementById('totale-vit-a'), spanTotaleVitB12 = document.getElementById('totale-vit-b12'), spanTotaleVitD = document.getElementById('totale-vit-d'), spanTotaleVitE = document.getElementById('totale-vit-e'), spanTotaleVitK = document.getElementById('totale-vit-k');
         const spanTotaleFe = document.getElementById('totale-fe'), spanTotaleZn = document.getElementById('totale-zn'), spanTotaleCu = document.getElementById('totale-cu');
+        const spanTotaleVitB2 = document.getElementById('totale-vit-b2'), spanTotaleVitB6 = document.getElementById('totale-vit-b6');
         const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total');
-        const spanObiettivoFatTrans = document.getElementById('obiettivo-fat-trans'), spanObiettivoVitE = document.getElementById('obiettivo-vit-e');
+        const spanObiettivoFatTrans = document.getElementById('obiettivo-fat-trans'), spanObiettivoVitE = document.getElementById('obiettivo-vit-e'), spanObiettivoVitK = document.getElementById('obiettivo-vit-k');
+        const spanObiettivoVitB2 = document.getElementById('obiettivo-vit-b2'), spanObiettivoVitB6 = document.getElementById('obiettivo-vit-b6');
 
         const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
         const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
         const progressFatSat = document.getElementById('progress-fat-sat'), progressFatUnsat = document.getElementById('progress-fat-unsat'), progressFatTrans = document.getElementById('progress-fat-trans');
-        const progressVitA = document.getElementById('progress-vit-a'), progressVitB12 = document.getElementById('progress-vit-b12'), progressVitD = document.getElementById('progress-vit-d'), progressVitE = document.getElementById('progress-vit-e');
+        const progressVitA = document.getElementById('progress-vit-a'), progressVitB12 = document.getElementById('progress-vit-b12'), progressVitD = document.getElementById('progress-vit-d'), progressVitE = document.getElementById('progress-vit-e'), progressVitK = document.getElementById('progress-vit-k');
+        const progressVitB2 = document.getElementById('progress-vit-b2'), progressVitB6 = document.getElementById('progress-vit-b6');
         const progressFe = document.getElementById('progress-fe'), progressZn = document.getElementById('progress-zn'), progressCu = document.getElementById('progress-cu');
         const progressFatsTotal = document.getElementById('progress-fats-total');
 
@@ -788,7 +801,7 @@
         }
         
         function salvaPastoInCostruzione() { 
-            localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); 
+            localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInostruzione)); 
             localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
             saveAllTrackerDataToCloud(); 
         }
@@ -937,8 +950,8 @@
             let totali = { 
                 proteine: 0, calorie: 0, 
                 mg: 0, k: 0, vitc: 0, ca: 0,
-                fatSat: 0, fatUnsat: 0, fatTrans: 0, fatTotal: 0,
-                vitA: 0, vitB12: 0, vitD: 0, vitE: 0,
+                fatSat: 0, fatUnsat: 0, fatTrans: 0, fatPoly: 0, fatTotal: 0,
+                vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, vitB2: 0, vitB6: 0,
                 fe: 0, zn: 0, cu: 0
             };
             (datiGiornalieri.log || []).forEach(entry => { 
@@ -952,11 +965,15 @@
                         totali.ca += item.ca || 0;
                         totali.fatSat += item.fatSat || 0;
                         totali.fatUnsat += item.fatUnsat || 0;
+                        totali.fatPoly += item.fatPoly || 0;
                         totali.fatTrans += item.fatTrans || 0;
                         totali.vitA += item.vitA || 0;
                         totali.vitB12 += item.vitB12 || 0;
                         totali.vitD += item.vitD || 0;
                         totali.vitE += item.vitE || 0;
+                        totali.vitK += item.vitK || 0;
+                        totali.vitB2 += item.vitB2 || 0;
+                        totali.vitB6 += item.vitB6 || 0;
                         totali.fe += item.fe || 0;
                         totali.zn += item.zn || 0;
                         totali.cu += item.cu || 0;
@@ -970,19 +987,25 @@
                     totali.ca += entry.ca || 0;
                     totali.fatSat += entry.fatSat || 0;
                     totali.fatUnsat += entry.fatUnsat || 0;
+                    totali.fatPoly += entry.fatPoly || 0;
                     totali.fatTrans += entry.fatTrans || 0;
                     totali.vitA += entry.vitA || 0;
                     totali.vitB12 += entry.vitB12 || 0;
                     totali.vitD += entry.vitD || 0;
                     totali.vitE += entry.vitE || 0;
+                    totali.vitK += entry.vitK || 0;
+                    totali.vitB2 += entry.vitB2 || 0;
+                    totali.vitB6 += entry.vitB6 || 0;
                     totali.fe += entry.fe || 0;
                     totali.zn += entry.zn || 0;
                     totali.cu += entry.cu || 0;
                 }
             });
             
-            // Correzione: ricalcolo del fatTotal come somma di saturi e insaturi
-            totali.fatTotal = totali.fatSat + totali.fatUnsat;
+            // Calcolo dei grassi insaturi e totali
+            totali.fatUnsat = Math.max(0, (totali.fatTotal || 0) - (totali.fatSat || 0) - (totali.fatTrans || 0));
+            totali.fatUnsat = (totali.fatPoly || 0) + ((totali.fatTotal || 0) - (totali.fatSat || 0) - (totali.fatTrans || 0) - (totali.fatPoly || 0));
+            totali.fatTotal = (totali.fatSat || 0) + (totali.fatUnsat || 0) + (totali.fatTrans || 0);
 
             const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
@@ -991,7 +1014,7 @@
             if (deficitArrotondato < 0) { 
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
             } else if (deficitArrotondato > 0) { 
-                variazioneGrasso = -(deficitArrotondato / 7.7);
+                variazioneGrasso = -(deficitArroronndato / 7.7);
             } else { 
                 variazioneGrasso = 0;
             }
@@ -1019,12 +1042,16 @@
             datiGiornalieri.ca = totali.ca;
             datiGiornalieri.fatSat = totali.fatSat;
             datiGiornalieri.fatUnsat = totali.fatUnsat;
+            datiGiornalieri.fatPoly = totali.fatPoly;
             datiGiornalieri.fatTrans = totali.fatTrans;
             datiGiornalieri.fatTotal = totali.fatTotal;
             datiGiornalieri.vitA = totali.vitA;
             datiGiornalieri.vitB12 = totali.vitB12;
             datiGiornalieri.vitD = totali.vitD;
             datiGiornalieri.vitE = totali.vitE;
+            datiGiornalieri.vitK = totali.vitK;
+            datiGiornalieri.vitB2 = totali.vitB2;
+            datiGiornalieri.vitB6 = totali.vitB6;
             datiGiornalieri.fe = totali.fe;
             datiGiornalieri.zn = totali.zn;
             datiGiornalieri.cu = totali.cu;
@@ -1128,7 +1155,21 @@
             spanTotaleVitE.textContent = totali.vitE.toFixed(1);
             progressVitE.max = OBIETTIVI_EXTRA.vitE;
             progressVitE.value = totali.vitE;
+            
+            spanObiettivoVitK.textContent = OBIETTIVI_EXTRA.vitK;
+            spanTotaleVitK.textContent = totali.vitK.toFixed(1);
+            progressVitK.max = OBIETTIVI_EXTRA.vitK;
+            progressVitK.value = totali.vitK;
 
+            spanObiettivoVitB2.textContent = OBIETTIVI_EXTRA.vitB2;
+            spanTotaleVitB2.textContent = totali.vitB2.toFixed(2);
+            progressVitB2.max = OBIETTIVI_EXTRA.vitB2;
+            progressVitB2.value = totali.vitB2;
+
+            spanObiettivoVitB6.textContent = OBIETTIVI_EXTRA.vitB6;
+            spanTotaleVitB6.textContent = totali.vitB6.toFixed(2);
+            progressVitB6.max = OBIETTIVI_EXTRA.vitB6;
+            progressVitB6.value = totali.vitB6;
 
             const microHeader = document.getElementById('micro-header');
             microHeader.classList.remove('nutrients-warning');
@@ -1138,7 +1179,7 @@
 
             const vitHeader = document.getElementById('vit-header');
             vitHeader.classList.remove('nutrients-warning');
-            if (totali.vitc < OBIETTIVI.vitc * 0.5 || totali.vitA < OBIETTIVI.vitA * 0.5 || totali.vitB12 < OBIETTIVI.vitB12 * 0.5 || totali.vitD < OBIETTIVI.vitD * 0.5 || totali.vitE < OBIETTIVI.vitE * 0.5) {
+            if (totali.vitc < OBIETTIVI.vitc * 0.5 || totali.vitA < OBIETTIVI.vitA * 0.5 || totali.vitB12 < OBIETTIVI.vitB12 * 0.5 || totali.vitD < OBIETTIVI.vitD * 0.5 || totali.vitE < OBIETTIVI.vitE * 0.5 || totali.vitK < OBIETTIVI.vitK * 0.5 || totali.vitB2 < OBIETTIVI.vitB2 * 0.5 || totali.vitB6 < OBIETTIVI.vitB6 * 0.5) {
                 vitHeader.classList.add('nutrients-warning');
             }
 
@@ -1152,10 +1193,10 @@
                         acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0;
                         acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
                         acc.fe += item.fe || 0; acc.zn += item.zn || 0; acc.cu += item.cu || 0;
-                        acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.fatTrans += item.fatTrans || 0;
-                        acc.vitE += item.vitE || 0;
+                        acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.fatTrans += item.fatTrans || 0; acc.fatPoly += item.fatPoly || 0;
+                        acc.vitE += item.vitE || 0; acc.vitK += item.vitK || 0; acc.vitB2 += item.vitB2 || 0; acc.vitB6 += item.vitB6 || 0;
                         return acc;
-                    }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, fatSat: 0, fatUnsat: 0, fatTrans: 0, vitE: 0 });
+                    }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, fatSat: 0, fatUnsat: 0, fatTrans: 0, fatPoly: 0, vitE: 0, vitK: 0, vitB2: 0, vitB6: 0 });
 
                     rigaPasto.innerHTML = `
                         <td>
@@ -1166,9 +1207,12 @@
                         <td>${totaliPastoCorrente.prot.toFixed(1)}</td>
                         <td>${totaliPastoCorrente.cal.toFixed(0)}</td>
                         <td>${totaliPastoCorrente.fatSat.toFixed(1)}</td>
-                        <td>${totaliPastoCorrente.fatUnsat.toFixed(1)}</td>
+                        <td>${(totaliPastoCorrente.fatUnsat || 0).toFixed(1)}</td>
                         <td>${totaliPastoCorrente.fatTrans.toFixed(2)}</td>
                         <td>${totaliPastoCorrente.vitE.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.vitK.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.vitB2.toFixed(2)}</td>
+                        <td>${totaliPastoCorrente.vitB6.toFixed(2)}</td>
                         <td>${totaliPastoCorrente.mg.toFixed(1)}</td>
                         <td>${totaliPastoCorrente.k.toFixed(0)}</td>
                         <td>${totaliPastoCorrente.vitc.toFixed(1)}</td>
@@ -1192,9 +1236,12 @@
                                 <td>${subItem.prot.toFixed(1)}</td>
                                 <td>${subItem.cal.toFixed(0)}</td>
                                 <td>${subItem.fatSat.toFixed(1)}</td>
-                                <td>${subItem.fatUnsat.toFixed(1)}</td>
+                                <td>${(subItem.fatUnsat || 0).toFixed(1)}</td>
                                 <td>${subItem.fatTrans.toFixed(2)}</td>
                                 <td>${subItem.vitE.toFixed(1)}</td>
+                                <td>${subItem.vitK.toFixed(1)}</td>
+                                <td>${subItem.vitB2.toFixed(2)}</td>
+                                <td>${subItem.vitB6.toFixed(2)}</td>
                                 <td>${subItem.mg.toFixed(1)}</td>
                                 <td>${subItem.k.toFixed(0)}</td>
                                 <td>${subItem.vitc.toFixed(1)}</td>
@@ -1214,7 +1261,7 @@
                         <td></td>
                         <td>${entry.cal.toFixed(0)} kcal</td>
                         <td></td><td></td><td></td><td></td>
-                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                         <td class="action-buttons">
                             <button class="delete-btn" data-index="${index}">&times;</button>
                         </td>
@@ -1222,7 +1269,7 @@
                 }
                 else { 
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.fatSat||0).toFixed(1)}</td><td>${(entry.fatUnsat||0).toFixed(1)}</td><td>${(entry.fatTrans||0).toFixed(2)}</td><td>${(entry.vitE||0).toFixed(1)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td>${(entry.fe||0).toFixed(1)}</td><td>${(entry.zn||0).toFixed(1)}</td><td>${(entry.cu||0).toFixed(2)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
+                    riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.fatSat||0).toFixed(1)}</td><td>${(entry.fatUnsat||0).toFixed(1)}</td><td>${(entry.fatTrans||0).toFixed(2)}</td><td>${(entry.vitE||0).toFixed(1)}</td><td>${(entry.vitK||0).toFixed(1)}</td><td>${(entry.vitB2||0).toFixed(2)}</td><td>${(entry.vitB6||0).toFixed(2)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td>${(entry.fe||0).toFixed(1)}</td><td>${(entry.zn||0).toFixed(1)}</td><td>${(entry.cu||0).toFixed(2)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
                 }
             });
 
@@ -1308,20 +1355,27 @@
             let ca100 = builderCa.value === '' ? null : parseFloat(builderCa.value);
             let fatTotal100 = builderFatTotal.value === '' ? null : parseFloat(builderFatTotal.value);
             let fatSat100 = builderFatSat.value === '' ? null : parseFloat(builderFatSat.value);
+            let fatPoly100 = builderFatPoly.value === '' ? null : parseFloat(builderFatPoly.value);
             let fatTrans100 = builderFatTrans.value === '' ? null : parseFloat(builderFatTrans.value);
             let vitA100 = builderVitA.value === '' ? null : parseFloat(builderVitA.value);
             let vitB12100 = builderVitB12.value === '' ? null : parseFloat(builderVitB12.value);
             let vitD100 = builderVitD.value === '' ? null : parseFloat(builderVitD.value);
             let vitE100 = builderVitE.value === '' ? null : parseFloat(builderVitE.value);
+            let vitK100 = builderVitK.value === '' ? null : parseFloat(builderVitK.value);
+            let vitB2100 = builderVitB2.value === '' ? null : parseFloat(builderVitB2.value);
+            let vitB6100 = builderVitB6.value === '' ? null : parseFloat(builderVitB6.value);
             let fe100 = builderFe.value === '' ? null : parseFloat(builderFe.value);
             let zn100 = builderZn.value === '' ? null : parseFloat(builderZn.value);
             let cu100 = builderCu.value === '' ? null : parseFloat(builderCu.value);
 
-            const fatUnsat100 = (fatTotal100 !== null && fatSat100 !== null) ? Math.max(0, fatTotal100 - fatSat100 - (fatTrans100 ?? 0)) : null;
+            // Calcolo dei grassi monoinsaturi e insaturi totali
+            const fatMono100 = (fatTotal100 !== null && fatSat100 !== null && fatPoly100 !== null && fatTrans100 !== null) ? Math.max(0, fatTotal100 - fatSat100 - fatPoly100 - fatTrans100) : null;
+            const fatUnsat100 = (fatMono100 !== null && fatPoly100 !== null) ? fatMono100 + fatPoly100 : null;
+
 
             foodDatabase[desc.toLowerCase()] = { 
                 prot: p100, kcal: k100, mg: mg100, k: k100_mg, vitc: vitc100, ca: ca100,
-                fatTotal: fatTotal100, fatSat: fatSat100, fatUnsat: fatUnsat100, fatTrans: fatTrans100, vitA: vitA100, vitB12: vitB12100, vitD: vitD100, vitE: vitE100,
+                fatTotal: fatTotal100, fatSat: fatSat100, fatUnsat: fatUnsat100, fatPoly: fatPoly100, fatTrans: fatTrans100, vitA: vitA100, vitB12: vitB12100, vitD: vitD100, vitE: vitE100, vitK: vitK100, vitB2: vitB2100, vitB6: vitB6100,
                 fe: fe100, zn: zn100, cu: cu100
             };
             salvaFoodDatabase(); 
@@ -1336,13 +1390,18 @@
                 k: ((k100_mg ?? 0) / 100) * qta, 
                 vitc: ((vitc100 ?? 0) / 100) * qta, 
                 ca: ((ca100 ?? 0) / 100) * qta,
+                fatTotal: ((fatTotal100 ?? 0) / 100) * qta,
                 fatSat: ((fatSat100 ?? 0) / 100) * qta,
                 fatUnsat: ((fatUnsat100 ?? 0) / 100) * qta,
+                fatPoly: ((fatPoly100 ?? 0) / 100) * qta,
                 fatTrans: ((fatTrans100 ?? 0) / 100) * qta,
                 vitA: ((vitA100 ?? 0) / 100) * qta,
                 vitB12: ((vitB12100 ?? 0) / 100) * qta,
                 vitD: ((vitD100 ?? 0) / 100) * qta,
                 vitE: ((vitE100 ?? 0) / 100) * qta,
+                vitK: ((vitK100 ?? 0) / 100) * qta,
+                vitB2: ((vitB2100 ?? 0) / 100) * qta,
+                vitB6: ((vitB6100 ?? 0) / 100) * qta,
                 fe: ((fe100 ?? 0) / 100) * qta,
                 zn: ((zn100 ?? 0) / 100) * qta,
                 cu: ((cu100 ?? 0) / 100) * qta
@@ -1353,8 +1412,8 @@
 
         function resetInputAlimento() { 
             [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa, 
-             builderFatTotal, builderFatSat, builderFatTrans, builderVitA, builderVitB12, builderVitD, builderVitE,
-             builderFe, builderZn, builderCu].forEach(el => el.value = ''); 
+             builderFatTotal, builderFatSat, builderFatPoly, builderFatTrans, builderVitA, builderVitB12, builderVitD, builderVitE, builderVitK,
+             builderVitB2, builderVitB6, builderFe, builderZn, builderCu].forEach(el => el.value = ''); 
             builderDesc.focus(); 
         }
 
@@ -1485,11 +1544,11 @@
 
             const totaliPasto = alimentiSelezionatiPerDiario.reduce((acc, item) => {
                 acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0; acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
-                acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.fatTrans += item.fatTrans || 0; acc.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
-                acc.vitA += item.vitA || 0; acc.vitB12 += item.vitB12 || 0; acc.vitD += item.vitD || 0; acc.vitE += item.vitE || 0;
+                acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; acc.fatPoly += item.fatPoly || 0; acc.fatTrans += item.fatTrans || 0; acc.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0) + (item.fatTrans || 0);
+                acc.vitA += item.vitA || 0; acc.vitB12 += item.vitB12 || 0; acc.vitD += item.vitD || 0; acc.vitE += item.vitE || 0; acc.vitK += item.vitK || 0; acc.vitB2 += item.vitB2 || 0; acc.vitB6 += item.vitB6 || 0;
                 acc.fe += item.fe || 0; acc.zn += item.zn || 0; acc.cu += item.cu || 0;
                 return acc;
-            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, fatSat: 0, fatUnsat: 0, fatTrans: 0, fatTotal: 0, vitE: 0});
+            }, {prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, fatSat: 0, fatUnsat: 0, fatPoly: 0, fatTrans: 0, fatTotal: 0, vitE: 0, vitK: 0, vitB2: 0, vitB6: 0});
 
             const newMeal = { type: 'meal', desc: mealName, mealId: mealId, isExpanded: false, items: alimentiSelezionatiPerDiario, ...totaliPasto };
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
@@ -1581,15 +1640,19 @@
                 builderVitC.value = foodData.vitc ?? '';
                 builderCa.value = foodData.ca ?? '';
                 builderFatTotal.value = foodData.fatTotal ?? '';
-                builderFatSat.value   = foodData.fatSat   ?? '';
+                builderFatSat.value = foodData.fatSat ?? '';
+                builderFatPoly.value = foodData.fatPoly ?? '';
                 builderFatTrans.value = foodData.fatTrans ?? '';
-                builderVitA.value     = foodData.vitA     ?? '';
-                builderVitB12.value   = foodData.vitB12   ?? '';
-                builderVitD.value     = foodData.vitD     ?? '';
-                builderVitE.value     = foodData.vitE     ?? '';
-                builderFe.value       = foodData.fe       ?? '';
-                builderZn.value       = foodData.zn       ?? '';
-                builderCu.value       = foodData.cu       ?? '';
+                builderVitA.value = foodData.vitA ?? '';
+                builderVitB12.value = foodData.vitB12 ?? '';
+                builderVitD.value = foodData.vitD ?? '';
+                builderVitE.value = foodData.vitE ?? '';
+                builderVitK.value = foodData.vitK ?? '';
+                builderVitB2.value = foodData.vitB2 ?? '';
+                builderVitB6.value = foodData.vitB6 ?? '';
+                builderFe.value = foodData.fe ?? '';
+                builderZn.value = foodData.zn ?? '';
+                builderCu.value = foodData.cu ?? '';
             }
             aggiornaColoreNutrienti();
         });
@@ -1634,7 +1697,7 @@ document.getElementById('btn-compila-ai').addEventListener('click', async () => 
                     parts: [{
                         text: `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}".  
 Se un valore non è disponibile usa 0.
-{"prot":g,"kcal":kcal,"fatTotal":g,"fatSat":g,"fatTrans":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"fe":mg,"zn":mg,"cu":mg}`
+{"prot":g,"kcal":kcal,"fatTotal":g,"fatSat":g,"fatMono":g,"fatPoly":g,"fatTrans":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitB2":mg,"vitB6":mg,"vitD":µg,"vitE":mg,"vitK":µg,"fe":mg,"zn":mg,"cu":mg}`
                     }]
                 }]
             })
@@ -1650,6 +1713,7 @@ Se un valore non è disponibile usa 0.
             'kcal': 'builder-kcal',
             'fatTotal': 'builder-fat-total',
             'fatSat': 'builder-fat-sat',
+            'fatPoly': 'builder-fat-poly',
             'fatTrans': 'builder-fat-trans',
             'mg': 'builder-mg',
             'k': 'builder-k',
@@ -1657,8 +1721,11 @@ Se un valore non è disponibile usa 0.
             'ca': 'builder-ca',
             'vitA': 'builder-vit-a',
             'vitB12': 'builder-vit-b12',
+            'vitB2': 'builder-vit-b2',
+            'vitB6': 'builder-vit-b6',
             'vitD': 'builder-vit-d',
             'vitE': 'builder-vit-e',
+            'vitK': 'builder-vit-k',
             'fe': 'builder-fe',
             'zn': 'builder-zn',
             'cu': 'builder-cu'
@@ -2060,7 +2127,7 @@ btnCopyPrompt.addEventListener('click', async () => {
         alert('Scrivi prima il nome dell\'alimento.');
         return;
     }
-    const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". Se un valore non è disponibile usa 0. {"prot":g,"kcal":kcal,"fatTotal":g,"fatSat":g,"fatTrans":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"fe":mg,"zn":mg,"cu":mg}`;
+    const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". Se un valore non è disponibile usa 0. {"prot":g,"kcal":kcal,"fatTotal":g,"fatSat":g,"fatMono":g,"fatPoly":g,"fatTrans":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitB2":mg,"vitB6":mg,"vitD":µg,"vitE":mg,"vitK":µg,"fe":mg,"zn":mg,"cu":mg}`;
     try {
         await navigator.clipboard.writeText(promptText);
         alert('Richiesta AI copiata negli appunti!');
@@ -2082,8 +2149,8 @@ btnConfirmJson.addEventListener('click', () => {
         
         const fieldsToUpdate = {
             'prot': 'builder-prot', 'kcal': 'builder-kcal', 'mg': 'builder-mg', 'k': 'builder-k',
-            'vitc': 'builder-vitc', 'ca': 'builder-ca', 'fatTotal': 'builder-fat-total', 'fatSat': 'builder-fat-sat', 'fatTrans': 'builder-fat-trans',
-            'vitA': 'builder-vit-a', 'vitB12': 'builder-vit-b12', 'vitD': 'builder-vit-d', 'vitE': 'builder-vit-e',
+            'vitc': 'builder-vitc', 'ca': 'builder-ca', 'fatTotal': 'builder-fat-total', 'fatSat': 'builder-fat-sat', 'fatPoly': 'builder-fat-poly', 'fatTrans': 'builder-fat-trans',
+            'vitA': 'builder-vit-a', 'vitB12': 'builder-vit-b12', 'vitB2': 'builder-vit-b2', 'vitB6': 'builder-vit-b6', 'vitD': 'builder-vit-d', 'vitE': 'builder-vit-e', 'vitK': 'builder-vit-k',
             'fe': 'builder-fe', 'zn': 'builder-zn', 'cu': 'builder-cu'
         };
 
