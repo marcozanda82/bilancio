@@ -594,7 +594,30 @@
             </div>
             <div class="sezione">
                 <h2>Diario Giornaliero</h2>
-                <table id="log-pasti"><thead><tr><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th><th>Azione</th></tr></thead><tbody id="log-body"></tbody></table>
+                <table id="log-pasti">
+                    <thead>
+                        <tr>
+                            <th>Descrizione</th>
+                            <th>(g)</th>
+                            <th>Prot</th>
+                            <th>Kcal</th>
+                            <th>Mg</th>
+                            <th>K</th>
+                            <th>Vit.C</th>
+                            <th>Ca</th>
+                            <th>Fe</th>
+                            <th>Zn</th>
+                            <th>Cu</th>
+                            <th>Gr. Sat</th>
+                            <th>Gr. Insat</th>
+                            <th>Vit. A</th>
+                            <th>Vit. B12</th>
+                            <th>Vit. D</th>
+                            <th>Azione</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-body"></tbody>
+                </table>
                 <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
                     <h3 style="margin:0 0 10px 0; font-size:1em;">Carica/Salva Giorno Specifico</h3>
                     <div>
@@ -1119,8 +1142,10 @@
                         acc.prot += item.prot || 0; acc.cal += item.cal || 0; acc.mg += item.mg || 0;
                         acc.k += item.k || 0; acc.vitc += item.vitc || 0; acc.ca += item.ca || 0;
                         acc.fe += item.fe || 0; acc.zn += item.zn || 0; acc.cu += item.cu || 0;
+                        acc.fatSat += item.fatSat || 0; acc.fatUnsat += item.fatUnsat || 0; 
+                        acc.vitA += item.vitA || 0; acc.vitB12 += item.vitB12 || 0; acc.vitD += item.vitD || 0;
                         return acc;
-                    }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0 });
+                    }, { prot: 0, cal: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, fatSat: 0, fatUnsat: 0, vitA: 0, vitB12: 0, vitD: 0 });
 
                     rigaPasto.innerHTML = `
                         <td>
@@ -1134,6 +1159,14 @@
                         <td>${totaliPastoCorrente.k.toFixed(0)}</td>
                         <td>${totaliPastoCorrente.vitc.toFixed(1)}</td>
                         <td>${totaliPastoCorrente.ca.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.fe.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.zn.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.cu.toFixed(2)}</td>
+                        <td>${totaliPastoCorrente.fatSat.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.fatUnsat.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.vitA.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.vitB12.toFixed(1)}</td>
+                        <td>${totaliPastoCorrente.vitD.toFixed(1)}</td>
                         <td class="action-buttons">
                             <button class="edit-btn" data-index="${index}">✏️</button>
                             <button class="delete-btn" data-index="${index}">&times;</button>
@@ -1147,12 +1180,20 @@
                             rigaSubItem.innerHTML = `
                                 <td>${subItem.desc}</td>
                                 <td>${subItem.qta.toFixed(0)}g</td>
-                                <td>${subItem.prot.toFixed(1)}</td>
-                                <td>${subItem.cal.toFixed(0)}</td>
-                                <td>${subItem.mg.toFixed(1)}</td>
-                                <td>${subItem.k.toFixed(0)}</td>
-                                <td>${subItem.vitc.toFixed(1)}</td>
-                                <td>${subItem.ca.toFixed(1)}</td>
+                                <td>${(subItem.prot||0).toFixed(1)}</td>
+                                <td>${(subItem.cal||0).toFixed(0)}</td>
+                                <td>${(subItem.mg||0).toFixed(1)}</td>
+                                <td>${(subItem.k||0).toFixed(0)}</td>
+                                <td>${(subItem.vitc||0).toFixed(1)}</td>
+                                <td>${(subItem.ca||0).toFixed(1)}</td>
+                                <td>${(subItem.fe||0).toFixed(1)}</td>
+                                <td>${(subItem.zn||0).toFixed(1)}</td>
+                                <td>${(subItem.cu||0).toFixed(2)}</td>
+                                <td>${(subItem.fatSat||0).toFixed(1)}</td>
+                                <td>${(subItem.fatUnsat||0).toFixed(1)}</td>
+                                <td>${(subItem.vitA||0).toFixed(1)}</td>
+                                <td>${(subItem.vitB12||0).toFixed(1)}</td>
+                                <td>${(subItem.vitD||0).toFixed(1)}</td>
                                 <td></td>
                             `;
                         });
@@ -1164,7 +1205,7 @@
                         <td></td> 
                         <td></td>
                         <td>${entry.cal.toFixed(0)} kcal</td>
-                        <td></td><td></td><td></td><td></td>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                         <td class="action-buttons">
                             <button class="delete-btn" data-index="${index}">&times;</button>
                         </td>
@@ -1172,7 +1213,27 @@
                 }
                 else { 
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</td>`;
+                    riga.innerHTML = `
+                        <td>${entry.desc}</td>
+                        <td>${entry.qta}g</td>
+                        <td>${(entry.prot||0).toFixed(1)}</td>
+                        <td>${(entry.cal||0).toFixed(0)}</td>
+                        <td>${(entry.mg||0).toFixed(1)}</td>
+                        <td>${(entry.k||0).toFixed(0)}</td>
+                        <td>${(entry.vitc||0).toFixed(1)}</td>
+                        <td>${(entry.ca||0).toFixed(1)}</td>
+                        <td>${(entry.fe||0).toFixed(1)}</td>
+                        <td>${(entry.zn||0).toFixed(1)}</td>
+                        <td>${(entry.cu||0).toFixed(2)}</td>
+                        <td>${(entry.fatSat||0).toFixed(1)}</td>
+                        <td>${(entry.fatUnsat||0).toFixed(1)}</td>
+                        <td>${(entry.vitA||0).toFixed(1)}</td>
+                        <td>${(entry.vitB12||0).toFixed(1)}</td>
+                        <td>${(entry.vitD||0).toFixed(1)}</td>
+                        <td class="action-buttons">
+                            <button class="edit-btn" data-index="${index}">✏️</button>
+                            <button class="delete-btn" data-index="${index}">&times;</td>
+                    `;
                 }
             });
 
@@ -1294,6 +1355,63 @@
             if (isSingle) { foodItem.type = 'single'; } else { foodItem.selezionato = true; }
             return foodItem;
         }
+        
+        async function handleAlimentoAddition(isForMealBuilder) {
+            const desc = builderDesc.value.trim();
+            const qta = parseFloat(builderQta.value);
+            
+            if (!desc || isNaN(qta) || qta <= 0) {
+                alert('Inserisci nome e quantità valide.');
+                return null;
+            }
+
+            const nutrients = {
+                prot: builderProt.value,
+                kcal: builderKcal.value,
+                mg: builderMg.value,
+                k: builderK.value,
+                vitc: builderVitC.value,
+                ca: builderCa.value,
+                fatSat: builderFatSat.value,
+                fatUnsat: builderFatUnsat.value,
+                vitA: builderVitA.value,
+                vitB12: builderVitB12.value,
+                vitD: builderVitD.value,
+                fe: builderFe.value,
+                zn: builderZn.value,
+                cu: builderCu.value
+            };
+
+            const emptyFields = Object.keys(nutrients).filter(key => nutrients[key] === '');
+            
+            if (emptyFields.length > 0) {
+                const confirmMsg = `Ci sono campi nutrienti vuoti (${emptyFields.join(', ')}). Vuoi: \n\n- Premi OK per compilare con i dati disponibili e procedere. \n- Premi ANNULLA per usare l'AI per compilare i dati mancanti.`;
+                if (!confirm(confirmMsg)) {
+                    await document.getElementById('btn-compila-ai').click();
+                    return;
+                }
+            }
+            
+            const item = creaAlimentoDaInput(isForMealBuilder);
+            if (item) {
+                if (isForMealBuilder) {
+                    pastoInCostruzione.push(item);
+                    salvaPastoInCostruzione();
+                    renderMealBuilder();
+                    mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    if (!datiGiornalieri.log) datiGiornalieri.log = [];
+                    datiGiornalieri.log.push(item);
+                    salvaGiorno(giornoVisualizzato, datiGiornalieri);
+                }
+                
+                aggiornaUI();
+                resetInputAlimento();
+                aggiornaColoreNutrienti();
+                isDirty = true;
+                updateFloppyDiskIcon();
+            }
+        }
 
         function resetInputAlimento() { 
             [builderDesc, builderQta, builderProt, builderKcal, builderMg, builderK, builderVitC, builderCa, 
@@ -1371,33 +1489,8 @@
             updateFloppyDiskIcon();
         });
 
-        btnAggiungiSingolo.addEventListener('click', () => {
-            const item = creaAlimentoDaInput(true);
-            if (item) {
-                if (!datiGiornalieri.log) datiGiornalieri.log = [];
-                datiGiornalieri.log.push(item);
-                aggiornaUI();
-                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
-                resetInputAlimento();
-                aggiornaColoreNutrienti();
-                isDirty = true;
-                updateFloppyDiskIcon();
-            }
-        });
-
-       btnCostruisciPasto.addEventListener('click', () => {
-            const item = creaAlimentoDaInput(false);
-            if (item) {
-                pastoInCostruzione.push(item);
-                salvaPastoInCostruzione(); 
-                renderMealBuilder();
-                resetInputAlimento();
-                aggiornaColoreNutrienti();
-                mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
-                isDirty = true;
-                updateFloppyDiskIcon();
-            }
-        });
+       btnAggiungiSingolo.addEventListener('click', () => handleAlimentoAddition(false));
+       btnCostruisciPasto.addEventListener('click', () => handleAlimentoAddition(true));
 
         mealBuilderSezione.addEventListener('change', (e) => {
             if (e.target.classList.contains('meal-item-checkbox')) { 
