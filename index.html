@@ -950,13 +950,13 @@
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-let totali = { 
-    proteine: 0, calorie: 0, 
-    mg: 0, k: 0, vitc: 0, ca: 0,
-    fatSat: 0, fatUnsat: 0, fatTotal: 0,
-    vitA: 0, vitB12: 0, vitD: 0,
-    fe: 0, zn: 0, cu: 0
-};
+            let totali = { 
+                proteine: 0, calorie: 0, 
+                mg: 0, k: 0, vitc: 0, ca: 0,
+                fatSat: 0, fatUnsat: 0, fatTotal: 0,
+                vitA: 0, vitB12: 0, vitD: 0,
+                fe: 0, zn: 0, cu: 0
+            };
 (datiGiornalieri.log || []).forEach(entry => { 
     if (entry.type === 'meal') {
         entry.items.forEach(item => {
@@ -976,7 +976,7 @@ let totali = {
             totali.zn += item.zn || 0;
             totali.cu += item.cu || 0;
         });
-    } else if (entry.type === 'single') { 
+    } else if (entry.type === 'single') {
         totali.proteine += entry.prot || 0;
         totali.calorie += entry.cal || 0;
         totali.mg += entry.mg || 0;
@@ -992,8 +992,6 @@ let totali = {
         totali.fe += entry.fe || 0;
         totali.zn += entry.zn || 0;
         totali.cu += entry.cu || 0;
-    } else if (entry.type === 'workout') { 
-        // Logica per gli allenamenti
     }
 });
             
