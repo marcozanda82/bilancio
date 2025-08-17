@@ -950,50 +950,52 @@
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { 
-                proteine: 0, calorie: 0, 
-                mg: 0, k: 0, vitc: 0, ca: 0,
-                fatSat: 0, fatUnsat: 0, fatTotal: 0,
-                vitA: 0, vitB12: 0, vitD: 0,
-                fe: 0, zn: 0, cu: 0
-            };
-            (datiGiornalieri.log || []).forEach(entry => { 
-                if (entry.type === 'meal') {
-                    entry.items.forEach(item => {
-                        totali.proteine += item.prot || 0;
-                        totali.calorie += item.cal || 0;
-                        totali.mg += item.mg || 0;
-                        totali.k += item.k || 0;
-                        totali.vitc += item.vitc || 0;
-                        totali.ca += item.ca || 0;
-                        totali.fatSat += item.fatSat || 0;
-                        totali.fatUnsat += item.fatUnsat || 0;
-                        totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
-                        totali.vitA += item.vitA || 0;
-                        totali.vitB12 += item.vitB12 || 0;
-                        totali.vitD += item.vitD || 0;
-                        totali.fe += item.fe || 0;
-                        totali.zn += item.zn || 0;
-                        totali.cu += item.cu || 0;
-                    });
-                } else if (entry.type === 'single') { 
-                    totali.proteine += entry.prot || 0;
-                    totali.calorie += entry.cal || 0;
-                    totali.mg += entry.mg || 0;
-                    totali.k += entry.k || 0;
-                    totali.vitc += entry.vitc || 0;
-                    totali.ca += entry.ca || 0;
-                    totali.fatSat += entry.fatSat || 0;
-                    totali.fatUnsat += entry.fatUnsat || 0;
-                    totali.fatTotal += (entry.fatSat || 0) + (entry.fatUnsat || 0);
-                    totali.vitA += entry.vitA || 0;
-                    totali.vitB12 += entry.vitB12 || 0;
-                    totali.vitD += entry.vitD || 0;
-                    totali.fe += entry.fe || 0;
-                    totali.zn += entry.zn || 0;
-                    totali.cu += entry.cu || 0;
-                }
-            });
+let totali = { 
+    proteine: 0, calorie: 0, 
+    mg: 0, k: 0, vitc: 0, ca: 0,
+    fatSat: 0, fatUnsat: 0, fatTotal: 0,
+    vitA: 0, vitB12: 0, vitD: 0,
+    fe: 0, zn: 0, cu: 0
+};
+(datiGiornalieri.log || []).forEach(entry => { 
+    if (entry.type === 'meal') {
+        entry.items.forEach(item => {
+            totali.proteine += item.prot || 0;
+            totali.calorie += item.cal || 0;
+            totali.mg += item.mg || 0;
+            totali.k += item.k || 0;
+            totali.vitc += item.vitc || 0;
+            totali.ca += item.ca || 0;
+            totali.fatSat += item.fatSat || 0;
+            totali.fatUnsat += item.fatUnsat || 0;
+            totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
+            totali.vitA += item.vitA || 0;
+            totali.vitB12 += item.vitB12 || 0;
+            totali.vitD += item.vitD || 0;
+            totali.fe += item.fe || 0;
+            totali.zn += item.zn || 0;
+            totali.cu += item.cu || 0;
+        });
+    } else if (entry.type === 'single') { 
+        totali.proteine += entry.prot || 0;
+        totali.calorie += entry.cal || 0;
+        totali.mg += entry.mg || 0;
+        totali.k += entry.k || 0;
+        totali.vitc += entry.vitc || 0;
+        totali.ca += entry.ca || 0;
+        totali.fatSat += entry.fatSat || 0;
+        totali.fatUnsat += entry.fatUnsat || 0;
+        totali.fatTotal += (entry.fatSat || 0) + (entry.fatUnsat || 0);
+        totali.vitA += entry.vitA || 0;
+        totali.vitB12 += entry.vitB12 || 0;
+        totali.vitD += entry.vitD || 0;
+        totali.fe += entry.fe || 0;
+        totali.zn += entry.zn || 0;
+        totali.cu += entry.cu || 0;
+    } else if (entry.type === 'workout') { 
+        // Logica per gli allenamenti
+    }
+});
             
             const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
@@ -2146,3 +2148,4 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
+
