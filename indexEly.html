@@ -443,9 +443,9 @@
                     <span>kcal</span>
                 </div>
 
-                <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
+                <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine">75</span> g</p>
                 <progress id="progress-proteine" class="macro-progress" value="0"></progress>
-                <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+                <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie">1600</span> kcal</p>
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
                 <hr>
@@ -459,12 +459,12 @@
                         <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
                         <div class="fats-sub-bars-container">
                             <div>
-                                <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat">20</span> g</p>
-                                <progress id="progress-fat-sat" class="progress-fat-sat" value="0" max="20"></progress>
+                                <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat">18</span> g</p>
+                                <progress id="progress-fat-sat" class="progress-fat-sat" value="0" max="18"></progress>
                             </div>
                             <div>
-                                <p>Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat">50</span> g</p>
-                                <progress id="progress-fat-unsat" class="progress-fat-unsat" value="0" max="50"></progress>
+                                <p>Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat">32</span> g</p>
+                                <progress id="progress-fat-unsat" class="progress-fat-unsat" value="0" max="32"></progress>
                             </div>
                         </div>
                     </div>
@@ -477,14 +477,14 @@
                 <div class="collapsible-content" id="micro-content">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <p>Magnesio: <span id="totale-mg">0</span> / 280 mg</p><progress id="progress-mg" value="0"></progress>
-                            <p>Potassio: <span id="totale-k">0</span> / 3100 mg</p><progress id="progress-k" value="0"></progress>
-                            <p>Ferro: <span id="totale-fe">0</span> / 15 mg</p><progress id="progress-fe" value="0"></progress>
+                            <p>Magnesio: <span id="totale-mg">0</span> / 280 mg</p><progress id="progress-mg" value="0" max="280"></progress>
+                            <p>Potassio: <span id="totale-k">0</span> / 3100 mg</p><progress id="progress-k" value="0" max="3100"></progress>
+                            <p>Ferro: <span id="totale-fe">0</span> / 15 mg</p><progress id="progress-fe" value="0" max="15"></progress>
                         </div>
                         <div>
-                            <p>Zinco: <span id="totale-zn">0</span> / 9 mg</p><progress id="progress-zn" value="0"></progress>
-                            <p>Calcio: <span id="totale-ca">0</span> / 1300 mg</p><progress id="progress-ca" value="0"></progress>
-                            <p>Rame: <span id="totale-cu">0</span> / 0.8 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
+                            <p>Zinco: <span id="totale-zn">0</span> / 9 mg</p><progress id="progress-zn" value="0" max="9"></progress>
+                            <p>Calcio: <span id="totale-ca">0</span> / 1300 mg</p><progress id="progress-ca" value="0" max="1300"></progress>
+                            <p>Rame: <span id="totale-cu">0</span> / 0.8 mg</p><progress id="progress-cu" value="0" max="0.8"></progress>
                         </div>
                     </div>
                 </div>
@@ -496,7 +496,7 @@
                 <div class="collapsible-content" id="vit-content">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <p>Vitamina C: <span id="totale-vitc">0</span> / 75 mg</p><progress id="progress-vitc" value="0"></progress>
+                            <p>Vitamina C: <span id="totale-vitc">0</span> / 75 mg</p><progress id="progress-vitc" value="0" max="75"></progress>
                             <p>Vitamina A: <span id="totale-vit-a">0</span> / 600 µg</p>
                             <progress id="progress-vit-a" value="0" max="600"></progress>
                         </div>
@@ -1042,8 +1042,8 @@
             datiGiornalieri.variazioneGrassoG = variazioneGrasso;
             datiGiornalieri.scoreMuscolo = scoreMuscolo;
 
-            spanObiettivoProteine.textContent = 65;
-            spanObiettivoCalorie.textContent  = 1600;
+            spanObiettivoProteine.textContent = OBIETTIVI.prot;
+            spanObiettivoCalorie.textContent = OBIETTIVI.cal; 
             spanTotaleProteine.textContent = totali.proteine.toFixed(1);
             spanTotaleCalorie.textContent = totali.calorie.toFixed(0);
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
