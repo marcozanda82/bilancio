@@ -292,7 +292,7 @@
                 </div>
                 <hr>
 
-                <h3 class="collapsible-header" id="vit-header">
+                <h3 classible="collapsible-header" id="vit-header">
                     Vitamine <span class="arrow">▶</span>
                 </h3>
                 <div class="collapsible-content" id="vit-content">
@@ -522,8 +522,17 @@
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
         const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"fe":mg,"zn":mg,"cu":mg}`;
 
-        // Le variabili dei pulsanti di autenticazione non sono più necessarie qui
+        const authSection = document.getElementById('auth-section');
+        const userEmailInput = document.getElementById('user-email');
+        const userPasswordInput = document.getElementById('user-password');
+        const btnRegister = document.getElementById('btn-register');
+        const btnLogin = document.getElementById('btn-login');
         const btnSignOut = document.getElementById('btn-sign-out');
+        const authStatusP = document.getElementById('auth-status');
+        const authButtonsDiv = document.querySelector('.auth-buttons');
+        const authHeader = document.getElementById('auth-header');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const authFormFields = document.getElementById('auth-form-fields');
 
         const mainTrackerContent = document.getElementById('main-tracker-content');
         const titoloGiornataEl = document.getElementById('titolo-giornata');
