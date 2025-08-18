@@ -1897,6 +1897,9 @@ Se un valore non è disponibile usa 0.
             initAppUI();
             btnFloppyUpload.style.display = 'none';
             updateFloppyDiskIcon();
+			btnRegister.addEventListener('click', handleRegister);
+btnLogin.addEventListener('click', handleLogin);
+btnSignOut.addEventListener('click', handleSignOut);
         });
 btnCopyPrompt.addEventListener('click', async () => {
     const nome = builderDesc.value.trim();
@@ -1962,3 +1965,4 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
+
