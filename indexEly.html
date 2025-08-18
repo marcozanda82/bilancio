@@ -552,13 +552,11 @@
         const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
         const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
         
-        // VARIABILI AGGIUNTE PER RISOLVERE L'ERRORE
         const spanTotaleFatsTotal = document.getElementById('totale-fats-total');
         const spanTotaleFatSat = document.getElementById('totale-fat-sat');
         const spanTotaleFatUnsat = document.getElementById('totale-fat-unsat');
         const progressFatSat = document.getElementById('progress-fat-sat');
         const progressFatUnsat = document.getElementById('progress-fat-unsat');
-        // FINE VARIABILI AGGIUNTE
 
         const spanTotaleVitA = document.getElementById('totale-vit-a'), spanTotaleVitB12 = document.getElementById('totale-vit-b12'), spanTotaleVitD = document.getElementById('totale-vit-d');
         const spanTotaleFe = document.getElementById('totale-fe'), spanTotaleZn = document.getElementById('totale-zn'), spanTotaleCu = document.getElementById('totale-cu');
@@ -801,11 +799,10 @@
             const spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total');
             spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal;
             spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1);
-			spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1);
-			spanTotaleFatSat = document.getElementById('totale-fat-sat');
+            spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1);
+            spanTotaleFatSat.textContent   = totali.fatSat.toFixed(1);
             progressFatsTotal.max = OBIETTIVI_FAT.fatTotal;
             progressFatsTotal.value = totali.fatTotal;
-            spanTotaleFatSat.textContent   = totali.fatSat.toFixed(1);
             progressFatSat.max   = OBIETTIVI_FAT.fatSat;
             progressFatSat.value = totali.fatSat;
             spanTotaleFatUnsat.textContent = totali.fatUnsat.toFixed(1);
