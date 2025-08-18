@@ -801,7 +801,7 @@
             const spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total');
             spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal;
             spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1);
-			spanTotaleFatsTotal.textContent = document.getElementById('totale-fats-total');
+			spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1);
 			spanTotaleFatSat = document.getElementById('totale-fat-sat');
             progressFatsTotal.max = OBIETTIVI_FAT.fatTotal;
             progressFatsTotal.value = totali.fatTotal;
@@ -1732,6 +1732,7 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
+
 
 
 
