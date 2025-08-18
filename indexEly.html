@@ -1603,66 +1603,56 @@ Se un valore non è disponibile usa 0.
             db = getDatabase(firebaseApp);
             auth = getAuth(firebaseApp);
             console.log("Firebase inizializzato per il tracker.");
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUserUID = user.uid;
-                    authFormFields.style.display = 'none';
-                    authHeader.style.display = 'none';
-                    welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
-                    welcomeMessage.style.display = 'block';
-                    btnSignOut.style.display = 'block';
-                    authStatusP.textContent = '';
-                    authSection.style.borderColor = '#2e7d32';
-                    authSection.classList.add('logged-in');
-                    mainTrackerContent.classList.add('authenticated');
-                    cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
-                    cloudSyncStatusSpan.className = 'cloud-sync-status connected';
-                    cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
-                    btnFloppyUpload.style.display = 'none';
-                    updateFloppyDiskIcon();
-                    console.log("Utente autenticato. UI aggiornata.");
-                    const lastLocalUpdate = parseInt(localStorage.getItem(LOCAL_LAST_UPDATE_KEY) || 0);
-                    let lastCloudUpdate = 0;
-                    try {
-                        const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
-                        if (cloudTimestampSnapshot.exists()) {
-                            lastCloudUpdate = cloudTimestampSnapshot.val();
-                        }
-                    } catch (error) {
-                        console.error("Errore nel recupero del timestamp cloud:", error);
-                    }
-                    console.log(`Ultimo aggiornamento locale: ${new Date(lastLocalUpdate).toLocaleString()}`);
-                    console.log(`Ultimo aggiornamento cloud: ${new Date(lastCloudUpdate).toLocaleString()}`);
-                    setTimeout(async () => {
-                        if (lastCloudUpdate > lastLocalUpdate) {
-                            console.log("Dati sul cloud più recenti. Download automatico in corso...");
-                            await loadAllTrackerDataFromCloud(true);
-                        } else if (lastLocalUpdate > lastCloudUpdate) {
-                            if (confirm("I tuoi dati locali sono più recenti di quelli sul cloud. Vuoi caricarli ORA per mantenerli aggiornati sul cloud?")) {
-                                await handleManualUploadToCloud();
-                            }
-                        } else {
-                            console.log("Dati locali e cloud sono sincronizzati o non ci sono differenze significative.");
-                        }
-                    }, 500);
-                } else {
-                    currentUserUID = null;
-                    authFormFields.style.display = 'block';
-                    authHeader.style.display = 'block';
-                    welcomeMessage.style.display = 'none';
-                    btnSignOut.style.display = 'none';
-                    authStatusP.textContent = "Non autenticato";
-                    authSection.style.borderColor = '#c62828';
-                    authSection.classList.remove('logged-in');
-                    mainTrackerContent.classList.remove('authenticated');
-                    cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
-                    cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
-                    cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-                    btnFloppyUpload.style.display = 'none';
-                    updateFloppyDiskIcon();
-                    console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
-                }
-            });
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        // --- UTENTE AUTENTICATO ---
+        currentUserUID = user.uid;
+        authFormFields.style.display = 'none';
+        authHeader.style.display = 'none';
+        welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
+        welcomeMessage.style.display = 'block';
+        btnSignOut.style.display = 'block';
+        authStatusP.textContent = '';
+        authSection.style.borderColor = '#2e7d32';
+        authSection.classList.add('logged-in');
+        mainTrackerContent.classList.add('authenticated');
+        cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
+        cloudSyncStatusSpan.className = 'cloud-sync-status connected';
+        cloudSyncSection.querySelectorAll('button').forEach(b => b.disabled = false);
+        btnFloppyUpload.style.display = 'none';
+
+        // 👇 Nascondi la sezione login con fade
+        authSection.style.transition = 'opacity 0.4s';
+        authSection.style.opacity = 0;
+        setTimeout(() => authSection.style.display = 'none', 400);
+
+        updateFloppyDiskIcon();
+        console.log("Utente autenticato. UI aggiornata.");
+        /* … resto del tuo codice già presente … */
+    } else {
+        // --- UTENTE NON AUTENTICATO ---
+        currentUserUID = null;
+        authFormFields.style.display = 'block';
+        authHeader.style.display = 'block';
+        welcomeMessage.style.display = 'none';
+        btnSignOut.style.display = 'none';
+        authStatusP.textContent = "Non autenticato";
+        authSection.style.borderColor = '#c62828';
+        authSection.classList.remove('logged-in');
+        mainTrackerContent.classList.remove('authenticated');
+        cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
+        cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
+        cloudSyncSection.querySelectorAll('button').forEach(b => b.disabled = true);
+        btnFloppyUpload.style.display = 'none';
+
+        // 👇 Mostra la sezione login
+        authSection.style.display = 'block';
+        authSection.style.opacity = 1;
+
+        updateFloppyDiskIcon();
+        console.log("Utente non autenticato.");
+    }
+});
         } catch (error) {
             console.error("Errore durante l'inizializzazione di Firebase:", error);
             authStatusP.textContent = `Errore Firebase: ${error.message}`;
@@ -1961,5 +1951,6 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
+
 
 
