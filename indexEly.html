@@ -703,10 +703,10 @@
             const obiettivoCalorieTotale = obiettivoCalorieBaseWorkout + (datiGiornalieri.calorieAdjustment || 0);
             const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_EXTRA };
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
-            let totali = {
-                proteine: 0, calorie: 0,
-                mg: 0, k: 0, vitc: 0, ca: 0,
-                fatSat: 0, fatUnsat: 0, fatTotal: 0,
+let totali = {
+    proteine: 0, calorie: 0,
+    mg: 0, k: 0, vitc: 0, ca: 0,
+    fatSat: 0, fatUnsat: 0, fatTotal: 0,
                 vitA: 0, vitB12: 0, vitD: 0,
                 fe: 0, zn: 0, cu: 0
             };
@@ -1726,5 +1726,6 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
+
 
 
