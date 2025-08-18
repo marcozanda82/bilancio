@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storico Dettagliato - Tabella Trend</title>
+    <title>Diario e Trend Giornalieri di Elisa</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
         .container { width: 100%; max-width: 950px; }
-        h1 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px;}
-        .nav-links a { display: inline-block; margin-bottom: 25px; padding: 10px 15px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        h1 { color: #880e4f; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px;}
+        .nav-links a { display: inline-block; margin-bottom: 25px; padding: 10px 15px; background-color: #4db6ac; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
 
         .storico-table { width: 100%; border-collapse: collapse; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;}
         th, td { padding: 12px 15px; text-align: left; vertical-align: middle; }
-        th { background-color: #e8eaf6; font-weight: 600; color: #3f51b5; }
-        .day-summary-row { border-bottom: 2px solid #e0e0e0; cursor: pointer; transition: background-color 0.2s; }
-        .day-summary-row:hover { background-color: #f9f9fc; }
-        .day-summary-row.expanded { background-color: #f1f3f9; }
+        th { background-color: #fce4ec; font-weight: 600; color: #ad1457; } /* Abbinato a indexEly.html */
+        .day-summary-row { border-bottom: 2px solid #f8bbd0; cursor: pointer; transition: background-color 0.2s; } /* Abbinato a indexEly.html */
+        .day-summary-row:hover { background-color: #f8bbd0; } /* Abbinato a indexEly.html */
+        .day-summary-row.expanded { background-color: #f8bbd0; } /* Abbinato a indexEly.html */
         
         .day-detail-row { display: none; }
         .day-detail-row.expanded { display: table-row; }
@@ -30,9 +30,7 @@
         .meal-expand-arrow { display: inline-block; width: 20px; transition: transform 0.2s; }
         .meal-group-row.expanded .meal-expand-arrow { transform: rotate(90deg); }
         .sub-item-row { display: none; }
-        /* Modificato per mostrare solo i sub-item successivi al pasto espanso */
         .meal-group-row.expanded + .sub-item-row { display: table-row; } 
-        /* Regola per mostrare tutti i sub-item di un pasto espanso */
         .meal-group-row.expanded ~ .sub-item-row.meal-active { display: table-row; }
 
         .trend-muscle { font-size: 1.5em; font-weight: bold; }
@@ -43,9 +41,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>📊 Storico e Trend Giornalieri</h1>
+        <h1>📊 Diario e Trend Giornalieri di Elisa</h1>
         <div class="nav-links">
-            <a href="indexEly.html">⬅️ Torna al Tracker</a>
+            <a href="indexEly.html">⬅️ Torna al Tracker di Elisa</a>
         </div>
         <div class="storico-table-container">
             <table class="storico-table">
@@ -103,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return storicoDati;
     }
 
-    // Copia il PIANO_SETTIMANALE da indexEly.html per coerenza
     const PIANO_SETTIMANALE = {
         0: { tipo: '💧 Riposo (Deficit)', cal: 1600, prot: 75 },
         1: { tipo: '🔥 Forza (Mantenimento)', cal: 1600, prot: 75 },
