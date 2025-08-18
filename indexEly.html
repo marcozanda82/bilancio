@@ -389,10 +389,7 @@
             <p id="welcome-message"></p>
             <div id="auth-form-fields">
                 <div><label for="user-email">Email</label><input type="email" id="user-email"></div>
-                <form id="auth-form">
-  <label for="user-password">Password</label>
-  <input type="password" id="user-password" autocomplete="current-password">
-</form></div>
+                <div><label for="user-password">Password</label><input type="password" id="user-password"></div>
                 <div class="auth-buttons">
                     <button id="btn-register">Registrati</button>
                     <button id="btn-login">Accedi</button>
@@ -599,7 +596,7 @@
                     </thead>
                     <tbody id="log-body"></tbody>
                 </table>
-                <div id="caricamento-manuale" classione="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
+                <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
                     <h3 style="margin:0 0 10px 0; font-size:1em;">Carica/Salva Giorno Specifico</h3>
                     <div>
                         <input type="date" id="data-caricamento">
@@ -731,7 +728,6 @@
 
         const btnCaricaGiorno = document.getElementById('btn-carica-giorno'), dataCaricamentoInput = document.getElementById('data-caricamento');
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
-		const spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total');
         const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
         const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
         const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanTotaleFatUnsat = document.getElementById('totale-fat-unsat');
@@ -896,43 +892,43 @@
                 vitA: 0, vitB12: 0, vitD: 0,
                 fe: 0, zn: 0, cu: 0
             };
-            (datiGiornalieri.log || []).forEach(entry => {
-                if (entry.type === 'meal') {
-                    entry.items.forEach(item => {
-                        totali.proteine += item.prot || 0;
-                        totali.calorie += item.cal || 0;
-                        totali.mg += item.mg || 0;
-                        totali.k += item.k || 0;
-                        totali.vitc += item.vitc || 0;
-                        totali.ca += item.ca || 0;
-                        totali.fatSat += item.fatSat || 0;
-                        totali.fatUnsat += item.fatUnsat || 0;
-                        totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
-                        totali.vitA += item.vitA || 0;
-                        totali.vitB12 += item.vitB12 || 0;
-                        totali.vitD += item.vitD || 0;
-                        totali.fe += item.fe || 0;
-                        totali.zn += item.zn || 0;
-                        totali.cu += item.cu || 0;
-                    });
-                } else if (entry.type === 'single') {
-                    totali.proteine += entry.prot || 0;
-                    totali.calorie += entry.cal || 0;
-                    totali.mg += entry.mg || 0;
-                    totali.k += entry.k || 0;
-                    totali.vitc += entry.vitc || 0;
-                    totali.ca += entry.ca || 0;
-                    totali.fatSat += entry.fatSat || 0;
-                    totali.fatUnsat += entry.fatUnsat || 0;
-                    totali.fatTotal += (entry.fatSat || 0) + (entry.fatUnsat || 0);
-                    totali.vitA += entry.vitA || 0;
-                    totali.vitB12 += entry.vitB12 || 0;
-                    totali.vitD += entry.vitD || 0;
-                    totali.fe += entry.fe || 0;
-                    totali.zn += entry.zn || 0;
-                    totali.cu += entry.cu || 0;
-                }
-            });
+(datiGiornalieri.log || []).forEach(entry => {
+    if (entry.type === 'meal') {
+        entry.items.forEach(item => {
+            totali.proteine += item.prot || 0;
+            totali.calorie += item.cal || 0;
+            totali.mg += item.mg || 0;
+            totali.k += item.k || 0;
+            totali.vitc += item.vitc || 0;
+            totali.ca += item.ca || 0;
+            totali.fatSat += item.fatSat || 0;
+            totali.fatUnsat += item.fatUnsat || 0;
+            totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
+            totali.vitA += item.vitA || 0;
+            totali.vitB12 += item.vitB12 || 0;
+            totali.vitD += item.vitD || 0;
+            totali.fe += item.fe || 0;
+            totali.zn += item.zn || 0;
+            totali.cu += item.cu || 0;
+        });
+    } else if (entry.type === 'single') {
+        totali.proteine += entry.prot || 0;
+        totali.calorie += entry.cal || 0;
+        totali.mg += entry.mg || 0;
+        totali.k += entry.k || 0;
+        totali.vitc += entry.vitc || 0;
+        totali.ca += entry.ca || 0;
+        totali.fatSat += entry.fatSat || 0;
+        totali.fatUnsat += entry.fatUnsat || 0;
+        totali.fatTotal += (entry.fatSat || 0) + (entry.fatUnsat || 0);
+        totali.vitA += entry.vitA || 0;
+        totali.vitB12 += entry.vitB12 || 0;
+        totali.vitD += entry.vitD || 0;
+        totali.fe += entry.fe || 0;
+        totali.zn += entry.zn || 0;
+        totali.cu += entry.cu || 0;
+    }
+});
             const deficitEffettivo = totali.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
             let variazioneGrasso = 0;
@@ -1501,10 +1497,7 @@ Premi 'Annulla' per CARICARE i dati esistenti per quella data (sovrascrivendo il
         });
 document.getElementById('btn-compila-ai').addEventListener('click', async () => {
     const nome = builderDesc.value.trim();
-    if (!nome) {
-        alert('Scrivi prima il nome dell\'alimento.');
-        return;
-    }
+    if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
     document.getElementById('btn-compila-ai').disabled = true;
     document.getElementById('btn-compila-ai').textContent = 'Caricamento…';
     try {
@@ -1543,8 +1536,10 @@ Se un valore non è disponibile usa 0.
         };
         for (const key in fieldsToUpdate) {
             const el = document.getElementById(fieldsToUpdate[key]);
-            if (el && typeof resObj[key] !== 'undefined' && resObj[key] !== null) {
-                el.value = resObj[key];
+            if (el) {
+                if (el.value === '' || (parseFloat(el.value) === 0 && resObj[key] !== 0)) {
+                    el.value = resObj[key] ?? 0;
+                }
             }
         }
         aggiornaColoreNutrienti();
@@ -1604,56 +1599,66 @@ Se un valore non è disponibile usa 0.
             db = getDatabase(firebaseApp);
             auth = getAuth(firebaseApp);
             console.log("Firebase inizializzato per il tracker.");
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        // --- UTENTE AUTENTICATO ---
-        currentUserUID = user.uid;
-        authFormFields.style.display = 'none';
-        authHeader.style.display = 'none';
-        welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
-        welcomeMessage.style.display = 'block';
-        btnSignOut.style.display = 'block';
-        authStatusP.textContent = '';
-        authSection.style.borderColor = '#2e7d32';
-        authSection.classList.add('logged-in');
-        mainTrackerContent.classList.add('authenticated');
-        cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
-        cloudSyncStatusSpan.className = 'cloud-sync-status connected';
-        cloudSyncSection.querySelectorAll('button').forEach(b => b.disabled = false);
-        btnFloppyUpload.style.display = 'none';
-
-        // 👇 Nascondi la sezione login con fade
-        authSection.style.transition = 'opacity 0.4s';
-        authSection.style.opacity = 0;
-        setTimeout(() => authSection.style.display = 'none', 400);
-
-        updateFloppyDiskIcon();
-        console.log("Utente autenticato. UI aggiornata.");
-        /* … resto del tuo codice già presente … */
-    } else {
-        // --- UTENTE NON AUTENTICATO ---
-        currentUserUID = null;
-        authFormFields.style.display = 'block';
-        authHeader.style.display = 'block';
-        welcomeMessage.style.display = 'none';
-        btnSignOut.style.display = 'none';
-        authStatusP.textContent = "Non autenticato";
-        authSection.style.borderColor = '#c62828';
-        authSection.classList.remove('logged-in');
-        mainTrackerContent.classList.remove('authenticated');
-        cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
-        cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
-        cloudSyncSection.querySelectorAll('button').forEach(b => b.disabled = true);
-        btnFloppyUpload.style.display = 'none';
-
-        // 👇 Mostra la sezione login
-        authSection.style.display = 'block';
-        authSection.style.opacity = 1;
-
-        updateFloppyDiskIcon();
-        console.log("Utente non autenticato.");
-    }
-});
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUserUID = user.uid;
+                    authFormFields.style.display = 'none';
+                    authHeader.style.display = 'none';
+                    welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
+                    welcomeMessage.style.display = 'block';
+                    btnSignOut.style.display = 'block';
+                    authStatusP.textContent = '';
+                    authSection.style.borderColor = '#2e7d32';
+                    authSection.classList.add('logged-in');
+                    mainTrackerContent.classList.add('authenticated');
+                    cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
+                    cloudSyncStatusSpan.className = 'cloud-sync-status connected';
+                    cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
+                    btnFloppyUpload.style.display = 'none';
+                    updateFloppyDiskIcon();
+                    console.log("Utente autenticato. UI aggiornata.");
+                    const lastLocalUpdate = parseInt(localStorage.getItem(LOCAL_LAST_UPDATE_KEY) || 0);
+                    let lastCloudUpdate = 0;
+                    try {
+                        const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
+                        if (cloudTimestampSnapshot.exists()) {
+                            lastCloudUpdate = cloudTimestampSnapshot.val();
+                        }
+                    } catch (error) {
+                        console.error("Errore nel recupero del timestamp cloud:", error);
+                    }
+                    console.log(`Ultimo aggiornamento locale: ${new Date(lastLocalUpdate).toLocaleString()}`);
+                    console.log(`Ultimo aggiornamento cloud: ${new Date(lastCloudUpdate).toLocaleString()}`);
+                    setTimeout(async () => {
+                        if (lastCloudUpdate > lastLocalUpdate) {
+                            console.log("Dati sul cloud più recenti. Download automatico in corso...");
+                            await loadAllTrackerDataFromCloud(true);
+                        } else if (lastLocalUpdate > lastCloudUpdate) {
+                            if (confirm("I tuoi dati locali sono più recenti di quelli sul cloud. Vuoi caricarli ORA per mantenerli aggiornati sul cloud?")) {
+                                await handleManualUploadToCloud();
+                            }
+                        } else {
+                            console.log("Dati locali e cloud sono sincronizzati o non ci sono differenze significative.");
+                        }
+                    }, 500);
+                } else {
+                    currentUserUID = null;
+                    authFormFields.style.display = 'block';
+                    authHeader.style.display = 'block';
+                    welcomeMessage.style.display = 'none';
+                    btnSignOut.style.display = 'none';
+                    authStatusP.textContent = "Non autenticato";
+                    authSection.style.borderColor = '#c62828';
+                    authSection.classList.remove('logged-in');
+                    mainTrackerContent.classList.remove('authenticated');
+                    cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
+                    cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
+                    cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
+                    btnFloppyUpload.style.display = 'none';
+                    updateFloppyDiskIcon();
+                    console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
+                }
+            });
         } catch (error) {
             console.error("Errore durante l'inizializzazione di Firebase:", error);
             authStatusP.textContent = `Errore Firebase: ${error.message}`;
@@ -1702,25 +1707,6 @@ onAuthStateChanged(auth, async (user) => {
                 alert(`Errore durante la disconnessione: ${error.message}`);
                 console.error("Sign out error:", error);
             }
-        }
-            if (btnRegister) {
-            btnRegister.addEventListener('click', handleRegister);
-        }
-        if (btnLogin) {
-            btnLogin.addEventListener('click', handleLogin);
-        }
-        const googleProvider = new GoogleAuthProvider();
-        const btnGoogleLogin = document.getElementById('btn-google-login');
-        if (btnGoogleLogin) {
-            btnGoogleLogin.addEventListener('click', async () => {
-                try {
-                    await signInWithPopup(auth, googleProvider);
-                    alert("Accesso con Google effettuato con successo!");
-                } catch (error) {
-                    alert(`Errore di accesso con Google: ${error.message}`);
-                    console.error("Google login error:", error);
-                }
-            });
         }
         function getUserDataRef() {
             if (!db || !currentUserUID) {
@@ -1952,7 +1938,4 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
-
-
-
 
