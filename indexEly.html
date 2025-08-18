@@ -996,7 +996,7 @@
             }
             const fatsHeader = document.getElementById('fats-header');
             fatsHeader.classList.remove('nutrients-warning');
-            if (totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTotal > OBIETTIVI_FAT.fatTotal || totali.fatTotal < OBIETTIVI_FAT.fatTotal * 0.5) {
+            if (totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTotal > OBIETTIVI_FAT.fatTotal || totali.fatTotal < OBIETTIVI.fatTotal * 0.5) {
                 fatsHeader.classList.add('nutrients-warning');
             }
             spanTotaleMg.textContent = totali.mg.toFixed(1);
@@ -1539,10 +1539,8 @@ Se un valore non è disponibile usa 0.
         };
         for (const key in fieldsToUpdate) {
             const el = document.getElementById(fieldsToUpdate[key]);
-            if (el) {
-                if (el.value === '' || (parseFloat(el.value) === 0 && resObj[key] !== 0)) {
-                    el.value = resObj[key] ?? 0;
-                }
+            if (el && typeof resObj[key] !== 'undefined' && resObj[key] !== null) {
+                el.value = resObj[key];
             }
         }
         aggiornaColoreNutrienti();
@@ -1897,9 +1895,6 @@ Se un valore non è disponibile usa 0.
             initAppUI();
             btnFloppyUpload.style.display = 'none';
             updateFloppyDiskIcon();
-			btnRegister.addEventListener('click', handleRegister);
-btnLogin.addEventListener('click', handleLogin);
-btnSignOut.addEventListener('click', handleSignOut);
         });
 btnCopyPrompt.addEventListener('click', async () => {
     const nome = builderDesc.value.trim();
@@ -1965,4 +1960,3 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
-
