@@ -174,9 +174,6 @@
             min-width: 150px;
             margin-bottom: 5px;
         }
-        .cloud-sync-section #btn-upload-manual {
-            background-color: #00796b;
-        }
         .cloud-sync-section #btn-download-manual {
             background-color: #e64a19;
         }
@@ -323,7 +320,7 @@
                     <button id="btn-add-workout">Aggiungi Allenamento</button>
                 </div>
             </div>
-            <div id="food-adder" classione="sezione">
+            <div id="food-adder" class="sezione">
                 <div class="food-adder-header">
                     <h2>Aggiungi Alimento</h2>
                     <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
@@ -367,7 +364,7 @@
                     <button id="btn-compila-ai" style="background-color: #880e4f;">Compila AI</button>
                 </div>
             </div>
-            <div id="meal-builder-sezione" classione="sezione" data-visible="false">
+            <div id="meal-builder-sezione" class="sezione" data-visible="false">
                 <h2>Costruttore Pasto</h2>
                 <div id="meal-builder-summary">
                     <p>Pasto Selezionato: <span id="current-meal-type-display"></span></p>
@@ -394,7 +391,7 @@
                 </table>
                 <button id="btn-salva-pasto">Salva Pasto nel Diario</button>
             </div>
-            <div id="diary-section" classione="sezione">
+            <div id="diary-section" class="sezione">
                 <h2>Diario Giornaliero</h2>
                 <table id="log-pasti">
                     <thead>
@@ -420,7 +417,7 @@
                     </thead>
                     <tbody id="log-body"></tbody>
                 </table>
-                <div id="caricamento-manuale" classione="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
+                <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
                     <h3 style="margin:0 0 10px 0; font-size:1em;">Carica/Salva Giorno Specifico</h3>
                     <div>
                         <input type="date" id="data-caricamento">
@@ -429,10 +426,10 @@
                 </div>
             </div>
 
-            <div id="sync-section" classione="sezione">
+            <div id="sync-section" class="sezione">
                 <h2>Sincronizzazione Cloud Manuale</h2>
                 <div class="cloud-sync-section">
-                    <button id="btn-download-manual"⬇️ Scarica Dati dal Cloud</button>
+                    <button id="btn-download-manual">⬇️ Scarica Dati dal Cloud</button>
                     <span id="cloud-sync-status" class="cloud-sync-status disconnected">Connessione Cloud: Disconnesso</span>
                 </div>
                 <p style="font-size: 0.85em; color: #777; margin-top: 10px;">
@@ -554,12 +551,19 @@
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanTotaleCalorie = document.getElementById('totale-calorie');
         const spanObiettivoProteine = document.getElementById('obiettivo-proteine'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie');
         const spanTotaleMg = document.getElementById('totale-mg'), spanTotaleK = document.getElementById('totale-k'), spanTotaleVitC = document.getElementById('totale-vitc'), spanTotaleCa = document.getElementById('totale-ca');
-        const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanTotaleFatUnsat = document.getElementById('totale-fat-unsat');
+        
+        // VARIABILI AGGIUNTE PER RISOLVERE L'ERRORE
+        const spanTotaleFatsTotal = document.getElementById('totale-fats-total');
+        const spanTotaleFatSat = document.getElementById('totale-fat-sat');
+        const progressFatSat = document.getElementById('progress-fat-sat');
+        const spanTotaleFatUnsat = document.getElementById('totale-fat-unsat');
+        const progressFatUnsat = document.getElementById('progress-fat-unsat');
+        // FINE VARIABILI AGGIUNTE
+
         const spanTotaleVitA = document.getElementById('totale-vit-a'), spanTotaleVitB12 = document.getElementById('totale-vit-b12'), spanTotaleVitD = document.getElementById('totale-vit-d');
         const spanTotaleFe = document.getElementById('totale-fe'), spanTotaleZn = document.getElementById('totale-zn'), spanTotaleCu = document.getElementById('totale-cu');
         const progressProteine = document.getElementById('progress-proteine'), progressCalorie = document.getElementById('progress-calorie');
         const progressMg = document.getElementById('progress-mg'), progressK = document.getElementById('progress-k'), progressVitC = document.getElementById('progress-vitc'), progressCa = document.getElementById('progress-ca');
-        const progressFatSat = document.getElementById('progress-fat-sat'), progressFatUnsat = document.getElementById('progress-fat-unsat');
         const progressVitA = document.getElementById('progress-vit-a'), progressVitB12 = document.getElementById('progress-vit-b12'), progressVitD = document.getElementById('progress-vit-d');
         const progressFe = document.getElementById('progress-fe'), progressZn = document.getElementById('progress-zn'), progressCu = document.getElementById('progress-cu');
         const progressFatsTotal = document.getElementById('progress-fats-total');
@@ -703,10 +707,10 @@
             const obiettivoCalorieTotale = obiettivoCalorieBaseWorkout + (datiGiornalieri.calorieAdjustment || 0);
             const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_EXTRA };
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
-let totali = {
-    proteine: 0, calorie: 0,
-    mg: 0, k: 0, vitc: 0, ca: 0,
-    fatSat: 0, fatUnsat: 0, fatTotal: 0,
+            let totali = {
+                proteine: 0, calorie: 0,
+                mg: 0, k: 0, vitc: 0, ca: 0,
+                fatSat: 0, fatUnsat: 0, fatTotal: 0, // Inizializzazione corretta di fatTotal
                 vitA: 0, vitB12: 0, vitD: 0,
                 fe: 0, zn: 0, cu: 0
             };
@@ -1084,8 +1088,10 @@ let totali = {
             };
             const emptyFields = Object.keys(nutrients).filter(key => nutrients[key] === '');
             if (emptyFields.length > 0) {
-                const confirmMsg = `Ci sono campi nutrienti vuoti (${emptyFields.join(', ')}). Vuoi: \n\n- Premi OK per compilare con i dati disponibili e procedere. \n- Premi ANNULLA per usare l'AI per compilare i dati mancanti.`;
-                if (!confirm(confirmMsg)) {
+                const confirmMsg = `Ci sono campi nutrienti vuoti (${emptyFields.join(', ')}). Vuoi: \n\n- Premi OK per compilare con i dati disponibili. \n- Premi ANNULLA per usare l'AI per compilare i dati mancanti.`;
+                if (confirm(confirmMsg)) {
+                    // Procedi con i dati disponibili, non fare nulla
+                } else {
                     await document.getElementById('btn-compila-ai').click();
                     return;
                 }
@@ -1164,8 +1170,6 @@ let totali = {
             datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri);
-            workoutDescInput.value = '';
-            workoutCaloriesInput.value = '';
             renderMealBuilder();
             isDirty = true;
             updateFloppyDiskIcon();
@@ -1726,6 +1730,3 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
-
-
-
