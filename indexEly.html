@@ -1238,7 +1238,7 @@
                 isDirty = true;
                 updateFloppyDiskIcon();
                 if (itemToEdit.type === 'meal' && itemToEdit.mealId) {
-                    mealTypeSelector.value = itemToEdit.mealId;
+                    mealTypeSelector.value = itemtoEdit.mealId;
                 } else if (itemToEdit.type === 'single') {
                     mealTypeSelector.value = MEAL_TYPE_SEQUENCE[0];
                 }
@@ -1497,7 +1497,6 @@ Se un valore non è disponibile usa 0.
             btnSignOut.addEventListener('click', handleSignOut);
         }
 
-        // --- Le altre funzioni del tracker restano qui intatte ---
         function getUserDataRef() {
             if (!db || !currentUserUID) {
                 return null;
@@ -1660,8 +1659,6 @@ Se un valore non è disponibile usa 0.
         }
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico();
-            // In questa pagina non ci sono pulsanti di accesso, quindi non è necessario
-            // collegarli qui. La logica di accesso è gestita in loginEly.html
             initAppUI();
             btnFloppyUpload.style.display = 'none';
             updateFloppyDiskIcon();
