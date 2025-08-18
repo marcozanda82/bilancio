@@ -996,7 +996,7 @@
             }
             const fatsHeader = document.getElementById('fats-header');
             fatsHeader.classList.remove('nutrients-warning');
-            if (totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTotal > OBIETTIVI_FAT.fatTotal || totali.fatTotal < OBIETTIVI.fatTotal * 0.5) {
+            if (totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTotal > OBIETTIVI_FAT.fatTotal || totali.fatTotal < OBIETTIVI_FAT.fatTotal * 0.5) {
                 fatsHeader.classList.add('nutrients-warning');
             }
             spanTotaleMg.textContent = totali.mg.toFixed(1);
@@ -1958,20 +1958,5 @@ btnConfirmJson.addEventListener('click', () => {
     }
 });
     </script>
-	<script>
-  // Forza l'aggiunta degli event listener
-  document.addEventListener('DOMContentLoaded', () => {
-    const btnRegister = document.getElementById('btn-register');
-    const btnLogin = document.getElementById('btn-login');
-    const btnSignOut = document.getElementById('btn-sign-out');
-
-    if (btnRegister) btnRegister.addEventListener('click', handleRegister);
-    if (btnLogin) btnLogin.addEventListener('click', handleLogin);
-    if (btnSignOut) btnSignOut.addEventListener('click', handleSignOut);
-
-    console.log("✅ Event listener aggiunti forzatamente!");
-  });
-</script>
 </body>
 </html>
-
