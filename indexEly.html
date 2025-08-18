@@ -1958,5 +1958,20 @@ btnConfirmJson.addEventListener('click', () => {
     }
 });
     </script>
+	<script>
+  // Forza l'aggiunta degli event listener
+  document.addEventListener('DOMContentLoaded', () => {
+    const btnRegister = document.getElementById('btn-register');
+    const btnLogin = document.getElementById('btn-login');
+    const btnSignOut = document.getElementById('btn-sign-out');
+
+    if (btnRegister) btnRegister.addEventListener('click', handleRegister);
+    if (btnLogin) btnLogin.addEventListener('click', handleLogin);
+    if (btnSignOut) btnSignOut.addEventListener('click', handleSignOut);
+
+    console.log("✅ Event listener aggiunti forzatamente!");
+  });
+</script>
 </body>
 </html>
+
