@@ -402,7 +402,8 @@
             <h2 id="titolo-giornata"></h2>
 <div class="nav-links">
     <a href="storicoEly.html">📝 Diario</a>
-   </div>
+    <a href="stima_grassi.html">🔍 Analisi Nutrizionale</a>
+</div>
             <div id="riepilogo" class="sezione">
                 <div class="summary-header-row">
                     <h2>Riepilogo di Oggi</h2>
@@ -419,8 +420,8 @@
                     <span>kcal</span>
                 </div>
 
-                <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine">75</span> g</p>
-                <progress id="progress-proteine" class="macro-progress" value="0"></progress>
+                <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine">50</span> g</p>
+                <progress id="progress-proteine" class="macro-progress" value="0" max="50"></progress>
                 <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie">1600</span> kcal</p>
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
@@ -652,13 +653,13 @@
         let currentUserUID = null; 
 
         const PIANO_SETTIMANALE = {
-            0: { tipo: '💧 Riposo (Deficit)', cal_base: 1600, prot: 75 },
-            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 1600, prot: 75 },
-            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 1600, prot: 75 },
-            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 1600, prot: 75 },
-            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 1600, prot: 75 },
-            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 1600, prot: 75 },
-            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 1600, prot: 75 }
+            0: { tipo: '💧 Riposo (Deficit)', cal_base: 1600, prot: 50 },
+            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 1600, prot: 50 },
+            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 1600, prot: 50 },
+            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 1600, prot: 50 },
+            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 1600, prot: 50 },
+            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 1600, prot: 50 },
+            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 1600, prot: 50 }
         };
 
         const DEFICIT_PREIMPOSTATO_SETTIMANALE = {
@@ -676,10 +677,10 @@
 	const OBIETTIVI_EXTRA = { fatSat: 18, fatUnsat: 32, vitA: 600, vitB12: 2.4, vitD: 15, vitc: 75 };
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
-            merenda1: { prot: 30, cal_perc: 0.20 },
-            pranzo: { prot: 40, cal_perc: 0.35 },
-            merenda2: { prot: 30, cal_perc: 0.15 },
-            cena: { prot: 40, cal_perc: 0.30 }
+            merenda1: { prot: 10, cal_perc: 0.20 }, // Valore ricalcolato per 50g totali
+            pranzo: { prot: 15, cal_perc: 0.35 },
+            merenda2: { prot: 10, cal_perc: 0.15 },
+            cena: { prot: 15, cal_perc: 0.30 }
         };
         const totalProtForza = Object.values(OBIETTIVI_MACRO_PASTO_BASE_FORZA).reduce((sum, p) => sum + p.prot, 0);
         for (const mealType in OBIETTIVI_MACRO_PASTO_BASE_FORZA) {
@@ -1675,10 +1676,8 @@ Se un valore non è disponibile usa 0.
 
         for (const key in fieldsToUpdate) {
             const el = document.getElementById(fieldsToUpdate[key]);
-            if (el) {
-                if (el.value === '' || (parseFloat(el.value) === 0 && resObj[key] !== 0)) {
-                    el.value = resObj[key] ?? 0;
-                }
+            if (el && typeof resObj[key] !== 'undefined' && resObj[key] !== null) {
+                el.value = resObj[key];
             }
         }
         aggiornaColoreNutrienti();
@@ -2133,4 +2132,3 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
-
