@@ -394,7 +394,7 @@
                 </table>
                 <button id="btn-salva-pasto">Salva Pasto nel Diario</button>
             </div>
-            <div id="diary-section" class="sezione">
+            <div id="diary-section" classione="sezione">
                 <h2>Diario Giornaliero</h2>
                 <table id="log-pasti">
                     <thead>
@@ -429,7 +429,7 @@
                 </div>
             </div>
 
-            <div id="sync-section" class="sezione">
+            <div id="sync-section" classione="sezione">
                 <h2>Sincronizzazione Cloud Manuale</h2>
                 <div class="cloud-sync-section">
                     <button id="btn-download-manual"⬇️ Scarica Dati dal Cloud</button>
@@ -752,7 +752,7 @@
             let variazioneGrasso = 0;
             if (deficitArrotondato < 0) {
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
-            } else if (deficitArroronndato > 0) {
+            } else if (deficitArrotondato > 0) {
                 variazioneGrasso = -(deficitArrotondato / 7.7);
             } else {
                 variazioneGrasso = 0;
@@ -1422,21 +1422,28 @@ Se un valore non è disponibile usa 0.
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     currentUserUID = user.uid;
-                    authFormFields.style.display = 'none';
-                    authHeader.style.display = 'none';
-                    welcomeMessage.textContent = `Benvenuto, ${user.email}!`;
-                    welcomeMessage.style.display = 'block';
-                    btnSignOut.style.display = 'block';
-                    authStatusP.textContent = '';
-                    authSection.style.borderColor = '#2e7d32';
-                    authSection.classList.add('logged-in');
-                    mainTrackerContent.classList.add('authenticated');
-                    cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
-                    cloudSyncStatusSpan.className = 'cloud-sync-status connected';
-                    cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = false);
-                    btnFloppyUpload.style.display = 'none';
-                    updateFloppyDiskIcon();
-                    console.log("Utente autenticato. UI aggiornata.");
+                    // L'utente è autenticato, mostriamo l'interfaccia del tracker
+                    document.getElementById('main-tracker-content').classList.add('authenticated');
+                    
+                    // Personalizziamo l'interfaccia con i dati dell'utente
+                    const welcomeMessageEl = document.getElementById('welcome-message');
+                    if (welcomeMessageEl) {
+                        welcomeMessageEl.textContent = `Benvenuto, ${user.email}!`;
+                    }
+                    
+                    // Gestione sincronizzazione
+                    const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
+                    if (cloudSyncStatusSpan) {
+                         cloudSyncStatusSpan.textContent = `Connesso Cloud: ${user.email}`;
+                         cloudSyncStatusSpan.className = 'cloud-sync-status connected';
+                         // Abilita i pulsanti di sincronizzazione
+                         document.querySelectorAll('.cloud-sync-section button').forEach(button => button.disabled = false);
+                    }
+                    
+                    // Il codice di avvio dell'app va qui
+                    initAppUI();
+                    
+                    // Logica di sincronizzazione automatica all'avvio
                     const lastLocalUpdate = parseInt(localStorage.getItem(LOCAL_LAST_UPDATE_KEY) || 0);
                     let lastCloudUpdate = 0;
                     try {
@@ -1461,94 +1468,36 @@ Se un valore non è disponibile usa 0.
                             console.log("Dati locali e cloud sono sincronizzati o non ci sono differenze significative.");
                         }
                     }, 500);
+
                 } else {
-                    currentUserUID = null;
-                    authFormFields.style.display = 'block';
-                    authHeader.style.display = 'block';
-                    welcomeMessage.style.display = 'none';
-                    btnSignOut.style.display = 'none';
-                    authStatusP.textContent = "Non autenticato";
-                    authSection.style.borderColor = '#c62828';
-                    authSection.classList.remove('logged-in');
-                    mainTrackerContent.classList.remove('authenticated');
-                    cloudSyncStatusSpan.textContent = "Connessione Cloud: Non autenticato";
-                    cloudSyncStatusSpan.className = 'cloud-sync-status disconnected';
-                    cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-                    btnFloppyUpload.style.display = 'none';
-                    updateFloppyDiskIcon();
-                    console.log("Utente non autenticato. Mostro solo la sezione di autenticazione.");
+                    // L'utente non è autenticato, reindirizziamo alla pagina di login
+                    window.location.href = "loginEly.html";
                 }
             });
+
         } catch (error) {
             console.error("Errore durante l'inizializzazione di Firebase:", error);
-            authStatusP.textContent = `Errore Firebase: ${error.message}`;
-            authSection.style.borderColor = '#c62828';
-            mainTrackerContent.classList.remove('authenticated');
-            cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = true);
-            btnFloppyUpload.style.display = 'none';
+            // Reindirizziamo in caso di errore critico di Firebase
+            window.location.href = "loginEly.html";
         }
-        async function handleRegister() {
-            const email = userEmailInput.value.trim();
-            const password = userPasswordInput.value.trim();
-            if (!email || !password) {
-                alert("Inserisci email e password per registrarti.");
-                return;
-            }
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                alert("Registrazione completata e accesso effettuato!");
-                userPasswordInput.value = '';
-            } catch (error) {
-                alert(`Errore di registrazione: ${error.message}`);
-                console.error("Registration error:", error);
-            }
-        }
-        async function handleLogin() {
-            const email = userEmailInput.value.trim();
-            const password = userPasswordInput.value.trim();
-            if (!email || !password) {
-                alert("Inserisci email e password per accedere.");
-                return;
-            }
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                alert("Accesso effettuato con successo!");
-                userPasswordInput.value = '';
-            } catch (error) {
-                alert(`Errore di accesso: ${error.message}`);
-                console.error("Login error:", error);
-            }
-        }
+        
         async function handleSignOut() {
             try {
                 await signOut(auth);
                 alert("Disconnessione avvenuta.");
+                window.location.href = "loginEly.html";
             } catch (error) {
                 alert(`Errore durante la disconnessione: ${error.message}`);
                 console.error("Sign out error:", error);
             }
         }
-        const btnRegister = document.getElementById('btn-register');
-        const btnLogin = document.getElementById('btn-login');
-        if (btnRegister) {
-            btnRegister.addEventListener('click', handleRegister);
+        
+        const btnSignOut = document.getElementById('btn-sign-out');
+        if (btnSignOut) {
+            btnSignOut.addEventListener('click', handleSignOut);
         }
-        if (btnLogin) {
-            btnLogin.addEventListener('click', handleLogin);
-        }
-        const googleProvider = new GoogleAuthProvider();
-        const btnGoogleLogin = document.getElementById('btn-google-login');
-        if (btnGoogleLogin) {
-            btnGoogleLogin.addEventListener('click', async () => {
-                try {
-                    await signInWithPopup(auth, googleProvider);
-                    alert("Accesso con Google effettuato con successo!");
-                } catch (error) {
-                    alert(`Errore di accesso con Google: ${error.message}`);
-                    console.error("Google login error:", error);
-                }
-            });
-        }
+
+        // --- Le altre funzioni del tracker restano qui intatte ---
         function getUserDataRef() {
             if (!db || !currentUserUID) {
                 return null;
@@ -1711,6 +1660,8 @@ Se un valore non è disponibile usa 0.
         }
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico();
+            // In questa pagina non ci sono pulsanti di accesso, quindi non è necessario
+            // collegarli qui. La logica di accesso è gestita in loginEly.html
             initAppUI();
             btnFloppyUpload.style.display = 'none';
             updateFloppyDiskIcon();
