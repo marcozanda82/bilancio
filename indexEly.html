@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Nutrizionale Definitivo</title>
+    <title>Tracker Nutrizionale Elisa</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
+        h1, h2, h3 { color: #880e4f; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
         h2 { font-size: 1.4em; margin-top: 30px; }
         h3 { font-size: 1.1em; color: #333; border-bottom: 1px solid #eee; margin-top: 20px; }
-        #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
+        #titolo-giornata { text-align: center; color: #ad1457; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fce4ec; border-radius: 8px; border: 1px solid #f8bbd0;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
         input[type="text"], input[type="number"], input[type="date"], select, input[type="email"], input[type="password"] {
             width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em;
         }
-        button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
-        button:hover { background-color: #1565c0; }
-        #form-allenamento button { background-color: #2e7d32; }
+        button { background-color: #ec407a; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
+        button:hover { background-color: #d81b60; }
+        #form-allenamento button { background-color: #66bb6a; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
-        .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #4db6ac; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
         .sync-button-container { text-align: center; margin-top: 20px; }
         .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
@@ -50,22 +50,20 @@
         .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; }
         .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
         .sub-item-row td:last-child { visibility: hidden; }
-
-        /* Stili per il riepilogo del costruttore pasti */
         .nutrients-warning {
-            color: #d32f2f !important; /* Rosso scuro per l'avviso */
+            color: #d32f2f !important;
         }
         #meal-builder-summary {
             margin-bottom: 20px;
             padding: 15px;
-            background-color: #e3f2fd;
-            border: 1px solid #90caf9;
+            background-color: #fce4ec;
+            border: 1px solid #f8bbd0;
             border-radius: 8px;
         }
         #meal-builder-summary p {
             margin: 5px 0;
             font-weight: 600;
-            color: #1e88e5;
+            color: #ad1457;
         }
         #meal-builder-summary .progress-container {
             display: flex;
@@ -78,14 +76,12 @@
         #meal-builder-summary .progress-item p {
             font-size: 0.9em;
             margin-bottom: 5px;
-            color: #3f51b5;
+            color: #d81b60;
         }
         #meal-builder-summary .progress-item progress {
             height: 18px;
             border-radius: 4px;
         }
-
-        /* Stili per l'indicatore testuale deficit/surplus */
         #calorie-balance-text {
             display: block;
             text-align: center;
@@ -96,12 +92,9 @@
             padding: 8px 0;
             border-radius: 5px;
         }
-        /* Colori per lo stato */
         .balance-deficit { background-color: #ffebee; color: #d32f2f; }
         .balance-surplus { background-color: #e8f5e9; color: #2e7d32; }
-        .balance-even { background-color: #e3f2fd; color: #1976d2; }
-
-        /* Stili per l'area allenamento a scomparsa */
+        .balance-even { background-color: #fce4ec; color: #ad1457; }
         .collapsible-header {
             cursor: pointer;
             padding: 10px 0;
@@ -110,11 +103,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: #0d47a1;
+            color: #880e4f;
             font-size: 1.4em;
         }
         .collapsible-header:hover {
-            color: #1976d2;
+            color: #ad1457;
         }
         .collapsible-header .arrow {
             font-size: 0.8em;
@@ -133,8 +126,6 @@
         .collapsible-header.expanded .arrow {
             transform: rotate(90deg);
         }
-
-        /* Stili per il regolatore deficit/surplus */
         #calorie-adjuster {
             display: flex;
             align-items: center;
@@ -147,7 +138,7 @@
             padding: 5px 12px;
             font-size: 1.2em;
             border-radius: 5px;
-            background-color: #4CAF50;
+            background-color: #66bb6a;
             color: white;
             border: none;
             cursor: pointer;
@@ -168,8 +159,6 @@
             font-weight: normal;
             color: #333;
         }
-
-        /* Stili per i pulsanti di sincronizzazione manuale */
         .cloud-sync-section {
             display: flex;
             gap: 10px;
@@ -206,8 +195,6 @@
             color: #c62828;
             font-weight: bold;
         }
-
-        /* Stili per la sezione di autenticazione */
         #auth-section {
             margin-bottom: 25px;
             padding: 20px;
@@ -244,24 +231,20 @@
             text-align: center;
             font-weight: bold;
             font-size: 1.2em;
-            color: #0d47a1;
+            color: #ad1457;
             margin-bottom: 10px;
             display: none;
         }
-
-        /* Nascondi il tracker finché l'utente non è autenticato */
         #main-tracker-content {
             display: none;
         }
         #main-tracker-content.authenticated {
             display: block;
         }
-
-        /* NUOVI STILI per il riquadro di benvenuto minimizzato */
         #auth-section.logged-in {
             padding: 10px 20px;
-            background-color: #e3f2fd;
-            border: 1px solid #90caf9;
+            background-color: #fce4ec;
+            border: 1px solid #f8bbd0;
             box-shadow: none;
             text-align: center;
             display: flex;
@@ -289,8 +272,6 @@
             margin: 0;
             flex-shrink: 0;
         }
-
-        /* STILI PER IL PULSANTE FLOPPY DISK (ORA RIMOSSO O NASCOSTO) */
         .summary-header-row {
             display: flex;
             justify-content: space-between;
@@ -304,7 +285,7 @@
             border-bottom: none;
         }
         .floppy-disk-button {
-            display: none; /* Rimosso l'icona del floppy disk */
+            display: none;
             background-color: #00796b;
             color: white;
             border: none;
@@ -317,11 +298,10 @@
             justify-content: center;
             transition: background-color 0.3s;
             flex-shrink: 0;
-            /* Nuovi stili per il lampeggio */
             animation-duration: 1.5s;
             animation-iteration-count: infinite;
             animation-timing-function: ease-in-out;
-            animation-name: none; /* Inizialmente nessuna animazione */
+            animation-name: none;
         }
         .floppy-disk-button:hover {
             background-color: #004d40;
@@ -329,21 +309,20 @@
         .floppy-disk-button.disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            animation-name: none !important; /* Disabilita lampeggio se il pulsante è disabilitato */
+            animation-name: none !important;
         }
-        /* Definizione dell'animazione di lampeggio */
         @keyframes pulse-red {
             0% {
                 box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
-                background-color: #00796b; /* Colore normale */
+                background-color: #00796b;
             }
             70% {
                 box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
-                background-color: #d32f2f; /* Colore rosso quando lampeggia */
+                background-color: #d32f2f;
             }
             100% {
                 box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
-                background-color: #00796b; /* Torna normale */
+                background-color: #00796b;
             }
         }
         .floppy-disk-button.unsaved-changes {
@@ -364,7 +343,6 @@
             justify-content: space-between;
         }
         
-        /* Stili per le nuove barre di progressione */
         .fats-bar-container {
             margin-top: 15px;
         }
@@ -376,7 +354,6 @@
         .fats-sub-bars-container div {
             flex-grow: 1;
         }
-        /* Colori dinamici per la barra dei grassi saturi */
         .progress-fat-sat.green::-webkit-progress-value { background-color: #4CAF50; }
         .progress-fat-sat.green::-moz-progress-bar { background-color: #4CAF50; }
         .progress-fat-sat.orange::-webkit-progress-value { background-color: #ff9800; }
@@ -405,7 +382,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Tracker Nutrizionale Ely</h1>
+        <h1>Tracker Nutrizionale Elisa</h1>
         
         <div id="auth-section" class="sezione">
             <h2 id="auth-header">Accedi / Registrati</h2>
@@ -424,8 +401,8 @@
         <div id="main-tracker-content">
             <h2 id="titolo-giornata"></h2>
 <div class="nav-links">
-    <a href="storico.html">📊 Storico</a>
-    <a href="stima_grassi.html">🫙 Stima Grassi</a>
+    <a href="storicoEly.html">📝 Diario</a>
+    <a href="stima_grassi.html">🔍 Analisi Nutrizionale</a>
 </div>
             <div id="riepilogo" class="sezione">
                 <div class="summary-header-row">
@@ -553,7 +530,7 @@
     <div id="manual-fill-section">
         <div class="button-group">
             <button id="btn-copy-prompt">Copia Richiesta AI</button>
-            <button id="btn-confirm-json" style="background-color: #2e7d32;">Conferma Dati da JSON</button>
+            <button id="btn-confirm-json" style="background-color: #66bb6a;">Conferma Dati da JSON</button>
         </div>
         <textarea id="manual-json-input" placeholder="Incolla qui l'oggetto JSON con i valori nutrizionali, come da richiesta."></textarea>
     </div>
@@ -562,7 +539,7 @@
                 <div class="button-group">
                     <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
                     <button id="btn-aggiungi-singolo">Aggiungi al Diario</button>
-                    <button id="btn-compila-ai" style="background-color: #0d47a1;">Compila AI</button>
+                    <button id="btn-compila-ai" style="background-color: #880e4f;">Compila AI</button>
                 </div>
             </div>
             <div id="meal-builder-sezione" class="sezione" data-visible="false">
@@ -2093,7 +2070,9 @@ btnCopyPrompt.addEventListener('click', async () => {
         alert('Scrivi prima il nome dell\'alimento.');
         return;
     }
-    const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". Se un valore non è disponibile usa 0. ${GEMINI_PROMPT_FORMAT}`;
+    const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}".  
+Se un valore non è disponibile usa 0.
+{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"fe":mg,"zn":mg,"cu":mg}`;
     try {
         await navigator.clipboard.writeText(promptText);
         alert('Richiesta AI copiata negli appunti!');
@@ -2114,11 +2093,20 @@ btnConfirmJson.addEventListener('click', () => {
         const resObj = JSON.parse(jsonText);
         
         const fieldsToUpdate = {
-            'prot': 'builder-prot', 'kcal': 'builder-kcal', 'mg': 'builder-mg', 'k': 'builder-k',
-            'vitc': 'builder-vitc', 'ca': 'builder-ca', 'fatSat': 'builder-fat-sat',
-            'fatUnsat': 'builder-fat-unsat', 'vitA': 'builder-vit-a',
-            'vitB12': 'builder-vit-b12', 'vitD': 'builder-vit-d',
-            'fe': 'builder-fe', 'zn': 'builder-zn', 'cu': 'builder-cu'
+            'prot': 'builder-prot',
+            'kcal': 'builder-kcal',
+            'mg': 'builder-mg',
+            'k': 'builder-k',
+            'vitc': 'builder-vitc',
+            'ca': 'builder-ca',
+            'fatSat': 'builder-fat-sat',
+            'fatUnsat': 'builder-fat-unsat',
+            'vitA': 'builder-vit-a',
+            'vitB12': 'builder-vit-b12',
+            'vitD': 'builder-vit-d',
+            'fe': 'builder-fe',
+            'zn': 'builder-zn',
+            'cu': 'builder-cu'
         };
 
         for (const key in fieldsToUpdate) {
@@ -2146,4 +2134,3 @@ btnConfirmJson.addEventListener('click', () => {
     </script>
 </body>
 </html>
-
