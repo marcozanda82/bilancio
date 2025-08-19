@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diario e Trend Giornalieri di Elisa</title>
+    <title>Storico Dettagliato - Tabella Trend</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
         .container { width: 100%; max-width: 950px; }
-        h1 { color: #880e4f; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px;}
-        .nav-links a { display: inline-block; margin-bottom: 25px; padding: 10px 15px; background-color: #4db6ac; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        h1 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; margin-bottom: 20px;}
+        .nav-links a { display: inline-block; margin-bottom: 25px; padding: 10px 15px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
 
         .storico-table { width: 100%; border-collapse: collapse; background-color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;}
         th, td { padding: 12px 15px; text-align: left; vertical-align: middle; }
-        th { background-color: #fce4ec; font-weight: 600; color: #ad1457; }
-        .day-summary-row { border-bottom: 2px solid #f8bbd0; cursor: pointer; transition: background-color 0.2s; }
-        .day-summary-row:hover { background-color: #f8bbd0; }
-        .day-summary-row.expanded { background-color: #f8bbd0; }
+        th { background-color: #e8eaf6; font-weight: 600; color: #3f51b5; }
+        .day-summary-row { border-bottom: 2px solid #e0e0e0; cursor: pointer; transition: background-color 0.2s; }
+        .day-summary-row:hover { background-color: #f9f9fc; }
+        .day-summary-row.expanded { background-color: #f1f3f9; }
         
         .day-detail-row { display: none; }
         .day-detail-row.expanded { display: table-row; }
@@ -30,7 +30,9 @@
         .meal-expand-arrow { display: inline-block; width: 20px; transition: transform 0.2s; }
         .meal-group-row.expanded .meal-expand-arrow { transform: rotate(90deg); }
         .sub-item-row { display: none; }
+        /* Modificato per mostrare solo i sub-item successivi al pasto espanso */
         .meal-group-row.expanded + .sub-item-row { display: table-row; } 
+        /* Regola per mostrare tutti i sub-item di un pasto espanso */
         .meal-group-row.expanded ~ .sub-item-row.meal-active { display: table-row; }
 
         .trend-muscle { font-size: 1.5em; font-weight: bold; }
@@ -41,9 +43,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>📊 Diario e Trend Giornalieri di Elisa</h1>
+        <h1>📊 Storico e Trend Giornalieri</h1>
         <div class="nav-links">
-            <a href="indexEly.html">⬅️ Torna al Tracker di Elisa</a>
+            <a href="indexEly.html">⬅️ Torna al Tracker</a>
         </div>
         <div class="storico-table-container">
             <table class="storico-table">
@@ -101,14 +103,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return storicoDati;
     }
 
+    // Copia il PIANO_SETTIMANALE da indexEly.html per coerenza
     const PIANO_SETTIMANALE = {
-        0: { tipo: '💧 Riposo (Deficit)', cal: 1600, prot: 50 },
-        1: { tipo: '🔥 Forza (Mantenimento)', cal: 1600, prot: 50 },
-        2: { tipo: '💪 Forza (Mantenimento)', cal: 1600, prot: 50 },
-        3: { tipo: '🏃 Cardio (Deficit)', cal: 1600, prot: 50 },
-        4: { tipo: '🏋️ Forza (Mantenimento)', cal: 1600, prot: 50 },
-        5: { tipo: '🏃 Cardio (Deficit)', cal: 1600, prot: 50 },
-        6: { tipo: '🥗 Mantenimento (Free)', cal: 1600, prot: 50 }
+        0: { tipo: '💧 Riposo (Deficit)', cal_base: 1600, prot: 50 },
+        1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 1600, prot: 50 },
+        2: { tipo: '💪 Forza (Mantenimento)', cal_base: 1600, prot: 50 },
+        3: { tipo: '🏃 Cardio (Deficit)', cal_base: 1600, prot: 50 },
+        4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 1600, prot: 50 },
+        5: { tipo: '🏃 Cardio (Deficit)', cal_base: 1600, prot: 50 },
+        6: { tipo: '🥗 Mantenimento (Free)', cal_base: 1600, prot: 50 }
     };
 
     function renderStorico() {
@@ -141,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     totaliGiorno.mg += entry.mg || 0;
                     totaliGiorno.k += entry.k || 0;
                     totaliGiorno.vitc += entry.vitc || 0;
-                    totaliGiorno.ca += item.ca || 0;
+                    totaliGiorno.ca += entry.ca || 0;
                 } else if (entry.type === 'workout') {
                     totalWorkoutCaloriesLogged += entry.cal || 0;
                 }
@@ -153,7 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const giornoSettimana = dataDelGiorno.getDay();
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
             
-            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
+            const calorieAdjustment = giorno.calorieAdjustment || 0;
+
+            const obiettivoCalorieTotale = 1600 + workoutCalories + calorieAdjustment;
 
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
@@ -180,28 +185,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 testoVariazioneGrasso = '0.0 g';
             }
             
-let trendEquilibrioHtml = '<span class="trend-neutral trend-muscle">―</span>';
-let scoreEquilibrio = 0;
+            let trendMuscoloHtml = ''; // CORREZIONE: Inizializza la variabile
+            let scoreMuscolo = 0;
 
-// Punteggio per le proteine
-if(totaliGiorno.proteine >= pianoDelGiorno.prot) {
-    scoreEquilibrio++;
-}
+            if(totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) {
+                scoreMuscolo++;
+            } else {
+                scoreMuscolo--;
+            }
 
-// Punteggio per l'equilibrio calorico
-// Un intervallo di +/- 150 kcal è considerato equilibrato
-if (deficitArrotondato >= -150 && deficitArrotondato <= 150) {
-    scoreEquilibrio++;
-}
+            if(pianoDelGiorno.tipo.includes('Forza')) {
+                scoreMuscolo++;
+                if (deficitArrotondato < -200) {
+                    scoreMuscolo--;
+                }
+            }
 
-// Assegnazione dell'icona in base al punteggio
-if(scoreEquilibrio === 2) {
-    trendEquilibrioHtml = '<span class="trend-up trend-muscle">▲</span>'; // Icona di successo
-} else if (scoreEquilibrio === 1) {
-    trendEquilibrioHtml = '<span class="trend-neutral trend-muscle">―</span>'; // Icona neutra
-} else {
-    trendEquilibrioHtml = '<span class="trend-down trend-muscle">▼</span>'; // Icona di attenzione
-}
+            if(scoreMuscolo > 0) {
+                trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
+            } else if (scoreMuscolo < 0) {
+                trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
+            } else {
+                trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
+            }
 
             const summaryRow = document.createElement('tr');
             summaryRow.className = 'day-summary-row';
@@ -290,5 +296,3 @@ if(scoreEquilibrio === 2) {
 </script>
 </body>
 </html>
-
-
