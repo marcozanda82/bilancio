@@ -156,9 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const giornoSettimana = dataDelGiorno.getDay();
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
             
-            const calorieAdjustment = giorno.calorieAdjustment || 0;
-
-            const obiettivoCalorieTotale = 1600 + workoutCalories + calorieAdjustment;
+            const obiettivoCalorieTotale = 1600 + workoutCalories;
 
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
@@ -296,3 +294,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
