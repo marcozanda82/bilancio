@@ -56,7 +56,7 @@
                         <th>Calorie</th>
                         <th>Workout</th>
                         <th>Deficit/Surplus</th> <th>Grasso (g)</th>
-                        <th>Massa Musc.</th>
+                        <th>Trend</th>
                     </tr>
                 </thead>
                 <tbody id="storico-body"></tbody>
@@ -183,28 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 testoVariazioneGrasso = '0.0 g';
             }
             
-            let trendMuscoloHtml = ''; // CORREZIONE: Inizializza la variabile
-            let scoreMuscolo = 0;
-
-            if(totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) {
-                scoreMuscolo++;
+            let trendHtml = '';
+            if (deficitArrotondato < 100) {
+                trendHtml = '<span style="color: green;">✅</span>';
             } else {
-                scoreMuscolo--;
-            }
-
-            if(pianoDelGiorno.tipo.includes('Forza')) {
-                scoreMuscolo++;
-                if (deficitArrotondato < -200) {
-                    scoreMuscolo--;
-                }
-            }
-
-            if(scoreMuscolo > 0) {
-                trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
-            } else if (scoreMuscolo < 0) {
-                trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
-            } else {
-                trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
+                trendHtml = '<span style="color: red;">❌</span>';
             }
 
             const summaryRow = document.createElement('tr');
@@ -218,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${totaliGiorno.calorie.toFixed(0)}</td>
                 <td>${workoutCalories} kcal</td>
                 <td>${deficitSurplusText}</td> <td>${testoVariazioneGrasso}</td>
-                <td>${trendMuscoloHtml}</td>
+                <td>${trendHtml}</td>
             `;
             storicoBody.appendChild(summaryRow);
 
@@ -294,4 +277,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
