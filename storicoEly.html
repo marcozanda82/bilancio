@@ -180,27 +180,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 testoVariazioneGrasso = '0.0 g';
             }
             
-            let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
-            let scoreMuscolo = 0;
+let trendEquilibrioHtml = '<span class="trend-neutral trend-muscle">―</span>';
+let scoreEquilibrio = 0;
 
-            if(totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) {
-                scoreMuscolo++;
-            } else {
-                scoreMuscolo--;
-            }
+// Punteggio per le proteine
+if(totaliGiorno.proteine >= pianoDelGiorno.prot) {
+    scoreEquilibrio++;
+}
 
-            if(pianoDelGiorno.tipo.includes('Forza')) {
-                scoreMuscolo++;
-                if (deficitArrotondato < -200) {
-                    scoreMuscolo--;
-                }
-            }
+// Punteggio per l'equilibrio calorico
+// Un intervallo di +/- 150 kcal è considerato equilibrato
+if (deficitArrotondato >= -150 && deficitArrotondato <= 150) {
+    scoreEquilibrio++;
+}
 
-            if(scoreMuscolo > 0) {
-                trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
-            } else if (scoreMuscolo < 0) {
-                trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
-            }
+// Assegnazione dell'icona in base al punteggio
+if(scoreEquilibrio === 2) {
+    trendEquilibrioHtml = '<span class="trend-up trend-muscle">▲</span>'; // Icona di successo
+} else if (scoreEquilibrio === 1) {
+    trendEquilibrioHtml = '<span class="trend-neutral trend-muscle">―</span>'; // Icona neutra
+} else {
+    trendEquilibrioHtml = '<span class="trend-down trend-muscle">▼</span>'; // Icona di attenzione
+}
 
             const summaryRow = document.createElement('tr');
             summaryRow.className = 'day-summary-row';
@@ -289,4 +290,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
