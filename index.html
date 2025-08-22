@@ -169,6 +169,87 @@
         #log-pasti td:first-child { background-color: #ffffff; }
         #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
         #log-pasti .sub-item-row td:first-child { background-color: #ffffff; }
+        
+        /* Stili per la finestra modale (pop-up) */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6); 
+            -webkit-animation-name: fadeIn;
+            -webkit-animation-duration: 0.4s;
+            animation-name: fadeIn;
+            animation-duration: 0.4s;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 25px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            -webkit-animation-name: slideIn;
+            -webkit-animation-duration: 0.4s;
+            animation-name: slideIn;
+            animation-duration: 0.4s;
+        }
+
+        .modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .modal-close:hover,
+        .modal-close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .vitamin-weekly-summary {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .vitamin-weekly-summary:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .vitamin-weekly-summary h4 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #1565c0;
+            border: none;
+        }
+        .vitamin-weekly-summary p {
+            margin: 4px 0;
+            font-size: 0.95em;
+        }
+        .vitamin-weekly-summary i {
+            color: #555;
+            font-size: 0.9em;
+        }
+        .vitamin-weekly-summary progress {
+            width: 100%;
+            height: 20px;
+        }
+
+        /* Animazioni per la modale */
+        @-webkit-keyframes slideIn { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
+        @keyframes slideIn { from {margin-top: 5%; opacity: 0} to {margin-top: 10%; opacity: 1} }
+        @-webkit-keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
+        @keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
 
     </style>
 </head>
@@ -262,7 +343,10 @@
                 </h3>
                 <div class="collapsible-content" id="vit-content">
                     <div class="vitamin-group">
-                        <h4>Accumulabili (Liposolubili / Fegato)</h4>
+                        <h4 style="display: flex; align-items: center; gap: 8px;">
+                            Accumulabili (Liposolubili / Fegato) 
+                            <i id="info-vit-settimanali" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2;"></i>
+                        </h4>
                         <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p><progress id="progress-vit-a" value="0" max="900"></progress>
                         <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p><progress id="progress-vit-d" value="0" max="15"></progress>
                         <p>Vitamina E: <span id="totale-vit-e">0</span> / 15 mg</p><progress id="progress-vit-e" value="0" max="15"></progress>
@@ -425,7 +509,45 @@
             </div>
         </div>
     </div>
-
+    
+    <div id="weekly-vitamin-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Riepilogo Settimanale Vitamine Accumulabili</h2>
+            <p style="font-size: 0.9em; color: #555;">Dati calcolati sugli ultimi 7 giorni, incluso oggi.</p>
+            
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina A</h4>
+                <p>Totale: <span id="weekly-vit-a-total">0</span> / <span id="weekly-vit-a-goal">6300</span> µg</p>
+                <progress id="weekly-progress-vit-a" value="0" max="6300"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-a-avg">0</span> µg</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina D</h4>
+                <p>Totale: <span id="weekly-vit-d-total">0</span> / <span id="weekly-vit-d-goal">105</span> µg</p>
+                <progress id="weekly-progress-vit-d" value="0" max="105"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-d-avg">0</span> µg</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina E</h4>
+                <p>Totale: <span id="weekly-vit-e-total">0</span> / <span id="weekly-vit-e-goal">105</span> mg</p>
+                <progress id="weekly-progress-vit-e" value="0" max="105"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-e-avg">0</span> mg</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina K</h4>
+                <p>Totale: <span id="weekly-vit-k-total">0</span> / <span id="weekly-vit-k-goal">840</span> µg</p>
+                <progress id="weekly-progress-vit-k" value="0" max="840"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-k-avg">0</span> µg</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina B12</h4>
+                <p>Totale: <span id="weekly-vit-b12-total">0</span> / <span id="weekly-vit-b12-goal">16.8</span> µg</p>
+                <progress id="weekly-progress-vit-b12" value="0" max="16.8"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-b12-avg">0</span> µg</i></p>
+            </div>
+        </div>
+    </div>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
@@ -524,6 +646,10 @@
         const manualJsonInput = document.getElementById('manual-json-input');
         const btnConfirmJson = document.getElementById('btn-confirm-json');
         const btnClearNutrients = document.getElementById('btn-clear-nutrients');
+        // Riferimenti per la modale delle vitamine settimanali
+        const weeklyVitaminModal = document.getElementById('weekly-vitamin-modal');
+        const infoVitSettimanaliBtn = document.getElementById('info-vit-settimanali');
+        const modalCloseBtn = weeklyVitaminModal.querySelector('.modal-close');
         
         // Input Builder References
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
@@ -883,6 +1009,68 @@
             document.getElementById('nutrients-header').classList.toggle('nutrients-warning', hasEmptyFields);
         }
         
+        function calculateWeeklyVitaminStats() {
+            const vitaminsToTrack = {
+                'vitA': { total: 0, goal: OBIETTIVI_VIT.vitA * 7, id: 'a' },
+                'vitD': { total: 0, goal: OBIETTIVI_VIT.vitD * 7, id: 'd' },
+                'vitE': { total: 0, goal: OBIETTIVI_VIT.vitE * 7, id: 'e' },
+                'vitK': { total: 0, goal: OBIETTIVI_VIT.vitK * 7, id: 'k' },
+                'vitB12': { total: 0, goal: OBIETTIVI_VIT.vitB12 * 7, id: 'b12' }
+            };
+
+            const today = new Date();
+
+            for (let i = 0; i < 7; i++) {
+                const dateToCheck = new Date(today);
+                dateToCheck.setDate(today.getDate() - i);
+                const dateString = dateToCheck.toISOString().split('T')[0];
+
+                const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
+                if (dailyDataRaw) {
+                    try {
+                        const dailyData = JSON.parse(dailyDataRaw);
+                        if (dailyData && dailyData.log) {
+                            dailyData.log.forEach(entry => {
+                                const items = entry.type === 'meal' ? entry.items : [entry];
+                                items.forEach(item => {
+                                    for (const key in vitaminsToTrack) {
+                                        if (item[key]) {
+                                            vitaminsToTrack[key].total += item[key];
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    } catch (e) {
+                        console.error(`Errore nel parsing dei dati per il giorno ${dateString}:`, e);
+                    }
+                }
+            }
+            return vitaminsToTrack;
+        }
+
+        function openWeeklyVitaminsModal() {
+            const weeklyStats = calculateWeeklyVitaminStats();
+            
+            for (const key in weeklyStats) {
+                const stat = weeklyStats[key];
+                const { id, total, goal } = stat;
+                const avg = total / 7;
+
+                document.getElementById(`weekly-vit-${id}-total`).textContent = total.toFixed(1);
+                document.getElementById(`weekly-vit-${id}-goal`).textContent = goal.toFixed(1);
+                document.getElementById(`weekly-progress-vit-${id}`).value = total;
+                document.getElementById(`weekly-progress-vit-${id}`).max = goal;
+                document.getElementById(`weekly-vit-${id}-avg`).textContent = avg.toFixed(1);
+            }
+
+            weeklyVitaminModal.style.display = 'block';
+        }
+
+        function closeWeeklyVitaminsModal() {
+            weeklyVitaminModal.style.display = 'none';
+        }
+
         function toggleCollapsible(headerId, contentId) {
             const header = document.getElementById(headerId);
             const content = document.getElementById(contentId);
@@ -1068,6 +1256,15 @@
         });
         btnCalorieMinus.addEventListener('click', () => handleCalorieAdjustment(-10));
         btnCaloriePlus.addEventListener('click', () => handleCalorieAdjustment(10));
+
+        // Listener per la modale delle vitamine settimanali
+        infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
+        modalCloseBtn.addEventListener('click', closeWeeklyVitaminsModal);
+        window.addEventListener('click', (event) => {
+            if (event.target == weeklyVitaminModal) {
+                closeWeeklyVitaminsModal();
+            }
+        });
 
         // --- Firebase & Sync Logic ---
         try {
