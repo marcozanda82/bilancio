@@ -28,8 +28,8 @@
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
         progress.macro-progress { height: 25px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8em; table-layout: fixed; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; word-wrap: break-word; }
+        table { border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background-color: #f2f2f2; font-weight: 600; }
         .builder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
         .button-group { display: flex; gap: 10px; margin-top: 15px; }
@@ -126,29 +126,50 @@
         .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
         #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        /* Stili per tabella diario e colonna bloccata */
-        .diary-table-container { overflow-x: auto; }
-        #log-pasti th:first-child, #log-pasti td:first-child { 
-            width: 150px; 
+        /* NUOVI STILI PER TABELLA DIARIO CON COLONNA BLOCCATA */
+        .diary-table-container { 
+            overflow-x: auto; 
+            -webkit-box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
+            box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
+        }
+        
+        #log-pasti {
+            /* Rimuoviamo la larghezza fissa per permettere lo scorrimento */
+        }
+        
+        #log-pasti th, #log-pasti td {
+            min-width: 60px;
+            text-align: right;
+            padding: 8px 10px;
+            white-space: nowrap;
+        }
+
+        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1) { /* Colonna Descrizione */
+            min-width: 150px;
+            text-align: left;
             position: -webkit-sticky;
             position: sticky;
             left: 0;
             z-index: 2;
+            border-right: 2px solid #e0e0e0;
         }
-        #log-pasti th:last-child, #log-pasti td:last-child { width: 80px; text-align: center; }
-        #log-pasti td, #log-pasti th {
-            text-align: right;
-            padding-right: 8px;
-            white-space: nowrap;
-        }
-        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1),
-        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) {
+
+        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) { /* Colonna Grammi */
+            min-width: 50px;
             text-align: left;
         }
-        #log-pasti th:first-child { background-color: #f2f2f2; }
+        
+        #log-pasti th:last-child, #log-pasti td:last-child { /* Colonna Azione */
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Sfondi per la colonna bloccata per evitare trasparenze */
+        #log-pasti th:first-child { background-color: #f8f9fa; }
         #log-pasti td:first-child { background-color: #ffffff; }
         #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
         #log-pasti .sub-item-row td:first-child { background-color: #ffffff; }
+
     </style>
 </head>
 <body>
