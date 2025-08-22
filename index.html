@@ -244,6 +244,10 @@
             width: 100%;
             height: 20px;
         }
+        
+        .diff-value { font-weight: bold; }
+        .diff-surplus { color: #2e7d32; } /* Verde per surplus */
+        .diff-deficit { color: #d32f2f; } /* Rosso per carenza */
 
         /* Animazioni per la modale */
         @-webkit-keyframes slideIn { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
@@ -520,31 +524,31 @@
                 <h4>Vitamina A</h4>
                 <p>Totale: <span id="weekly-vit-a-total">0</span> / <span id="weekly-vit-a-goal">6300</span> µg</p>
                 <progress id="weekly-progress-vit-a" value="0" max="6300"></progress>
-                <p><i>Media giornaliera: <span id="weekly-vit-a-avg">0</span> µg</i></p>
+                <p><i>Media giornaliera: <span id="weekly-vit-a-avg">0.0</span> µg (Obiettivo: 900 µg | <span id="weekly-vit-a-diff" class="diff-value"></span>)</i></p>
             </div>
             <div class="vitamin-weekly-summary">
                 <h4>Vitamina D</h4>
                 <p>Totale: <span id="weekly-vit-d-total">0</span> / <span id="weekly-vit-d-goal">105</span> µg</p>
                 <progress id="weekly-progress-vit-d" value="0" max="105"></progress>
-                <p><i>Media giornaliera: <span id="weekly-vit-d-avg">0</span> µg</i></p>
+                <p><i>Media giornaliera: <span id="weekly-vit-d-avg">0.0</span> µg (Obiettivo: 15 µg | <span id="weekly-vit-d-diff" class="diff-value"></span>)</i></p>
             </div>
             <div class="vitamin-weekly-summary">
                 <h4>Vitamina E</h4>
                 <p>Totale: <span id="weekly-vit-e-total">0</span> / <span id="weekly-vit-e-goal">105</span> mg</p>
                 <progress id="weekly-progress-vit-e" value="0" max="105"></progress>
-                <p><i>Media giornaliera: <span id="weekly-vit-e-avg">0</span> mg</i></p>
+                <p><i>Media giornaliera: <span id="weekly-vit-e-avg">0.0</span> mg (Obiettivo: 15 mg | <span id="weekly-vit-e-diff" class="diff-value"></span>)</i></p>
             </div>
             <div class="vitamin-weekly-summary">
                 <h4>Vitamina K</h4>
                 <p>Totale: <span id="weekly-vit-k-total">0</span> / <span id="weekly-vit-k-goal">840</span> µg</p>
                 <progress id="weekly-progress-vit-k" value="0" max="840"></progress>
-                <p><i>Media giornaliera: <span id="weekly-vit-k-avg">0</span> µg</i></p>
+                <p><i>Media giornaliera: <span id="weekly-vit-k-avg">0.0</span> µg (Obiettivo: 120 µg | <span id="weekly-vit-k-diff" class="diff-value"></span>)</i></p>
             </div>
             <div class="vitamin-weekly-summary">
                 <h4>Vitamina B12</h4>
                 <p>Totale: <span id="weekly-vit-b12-total">0</span> / <span id="weekly-vit-b12-goal">16.8</span> µg</p>
                 <progress id="weekly-progress-vit-b12" value="0" max="16.8"></progress>
-                <p><i>Media giornaliera: <span id="weekly-vit-b12-avg">0</span> µg</i></p>
+                <p><i>Media giornaliera: <span id="weekly-vit-b12-avg">0.0</span> µg (Obiettivo: 2.4 µg | <span id="weekly-vit-b12-diff" class="diff-value"></span>)</i></p>
             </div>
         </div>
     </div>
@@ -1056,12 +1060,29 @@
                 const stat = weeklyStats[key];
                 const { id, total, goal } = stat;
                 const avg = total / 7;
+                const dailyGoal = OBIETTIVI_VIT[key]; // Ottiene l'obiettivo giornaliero
+                const diff = avg - dailyGoal;
 
                 document.getElementById(`weekly-vit-${id}-total`).textContent = total.toFixed(1);
                 document.getElementById(`weekly-vit-${id}-goal`).textContent = goal.toFixed(1);
                 document.getElementById(`weekly-progress-vit-${id}`).value = total;
                 document.getElementById(`weekly-progress-vit-${id}`).max = goal;
                 document.getElementById(`weekly-vit-${id}-avg`).textContent = avg.toFixed(1);
+                
+                const diffSpan = document.getElementById(`weekly-vit-${id}-diff`);
+                const unit = key === 'vitE' ? 'mg' : 'µg'; // Unità di misura corretta
+                
+                // Resetta le classi di colore
+                diffSpan.classList.remove('diff-surplus', 'diff-deficit');
+
+                // Imposta testo e colore in base alla differenza
+                if (diff >= 0) {
+                    diffSpan.classList.add('diff-surplus');
+                    diffSpan.textContent = `+${diff.toFixed(1)} ${unit}`;
+                } else {
+                    diffSpan.classList.add('diff-deficit');
+                    diffSpan.textContent = `${diff.toFixed(1)} ${unit}`;
+                }
             }
 
             weeklyVitaminModal.style.display = 'block';
