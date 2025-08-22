@@ -25,7 +25,7 @@
         .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
         .sync-button-container { text-align: center; margin-top: 20px; }
         .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
-        #riepilogo p { font-size: 1.1em; margin: 8px 0; }
+        #riepilogo p, #riepilogo-settimanale p { font-size: 1.1em; margin: 8px 0; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
         progress.macro-progress { height: 25px; }
         table { border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
@@ -126,7 +126,6 @@
         .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
         #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        /* NUOVI STILI PER TABELLA DIARIO CON COLONNA BLOCCATA */
         .diary-table-container { 
             overflow-x: auto; 
             -webkit-box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
@@ -134,7 +133,7 @@
         }
         
         #log-pasti {
-            /* Rimuoviamo la larghezza fissa per permettere lo scorrimento */
+            border-collapse: collapse;
         }
         
         #log-pasti th, #log-pasti td {
@@ -144,7 +143,7 @@
             white-space: nowrap;
         }
 
-        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1) { /* Colonna Descrizione */
+        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1) {
             min-width: 150px;
             text-align: left;
             position: -webkit-sticky;
@@ -154,17 +153,16 @@
             border-right: 2px solid #e0e0e0;
         }
 
-        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) { /* Colonna Grammi */
+        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) {
             min-width: 50px;
             text-align: left;
         }
         
-        #log-pasti th:last-child, #log-pasti td:last-child { /* Colonna Azione */
+        #log-pasti th:last-child, #log-pasti td:last-child {
             min-width: 80px;
             text-align: center;
         }
 
-        /* Sfondi per la colonna bloccata per evitare trasparenze */
         #log-pasti th:first-child { background-color: #f8f9fa; }
         #log-pasti td:first-child { background-color: #ffffff; }
         #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
@@ -215,68 +213,71 @@
                 <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
-                <hr>
-                
-                <h3 class="collapsible-header" id="fats-header">
-                    Grassi <span class="arrow">▶</span>
-                </h3>
-                <div class="collapsible-content" id="fats-content">
-                    <div class="fats-bar-container">
-                        <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
-                        <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
-                        <div class="fats-sub-bars-container">
-                            <div>
-                                <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat">20</span> g</p>
-                                <progress id="progress-fat-sat" class="progress-fat-sat" value="0" max="20"></progress>
-                            </div>
-                            <div>
-                                <p>Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat">50</span> g</p>
-                                <progress id="progress-fat-unsat" class="progress-fat-unsat" value="0" max="50"></progress>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                
-                <h3 class="collapsible-header" id="micro-header">
-                    Micronutrienti <span class="arrow">▶</span>
-                </h3>
-                <div class="collapsible-content" id="micro-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div>
-                            <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
-                            <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
-                            <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
-                        </div>
-                        <div>
-                            <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
-                            <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
-                            <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
-                        </div>
-                    </div>
-                </div>
-                <hr>
-
-                <h3 class="collapsible-header" id="vit-header">
-                    Vitamine <span class="arrow">▶</span>
-                </h3>
-                <div class="collapsible-content" id="vit-content">
+            </div>
+            
+            <div id="riepilogo-settimanale" class="sezione" style="border-left-color: #4CAF50;">
+                <h2 class="collapsible-header" id="weekly-summary-header">Riepilogo Settimanale Vitamine <span class="arrow">▶</span></h2>
+                <div class="collapsible-content" id="weekly-summary-content">
+                    <p style="text-align:center; font-weight:bold;" id="settimana-corrente"></p>
                     <div class="vitamin-group">
-                        <h4>Accumulabili (Liposolubili / Fegato)</h4>
-                        <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p><progress id="progress-vit-a" value="0" max="900"></progress>
-                        <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p><progress id="progress-vit-d" value="0" max="15"></progress>
-                        <p>Vitamina E: <span id="totale-vit-e">0</span> / 15 mg</p><progress id="progress-vit-e" value="0" max="15"></progress>
-                        <p>Vitamina K: <span id="totale-vit-k">0</span> / 120 µg</p><progress id="progress-vit-k" value="0" max="120"></progress>
-                        <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p><progress id="progress-vit-b12" value="0" max="2.4"></progress>
-                    </div>
-                     <div class="vitamin-group">
-                        <h4>Giornaliere (Idrosolubili)</h4>
-                        <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0" max="90"></progress>
-                        <p>Vitamina B2: <span id="totale-b2">0</span> / 1.3 mg</p><progress id="progress-b2" value="0" max="1.3"></progress>
-                        <p>Vitamina B6: <span id="totale-b6">0</span> / 1.3 mg</p><progress id="progress-b6" value="0" max="1.3"></progress>
-                        <p>Folati (B9): <span id="totale-b9">0</span> / 400 µg</p><progress id="progress-b9" value="0" max="400"></progress>
+                        <h4>Vitamine Accumulabili</h4>
+                        <p>Vitamina A: <span id="weekly-totale-vit-a">0</span> / <span id="weekly-obiettivo-vit-a"></span> µg</p><progress id="weekly-progress-vit-a" value="0"></progress>
+                        <p>Vitamina D: <span id="weekly-totale-vit-d">0</span> / <span id="weekly-obiettivo-vit-d"></span> µg</p><progress id="weekly-progress-vit-d" value="0"></progress>
+                        <p>Vitamina E: <span id="weekly-totale-vit-e">0</span> / <span id="weekly-obiettivo-vit-e"></span> mg</p><progress id="weekly-progress-vit-e" value="0"></progress>
+                        <p>Vitamina K: <span id="weekly-totale-vit-k">0</span> / <span id="weekly-obiettivo-vit-k"></span> µg</p><progress id="weekly-progress-vit-k" value="0"></progress>
+                        <p>Vitamina B12: <span id="weekly-totale-vit-b12">0</span> / <span id="weekly-obiettivo-vit-b12"></span> µg</p><progress id="weekly-progress-vit-b12" value="0"></progress>
                     </div>
                 </div>
+            </div>
+
+            <div id="dettagli-giornalieri" class="sezione" style="border-left-color: #ff9800;">
+                 <h2 class="collapsible-header expanded" id="daily-details-header">Dettagli Giornalieri <span class="arrow">▼</span></h2>
+                 <div class="collapsible-content expanded" id="daily-details-content">
+                    <hr>
+                    <h3 class="collapsible-header" id="fats-header">Grassi <span class="arrow">▶</span></h3>
+                    <div class="collapsible-content" id="fats-content">
+                        <div class="fats-bar-container">
+                            <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
+                            <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
+                            <div class="fats-sub-bars-container">
+                                <div>
+                                    <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat">20</span> g</p>
+                                    <progress id="progress-fat-sat" class="progress-fat-sat" value="0" max="20"></progress>
+                                </div>
+                                <div>
+                                    <p>Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat">50</span> g</p>
+                                    <progress id="progress-fat-unsat" class="progress-fat-unsat" value="0" max="50"></progress>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <h3 class="collapsible-header" id="micro-header">Micronutrienti <span class="arrow">▶</span></h3>
+                    <div class="collapsible-content" id="micro-content">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
+                                <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
+                                <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
+                            </div>
+                            <div>
+                                <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
+                                <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
+                                <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <h3 class="collapsible-header" id="vit-header">Vitamine Giornaliere (Idrosolubili) <span class="arrow">▶</span></h3>
+                    <div class="collapsible-content" id="vit-content" style="display:block;">
+                         <div class="vitamin-group" style="padding:0; margin:0; background:none; border:none;">
+                            <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0" max="90"></progress>
+                            <p>Vitamina B2: <span id="totale-b2">0</span> / 1.3 mg</p><progress id="progress-b2" value="0" max="1.3"></progress>
+                            <p>Vitamina B6: <span id="totale-b6">0</span> / 1.3 mg</p><progress id="progress-b6" value="0" max="1.3"></progress>
+                            <p>Folati (B9): <span id="totale-b9">0</span> / 400 µg</p><progress id="progress-b9" value="0" max="400"></progress>
+                        </div>
+                    </div>
+                 </div>
             </div>
 
             <div id="form-allenamento" class="sezione">
@@ -469,6 +470,7 @@
         const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9 };
         const OBIETTIVI_FAT = { fatTotal: 70, fatSat: 20, fatUnsat: 50 };
         const OBIETTIVI_VIT = { vitA: 900, vitB12: 2.4, vitD: 15, vitE: 15, vitK: 120, b9: 400, b2: 1.3, b6: 1.3 };
+        const VITAMINE_ACCUMULABILI = ['vitA', 'vitD', 'vitE', 'vitK', 'vitB12'];
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
             merenda1: { prot: 30, cal_perc: 0.20 },
@@ -589,6 +591,7 @@
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
             localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
             console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
+            aggiornaRiepilogoSettimanale(dataDaSalvare);
             saveAllTrackerDataToCloud(); 
         }
         
@@ -617,6 +620,7 @@
             }
             
             aggiornaUI();
+            aggiornaRiepilogoSettimanale(data);
             console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
         }
 
@@ -718,11 +722,6 @@
             spanTotaleZn.textContent = totali.zn.toFixed(1); progressZn.max = OBIETTIVI.zn; progressZn.value = totali.zn;
             spanTotaleCu.textContent = totali.cu.toFixed(2); progressCu.max = OBIETTIVI.cu; progressCu.value = totali.cu;
             spanTotaleVitC.textContent = totali.vitc.toFixed(1); progressVitC.max = OBIETTIVI.vitc; progressVitC.value = totali.vitc;
-            spanTotaleVitA.textContent = totali.vitA.toFixed(1); progressVitA.max = OBIETTIVI.vitA; progressVitA.value = totali.vitA;
-            spanTotaleVitB12.textContent = totali.vitB12.toFixed(1); progressVitB12.max = OBIETTIVI.vitB12; progressVitB12.value = totali.vitB12;
-            spanTotaleVitD.textContent = totali.vitD.toFixed(1); progressVitD.max = OBIETTIVI.vitD; progressVitD.value = totali.vitD;
-            spanTotaleVitE.textContent = totali.vitE.toFixed(1); progressVitE.max = OBIETTIVI.vitE; progressVitE.value = totali.vitE;
-            spanTotaleVitK.textContent = totali.vitK.toFixed(1); progressVitK.max = OBIETTIVI.vitK; progressVitK.value = totali.vitK;
             spanTotaleB9.textContent = totali.b9.toFixed(1); progressB9.max = OBIETTIVI.b9; progressB9.value = totali.b9;
             spanTotaleB2.textContent = totali.b2.toFixed(2); progressB2.max = OBIETTIVI.b2; progressB2.value = totali.b2;
             spanTotaleB6.textContent = totali.b6.toFixed(2); progressB6.max = OBIETTIVI.b6; progressB6.value = totali.b6;
@@ -738,7 +737,7 @@
             
             document.getElementById('fats-header').classList.toggle('nutrients-warning', totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTotal > OBIETTIVI_FAT.fatTotal);
             document.getElementById('micro-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_MICRO).some(k => totali[k] < OBIETTIVI_MICRO[k] * 0.5));
-            document.getElementById('vit-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_VIT).some(k => totali[k] < OBIETTIVI_VIT[k] * 0.5));
+            document.getElementById('vit-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_VIT).some(k => !VITAMINE_ACCUMULABILI.includes(k) && totali[k] < OBIETTIVI_VIT[k] * 0.5));
             
             logBody.innerHTML = ''; 
             const nutrientKeys = ['prot', 'cal', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'fatSat', 'fatUnsat', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
@@ -891,14 +890,65 @@
             header.querySelector('.arrow').textContent = header.classList.contains('expanded') ? '▼' : '▶';
         }
 
+        // --- NUOVE FUNZIONI PER RIEPILOGO SETTIMANALE ---
+        function getWeekDateRange(dateString) {
+            const date = new Date(dateString);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+            const monday = new Date(date.setDate(diff));
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            return { start: monday, end: sunday };
+        }
+
+        function aggiornaRiepilogoSettimanale(giornoCorrente) {
+            const { start, end } = getWeekDateRange(giornoCorrente);
+            
+            document.getElementById('settimana-corrente').textContent = 
+                `Settimana: ${start.toLocaleDateString('it-IT', {day:'numeric', month:'short'})} - ${end.toLocaleDateString('it-IT', {day:'numeric', month:'short'})}`;
+
+            const weeklyTotals = {};
+            VITAMINE_ACCUMULABILI.forEach(vit => weeklyTotals[vit] = 0);
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dateString = d.toISOString().split('T')[0];
+                const dayDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
+                if (dayDataRaw) {
+                    try {
+                        const dayData = JSON.parse(dayDataRaw);
+                        (dayData.log || []).forEach(entry => {
+                            const items = entry.type === 'meal' ? entry.items : [entry];
+                            items.forEach(item => {
+                                VITAMINE_ACCUMULABILI.forEach(vit => {
+                                    weeklyTotals[vit] += item[vit] || 0;
+                                });
+                            });
+                        });
+                    } catch (e) { console.error(`Errore parsing dati per ${dateString}`, e); }
+                }
+            }
+
+            VITAMINE_ACCUMULABILI.forEach(vit => {
+                const total = weeklyTotals[vit];
+                const goal = OBIETTIVI_VIT[vit] * 7;
+                const key = vit.replace('vit', 'vit-');
+                
+                document.getElementById(`weekly-totale-${key}`).textContent = total.toFixed(1);
+                document.getElementById(`weekly-obiettivo-${key}`).textContent = goal.toFixed(1);
+                const progress = document.getElementById(`weekly-progress-${key}`);
+                progress.max = goal;
+                progress.value = total;
+            });
+        }
+
         // --- EVENT LISTENERS SETUP ---
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
         });
         
-        ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
-            document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
+        ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header', 'weekly-summary-header', 'daily-details-header'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
         
         btnClearNutrients.addEventListener('click', () => { resetInputAlimento(); aggiornaColoreNutrienti(); });
