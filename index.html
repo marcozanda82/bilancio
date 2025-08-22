@@ -386,7 +386,7 @@
                     <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
                     <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
-                    <div><label>Kcal/100g</label><input type="number" id="builder-cal" min="0"></div>
+                    <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
                 </div>
 <h2 class="collapsible-header" id="nutrients-header">
     Dettagli Nutrizionali <span class="arrow">▶</span>
@@ -614,7 +614,7 @@
 
         const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-        const GEMINI_PROMPT_FORMAT = `{"prot":g,"cal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg}`;
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg}`;
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
 
         // --- Element References ---
@@ -657,7 +657,7 @@
         
         // Input Builder References
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
-        const builderProt = document.getElementById('builder-prot'), builderCal = document.getElementById('builder-cal');
+        const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
         const builderFatSat = document.getElementById('builder-fat-sat'), builderFatUnsat = document.getElementById('builder-fat-unsat');
         const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
@@ -824,7 +824,7 @@
                 const items = entry.type === 'meal' ? entry.items : [entry];
                 items.forEach(item => {
                     for (const nutriente of nutrientiDaSommare) {
-                        const itemKey = nutriente === 'proteine' ? 'prot' : (nutriente === 'calorie' ? 'cal' : nutriente);
+                        const itemKey = nutriente === 'proteine' ? 'prot' : (nutriente === 'calorie' ? 'kcal' : nutriente);
                         if(itemKey === 'fatTotal') {
                            totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
                         } else if (item[itemKey] !== undefined) {
@@ -871,7 +871,7 @@
             document.getElementById('vit-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_VIT).some(k => totali[k] < OBIETTIVI_VIT[k] * 0.5));
             
             logBody.innerHTML = ''; 
-            const nutrientKeys = ['prot', 'cal', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'fatSat', 'fatUnsat', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
+            const nutrientKeys = ['prot', 'kcal', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'fatSat', 'fatUnsat', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
             const formatNumber = (key, value) => (value || 0).toFixed(['cu', 'b2', 'b6'].includes(key) ? 2 : (['cal', 'k'].includes(key) ? 0 : 1));
 
             (datiGiornalieri.log || []).forEach((entry, index) => {
@@ -945,7 +945,7 @@
         }
         
         const inputFields = {
-            prot: builderProt, cal: builderCal, mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
+            prot: builderProt, kcal: builderKcal, mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
             fatSat: builderFatSat, fatUnsat: builderFatUnsat, vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
             vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, fe: builderFe, zn: builderZn, cu: builderCu
         };
@@ -1155,6 +1155,11 @@
             aggiornaUI(); 
             salvaGiorno(giornoVisualizzato, datiGiornalieri); 
             renderMealBuilder(); 
+
+            const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
+            mealTypeSelector.value = (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) ? MEAL_TYPE_SEQUENCE[currentIndex + 1] : MEAL_TYPE_SEQUENCE[0];
+            localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
+            saveAllTrackerDataToCloud(); 
         });
 
         document.body.addEventListener('click', (e) => {
@@ -1404,3 +1409,4 @@
     </script>
 </body>
 </html>
+
