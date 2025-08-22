@@ -956,13 +956,18 @@
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return null; }
             
             const foodData = { lastQta: qta };
-            const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta };
-            
-            for (const key in inputFields) {
-                const value = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
-                foodData[key] = value;
-                foodItem[key] = ((value ?? 0) / 100) * qta;
-            }
+const foodItem = {
+    desc: desc.charAt(0).toUpperCase() + desc.slice(1),
+    qta
+};
+
+for (const key in inputFields) {
+    const value = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
+    foodData[key] = value;
+    foodItem[key] = ((value ?? 0) / 100) * qta;
+}
+
+foodItem.type = isSingle ? 'single' : 'meal';
             
             foodDatabase[desc.toLowerCase()] = foodData;
             salvaFoodDatabase(); 
@@ -1409,3 +1414,4 @@
     </script>
 </body>
 </html>
+
