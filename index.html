@@ -694,7 +694,7 @@
                 const items = entry.type === 'meal' ? entry.items : [entry];
                 items.forEach(item => {
                     for (const nutriente of nutrientiDaSommare) {
-                        const itemKey = nutriente === 'proteine' ? 'prot' : (nutriente === 'calorie' ? 'cal' : nutriente);
+                        const itemKey = nutriente === 'proteine' ? 'prot' : (nutriente === 'calorie' ? 'kcal' : nutriente);
                         if(itemKey === 'fatTotal') {
                            totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
                         } else if (item[itemKey] !== undefined) {
@@ -727,7 +727,8 @@
             spanTotaleB2.textContent = totali.b2.toFixed(2); progressB2.max = OBIETTIVI.b2; progressB2.value = totali.b2;
             spanTotaleB6.textContent = totali.b6.toFixed(2); progressB6.max = OBIETTIVI.b6; progressB6.value = totali.b6;
 
-            const calorieDifference = totali.calorie - obiettivoCalorieTotale;
+            const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
+            const calorieDifference = totali.calorie - targetCaloriesForBalanceText;
             calorieBalanceText.className = '';
             const tolerance = 50;
             if (calorieDifference < -tolerance) { calorieBalanceText.textContent = `Deficit: ${Math.abs(calorieDifference).toFixed(0)} kcal`; calorieBalanceText.classList.add('balance-deficit');
@@ -740,7 +741,7 @@
             document.getElementById('vit-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_VIT).some(k => totali[k] < OBIETTIVI_VIT[k] * 0.5));
             
             logBody.innerHTML = ''; 
-            const nutrientKeys = ['prot', 'cal', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'fatSat', 'fatUnsat', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
+            const nutrientKeys = ['prot', 'kcal', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'fatSat', 'fatUnsat', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
             const formatNumber = (key, value) => (value || 0).toFixed(['cu', 'b2', 'b6'].includes(key) ? 2 : (['cal', 'k'].includes(key) ? 0 : 1));
 
             (datiGiornalieri.log || []).forEach((entry, index) => {
@@ -813,9 +814,8 @@
             foodDatalist.innerHTML = Object.keys(foodDatabase).map(foodName => `<option value="${foodName.charAt(0).toUpperCase() + foodName.slice(1)}"></option>`).join('');
         }
         
-        // ***** MODIFICA APPLICATA QUI *****
         const inputFields = {
-            prot: builderProt, cal: builderKcal, mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
+            prot: builderProt, kcal: builderKcal, mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
             fatSat: builderFatSat, fatUnsat: builderFatUnsat, vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
             vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, fe: builderFe, zn: builderZn, cu: builderCu
         };
