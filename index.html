@@ -727,7 +727,8 @@
             spanTotaleB2.textContent = totali.b2.toFixed(2); progressB2.max = OBIETTIVI.b2; progressB2.value = totali.b2;
             spanTotaleB6.textContent = totali.b6.toFixed(2); progressB6.max = OBIETTIVI.b6; progressB6.value = totali.b6;
 
-            const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
+            
+            const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
             const calorieDifference = totali.calorie - targetCaloriesForBalanceText;
             calorieBalanceText.className = '';
             const tolerance = 50;
@@ -1191,3 +1192,4 @@
     </script>
 </body>
 </html>
+
