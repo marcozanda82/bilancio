@@ -292,14 +292,14 @@
                     <label for="calorie-adjustment-input">Correzione Obiettivo:</label>
                     <button id="btn-calorie-minus" class="minus">-</button>
                     <input type="number" id="calorie-adjustment-input" value="0"> <button id="btn-calorie-plus">+</button>
-                    <span>kcal</span>
+                    <span>cal</span>
                 </div>
 
                 <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
                 <progress id="progress-proteine" class="macro-progress" value="0"></progress>
-                <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+                <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> cal</p>
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
-                <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
+                <p>Workout: <span id="workout-calories-totali">0</span> cal</p>
                 <hr>
                 
                 <h3 class="collapsible-header" id="fats-header">
@@ -372,7 +372,7 @@
                 <div class="collapsible-content" id="workout-content">
                     <label for="workout-desc">Descrizione Allenamento</label>
                     <input type="text" id="workout-desc" placeholder="es. Corsa 30 min, Pesistica">
-                    <label for="workout-calories">Calorie Bruciate (kcal)</label>
+                    <label for="workout-calories">Calorie Bruciate (cal)</label>
                     <input type="number" id="workout-calories" min="0">
                     <button id="btn-add-workout">Aggiungi Allenamento</button>
                 </div>
@@ -386,7 +386,7 @@
                     <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
                     <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
-                    <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
+                    <div><label>Calorie/100g</label><input type="number" id="builder-cal" min="0"></div>
                 </div>
 <h2 class="collapsible-header" id="nutrients-header">
     Dettagli Nutrizionali <span class="arrow">▶</span>
@@ -436,7 +436,7 @@
                             <progress id="meal-progress-prot" value="0"></progress>
                         </div>
                         <div class="progress-item">
-                            <p>Calorie: <span id="meal-cal-current">0</span> / <span id="meal-cal-target"></span> kcal (<span id="meal-cal-remaining"></span>)</p>
+                            <p>Calorie: <span id="meal-cal-current">0</span> / <span id="meal-cal-target"></span> cal (<span id="meal-cal-remaining"></span>)</p>
                             <progress id="meal-progress-cal" value="0"></progress>
                         </div>
                     </div>
@@ -448,7 +448,7 @@
                     <option value="cena">Cena</option>
                 </select>
                 <table id="log-pasto-builder">
-                    <thead><tr><th>Sel.</th><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
+                    <thead><tr><th>Sel.</th><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Cal</th><th>Azione</th></tr></thead>
                     <tbody id="log-pasto-builder-body"></tbody>
                 </table>
                 <button id="btn-salva-pasto">Salva Pasto nel Diario</button>
@@ -462,7 +462,7 @@
                             <th>Descrizione</th>
                             <th>(g)</th>
                             <th>Prot</th>
-                            <th>Kcal</th>
+                            <th>Cal</th>
                             <th>Mg</th>
                             <th>K</th>
                             <th>Vit.C</th>
@@ -614,7 +614,7 @@
 
         const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg}`;
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"cal":cal,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"fatSat":g,"fatUnsat":g,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg}`;
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
 
         // --- Element References ---
@@ -657,7 +657,7 @@
         
         // Input Builder References
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
-        const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
+        const builderProt = document.getElementById('builder-prot'), builderCal = document.getElementById('builder-cal');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
         const builderFatSat = document.getElementById('builder-fat-sat'), builderFatUnsat = document.getElementById('builder-fat-unsat');
         const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
@@ -769,11 +769,11 @@
                         if (entry.type === 'meal') {
                             entry.items.forEach(item => {
                                 consumatoProtAltriPasti += item.prot || 0;
-                                consumatoCalAltriPasti += item.kcal || 0;
+                                consumatoCalAltriPasti += item.cal || 0;
                             });
                         } else {
                             consumatoProtAltriPasti += entry.prot || 0;
-                            consumatoCalAltriPasti += entry.kcal || 0;
+                            consumatoCalAltriPasti += entry.cal || 0;
                         }
                     }
                 });
@@ -785,12 +785,12 @@
             }
             
             const totaliPastoInCostruzione = pastoInCostruzione.reduce((acc, item) => {
-                acc.prot += item.prot || 0; acc.kcal += item.kcal || 0; return acc;
-            }, { prot: 0, kcal: 0 });
+                acc.prot += item.prot || 0; acc.cal += item.cal || 0; return acc;
+            }, { prot: 0, cal: 0 });
 
             return {
                 currentProt: totaliPastoInCostruzione.prot, targetProt: obiettivoPastoProt, remainingProt: obiettivoPastoProt - totaliPastoInCostruzione.prot,
-                currentCal: totaliPastoInCostruzione.kcal, targetCal: obiettivoPastoCal, remainingCal: obiettivoPastoCal - totaliPastoInCostruzione.kcal
+                currentCal: totaliPastoInCostruzione.cal, targetCal: obiettivoPastoCal, remainingCal: obiettivoPastoCal - totaliPastoInCostruzione.cal
             };
         }
 
@@ -813,7 +813,7 @@
             const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
             
             const obiettivoCalorieTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
-            const OBIETTIVI = { prot: pianoDelGiorno.prot, kcal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT };
+            const OBIETTIVI = { prot: pianoDelGiorno.prot, cal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT };
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
@@ -824,7 +824,7 @@
                 const items = entry.type === 'meal' ? entry.items : [entry];
                 items.forEach(item => {
                     for (const nutriente of nutrientiDaSommare) {
-                        const itemKey = nutriente === 'proteine' ? 'prot' : (nutriente === 'calorie' ? 'kcal' : nutriente);
+                        const itemKey = nutriente === 'proteine' ? 'prot' : (nutriente === 'calorie' ? 'cal' : nutriente);
                         if(itemKey === 'fatTotal') {
                            totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
                         } else if (item[itemKey] !== undefined) {
@@ -836,7 +836,7 @@
 
             // --- Update UI elements ---
             spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.proteine.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
-            spanObiettivoCalorie.textContent = OBIETTIVI.kcal; spanTotaleCalorie.textContent = totali.calorie.toFixed(0); progressCalorie.max = OBIETTIVI.kcal; progressCalorie.value = totali.calorie;
+            spanObiettivoCalorie.textContent = OBIETTIVI.cal; spanTotaleCalorie.textContent = totali.calorie.toFixed(0); progressCalorie.max = OBIETTIVI.cal; progressCalorie.value = totali.calorie;
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
             spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal; spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1); progressFatsTotal.max = OBIETTIVI_FAT.fatTotal; progressFatsTotal.value = totali.fatTotal;
             spanTotaleFatSat.textContent   = totali.fatSat.toFixed(1); progressFatSat.max   = OBIETTIVI_FAT.fatSat; progressFatSat.value = totali.fatSat;
@@ -861,8 +861,8 @@
             const calorieDifference = totali.calorie - targetCaloriesForBalanceText;
             calorieBalanceText.className = '';
             const tolerance = 50;
-            if (calorieDifference < -tolerance) { calorieBalanceText.textContent = `Deficit: ${Math.abs(calorieDifference).toFixed(0)} kcal`; calorieBalanceText.classList.add('balance-deficit');
-            } else if (calorieDifference > tolerance) { calorieBalanceText.textContent = `Surplus: ${calorieDifference.toFixed(0)} kcal`; calorieBalanceText.classList.add('balance-surplus');
+            if (calorieDifference < -tolerance) { calorieBalanceText.textContent = `Deficit: ${Math.abs(calorieDifference).toFixed(0)} cal`; calorieBalanceText.classList.add('balance-deficit');
+            } else if (calorieDifference > tolerance) { calorieBalanceText.textContent = `Surplus: ${calorieDifference.toFixed(0)} cal`; calorieBalanceText.classList.add('balance-surplus');
             } else { calorieBalanceText.textContent = `In Pari`; calorieBalanceText.classList.add('balance-even'); }
             calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment || 0;
             
@@ -871,8 +871,8 @@
             document.getElementById('vit-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_VIT).some(k => totali[k] < OBIETTIVI_VIT[k] * 0.5));
             
             logBody.innerHTML = ''; 
-            const nutrientKeys = ['prot', 'kcal', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'fatSat', 'fatUnsat', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
-            const formatNumber = (key, value) => (value || 0).toFixed(['cu', 'b2', 'b6'].includes(key) ? 2 : (['kcal', 'k'].includes(key) ? 0 : 1));
+            const nutrientKeys = ['prot', 'cal', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'fatSat', 'fatUnsat', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
+            const formatNumber = (key, value) => (value || 0).toFixed(['cu', 'b2', 'b6'].includes(key) ? 2 : (['cal', 'k'].includes(key) ? 0 : 1));
 
             (datiGiornalieri.log || []).forEach((entry, index) => {
                 if (entry.type === 'meal') {
@@ -900,7 +900,7 @@
                     }
                 } else if (entry.type === 'workout') {
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td>${entry.kcal.toFixed(0)}</td><td colspan="17"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td>${entry.cal.toFixed(0)}</td><td colspan="17"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 } else { 
                     const riga = logBody.insertRow();
                     riga.innerHTML = `
@@ -919,8 +919,8 @@
             const selectedMealTypeText = mealTypeSelector?.options[mealTypeSelector.selectedIndex]?.text ?? '';
             const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
             const totaliPastoCorrenteSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
-                acc.prot += item.prot || 0; acc.kcal += item.kcal || 0; return acc;
-            }, { prot: 0, kcal: 0 });
+                acc.prot += item.prot || 0; acc.cal += item.cal || 0; return acc;
+            }, { prot: 0, cal: 0 });
 
             currentMealTypeDisplay.textContent = selectedMealTypeText;
             mealProtCurrent.textContent = totaliPastoCorrenteSelezionati.prot.toFixed(1);
@@ -928,15 +928,15 @@
             mealProtRemaining.textContent = `${(obiettiviPasto.targetProt - totaliPastoCorrenteSelezionati.prot).toFixed(1)} g`;
             mealProgressProt.max = obiettiviPasto.targetProt;
             mealProgressProt.value = totaliPastoCorrenteSelezionati.prot;
-            mealCalCurrent.textContent = totaliPastoCorrenteSelezionati.kcal.toFixed(0);
+            mealCalCurrent.textContent = totaliPastoCorrenteSelezionati.cal.toFixed(0);
             mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
-            mealCalRemaining.textContent = `${(obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.kcal).toFixed(0)} kcal`;
+            mealCalRemaining.textContent = `${(obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.cal).toFixed(0)} cal`;
             mealProgressCal.max = obiettiviPasto.targetCal;
-            mealProgressCal.value = totaliPastoCorrenteSelezionati.kcal;
+            mealProgressCal.value = totaliPastoCorrenteSelezionati.cal;
 
             pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
-                riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}</td><td>${(item.prot || 0).toFixed(1)}</td><td>${(item.kcal || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
+                riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}</td><td>${(item.prot || 0).toFixed(1)}</td><td>${(item.cal || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
             });
         }
 
@@ -945,7 +945,7 @@
         }
         
         const inputFields = {
-            prot: builderProt, kcal: builderKcal, mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
+            prot: builderProt, cal: builderCal, mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
             fatSat: builderFatSat, fatUnsat: builderFatUnsat, vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
             vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, fe: builderFe, zn: builderZn, cu: builderCu
         };
@@ -1115,7 +1115,7 @@
             const desc = workoutDescInput.value.trim(), calories = parseFloat(workoutCaloriesInput.value);
             if (!desc || isNaN(calories) || calories <= 0) { alert('Dati allenamento non validi.'); return; }
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
-            datiGiornalieri.log.push({ type: 'workout', desc: desc, kcal: calories });
+            datiGiornalieri.log.push({ type: 'workout', desc: desc, cal: calories });
             datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri); 
@@ -1142,7 +1142,7 @@
         });
 
         btnSalvaPasto.addEventListener('click', () => {
-            const alimentiSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false);
+            const alimentiSelezionati = pastoInostruzione.filter(item => item.selezionato !== false);
             if (alimentiSelezionati.length === 0) { alert("Nessun alimento selezionato."); return; }
             
             const mealName = mealTypeSelector.options[mealTypeSelector.selectedIndex].text, mealId = mealTypeSelector.value;
@@ -1190,7 +1190,7 @@
                 } else { 
                     const itemToDelete = datiGiornalieri.log[index];
                     if (itemToDelete.type === 'workout') {
-                        datiGiornalieri.workoutCalorie = Math.max(0, (datiGiornalieri.workoutCalorie || 0) - (itemToDelete.kcal || 0));
+                        datiGiornalieri.workoutCalorie = Math.max(0, (datiGiornalieri.workoutCalorie || 0) - (itemToDelete.cal || 0));
                     }
                     datiGiornalieri.log.splice(index, 1);
                     aggiornaUI(); 
