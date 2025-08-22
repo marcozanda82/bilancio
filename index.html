@@ -11,6 +11,7 @@
         h1, h2, h3 { color: #0d47a1; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-top: 0; }
         h2 { font-size: 1.4em; margin-top: 30px; }
         h3 { font-size: 1.1em; color: #333; border-bottom: 1px solid #eee; margin-top: 20px; }
+        h4 { font-size: 1em; color: #1565c0; margin-top: 20px; margin-bottom: 10px; font-weight: 600; }
         #titolo-giornata { text-align: center; color: #d84315; font-weight: 600; margin-bottom: 20px; padding: 10px; background-color: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2;}
         .sezione { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
@@ -121,6 +122,28 @@
         .food-adder-header { display: flex; justify-content: space-between; align-items: center; }
         #btn-clear-nutrients { background-color: transparent; color: #d32f2f; border: none; padding: 5px 10px; font-size: 1em; cursor: pointer; transition: color 0.3s; }
         #btn-clear-nutrients:hover { color: #ff1744; }
+
+        /* NUOVI STILI per divisione vitamine e tabella diario */
+        .vitamin-group {
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+        #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        #log-pasti th:first-child, #log-pasti td:first-child { width: 120px; } /* Descrizione */
+        #log-pasti th:last-child, #log-pasti td:last-child { width: 70px; text-align: center; } /* Azione */
+        #log-pasti td, #log-pasti th {
+            text-align: right;
+            padding-right: 8px;
+            white-space: nowrap;
+        }
+        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1),
+        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) {
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -212,22 +235,20 @@
                     Vitamine <span class="arrow">▶</span>
                 </h3>
                 <div class="collapsible-content" id="vit-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-                        <div>
-                            <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0"></progress>
-                            <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p><progress id="progress-vit-a" value="0" max="900"></progress>
-                             <p>Vitamina B2: <span id="totale-b2">0</span> / 1.3 mg</p><progress id="progress-b2" value="0" max="1.3"></progress>
-                        </div>
-                        <div>
-                            <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p><progress id="progress-vit-d" value="0" max="15"></progress>
-                            <p>Vitamina E: <span id="totale-vit-e">0</span> / 15 mg</p><progress id="progress-vit-e" value="0" max="15"></progress>
-                             <p>Vitamina B6: <span id="totale-b6">0</span> / 1.3 mg</p><progress id="progress-b6" value="0" max="1.3"></progress>
-                        </div>
-                        <div>
-                            <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p><progress id="progress-vit-b12" value="0" max="2.4"></progress>
-                            <p>Vitamina K: <span id="totale-vit-k">0</span> / 120 µg</p><progress id="progress-vit-k" value="0" max="120"></progress>
-                            <p>Folati (B9): <span id="totale-b9">0</span> / 400 µg</p><progress id="progress-b9" value="0" max="400"></progress>
-                        </div>
+                    <div class="vitamin-group">
+                        <h4>Accumulabili (Liposolubili / Fegato)</h4>
+                        <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p><progress id="progress-vit-a" value="0" max="900"></progress>
+                        <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p><progress id="progress-vit-d" value="0" max="15"></progress>
+                        <p>Vitamina E: <span id="totale-vit-e">0</span> / 15 mg</p><progress id="progress-vit-e" value="0" max="15"></progress>
+                        <p>Vitamina K: <span id="totale-vit-k">0</span> / 120 µg</p><progress id="progress-vit-k" value="0" max="120"></progress>
+                        <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p><progress id="progress-vit-b12" value="0" max="2.4"></progress>
+                    </div>
+                     <div class="vitamin-group">
+                        <h4>Giornaliere (Idrosolubili)</h4>
+                        <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0" max="90"></progress>
+                        <p>Vitamina B2: <span id="totale-b2">0</span> / 1.3 mg</p><progress id="progress-b2" value="0" max="1.3"></progress>
+                        <p>Vitamina B6: <span id="totale-b6">0</span> / 1.3 mg</p><progress id="progress-b6" value="0" max="1.3"></progress>
+                        <p>Folati (B9): <span id="totale-b9">0</span> / 400 µg</p><progress id="progress-b9" value="0" max="400"></progress>
                     </div>
                 </div>
             </div>
@@ -723,7 +744,7 @@
                     }
                 } else if (entry.type === 'workout') {
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td>${entry.cal.toFixed(0)} kcal</td><td colspan="18"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td>${entry.cal.toFixed(0)} kcal</td><td colspan="17"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 } else { 
                     const riga = logBody.insertRow();
                     riga.innerHTML = `
@@ -778,7 +799,7 @@
             const qta = parseFloat(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return null; }
             
-            const foodData = {};
+            const foodData = { lastQta: qta };
             const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta };
             
             for (const key in inputFields) {
@@ -952,6 +973,7 @@
         builderDesc.addEventListener('input', (e) => {
             const foodData = foodDatabase[e.target.value.trim().toLowerCase()]; 
             if (foodData) {
+                builderQta.value = foodData.lastQta ?? '';
                 for(const key in inputFields) {
                     inputFields[key].value = foodData[key] ?? '';
                 }
