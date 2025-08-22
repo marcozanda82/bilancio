@@ -123,18 +123,19 @@
         #btn-clear-nutrients { background-color: transparent; color: #d32f2f; border: none; padding: 5px 10px; font-size: 1em; cursor: pointer; transition: color 0.3s; }
         #btn-clear-nutrients:hover { color: #ff1744; }
 
-        /* NUOVI STILI per divisione vitamine e tabella diario */
-        .vitamin-group {
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #f9f9f9;
-            border: 1px solid #eee;
-            border-radius: 6px;
-        }
+        .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
         #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        #log-pasti th:first-child, #log-pasti td:first-child { width: 120px; } /* Descrizione */
-        #log-pasti th:last-child, #log-pasti td:last-child { width: 70px; text-align: center; } /* Azione */
+        /* Stili per tabella diario e colonna bloccata */
+        .diary-table-container { overflow-x: auto; }
+        #log-pasti th:first-child, #log-pasti td:first-child { 
+            width: 150px; 
+            position: -webkit-sticky;
+            position: sticky;
+            left: 0;
+            z-index: 2;
+        }
+        #log-pasti th:last-child, #log-pasti td:last-child { width: 80px; text-align: center; }
         #log-pasti td, #log-pasti th {
             text-align: right;
             padding-right: 8px;
@@ -144,6 +145,10 @@
         #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) {
             text-align: left;
         }
+        #log-pasti th:first-child { background-color: #f2f2f2; }
+        #log-pasti td:first-child { background-color: #ffffff; }
+        #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
+        #log-pasti .sub-item-row td:first-child { background-color: #ffffff; }
     </style>
 </head>
 <body>
@@ -341,7 +346,7 @@
             </div>
             <div class="sezione">
                 <h2>Diario Giornaliero</h2>
-                <div style="overflow-x:auto;">
+                <div class="diary-table-container">
                 <table id="log-pasti">
                     <thead>
                         <tr>
@@ -728,7 +733,7 @@
                     }, {});
                     rigaPasto.innerHTML = `
                         <td><span class="expand-arrow" data-index="${index}">${entry.isExpanded ? '▼' : '▶'}</span> ${entry.desc}</td>
-                        <td>${entry.items.reduce((sum, item) => sum + item.qta, 0).toFixed(0)}g</td>
+                        <td>${entry.items.reduce((sum, item) => sum + item.qta, 0).toFixed(0)}</td>
                         ${nutrientKeys.map(k => `<td>${formatNumber(k, totaliPasto[k])}</td>`).join('')}
                         <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
 
@@ -737,18 +742,18 @@
                             const rigaSubItem = logBody.insertRow();
                             rigaSubItem.classList.add('sub-item-row');
                             rigaSubItem.innerHTML = `
-                                <td>${subItem.desc}</td><td>${subItem.qta.toFixed(0)}g</td>
+                                <td>${subItem.desc}</td><td>${subItem.qta.toFixed(0)}</td>
                                 ${nutrientKeys.map(k => `<td>${formatNumber(k, subItem[k])}</td>`).join('')}
                                 <td></td>`;
                         });
                     }
                 } else if (entry.type === 'workout') {
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td>${entry.cal.toFixed(0)} kcal</td><td colspan="17"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td>${entry.cal.toFixed(0)}</td><td colspan="17"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 } else { 
                     const riga = logBody.insertRow();
                     riga.innerHTML = `
-                        <td>${entry.desc}</td><td>${entry.qta}g</td>
+                        <td>${entry.desc}</td><td>${entry.qta}</td>
                         ${nutrientKeys.map(k => `<td>${formatNumber(k, entry[k])}</td>`).join('')}
                         <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 }
@@ -780,7 +785,7 @@
 
             pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
-                riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}g</td><td>${(item.prot || 0).toFixed(1)}</td><td>${(item.cal || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
+                riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}</td><td>${(item.prot || 0).toFixed(1)}</td><td>${(item.cal || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
             });
         }
 
