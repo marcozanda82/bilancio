@@ -23,6 +23,8 @@
         #form-allenamento button { background-color: #2e7d32; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
         .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        .sync-button-container { text-align: center; margin-top: 20px; }
+        .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
         progress.macro-progress { height: 25px; }
@@ -121,6 +123,10 @@
         #btn-clear-nutrients { background-color: transparent; color: #d32f2f; border: none; padding: 5px 10px; font-size: 1em; cursor: pointer; transition: color 0.3s; }
         #btn-clear-nutrients:hover { color: #ff1744; }
 
+        .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
+        #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        /* NUOVI STILI PER TABELLA DIARIO CON COLONNA BLOCCATA */
         .diary-table-container { 
             overflow-x: auto; 
             -webkit-box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
@@ -128,7 +134,7 @@
         }
         
         #log-pasti {
-            border-collapse: collapse;
+            /* Rimuoviamo la larghezza fissa per permettere lo scorrimento */
         }
         
         #log-pasti th, #log-pasti td {
@@ -138,7 +144,7 @@
             white-space: nowrap;
         }
 
-        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1) {
+        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1) { /* Colonna Descrizione */
             min-width: 150px;
             text-align: left;
             position: -webkit-sticky;
@@ -148,16 +154,17 @@
             border-right: 2px solid #e0e0e0;
         }
 
-        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) {
+        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) { /* Colonna Grammi */
             min-width: 50px;
             text-align: left;
         }
         
-        #log-pasti th:last-child, #log-pasti td:last-child {
+        #log-pasti th:last-child, #log-pasti td:last-child { /* Colonna Azione */
             min-width: 80px;
             text-align: center;
         }
 
+        /* Sfondi per la colonna bloccata per evitare trasparenze */
         #log-pasti th:first-child { background-color: #f8f9fa; }
         #log-pasti td:first-child { background-color: #ffffff; }
         #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
@@ -254,41 +261,20 @@
                     Vitamine <span class="arrow">▶</span>
                 </h3>
                 <div class="collapsible-content" id="vit-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-                        <div>
-                            <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p><progress id="progress-vit-a" value="0" max="900"></progress>
-                            <p>Vitamina B2: <span id="totale-b2">0</span> / 1.3 mg</p><progress id="progress-b2" value="0" max="1.3"></progress>
-                            <p>Vitamina B6: <span id="totale-b6">0</span> / 1.3 mg</p><progress id="progress-b6" value="0" max="1.3"></progress>
-                            <p>Vitamina B9: <span id="totale-b9">0</span> / 400 µg</p><progress id="progress-b9" value="0" max="400"></progress>
-                        </div>
-                        <div>
-                            <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p><progress id="progress-vit-b12" value="0" max="2.4"></progress>
-                            <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0" max="90"></progress>
-                            <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p><progress id="progress-vit-d" value="0" max="15"></progress>
-                        </div>
-                        <div>
-                            <p>Vitamina E: <span id="totale-vit-e">0</span> / 15 mg</p><progress id="progress-vit-e" value="0" max="15"></progress>
-                            <p>Vitamina K: <span id="totale-vit-k">0</span> / 120 µg</p><progress id="progress-vit-k" value="0" max="120"></progress>
-                        </div>
+                    <div class="vitamin-group">
+                        <h4>Accumulabili (Liposolubili / Fegato)</h4>
+                        <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p><progress id="progress-vit-a" value="0" max="900"></progress>
+                        <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p><progress id="progress-vit-d" value="0" max="15"></progress>
+                        <p>Vitamina E: <span id="totale-vit-e">0</span> / 15 mg</p><progress id="progress-vit-e" value="0" max="15"></progress>
+                        <p>Vitamina K: <span id="totale-vit-k">0</span> / 120 µg</p><progress id="progress-vit-k" value="0" max="120"></progress>
+                        <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p><progress id="progress-vit-b12" value="0" max="2.4"></progress>
                     </div>
-                </div>
-                <hr>
-
-                <div id="riepilogo-settimanale" style="padding-top:15px;">
-                    <h3 class="collapsible-header" id="weekly-summary-header">Riepilogo Vitamine (Ultimi 7 Giorni) <span class="arrow">▶</span></h3>
-                    <div class="collapsible-content" id="weekly-summary-content">
-                        <p style="text-align:center; font-weight:bold; color:#555;" id="settimana-corrente"></p>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div>
-                                <p>Vitamina A: <span id="weekly-totale-vit-a">0</span> / <span id="weekly-obiettivo-vit-a"></span> µg</p><progress id="weekly-progress-vit-a" value="0"></progress>
-                                <p>Vitamina D: <span id="weekly-totale-vit-d">0</span> / <span id="weekly-obiettivo-vit-d"></span> µg</p><progress id="weekly-progress-vit-d" value="0"></progress>
-                                <p>Vitamina E: <span id="weekly-totale-vit-e">0</span> / <span id="weekly-obiettivo-vit-e"></span> mg</p><progress id="weekly-progress-vit-e" value="0"></progress>
-                            </div>
-                            <div>
-                                <p>Vitamina K: <span id="weekly-totale-vit-k">0</span> / <span id="weekly-obiettivo-vit-k"></span> µg</p><progress id="weekly-progress-vit-k" value="0"></progress>
-                                <p>Vitamina B12: <span id="weekly-totale-vit-b12">0</span> / <span id="weekly-obiettivo-vit-b12"></span> µg</p><progress id="weekly-progress-vit-b12" value="0"></progress>
-                            </div>
-                        </div>
+                     <div class="vitamin-group">
+                        <h4>Giornaliere (Idrosolubili)</h4>
+                        <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0" max="90"></progress>
+                        <p>Vitamina B2: <span id="totale-b2">0</span> / 1.3 mg</p><progress id="progress-b2" value="0" max="1.3"></progress>
+                        <p>Vitamina B6: <span id="totale-b6">0</span> / 1.3 mg</p><progress id="progress-b6" value="0" max="1.3"></progress>
+                        <p>Folati (B9): <span id="totale-b9">0</span> / 400 µg</p><progress id="progress-b9" value="0" max="400"></progress>
                     </div>
                 </div>
             </div>
@@ -483,7 +469,6 @@
         const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9 };
         const OBIETTIVI_FAT = { fatTotal: 70, fatSat: 20, fatUnsat: 50 };
         const OBIETTIVI_VIT = { vitA: 900, vitB12: 2.4, vitD: 15, vitE: 15, vitK: 120, b9: 400, b2: 1.3, b6: 1.3 };
-        const VITAMINE_ACCUMULABILI = ['vitA', 'vitD', 'vitE', 'vitK', 'vitB12'];
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
             merenda1: { prot: 30, cal_perc: 0.20 },
@@ -604,7 +589,6 @@
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
             localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
             console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
-            aggiornaRiepilogoSettimanale(dataDaSalvare);
             saveAllTrackerDataToCloud(); 
         }
         
@@ -633,7 +617,6 @@
             }
             
             aggiornaUI();
-            aggiornaRiepilogoSettimanale(data);
             console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
         }
 
@@ -908,63 +891,14 @@
             header.querySelector('.arrow').textContent = header.classList.contains('expanded') ? '▼' : '▶';
         }
 
-        // --- FUNZIONI PER RIEPILOGO SETTIMANALE ---
-        function getRollingSevenDaysRange(endDateString) {
-            const endDate = new Date(endDateString);
-            const startDate = new Date(endDate);
-            startDate.setDate(startDate.getDate() - 6);
-            return { start: startDate, end: endDate };
-        }
-
-        function aggiornaRiepilogoSettimanale(giornoCorrente) {
-            const { start, end } = getRollingSevenDaysRange(giornoCorrente);
-            
-            const formatOptions = {day:'numeric', month:'short'};
-            document.getElementById('settimana-corrente').textContent = 
-                `Periodo: ${start.toLocaleDateString('it-IT', formatOptions)} - ${end.toLocaleDateString('it-IT', formatOptions)}`;
-
-            const weeklyTotals = {};
-            VITAMINE_ACCUMULABILI.forEach(vit => weeklyTotals[vit] = 0);
-
-            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                const dateString = d.toISOString().split('T')[0];
-                const dayDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
-                if (dayDataRaw) {
-                    try {
-                        const dayData = JSON.parse(dayDataRaw);
-                        (dayData.log || []).forEach(entry => {
-                            const items = entry.type === 'meal' ? entry.items : [entry];
-                            items.forEach(item => {
-                                VITAMINE_ACCUMULABILI.forEach(vit => {
-                                    weeklyTotals[vit] += item[vit] || 0;
-                                });
-                            });
-                        });
-                    } catch (e) { console.error(`Errore parsing dati per ${dateString}`, e); }
-                }
-            }
-
-            VITAMINE_ACCUMULABILI.forEach(vit => {
-                const total = weeklyTotals[vit];
-                const goal = OBIETTIVI_VIT[vit] * 7;
-                const key = vit.replace('vit', 'vit-');
-                
-                document.getElementById(`weekly-totale-${key}`).textContent = total.toFixed(1);
-                document.getElementById(`weekly-obiettivo-${key}`).textContent = goal.toFixed(1);
-                const progress = document.getElementById(`weekly-progress-${key}`);
-                progress.max = goal;
-                progress.value = total;
-            });
-        }
-
         // --- EVENT LISTENERS SETUP ---
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
         });
         
-        ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header', 'weekly-summary-header'].forEach(id => {
-            document.getElementById(id)?.addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
+        ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
+            document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
         
         btnClearNutrients.addEventListener('click', () => { resetInputAlimento(); aggiornaColoreNutrienti(); });
