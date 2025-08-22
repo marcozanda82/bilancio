@@ -727,7 +727,6 @@
             spanTotaleB2.textContent = totali.b2.toFixed(2); progressB2.max = OBIETTIVI.b2; progressB2.value = totali.b2;
             spanTotaleB6.textContent = totali.b6.toFixed(2); progressB6.max = OBIETTIVI.b6; progressB6.value = totali.b6;
 
-            // ***** MODIFICA APPLICATA QUI *****
             const calorieDifference = totali.calorie - obiettivoCalorieTotale;
             calorieBalanceText.className = '';
             const tolerance = 50;
@@ -814,8 +813,9 @@
             foodDatalist.innerHTML = Object.keys(foodDatabase).map(foodName => `<option value="${foodName.charAt(0).toUpperCase() + foodName.slice(1)}"></option>`).join('');
         }
         
+        // ***** MODIFICA APPLICATA QUI *****
         const inputFields = {
-            prot: builderProt, kcal: builderKcal, mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
+            prot: builderProt, cal: builderKcal, mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
             fatSat: builderFatSat, fatUnsat: builderFatUnsat, vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
             vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, fe: builderFe, zn: builderZn, cu: builderCu
         };
