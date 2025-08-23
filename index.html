@@ -716,6 +716,7 @@
         
         function salvaGiorno(dataDaSalvare, datiDaSalvare) {
             if (!datiDaSalvare) datiDaSalvare = datiGiornalieri;
+            datiDaSalvare.data = dataDaSalvare;
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
             localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
             console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
@@ -1451,4 +1452,5 @@
     </script>
 </body>
 </html>
+
 
