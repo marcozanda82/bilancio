@@ -848,33 +848,37 @@
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, fatUnsat: 0, fatTotal: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0, fe: 0, zn: 0, cu: 0 };
+let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, fatUnsat: 0, fatTotal: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0, fe: 0, zn: 0, cu: 0 };
             
-            (datiGiornalieri.log || []).forEach(entry => {
-                const items = entry.type === 'meal' ? entry.items : [entry];
-                items.forEach(item => {
-                    totali.proteine += item.prot || 0;
-                    totali.calorie += (item.kcal || item.cal) || 0;
-                    totali.mg += item.mg || 0;
-                    totali.k += item.k || 0;
-                    totali.vitc += item.vitc || 0;
-                    totali.ca += item.ca || 0;
-                    totali.fatSat += item.fatSat || 0;
-                    totali.fatUnsat += item.fatUnsat || 0;
-                    totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
-                    totali.vitA += item.vitA || 0;
-                    totali.vitB12 += item.vitB12 || 0;
-                    totali.vitD += item.vitD || 0;
-                    totali.vitE += item.vitE || 0;
-                    totali.vitK += item.vitK || 0;
-                    totali.b9 += item.b9 || 0;
-                    totali.b2 += item.b2 || 0;
-                    totali.b6 += item.b6 || 0;
-                    totali.fe += item.fe || 0;
-                    totali.zn += item.zn || 0;
-                    totali.cu += item.cu || 0;
-                });
-            });
+(datiGiornalieri.log || []).forEach(entry => {
+    // Aggiungi solo i valori nutrizionali se l'elemento non è un allenamento
+    if (entry.type !== 'workout') {
+        const items = entry.type === 'meal' ? entry.items : [entry];
+        items.forEach(item => {
+            totali.proteine += item.prot || 0;
+            totali.calorie += (item.kcal || item.cal) || 0;
+            // Aggiungi qui gli altri micronutrienti come sono già
+            totali.mg += item.mg || 0;
+            totali.k += item.k || 0;
+            totali.vitc += item.vitc || 0;
+            totali.ca += item.ca || 0;
+            totali.fatSat += item.fatSat || 0;
+            totali.fatUnsat += item.fatUnsat || 0;
+            totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
+            totali.vitA += item.vitA || 0;
+            totali.vitB12 += item.vitB12 || 0;
+            totali.vitD += item.vitD || 0;
+            totali.vitE += item.vitE || 0;
+            totali.vitK += item.vitK || 0;
+            totali.b9 += item.b9 || 0;
+            totali.b2 += item.b2 || 0;
+            totali.b6 += item.b6 || 0;
+            totali.fe += item.fe || 0;
+            totali.zn += item.zn || 0;
+            totali.cu += item.cu || 0;
+        });
+    }
+});
 
             // --- Update UI elements ---
             spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.proteine.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
@@ -1452,5 +1456,6 @@
     </script>
 </body>
 </html>
+
 
 
