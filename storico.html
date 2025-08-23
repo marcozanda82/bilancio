@@ -162,8 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const giornoSettimana = dataDelGiorno.getDay(); 
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
             
-            const calorieAdjustment = giorno.calorieAdjustment || 0;
-            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + calorieAdjustment;
+            // L'obiettivo calorico si basa solo sul piano settimanale e sul workout, ignorando gli aggiustamenti manuali
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
 
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
@@ -326,8 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             const workoutCalories = totalWorkoutCaloriesLogged;
-            const calorieAdjustment = giorno.calorieAdjustment || 0;
-            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + calorieAdjustment;
+            // Rimuovi l'aggiustamento dal calcolo dell'obiettivo per lo storico
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
 
