@@ -1036,6 +1036,7 @@
                 } else {
                     if (!datiGiornalieri.log) datiGiornalieri.log = [];
                     datiGiornalieri.log.push(item);
+                    salvaGiorno(giornoVisualizzato, datiGiornalieri);
                 }
                 aggiornaUI();
                 salvaGiorno(giornoVisualizzato, datiGiornalieri);
@@ -1183,7 +1184,7 @@
         });
 
         btnSalvaPasto.addEventListener('click', () => {
-            const alimentiSelezionati = pastoInostruzione.filter(item => item.selezionato !== false);
+            const alimentiSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false);
             if (alimentiSelezionati.length === 0) { alert("Nessun alimento selezionato."); return; }
             
             const mealName = mealTypeSelector.options[mealTypeSelector.selectedIndex].text, mealId = mealTypeSelector.value;
@@ -1450,3 +1451,4 @@
     </script>
 </body>
 </html>
+
