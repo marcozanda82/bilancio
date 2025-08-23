@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (entry.type === 'meal' && entry.items) {
                     entry.items.forEach(item => {
                         totaliGiorno.proteine += item.prot || 0;
-                        totaliGiorno.calorie += item.cal || 0; // Calorie dai pasti
+                        totaliGiorno.calorie += (item.cal || item.kcal) || 0; // Calorie dai pasti
                         // Aggiungi qui anche i micronutrienti se vuoi sommarli per i pasti raggruppati
                         totaliGiorno.mg += item.mg || 0;
                         totaliGiorno.k += item.k || 0;
@@ -158,14 +158,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 } else if (entry.type === 'single') { // Assumi che "single" siano sempre alimenti
                     totaliGiorno.proteine += entry.prot || 0;
-                    totaliGiorno.calorie += entry.cal || 0; // Calorie da alimenti singoli
+                    totaliGiorno.calorie += (entry.cal || entry.kcal) || 0; // Calorie da alimenti singoli
                     totaliGiorno.mg += entry.mg || 0;
                     totaliGiorno.k += entry.k || 0;
                     totaliGiorno.vitc += entry.vitc || 0;
                     totaliGiorno.ca += entry.ca || 0;
                 } else if (entry.type === 'workout') {
                     // Le calorie dell'allenamento NON vengono aggiunte a totaliGiorno.calorie
-                    totalWorkoutCaloriesLogged += entry.cal || 0; // Sommiamo le calorie dell'allenamento a parte
+                    totalWorkoutCaloriesLogged += (entry.cal || entry.kcal) || 0; // Sommiamo le calorie dell'allenamento a parte
                 }
             });
 
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Calcola l'obiettivo calorico TOTALE per questo giorno, replicando la logica dell'index.html
             // Obiettivo: base + workout + aggiustamento_manuale
-            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + calorieAdjustment;
 
             // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Calcola i totali specifici per il pasto raggruppato
                         const totaliPastoCorrente = (entry.items || []).reduce((acc, item) => {
                             acc.prot += item.prot || 0;
-                            acc.cal += item.cal || 0;
+                            acc.cal += (item.cal || item.kcal) || 0;
                             return acc;
                         }, { prot: 0, cal: 0 });
 
@@ -289,14 +289,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <td style="padding-left: 40px;">${item.desc}</td>
                                             <td>${item.qta} g</td>
                                             <td>${(item.prot || 0).toFixed(1)} g</td>
-                                            <td>${(item.cal || 0).toFixed(0)} Kcal</td>
+                                            <td>${((item.cal || item.kcal) || 0).toFixed(0)} Kcal</td>
                                           </tr>`;
                         });
                     } else if (entry.type === 'single') { // Alimento singolo
-                        detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${(entry.cal || 0).toFixed(0)} Kcal</td></tr>`;
+                        detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${((entry.cal || entry.kcal) || 0).toFixed(0)} Kcal</td></tr>`;
                     } else if (entry.type === 'workout') { // Allenamento
                          // Ho aggiunto " (bruciate)" per chiarezza nel dettaglio
-                         detailHtml += `<tr><td>${entry.desc}</td><td></td><td></td><td>${(entry.cal || 0).toFixed(0)} Kcal (bruciate)</td></tr>`;
+                         detailHtml += `<tr><td>${entry.desc}</td><td></td><td></td><td>${((entry.cal || entry.kcal) || 0).toFixed(0)} Kcal (bruciate)</td></tr>`;
                     }
                 });
                 detailHtml += `</tbody></table>`;
@@ -356,17 +356,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (entry.type === 'meal' && entry.items) {
                     entry.items.forEach(item => {
                         totaliGiorno.proteine += item.prot || 0;
-                        totaliGiorno.calorie += item.cal || 0;
+                        totaliGiorno.calorie += (item.cal || item.kcal) || 0;
                     });
                 } else if (entry.type === 'single') {
                     totaliGiorno.proteine += entry.prot || 0;
-                    totaliGiorno.calorie += entry.cal || 0;
+                    totaliGiorno.calorie += (entry.cal || entry.kcal) || 0;
                 } else if (entry.type === 'workout') {
-                    totalWorkoutCaloriesLogged += entry.cal || 0;
+                    totalWorkoutCaloriesLogged += (entry.cal || entry.kcal) || 0;
                 }
             });
             const workoutCalories = totalWorkoutCaloriesLogged;
-            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + (giorno.calorieAdjustment || 0);
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
 
