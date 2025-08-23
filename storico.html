@@ -177,10 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const giornoSettimana = dataDelGiorno.getDay(); // 0 = Domenica, 6 = Sabato
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1]; // Fallback al Lunedì
             
-            // Recupare l'aggiustamento calorico per questo giorno specifico dallo storico
-            // Assicurati che 'giorno.calorieAdjustment' esista e sia corretto nei dati salvati
-           // const calorieAdjustment = giorno.calorieAdjustment || 0; // Se presente nel log del giorno
-
             // Calcola l'obiettivo calorico TOTALE per questo giorno, replicando la logica dell'index.html
             // Obiettivo: base + workout + aggiustamento_manuale
             const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + calorieAdjustment;
@@ -428,4 +424,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
