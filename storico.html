@@ -76,32 +76,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Funzione per recuperare tutti i dati dallo storico LocalStorage
     function caricaTuttoLoStorico() {
         const storicoDati = [];
-        const dateViste = new Set(); // Per tenere traccia delle date già aggiunte
+        const dateViste = new Set(); 
 
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            // Filtra solo le chiavi che iniziano con 'trackerStorico_'
             if (key.startsWith('trackerStorico_')) {
                 try {
                     const dataString = key.replace('trackerStorico_', '');
                     
-                    // Evita di aggiungere duplicati se per qualche ragione la stessa data è presente più volte
                     if (dateViste.has(dataString)) {
                         console.warn(`Saltando potenziale duplicato per la data: ${dataString}`);
-                        continue; // Passa al prossimo elemento del localStorage
+                        continue; 
                     }
 
                     const datiGiorno = JSON.parse(localStorage.getItem(key));
                     
-                    // Ho semplificato questa logica per essere meno stringente,
-                    // dato l'avviso di "inconsistenza data".
-                    // Se vuoi re-introdurre il controllo stretto, devi assicurarti
-                    // che index.html salvi SEMPRE il campo 'data' all'interno dell'oggetto.
                     if (datiGiorno) {
-                        // Se il campo data nell'oggetto non c'è o non corrisponde, usiamo quello della chiave.
                         if (!datiGiorno.data || datiGiorno.data !== dataString) {
                              console.warn(`Inconsistenza data nella chiave ${key}. Usando la data dalla chiave.`);
-                             // Puoi decidere qui se aggiornare datiGiorno.data = dataString;
                         }
                         storicoDati.push({ data: dataString, ...datiGiorno });
                         dateViste.add(dataString);
@@ -111,10 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error("Errore nel parsing dei dati storici per la chiave:", key, e);
                 }
             }
-            // La logica per 'trackerGiornoCorrente' è stata rimossa, in quanto non usata in index.html per i salvataggi persistenti.
         }
 
-        // Ordina i dati dal più recente al più vecchio
         storicoDati.sort((a, b) => new Date(b.data) - new Date(a.data));
         return storicoDati;
     }
@@ -122,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Costanti per il piano settimanale (COPIA ESATTAMENTE DA INDEX.HTML PER CONSISTENZA)
     const PIANO_SETTIMANALE = {
         0: { tipo: '💧 Riposo (Deficit)', cal: 2300, prot: 140 }, // Domenica
-        1: { tipo: '🔥 Forza (Mantenimento)', cal: 2300, prot: 140 }, // Lunedì: Modificato da 2400 a 2300 per allinearsi all'index.html
+        1: { tipo: '🔥 Forza (Mantenimento)', cal: 2300, prot: 140 }, // Lunedì
         2: { tipo: '💪 Forza (Mantenimento)', cal: 2300, prot: 140 }, // Martedì
         3: { tipo: '🏃 Cardio (Deficit)', cal: 2300, prot: 140 }, // Mercoledì
         4: { tipo: '🏋️ Forza (Mantenimento)', cal: 2300, prot: 140 }, // Giovedì
@@ -138,109 +128,90 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        storicoBody.innerHTML = ''; // Pulisci la tabella prima di ripopolarla
+        storicoBody.innerHTML = ''; 
 
         storico.forEach((giorno, giornoIndex) => {
-            // Calcola i totali per il giorno
             let totaliGiorno = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0 };
-            let totalWorkoutCaloriesLogged = 0; // Variabile per le calorie bruciate negli allenamenti
+            let totalWorkoutCaloriesLogged = 0; 
 
             (giorno.log || []).forEach(entry => {
                 if (entry.type === 'meal' && entry.items) {
                     entry.items.forEach(item => {
                         totaliGiorno.proteine += item.prot || 0;
-                        totaliGiorno.calorie += (item.cal || item.kcal) || 0; // Calorie dai pasti
-                        // Aggiungi qui anche i micronutrienti se vuoi sommarli per i pasti raggruppati
+                        totaliGiorno.calorie += (item.cal || item.kcal) || 0; 
                         totaliGiorno.mg += item.mg || 0;
                         totaliGiorno.k += item.k || 0;
                         totaliGiorno.vitc += item.vitc || 0;
                         totaliGiorno.ca += item.ca || 0;
                     });
-                } else if (entry.type === 'single') { // Assumi che "single" siano sempre alimenti
+                } else if (entry.type === 'single') { 
                     totaliGiorno.proteine += entry.prot || 0;
-                    totaliGiorno.calorie += (entry.cal || entry.kcal) || 0; // Calorie da alimenti singoli
+                    totaliGiorno.calorie += (entry.cal || entry.kcal) || 0; 
                     totaliGiorno.mg += entry.mg || 0;
                     totaliGiorno.k += entry.k || 0;
                     totaliGiorno.vitc += entry.vitc || 0;
                     totaliGiorno.ca += entry.ca || 0;
                 } else if (entry.type === 'workout') {
-                    // Le calorie dell'allenamento NON vengono aggiunte a totaliGiorno.calorie
-                    totalWorkoutCaloriesLogged += (entry.cal || entry.kcal) || 0; // Sommiamo le calorie dell'allenamento a parte
+                    totalWorkoutCaloriesLogged += (entry.cal || entry.kcal) || 0; 
                 }
             });
 
-            // Ora, 'workoutCalories' userà il totale ricalcolato dal log degli allenamenti specifici.
             const workoutCalories = totalWorkoutCaloriesLogged;
             
-            // Recupera gli obiettivi dal PIANO_SETTIMANALE
             const dataDelGiorno = new Date(giorno.data);
-            const giornoSettimana = dataDelGiorno.getDay(); // 0 = Domenica, 6 = Sabato
-            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1]; // Fallback al Lunedì
+            const giornoSettimana = dataDelGiorno.getDay(); 
+            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
             
-            // Calcola l'obiettivo calorico TOTALE per questo giorno, replicando la logica dell'index.html
-            // Obiettivo: base + workout + aggiustamento_manuale
+            const calorieAdjustment = giorno.calorieAdjustment || 0;
             const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + calorieAdjustment;
 
-            // Calcolo del Deficit/Surplus (Calorie Assunte - Obiettivo Calorico Totale)
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
-            const deficitArrotondato = Math.round(deficitEffettivo); // Arrotonda all'intero più vicino
+            const deficitArrotondato = Math.round(deficitEffettivo);
 
-            // Determina la stringa per Deficit/Surplus
             let deficitSurplusText = '';
             if (deficitArrotondato < 0) {
-                deficitSurplusText = `${deficitArrotondato} kcal (Deficit)`; // Es: -4 kcal (Deficit)
+                deficitSurplusText = `${deficitArrotondato} kcal (Deficit)`; 
             } else if (deficitArrotondato > 0) {
-                deficitSurplusText = `+${deficitArrotondato} kcal (Surplus)`; // Es: +96 kcal (Surplus)
+                deficitSurplusText = `+${deficitArrotondato} kcal (Surplus)`; 
             } else {
                 deficitSurplusText = `0 kcal (Pari)`;
             }
 
-            // Calcolo della variazione di grasso
-            let variazioneGrasso = 0; // In grammi
+            let variazioneGrasso = 0; 
             let testoVariazioneGrasso = '';
 
-            // 7.7 kcal per 1g di grasso (1kg = 7700 kcal, 1g = 7.7 kcal)
-            if (deficitArrotondato < 0) { // Se il deficit è negativo (stai consumando meno calorie del bisogno), stai perdendo grasso
+            if (deficitArrotondato < 0) { 
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
                 testoVariazioneGrasso = '-' + variazioneGrasso.toFixed(1) + ' g';
-            } else if (deficitArrotondato > 0) { // Se il deficit è positivo (stai consumando più calorie del bisogno), stai guadagnando grasso
+            } else if (deficitArrotondato > 0) { 
                 variazioneGrasso = (deficitArrotondato / 7.7);
                 testoVariazioneGrasso = '+' + variazioneGrasso.toFixed(1) + ' g';
-            } else { // DeficitArrotondato è 0
+            } else { 
                 testoVariazioneGrasso = '0.0 g';
             }
             
-            // Logica per il trend muscolare
             let trendMuscoloHtml = '<span class="trend-neutral trend-muscle">―</span>';
             let scoreMuscolo = 0;
 
-            // Condizione 1: Proteine
             if(totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) {
                 scoreMuscolo++;
             } else {
                 scoreMuscolo--;
             }
 
-            // Condizione 2: Tipo di giornata "Forza"
             if(pianoDelGiorno.tipo.includes('Forza')) {
-                scoreMuscolo++; // Se è giornata di Forza, aggiungi 1 punto
-
-                // Nuova condizione per il deficit in giorni di forza
-                // Se il deficit effettivo è più negativo di -200 kcal (es. -250, -300) in un giorno di Forza
-                if (deficitArrotondato < -200) { // Se il deficit supera il taglio desiderato di 200 kcal (es. -250, -300)
-                    scoreMuscolo--; // Indice negativo per la massa muscolare
+                scoreMuscolo++; 
+                if (deficitArrotondato < -200) { 
+                    scoreMuscolo--;
                 }
             }
 
-            // Determinazione del simbolo finale
             if(scoreMuscolo > 0) {
                 trendMuscoloHtml = '<span class="trend-up trend-muscle">▲</span>';
             } else if (scoreMuscolo < 0) {
                 trendMuscoloHtml = '<span class="trend-down trend-muscle">▼</span>';
             }
-            // Altrimenti (scoreMuscolo === 0) rimane '―'
-
-
+            
             const summaryRow = document.createElement('tr');
             summaryRow.className = 'day-summary-row';
             summaryRow.dataset.giornoIndex = giornoIndex;
@@ -269,7 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 giorno.log.forEach((entry, pastoIndex) => {
                     if (entry.type === 'meal') {
-                        // Calcola i totali specifici per il pasto raggruppato
                         const totaliPastoCorrente = (entry.items || []).reduce((acc, item) => {
                             acc.prot += item.prot || 0;
                             acc.cal += (item.cal || item.kcal) || 0;
@@ -288,10 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <td>${((item.cal || item.kcal) || 0).toFixed(0)} Kcal</td>
                                           </tr>`;
                         });
-                    } else if (entry.type === 'single') { // Alimento singolo
+                    } else if (entry.type === 'single') { 
                         detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${((entry.cal || entry.kcal) || 0).toFixed(0)} Kcal</td></tr>`;
-                    } else if (entry.type === 'workout') { // Allenamento
-                         // Ho aggiunto " (bruciate)" per chiarezza nel dettaglio
+                    } else if (entry.type === 'workout') { 
                          detailHtml += `<tr><td>${entry.desc}</td><td></td><td></td><td>${((entry.cal || entry.kcal) || 0).toFixed(0)} Kcal (bruciate)</td></tr>`;
                     }
                 });
@@ -306,7 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Event listener per espandere/collassare i dettagli del giorno e dei pasti
     storicoBody.addEventListener('click', (e) => {
         const summaryRow = e.target.closest('.day-summary-row');
         if (summaryRow) {
@@ -326,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Nuova funzione per esportare i dati in un file Excel (CSV)
     function esportaInExcel() {
         const storico = caricaTuttoLoStorico();
         if (storico.length === 0) {
@@ -334,18 +301,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Creazione dell'header del file CSV
         let csvContent = "Data,Proteine (g),Calorie (kcal),Workout (kcal),Deficit/Surplus (kcal),Variazione Grasso (g),Trend Muscolare\n";
 
         storico.forEach(giorno => {
             const dataDelGiorno = new Date(giorno.data);
             const dataFormatted = dataDelGiorno.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-            // Recupera gli obiettivi dal piano settimanale (copiato da renderStorico)
             const giornoSettimana = dataDelGiorno.getDay();
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
-            // Calcola i totali del giorno per le macro
             let totaliGiorno = { proteine: 0, calorie: 0 };
             let totalWorkoutCaloriesLogged = 0;
             (giorno.log || []).forEach(entry => {
@@ -362,11 +326,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             const workoutCalories = totalWorkoutCaloriesLogged;
-            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
+            const calorieAdjustment = giorno.calorieAdjustment || 0;
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + calorieAdjustment;
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
 
-            // Calcolo della variazione di grasso (copiato da renderStorico)
             let variazioneGrasso = 0;
             if (deficitArrotondato < 0) {
                 variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
@@ -374,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 variazioneGrasso = -(deficitArrotondato / 7.7);
             }
 
-            // Trend muscolare (copiato da renderStorico)
             let scoreMuscolo = 0;
             if (totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) {
                 scoreMuscolo++;
@@ -394,11 +357,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 trendMuscolareText = 'Negativo';
             }
 
-            // Aggiunta dei dati del giorno al CSV
             csvContent += `"${dataFormatted}",${totaliGiorno.proteine.toFixed(1)},${totaliGiorno.calorie.toFixed(0)},${workoutCalories},${deficitArrotondato},${variazioneGrasso.toFixed(1)},"${trendMuscolareText}"\n`;
         });
 
-        // Creazione del file blob e download
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         if (link.download !== undefined) {
@@ -411,18 +372,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.removeChild(link);
         } else {
             alert("Il tuo browser non supporta il download diretto. Copia e incolla il contenuto.");
-            // Qui potresti fornire un'area di testo con i dati per la copia manuale
         }
     }
 
-    // Aggiungi l'event listener per il nuovo pulsante
     document.getElementById('btn-esporta-excel').addEventListener('click', esportaInExcel);
 
-    // Inizializza il rendering dello storico al caricamento della pagina
     renderStorico();
 });
 </script>
 </body>
 </html>
-
-
