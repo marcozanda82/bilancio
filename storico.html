@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Recupare l'aggiustamento calorico per questo giorno specifico dallo storico
             // Assicurati che 'giorno.calorieAdjustment' esista e sia corretto nei dati salvati
-            const calorieAdjustment = giorno.calorieAdjustment || 0; // Se presente nel log del giorno
+           // const calorieAdjustment = giorno.calorieAdjustment || 0; // Se presente nel log del giorno
 
             // Calcola l'obiettivo calorico TOTALE per questo giorno, replicando la logica dell'index.html
             // Obiettivo: base + workout + aggiustamento_manuale
@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             const workoutCalories = totalWorkoutCaloriesLogged;
-            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories + (giorno.calorieAdjustment || 0);
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
             const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
             const deficitArrotondato = Math.round(deficitEffettivo);
 
@@ -428,3 +428,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
