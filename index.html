@@ -26,7 +26,7 @@
         .sync-button-container { text-align: center; margin-top: 20px; }
         .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
-        progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; }
+        progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; cursor: pointer; }
         progress.macro-progress { height: 25px; }
         table { border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
@@ -255,6 +255,19 @@
         @-webkit-keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
         @keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
 
+        #nutrient-detail-modal-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #nutrient-detail-modal-list li:last-child {
+            border-bottom: none;
+        }
+        #nutrient-detail-modal-list li span {
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -552,6 +565,14 @@
             </div>
         </div>
     </div>
+
+    <div id="nutrient-detail-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="nutrient-detail-modal">&times;</span>
+            <h2 id="nutrient-detail-modal-title"></h2>
+            <ul id="nutrient-detail-modal-list"></ul>
+        </div>
+    </div>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
@@ -581,13 +602,13 @@
         let currentUserUID = null; 
 
         const PIANO_SETTIMANALE = {
-            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 150 },
-            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 150 },
-            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 150 },
-            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 150 },
-            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 150 },
-            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 150 },
-            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 150 }
+            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 },
+            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
+            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 },
+            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
+            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
         };
 
         const DEFICIT_PREIMPOSTATO_SETTIMANALE = { 0: -500, 1: -150, 2: -150, 3: -150, 4: -150, 5: -150, 6: -500 };
@@ -698,6 +719,12 @@
         const workoutDescInput = document.getElementById('workout-desc');
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
+
+        // Riferimenti per la nuova modale dei dettagli
+        const nutrientDetailModal = document.getElementById('nutrient-detail-modal');
+        const nutrientDetailTitle = document.getElementById('nutrient-detail-modal-title');
+        const nutrientDetailList = document.getElementById('nutrient-detail-modal-list');
+        const closeNutrientModalBtn = document.querySelector('#nutrient-detail-modal .modal-close');
 
 
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
@@ -848,37 +875,35 @@
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, fatUnsat: 0, fatTotal: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0, fe: 0, zn: 0, cu: 0 };
+            let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, fatUnsat: 0, fatTotal: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0, fe: 0, zn: 0, cu: 0 };
             
-(datiGiornalieri.log || []).forEach(entry => {
-    // Aggiungi solo i valori nutrizionali se l'elemento non è un allenamento
-    if (entry.type !== 'workout') {
-        const items = entry.type === 'meal' ? entry.items : [entry];
-        items.forEach(item => {
-            totali.proteine += item.prot || 0;
-            totali.calorie += (item.kcal || item.cal) || 0;
-            // Aggiungi qui gli altri micronutrienti come sono già
-            totali.mg += item.mg || 0;
-            totali.k += item.k || 0;
-            totali.vitc += item.vitc || 0;
-            totali.ca += item.ca || 0;
-            totali.fatSat += item.fatSat || 0;
-            totali.fatUnsat += item.fatUnsat || 0;
-            totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
-            totali.vitA += item.vitA || 0;
-            totali.vitB12 += item.vitB12 || 0;
-            totali.vitD += item.vitD || 0;
-            totali.vitE += item.vitE || 0;
-            totali.vitK += item.vitK || 0;
-            totali.b9 += item.b9 || 0;
-            totali.b2 += item.b2 || 0;
-            totali.b6 += item.b6 || 0;
-            totali.fe += item.fe || 0;
-            totali.zn += item.zn || 0;
-            totali.cu += item.cu || 0;
-        });
-    }
-});
+            (datiGiornalieri.log || []).forEach(entry => {
+                if (entry.type !== 'workout') {
+                    const items = entry.type === 'meal' ? entry.items : [entry];
+                    items.forEach(item => {
+                        totali.proteine += item.prot || 0;
+                        totali.calorie += (item.kcal || item.cal) || 0;
+                        totali.mg += item.mg || 0;
+                        totali.k += item.k || 0;
+                        totali.vitc += item.vitc || 0;
+                        totali.ca += item.ca || 0;
+                        totali.fatSat += item.fatSat || 0;
+                        totali.fatUnsat += item.fatUnsat || 0;
+                        totali.fatTotal += (item.fatSat || 0) + (item.fatUnsat || 0);
+                        totali.vitA += item.vitA || 0;
+                        totali.vitB12 += item.vitB12 || 0;
+                        totali.vitD += item.vitD || 0;
+                        totali.vitE += item.vitE || 0;
+                        totali.vitK += item.vitK || 0;
+                        totali.b9 += item.b9 || 0;
+                        totali.b2 += item.b2 || 0;
+                        totali.b6 += item.b6 || 0;
+                        totali.fe += item.fe || 0;
+                        totali.zn += item.zn || 0;
+                        totali.cu += item.cu || 0;
+                    });
+                }
+            });
 
             // --- Update UI elements ---
             spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.proteine.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
@@ -939,7 +964,7 @@ let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, 
                             const rigaSubItem = logBody.insertRow();
                             rigaSubItem.classList.add('sub-item-row');
                             rigaSubItem.innerHTML = `
-                                <td>${subItem.desc}</td><td>${subItem.qta.toFixed(0)}</td>
+                                <td>${subItem.desc}</td><td>${subItem.qta}</td>
                                 ${nutrientKeys.map(k => `<td>${formatNumber(k, subItem[k])}</td>`).join('')}
                                 <td></td>`;
                         });
@@ -960,14 +985,12 @@ let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, 
         function renderMealBuilder() {
             mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
             logPastoBuilderBody.innerHTML = ''; 
-
             const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
             const selectedMealTypeText = mealTypeSelector?.options[mealTypeSelector.selectedIndex]?.text ?? '';
             const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
             const totaliPastoCorrenteSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
                 acc.prot += item.prot || 0; acc.kcal += (item.kcal || item.cal) || 0; return acc;
             }, { prot: 0, kcal: 0 });
-
             currentMealTypeDisplay.textContent = selectedMealTypeText;
             mealProtCurrent.textContent = totaliPastoCorrenteSelezionati.prot.toFixed(1);
             mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
@@ -979,7 +1002,6 @@ let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, 
             mealCalRemaining.textContent = `${(obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.kcal).toFixed(0)} kcal`;
             mealProgressCal.max = obiettiviPasto.targetCal;
             mealProgressCal.value = totaliPastoCorrenteSelezionati.kcal;
-
             pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
                 riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}</td><td>${(item.prot || 0).toFixed(1)}</td><td>${((item.kcal || item.cal) || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
@@ -1107,7 +1129,7 @@ let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, 
                 const stat = weeklyStats[key];
                 const { id, total, goal } = stat;
                 const avg = total / 7;
-                const dailyGoal = OBIETTIVI_VIT[key]; // Ottiene l'obiettivo giornaliero
+                const dailyGoal = OBIETTIVI_VIT[key]; 
                 const diff = avg - dailyGoal;
 
                 document.getElementById(`weekly-vit-${id}-total`).textContent = total.toFixed(1);
@@ -1117,12 +1139,10 @@ let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, 
                 document.getElementById(`weekly-vit-${id}-avg`).textContent = avg.toFixed(1);
                 
                 const diffSpan = document.getElementById(`weekly-vit-${id}-diff`);
-                const unit = key === 'vitE' ? 'mg' : 'µg'; // Unità di misura corretta
+                const unit = key === 'vitE' ? 'mg' : 'µg'; 
                 
-                // Resetta le classi di colore
                 diffSpan.classList.remove('diff-surplus', 'diff-deficit');
 
-                // Imposta testo e colore in base alla differenza
                 if (diff >= 0) {
                     diffSpan.classList.add('diff-surplus');
                     diffSpan.textContent = `+${diff.toFixed(1)} ${unit}`;
@@ -1147,12 +1167,87 @@ let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, 
             header.querySelector('.arrow').textContent = header.classList.contains('expanded') ? '▼' : '▶';
         }
 
+        function getNutrientData() {
+            const allItems = [];
+            (datiGiornalieri.log || []).forEach(entry => {
+                if (entry.type === 'meal') {
+                    entry.items.forEach(item => allItems.push(item));
+                } else if (entry.type === 'single') {
+                    allItems.push(entry);
+                }
+            });
+            return allItems;
+        }
+
+        function showNutrientDetailsModal(nutrientKey, title, unit) {
+            const allItems = getNutrientData();
+            let totalNutrient = 0;
+            const itemContributions = [];
+
+            allItems.forEach(item => {
+                const value = item[nutrientKey] || 0;
+                totalNutrient += value;
+                if (value > 0) {
+                    itemContributions.push({
+                        name: item.desc,
+                        value: value,
+                        unit: unit
+                    });
+                }
+            });
+
+            itemContributions.sort((a, b) => b.value - a.value);
+
+            nutrientDetailTitle.textContent = `Dettaglio ${title}`;
+            nutrientDetailList.innerHTML = '';
+            
+            if (itemContributions.length === 0) {
+                nutrientDetailList.innerHTML = '<li>Nessun dato disponibile.</li>';
+            } else {
+                itemContributions.forEach(item => {
+                    const percentage = totalNutrient > 0 ? (item.value / totalNutrient) * 100 : 0;
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <span>${item.name}</span>
+                        <span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>
+                    `;
+                    nutrientDetailList.appendChild(listItem);
+                });
+            }
+
+            nutrientDetailModal.style.display = 'block';
+        }
+
         // --- EVENT LISTENERS SETUP ---
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
+            
+            // Abilita i click sulle barre di progressione principali
+            document.getElementById('progress-proteine').addEventListener('click', () => showNutrientDetailsModal('prot', 'Proteine', 'g'));
+            document.getElementById('progress-calorie').addEventListener('click', () => showNutrientDetailsModal('kcal', 'Calorie', 'kcal'));
+            document.getElementById('progress-fats-total').addEventListener('click', () => showNutrientDetailsModal('fatTotal', 'Grassi Totali', 'g'));
+            document.getElementById('progress-fat-sat').addEventListener('click', () => showNutrientDetailsModal('fatSat', 'Grassi Saturi', 'g'));
+            document.getElementById('progress-fat-unsat').addEventListener('click', () => showNutrientDetailsModal('fatUnsat', 'Grassi Insaturi', 'g'));
+            document.getElementById('progress-mg').addEventListener('click', () => showNutrientDetailsModal('mg', 'Magnesio', 'mg'));
+            document.getElementById('progress-k').addEventListener('click', () => showNutrientDetailsModal('k', 'Potassio', 'mg'));
+            document.getElementById('progress-fe').addEventListener('click', () => showNutrientDetailsModal('fe', 'Ferro', 'mg'));
+            document.getElementById('progress-zn').addEventListener('click', () => showNutrientDetailsModal('zn', 'Zinco', 'mg'));
+            document.getElementById('progress-ca').addEventListener('click', () => showNutrientDetailsModal('ca', 'Calcio', 'mg'));
+            document.getElementById('progress-cu').addEventListener('click', () => showNutrientDetailsModal('cu', 'Rame', 'mg'));
+            document.getElementById('progress-vitc').addEventListener('click', () => showNutrientDetailsModal('vitc', 'Vitamina C', 'mg'));
+            document.getElementById('progress-vit-a').addEventListener('click', () => showNutrientDetailsModal('vitA', 'Vitamina A', 'µg'));
+            document.getElementById('progress-vit-d').addEventListener('click', () => showNutrientDetailsModal('vitD', 'Vitamina D', 'µg'));
+            document.getElementById('progress-vit-e').addEventListener('click', () => showNutrientDetailsModal('vitE', 'Vitamina E', 'mg'));
+            document.getElementById('progress-vit-k').addEventListener('click', () => showNutrientDetailsModal('vitK', 'Vitamina K', 'µg'));
+            document.getElementById('progress-vit-b12').addEventListener('click', () => showNutrientDetailsModal('vitB12', 'Vitamina B12', 'µg'));
+            document.getElementById('progress-b2').addEventListener('click', () => showNutrientDetailsModal('b2', 'Vitamina B2', 'mg'));
+            document.getElementById('progress-b6').addEventListener('click', () => showNutrientDetailsModal('b6', 'Vitamina B6', 'mg'));
+            document.getElementById('progress-b9').addEventListener('click', () => showNutrientDetailsModal('b9', 'Folati (B9)', 'µg'));
         });
         
+        closeNutrientModalBtn.addEventListener('click', () => { nutrientDetailModal.style.display = 'none'; });
+
         ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
             document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
@@ -1331,7 +1426,12 @@ let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, 
         window.addEventListener('click', (event) => {
             if (event.target == weeklyVitaminModal) {
                 closeWeeklyVitaminsModal();
+            } else if (event.target == nutrientDetailModal) {
+                nutrientDetailModal.style.display = 'none';
             }
+        });
+        document.querySelector('#nutrient-detail-modal .modal-close').addEventListener('click', () => {
+            nutrientDetailModal.style.display = 'none';
         });
 
         // --- Firebase & Sync Logic ---
@@ -1456,7 +1556,3 @@ let totali = { proteine: 0, calorie: 0, mg: 0, k: 0, vitc: 0, ca: 0, fatSat: 0, 
     </script>
 </body>
 </html>
-
-
-
-
