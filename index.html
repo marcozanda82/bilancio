@@ -529,7 +529,7 @@
     
     <div id="weekly-vitamin-modal" class="modal">
         <div class="modal-content">
-            <span class="modal-close">&times;</span>
+            <span class="modal-close" data-modal="weekly-vitamin-modal">&times;</span>
             <h2>Riepilogo Settimanale Vitamine Accumulabili</h2>
             <p style="font-size: 0.9em; color: #555;">Dati calcolati sugli ultimi 7 giorni, incluso oggi.</p>
             
@@ -1130,8 +1130,9 @@
                 const { id, total, goal } = stat;
                 const avg = total / 7;
                 const dailyGoal = OBIETTIVI_VIT[key]; 
-                const diff = avg - dailyGoal;
-
+                
+                const percentageDiff = (avg - dailyGoal) / dailyGoal * 100;
+                
                 document.getElementById(`weekly-vit-${id}-total`).textContent = total.toFixed(1);
                 document.getElementById(`weekly-vit-${id}-goal`).textContent = goal.toFixed(1);
                 document.getElementById(`weekly-progress-vit-${id}`).value = total;
@@ -1139,16 +1140,15 @@
                 document.getElementById(`weekly-vit-${id}-avg`).textContent = avg.toFixed(1);
                 
                 const diffSpan = document.getElementById(`weekly-vit-${id}-diff`);
-                const unit = key === 'vitE' ? 'mg' : 'µg'; 
                 
                 diffSpan.classList.remove('diff-surplus', 'diff-deficit');
 
-                if (diff >= 0) {
+                if (percentageDiff >= 0) {
                     diffSpan.classList.add('diff-surplus');
-                    diffSpan.textContent = `+${diff.toFixed(1)} ${unit}`;
+                    diffSpan.textContent = `+${percentageDiff.toFixed(0)}%`;
                 } else {
                     diffSpan.classList.add('diff-deficit');
-                    diffSpan.textContent = `${diff.toFixed(1)} ${unit}`;
+                    diffSpan.textContent = `${percentageDiff.toFixed(0)}%`;
                 }
             }
 
