@@ -69,7 +69,7 @@
         .collapsible-header:hover { color: #1976d2; }
         .collapsible-header .arrow { font-size: 0.8em; transition: transform 0.3s ease; }
         .collapsible-content { display: none; overflow: hidden; transition: max-height 0.3s ease-out; max-height: 0; }
-        .collapsible-content.expanded { display: block; max-height: 2000px; } /* Aumentato per contenuti più lunghi */
+        .collapsible-content.expanded { display: block; max-height: 2000px; /* Aumentato per contenuti più lunghi */ }
         .collapsible-header.expanded .arrow { transform: rotate(90deg); }
 
         #calorie-adjuster { display: flex; align-items: center; justify-content: center; margin-top: 10px; margin-bottom: 20px; gap: 10px; }
@@ -111,8 +111,8 @@
         
         .fats-bar-container { margin-top: 15px; }
         .fats-group { padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px; }
-        .fats-sub-bars-container { display: flex; gap: 10px; margin-top: 10px; }
-        .fats-sub-bars-container div { flex-grow: 1; }
+        .fats-sub-bars-container { display: flex; gap: 20px; margin-top: 10px; }
+        .fats-sub-bars-container > div { flex-grow: 1; flex-basis: 0; }
         .progress-fat-sat.green::-webkit-progress-value { background-color: #4CAF50; }
         .progress-fat-sat.green::-moz-progress-bar { background-color: #4CAF50; }
         .progress-fat-sat.orange::-webkit-progress-value { background-color: #ff9800; }
@@ -325,10 +325,16 @@
                         <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
                         
                         <div class="fats-group">
-                            <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat"></span> g</p>
-                            <progress id="progress-fat-sat" class="progress-fat-sat" value="0"></progress>
-                            <p>Trans: <span id="totale-fat-trans">0</span> / <span id="obiettivo-fat-trans"></span> g</p>
-                            <progress id="progress-fat-trans" value="0"></progress>
+                             <div class="fats-sub-bars-container">
+                                <div>
+                                    <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat"></span> g</p>
+                                    <progress id="progress-fat-sat" class="progress-fat-sat" value="0"></progress>
+                                </div>
+                                <div>
+                                    <p>Trans: <span id="totale-fat-trans">0</span> / <span id="obiettivo-fat-trans"></span> g</p>
+                                    <progress id="progress-fat-trans" value="0"></progress>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="fats-group">
@@ -339,11 +345,20 @@
                                 <progress id="progress-fat-mono" value="0"></progress>
                                 <p>Polinsaturi: <span id="totale-fat-poly">0</span> / <span id="obiettivo-fat-poly"></span> g</p>
                                 <progress id="progress-fat-poly" value="0"></progress>
-                                <div class="fats-group" style="border: none; padding-left: 10px;">
-                                     <p>Omega 3: <span id="totale-omega3">0</span> / <span id="obiettivo-omega3"></span> g</p>
-                                     <progress id="progress-omega3" value="0"></progress>
-                                     <p>Omega 6: <span id="totale-omega6">0</span> / <span id="obiettivo-omega6"></span> g</p>
-                                     <progress id="progress-omega6" value="0"></progress>
+                                <div class="fats-group" style="border: none; padding-left: 10px; margin-top: 10px;">
+                                     <div class="fats-sub-bars-container">
+                                        <div>
+                                            <p>Omega 3: <span id="totale-omega3">0</span> / <span id="obiettivo-omega3"></span> g</p>
+                                            <progress id="progress-omega3" value="0"></progress>
+                                        </div>
+                                        <div>
+                                            <p>Omega 6: <span id="totale-omega6">0</span> / <span id="obiettivo-omega6"></span> g</p>
+                                            <progress id="progress-omega6" value="0"></progress>
+                                        </div>
+                                     </div>
+                                     <p style="text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.1em;">
+                                        Rapporto O6:O3: <span id="omega-ratio-value"></span>
+                                     </p>
                                 </div>
                             </div>
                         </div>
@@ -726,6 +741,7 @@
         const spanTotaleFatPoly = document.getElementById('totale-fat-poly'), spanObiettivoFatPoly = document.getElementById('obiettivo-fat-poly'), progressFatPoly = document.getElementById('progress-fat-poly');
         const spanTotaleOmega3 = document.getElementById('totale-omega3'), spanObiettivoOmega3 = document.getElementById('obiettivo-omega3'), progressOmega3 = document.getElementById('progress-omega3');
         const spanTotaleOmega6 = document.getElementById('totale-omega6'), spanObiettivoOmega6 = document.getElementById('obiettivo-omega6'), progressOmega6 = document.getElementById('progress-omega6');
+        const omegaRatioValueEl = document.getElementById('omega-ratio-value');
         // Micros
         const spanTotaleMg = document.getElementById('totale-mg'), progressMg = document.getElementById('progress-mg');
         const spanTotaleK = document.getElementById('totale-k'), progressK = document.getElementById('progress-k');
@@ -858,7 +874,7 @@
                             });
                         } else {
                             consumatoProtAltriPasti += entry.prot || 0;
-                            consumatoCalAltriPasti += (entry.kcal || entry.cal) || 0;
+                            consumatoCalAltriPasti += (entry.kcal || item.cal) || 0;
                         }
                     }
                 });
@@ -976,6 +992,22 @@
             spanTotaleB9.textContent = totali.b9.toFixed(1); progressB9.max = OBIETTIVI.b9; progressB9.value = totali.b9;
             spanTotaleB2.textContent = totali.b2.toFixed(2); progressB2.max = OBIETTIVI.b2; progressB2.value = totali.b2;
             spanTotaleB6.textContent = totali.b6.toFixed(2); progressB6.max = OBIETTIVI.b6; progressB6.value = totali.b6;
+            
+            // Calcolo e visualizzazione rapporto Omega6:Omega3
+            let ratioText = 'N/D';
+            if (totali.omega3 > 0 && totali.omega6 > 0) {
+                const ratio = totali.omega6 / totali.omega3;
+                ratioText = `${ratio.toFixed(1)}:1`;
+                // Colora il rapporto: verde se bilanciato (3-6), rosso altrimenti
+                if (ratio >= 3 && ratio <= 6) {
+                    omegaRatioValueEl.style.color = '#2e7d32'; 
+                } else {
+                    omegaRatioValueEl.style.color = '#d32f2f';
+                }
+            } else {
+                omegaRatioValueEl.style.color = '#333'; // Colore default
+            }
+            omegaRatioValueEl.textContent = ratioText;
 
             const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
             const calorieDifference = totali.calorie - targetCaloriesForBalanceText;
