@@ -202,6 +202,8 @@
             animation-name: slideIn;
             animation-duration: 0.4s;
         }
+        .modal-content ul { padding-left: 20px; }
+        .modal-content li { margin-bottom: 10px; }
 
         .modal-close {
             color: #aaa;
@@ -356,8 +358,9 @@
                                             <progress id="progress-omega6" value="0"></progress>
                                         </div>
                                      </div>
-                                     <p style="text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.1em;">
-                                        Rapporto O6:O3: <span id="omega-ratio-value"></span>
+                                     <p style="text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.1em; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        Rapporto O6:O3 <i id="info-omega-ratio" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2; font-size: 0.9em;"></i>:
+                                        <span id="omega-ratio-value"></span>
                                      </p>
                                 </div>
                             </div>
@@ -611,6 +614,24 @@
             <ul id="nutrient-detail-modal-list"></ul>
         </div>
     </div>
+
+    <div id="omega-ratio-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="omega-ratio-modal">&times;</span>
+            <h2>Rapporto Omega 6 : Omega 3</h2>
+            <p>Questo rapporto indica l'equilibrio tra acidi grassi potenzialmente pro-infiammatori (Omega 6) e quelli anti-infiammatori (Omega 3).</p>
+            <hr>
+            <h4>Qual è il rapporto ideale?</h4>
+            <p>Un rapporto considerato salutare e anti-infiammatorio si attesta tra <strong>2:1 e 5:1</strong>. Questo significa consumare da 2 a 5 volte più Omega 6 rispetto agli Omega 3.</p>
+            
+            <h4>Perché è importante?</h4>
+            <ul>
+                <li><strong>Rapporto Troppo Alto (es. 15:1 o più):</strong> Un eccesso di Omega 6, comune nelle diete moderne (oli di semi, cibi processati), può promuovere uno stato di infiammazione cronica nel corpo. L'infiammazione è associata a un aumentato rischio di malattie cardiovascolari, diabete e artrite.</li>
+                <li><strong>Obiettivo:</strong> L'obiettivo non è eliminare gli Omega 6, che sono essenziali, ma bilanciarli aumentando l'assunzione di Omega 3 (pesce azzurro, semi di lino, noci) e moderando le fonti più concentrate di Omega 6.</li>
+            </ul>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
@@ -713,10 +734,9 @@
         const manualJsonInput = document.getElementById('manual-json-input');
         const btnConfirmJson = document.getElementById('btn-confirm-json');
         const btnClearNutrients = document.getElementById('btn-clear-nutrients');
-        // Riferimenti per la modale delle vitamine settimanali
-        const weeklyVitaminModal = document.getElementById('weekly-vitamin-modal');
+        // Riferimenti modali
         const infoVitSettimanaliBtn = document.getElementById('info-vit-settimanali');
-        const modalCloseBtn = weeklyVitaminModal.querySelector('.modal-close');
+        const infoOmegaRatioBtn = document.getElementById('info-omega-ratio');
         
         // Input Builder References
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
@@ -769,12 +789,6 @@
         const workoutDescInput = document.getElementById('workout-desc');
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
-
-        // Riferimenti per la nuova modale dei dettagli
-        const nutrientDetailModal = document.getElementById('nutrient-detail-modal');
-        const nutrientDetailTitle = document.getElementById('nutrient-detail-modal-title');
-        const nutrientDetailList = document.getElementById('nutrient-detail-modal-list');
-        const closeNutrientModalBtn = document.querySelector('#nutrient-detail-modal .modal-close');
 
 
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
@@ -1207,43 +1221,6 @@
             return vitaminsToTrack;
         }
 
-        function openWeeklyVitaminsModal() {
-            const weeklyStats = calculateWeeklyVitaminStats();
-            
-            for (const key in weeklyStats) {
-                const stat = weeklyStats[key];
-                const { id, total, goal } = stat;
-                const avg = total / 7;
-                const dailyGoal = OBIETTIVI_VIT[key]; 
-                
-                const percentageDiff = (avg - dailyGoal) / dailyGoal * 100;
-                
-                document.getElementById(`weekly-vit-${id}-total`).textContent = total.toFixed(1);
-                document.getElementById(`weekly-vit-${id}-goal`).textContent = goal.toFixed(1);
-                document.getElementById(`weekly-progress-vit-${id}`).value = total;
-                document.getElementById(`weekly-progress-vit-${id}`).max = goal;
-                document.getElementById(`weekly-vit-${id}-avg`).textContent = avg.toFixed(1);
-                
-                const diffSpan = document.getElementById(`weekly-vit-${id}-diff`);
-                
-                diffSpan.classList.remove('diff-surplus', 'diff-deficit');
-
-                if (percentageDiff >= 0) {
-                    diffSpan.classList.add('diff-surplus');
-                    diffSpan.textContent = `+${percentageDiff.toFixed(0)}%`;
-                } else {
-                    diffSpan.classList.add('diff-deficit');
-                    diffSpan.textContent = `${percentageDiff.toFixed(0)}%`;
-                }
-            }
-
-            weeklyVitaminModal.style.display = 'block';
-        }
-
-        function closeWeeklyVitaminsModal() {
-            weeklyVitaminModal.style.display = 'none';
-        }
-
         function toggleCollapsible(headerId, contentId) {
             const header = document.getElementById(headerId);
             const content = document.getElementById(contentId);
@@ -1283,11 +1260,12 @@
 
             itemContributions.sort((a, b) => b.value - a.value);
 
-            nutrientDetailTitle.textContent = `Dettaglio ${title}`;
-            nutrientDetailList.innerHTML = '';
+            document.getElementById('nutrient-detail-modal-title').textContent = `Dettaglio ${title}`;
+            const listEl = document.getElementById('nutrient-detail-modal-list');
+            listEl.innerHTML = '';
             
             if (itemContributions.length === 0) {
-                nutrientDetailList.innerHTML = '<li>Nessun dato disponibile.</li>';
+                listEl.innerHTML = '<li>Nessun dato disponibile.</li>';
             } else {
                 itemContributions.forEach(item => {
                     const percentage = totalNutrient > 0 ? (item.value / totalNutrient) * 100 : 0;
@@ -1296,11 +1274,10 @@
                         <span>${item.name}</span>
                         <span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>
                     `;
-                    nutrientDetailList.appendChild(listItem);
+                    listEl.appendChild(listItem);
                 });
             }
-
-            nutrientDetailModal.style.display = 'block';
+            document.getElementById('nutrient-detail-modal').style.display = 'block';
         }
 
         // --- EVENT LISTENERS SETUP ---
@@ -1337,13 +1314,36 @@
             document.getElementById('progress-b6').addEventListener('click', () => showNutrientDetailsModal('b6', 'Vitamina B6', 'mg'));
             document.getElementById('progress-b9').addEventListener('click', () => showNutrientDetailsModal('b9', 'Folati (B9)', 'µg'));
         });
-        
-        closeNutrientModalBtn.addEventListener('click', () => { nutrientDetailModal.style.display = 'none'; });
 
         ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
             document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
         
+        // --- GESTIONE MODALI (Pop-up) ---
+        const allModals = document.querySelectorAll('.modal');
+        const allCloseButtons = document.querySelectorAll('.modal-close');
+
+        // Apertura modali
+        infoVitSettimanaliBtn.addEventListener('click', () => document.getElementById('weekly-vitamin-modal').style.display = 'block');
+        infoOmegaRatioBtn.addEventListener('click', () => document.getElementById('omega-ratio-modal').style.display = 'block');
+
+        // Chiusura modali
+        allCloseButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const modalId = button.getAttribute('data-modal');
+                document.getElementById(modalId).style.display = 'none';
+            });
+        });
+
+        window.addEventListener('click', (event) => {
+            allModals.forEach(modal => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+
         btnClearNutrients.addEventListener('click', () => { resetInputAlimento(); aggiornaColoreNutrienti(); });
         btnAddWorkout.addEventListener('click', () => {
             const desc = workoutDescInput.value.trim(), calories = parseFloat(workoutCaloriesInput.value);
@@ -1511,20 +1511,6 @@
         });
         btnCalorieMinus.addEventListener('click', () => handleCalorieAdjustment(-10));
         btnCaloriePlus.addEventListener('click', () => handleCalorieAdjustment(10));
-
-        // Listener per la modale delle vitamine settimanali
-        infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
-        modalCloseBtn.addEventListener('click', closeWeeklyVitaminsModal);
-        window.addEventListener('click', (event) => {
-            if (event.target == weeklyVitaminModal) {
-                closeWeeklyVitaminsModal();
-            } else if (event.target == nutrientDetailModal) {
-                nutrientDetailModal.style.display = 'none';
-            }
-        });
-        document.querySelector('#nutrient-detail-modal .modal-close').addEventListener('click', () => {
-            nutrientDetailModal.style.display = 'none';
-        });
 
         // --- Firebase & Sync Logic ---
         try {
