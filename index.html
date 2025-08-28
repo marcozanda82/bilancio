@@ -433,6 +433,7 @@
                     <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
+                    <div><label>Grassi Totali/100g</label><input type="number" id="builder-fat-total" step="0.1"></div>
                 </div>
                 <h2 class="collapsible-header" id="nutrients-header">
                     Dettagli Nutrizionali <span class="arrow">▶</span>
@@ -694,7 +695,12 @@
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
 
         // --- Element References ---
+        // Sezioni principali
         const authSection = document.getElementById('auth-section');
+        const mainTrackerContent = document.getElementById('main-tracker-content');
+        const titoloGiornataEl = document.getElementById('titolo-giornata');
+        
+        // Autenticazione
         const userEmailInput = document.getElementById('user-email');
         const userPasswordInput = document.getElementById('user-password');
         const btnRegister = document.getElementById('btn-register');
@@ -703,48 +709,44 @@
         const authStatusP = document.getElementById('auth-status');
         const welcomeMessage = document.getElementById('welcome-message');
         const authFormFields = document.getElementById('auth-form-fields');
-        const mainTrackerContent = document.getElementById('main-tracker-content');
-        const titoloGiornataEl = document.getElementById('titolo-giornata');
-        const logBody = document.getElementById('log-body');
-        const foodDatalist = document.getElementById('food-database-list');
+        
+        // Controlli principali
         const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
         const btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
+        const btnCaricaGiorno = document.getElementById('btn-carica-giorno');
+        const dataCaricamentoInput = document.getElementById('data-caricamento');
+        const calorieAdjustmentInput = document.getElementById('calorie-adjustment-input');
+        const btnCalorieMinus = document.getElementById('btn-calorie-minus');
+        const btnCaloriePlus = document.getElementById('btn-calorie-plus');
+
+        // Builder
+        const foodDatalist = document.getElementById('food-database-list');
         const mealBuilderSezione = document.getElementById('meal-builder-sezione');
         const logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
         const btnSalvaPasto = document.getElementById('btn-salva-pasto');
         const mealTypeSelector = document.getElementById('meal-type-selector');
-        const btnCaricaGiorno = document.getElementById('btn-carica-giorno');
-        const dataCaricamentoInput = document.getElementById('data-caricamento');
-        const calorieBalanceText = document.getElementById('calorie-balance-text');
-        const calorieAdjustmentInput = document.getElementById('calorie-adjustment-input');
-        const btnCalorieMinus = document.getElementById('btn-calorie-minus');
-        const btnCaloriePlus = document.getElementById('btn-calorie-plus');
-        const btnDownloadManual = document.getElementById('btn-download-manual');
-        const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
-        const cloudSyncSection = document.querySelector('.cloud-sync-section');
-        const btnCopyPrompt = document.getElementById('btn-copy-prompt');
-        const manualJsonInput = document.getElementById('manual-json-input');
-        const btnConfirmJson = document.getElementById('btn-confirm-json');
-        const btnClearNutrients = document.getElementById('btn-clear-nutrients');
+        
         // Riferimenti modali
         const infoVitSettimanaliBtn = document.getElementById('info-vit-settimanali');
         const infoOmegaRatioBtn = document.getElementById('info-omega-ratio');
         
-        // Input Builder References
+        // Input Builder
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
+        const builderFatTotal = document.getElementById('builder-fat-total');
         const builderFatSat = document.getElementById('builder-fat-sat'), builderFatTrans = document.getElementById('builder-fat-trans'), builderFatMono = document.getElementById('builder-fat-mono'), builderFatPoly = document.getElementById('builder-fat-poly'), builderOmega3 = document.getElementById('builder-omega3'), builderOmega6 = document.getElementById('builder-omega6');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
         const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
         const builderVitE = document.getElementById('builder-vit-e'), builderVitK = document.getElementById('builder-vit-k'), builderB9 = document.getElementById('builder-b9');
         const builderB2 = document.getElementById('builder-b2'), builderB6 = document.getElementById('builder-b6');
         const builderFe = document.getElementById('builder-fe'), builderZn = document.getElementById('builder-zn'), builderCu = document.getElementById('builder-cu');
-
-        // Riepilogo Span & Progress References
+        const btnClearNutrients = document.getElementById('btn-clear-nutrients');
+        
+        // Riepilogo Spans & Progress
+        const calorieBalanceText = document.getElementById('calorie-balance-text');
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanObiettivoProteine = document.getElementById('obiettivo-proteine'), progressProteine = document.getElementById('progress-proteine');
         const spanTotaleCalorie = document.getElementById('totale-calorie'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie'), progressCalorie = document.getElementById('progress-calorie');
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
-        // Fats
         const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total'), progressFatsTotal = document.getElementById('progress-fats-total');
         const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanObiettivoFatSat = document.getElementById('obiettivo-fat-sat'), progressFatSat = document.getElementById('progress-fat-sat');
         const spanTotaleFatTrans = document.getElementById('totale-fat-trans'), spanObiettivoFatTrans = document.getElementById('obiettivo-fat-trans'), progressFatTrans = document.getElementById('progress-fat-trans');
@@ -754,7 +756,6 @@
         const spanTotaleOmega3 = document.getElementById('totale-omega3'), spanObiettivoOmega3 = document.getElementById('obiettivo-omega3'), progressOmega3 = document.getElementById('progress-omega3');
         const spanTotaleOmega6 = document.getElementById('totale-omega6'), spanObiettivoOmega6 = document.getElementById('obiettivo-omega6'), progressOmega6 = document.getElementById('progress-omega6');
         const omegaRatioValueEl = document.getElementById('omega-ratio-value');
-        // Micros
         const spanTotaleMg = document.getElementById('totale-mg'), progressMg = document.getElementById('progress-mg');
         const spanTotaleK = document.getElementById('totale-k'), progressK = document.getElementById('progress-k');
         const spanTotaleCa = document.getElementById('totale-ca'), progressCa = document.getElementById('progress-ca');
@@ -770,18 +771,7 @@
         const spanTotaleB9 = document.getElementById('totale-b9'), progressB9 = document.getElementById('progress-b9');
         const spanTotaleB2 = document.getElementById('totale-b2'), progressB2 = document.getElementById('progress-b2');
         const spanTotaleB6 = document.getElementById('totale-b6'), progressB6 = document.getElementById('progress-b6');
-        
-        // Meal Builder References
-        const currentMealTypeDisplay = document.getElementById('current-meal-type-display');
-        const mealProtCurrent = document.getElementById('meal-prot-current'), mealProtTarget = document.getElementById('meal-prot-target'), mealProtRemaining = document.getElementById('meal-prot-remaining');
-        const mealCalCurrent = document.getElementById('meal-cal-current'), mealCalTarget = document.getElementById('meal-cal-target'), mealCalRemaining = document.getElementById('meal-cal-remaining');
-        const mealProgressProt = document.getElementById('meal-progress-prot'), mealProgressCal = document.getElementById('meal-progress-cal');
-        
-        // Workout References
-        const workoutDescInput = document.getElementById('workout-desc');
-        const workoutCaloriesInput = document.getElementById('workout-calories');
-        const btnAddWorkout = document.getElementById('btn-add-workout');
-
+        const logBody = document.getElementById('log-body');
 
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
         
@@ -874,7 +864,7 @@
                             });
                         } else {
                             consumatoProtAltriPasti += entry.prot || 0;
-                            consumatoCalAltriPasti += (entry.kcal || item.cal) || 0;
+                            consumatoCalAltriPasti += (item.kcal || item.cal) || 0;
                         }
                     }
                 });
@@ -943,12 +933,10 @@
                 }
             });
 
-            // Calcoli derivati per i grassi
             totaliGiorno.fatUnsat = totaliGiorno.fatMono + totaliGiorno.fatPoly;
             totaliGiorno.fatTotal = totaliGiorno.fatSat + totaliGiorno.fatTrans + totaliGiorno.fatUnsat;
-            totali = totaliGiorno; // Aggiorna la variabile globale
+            totali = totaliGiorno;
 
-            // --- Update UI elements ---
             spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.proteine.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
             spanObiettivoCalorie.textContent = OBIETTIVI.kcal; spanTotaleCalorie.textContent = totali.calorie.toFixed(0); progressCalorie.max = OBIETTIVI.kcal; progressCalorie.value = totali.calorie;
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
@@ -1049,17 +1037,17 @@
             const totaliPastoCorrenteSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
                 acc.prot += item.prot || 0; acc.kcal += (item.kcal || item.cal) || 0; return acc;
             }, { prot: 0, kcal: 0 });
-            currentMealTypeDisplay.textContent = selectedMealTypeText;
-            mealProtCurrent.textContent = totaliPastoCorrenteSelezionati.prot.toFixed(1);
-            mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
-            mealProtRemaining.textContent = `${(obiettiviPasto.targetProt - totaliPastoCorrenteSelezionati.prot).toFixed(1)} g`;
-            mealProgressProt.max = obiettiviPasto.targetProt;
-            mealProgressProt.value = totaliPastoCorrenteSelezionati.prot;
-            mealCalCurrent.textContent = totaliPastoCorrenteSelezionati.kcal.toFixed(0);
-            mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
-            mealCalRemaining.textContent = `${(obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.kcal).toFixed(0)} kcal`;
-            mealProgressCal.max = obiettiviPasto.targetCal;
-            mealProgressCal.value = totaliPastoCorrenteSelezionati.kcal;
+            document.getElementById('current-meal-type-display').textContent = selectedMealTypeText;
+            document.getElementById('meal-prot-current').textContent = totaliPastoCorrenteSelezionati.prot.toFixed(1);
+            document.getElementById('meal-prot-target').textContent = obiettiviPasto.targetProt.toFixed(0);
+            document.getElementById('meal-prot-remaining').textContent = `${(obiettiviPasto.targetProt - totaliPastoCorrenteSelezionati.prot).toFixed(1)} g`;
+            document.getElementById('meal-progress-prot').max = obiettiviPasto.targetProt;
+            document.getElementById('meal-progress-prot').value = totaliPastoCorrenteSelezionati.prot;
+            document.getElementById('meal-cal-current').textContent = totaliPastoCorrenteSelezionati.kcal.toFixed(0);
+            document.getElementById('meal-cal-target').textContent = obiettiviPasto.targetCal.toFixed(0);
+            document.getElementById('meal-cal-remaining').textContent = `${(obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.kcal).toFixed(0)} kcal`;
+            document.getElementById('meal-progress-cal').max = obiettiviPasto.targetCal;
+            document.getElementById('meal-progress-cal').value = totaliPastoCorrenteSelezionati.kcal;
             pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
                 riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}</td><td>${(item.prot || 0).toFixed(1)}</td><td>${((item.kcal || item.cal) || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
@@ -1134,7 +1122,7 @@
         }
 
         function resetInputAlimento() { 
-            [builderDesc, builderQta, ...Object.values(inputFields)].forEach(el => el.value = ''); 
+            [builderDesc, builderQta, builderFatTotal, ...Object.values(inputFields)].forEach(el => el.value = ''); 
             builderDesc.focus(); 
         }
 
@@ -1143,60 +1131,10 @@
             document.getElementById('nutrients-header').classList.toggle('nutrients-warning', hasEmptyFields);
         }
         
-        function toggleCollapsible(headerId, contentId) {
-            const header = document.getElementById(headerId);
-            const content = document.getElementById(contentId);
-            header.classList.toggle('expanded');
-            content.classList.toggle('expanded');
-            header.querySelector('.arrow').textContent = header.classList.contains('expanded') ? '▼' : '▶';
-        }
-
-        function showNutrientDetailsModal(nutrientKey, title, unit) {
-            const allItems = [];
-            (datiGiornalieri.log || []).forEach(entry => {
-                if (entry.type === 'meal') {
-                    entry.items.forEach(item => allItems.push(item));
-                } else if (entry.type === 'single') {
-                    allItems.push(entry);
-                }
-            });
-
-            let totalNutrient = 0;
-            const itemContributions = [];
-
-            allItems.forEach(item => {
-                const value = item[nutrientKey] || 0;
-                totalNutrient += value;
-                if (value > 0) {
-                    itemContributions.push({ name: item.desc, value: value, unit: unit });
-                }
-            });
-
-            itemContributions.sort((a, b) => b.value - a.value);
-
-            document.getElementById('nutrient-detail-modal-title').textContent = `Dettaglio ${title}`;
-            const listEl = document.getElementById('nutrient-detail-modal-list');
-            listEl.innerHTML = '';
-            
-            if (itemContributions.length === 0) {
-                listEl.innerHTML = '<li>Nessun dato disponibile.</li>';
-            } else {
-                itemContributions.forEach(item => {
-                    const percentage = totalNutrient > 0 ? (item.value / totalNutrient) * 100 : 0;
-                    const listItem = document.createElement('li');
-                    listItem.innerHTML = `<span>${item.name}</span><span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>`;
-                    listEl.appendChild(listItem);
-                });
-            }
-            document.getElementById('nutrient-detail-modal').style.display = 'block';
-        }
-
-        // --- EVENT LISTENERS SETUP ---
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
-            // Abilita i click sulle barre di progressione
             const progressBars = { 'proteine': 'prot', 'calorie': 'kcal', 'fats-total': 'fatTotal', 'fat-sat': 'fatSat', 'fat-trans': 'fatTrans', 'fat-unsat': 'fatUnsat', 'fat-mono': 'fatMono', 'fat-poly': 'fatPoly', 'omega3': 'omega3', 'omega6': 'omega6', 'mg': 'mg', 'k': 'k', 'fe': 'fe', 'zn': 'zn', 'ca': 'ca', 'cu': 'cu', 'vitc': 'vitc', 'vit-a': 'vitA', 'vit-d': 'vitD', 'vit-e': 'vitE', 'vit-k': 'vitK', 'vit-b12': 'vitB12', 'b2': 'b2', 'b6': 'b6', 'b9': 'b9'};
             const progressInfo = { 'prot': ['Proteine', 'g'], 'kcal': ['Calorie', 'kcal'], 'fatTotal': ['Grassi Totali', 'g'], 'fatSat': ['Grassi Saturi', 'g'], 'fatTrans': ['Grassi Trans', 'g'], 'fatUnsat': ['Grassi Insaturi', 'g'], 'fatMono': ['Monoinsaturi', 'g'], 'fatPoly': ['Polinsaturi', 'g'], 'omega3': ['Omega 3', 'g'], 'omega6': ['Omega 6', 'g'], 'mg': ['Magnesio', 'mg'], 'k': ['Potassio', 'mg'], 'fe': ['Ferro', 'mg'], 'zn': ['Zinco', 'mg'], 'ca': ['Calcio', 'mg'], 'cu': ['Rame', 'mg'], 'vitc': ['Vitamina C', 'mg'], 'vitA': ['Vitamina A', 'µg'], 'vitD': ['Vitamina D', 'µg'], 'vitE': ['Vitamina E', 'mg'], 'vitK': ['Vitamina K', 'µg'], 'vitB12': ['Vitamina B12', 'µg'], 'b2': ['Vitamina B2', 'mg'], 'b6': ['Vitamina B6', 'mg'], 'b9': ['Folati (B9)', 'µg']};
             
@@ -1210,11 +1148,8 @@
             document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
         
-        // --- GESTIONE MODALI (Pop-up) ---
         const allModals = document.querySelectorAll('.modal');
         const allCloseButtons = document.querySelectorAll('.modal-close');
-
-        // Apertura modali
         infoVitSettimanaliBtn.addEventListener('click', () => document.getElementById('weekly-vitamin-modal').style.display = 'block');
         infoOmegaRatioBtn.addEventListener('click', () => {
             const explanationEl = document.getElementById('omega-ratio-explanation');
@@ -1228,7 +1163,7 @@
                     explanationText = '<strong>Ottimo!</strong> Il tuo rapporto è bilanciato. Questo favorisce un corretto stato anti-infiammatorio nel corpo.';
                 } else if (ratio > 6) {
                     explanationText = '<strong>Sbilanciamento: Eccesso di Omega 6.</strong><br>Questo rapporto può favorire stati infiammatori. Prova a bilanciarlo aumentando le fonti di <strong>Omega 3</strong> (es. pesce azzurro, noci, semi di lino) e moderando quelle più ricche di <strong>Omega 6</strong> (es. oli di semi, cibi processati).';
-                } else { // ratio < 3
+                } else {
                     explanationText = '<strong>Sbilanciamento: Rapporto molto basso.</strong><br>Anche se un basso rapporto è generalmente positivo, assicurati di assumere una quantità adeguata di Omega 6, che sono comunque acidi grassi essenziali per l\'organismo.';
                 }
             } else {
@@ -1238,15 +1173,12 @@
             explanationEl.innerHTML = explanationText;
             document.getElementById('omega-ratio-modal').style.display = 'block';
         });
-
-        // Chiusura modali
         allCloseButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const modalId = button.getAttribute('data-modal');
                 document.getElementById(modalId).style.display = 'none';
             });
         });
-
         window.addEventListener('click', (event) => {
             allModals.forEach(modal => {
                 if (event.target == modal) {
@@ -1255,17 +1187,16 @@
             });
         });
 
-
         btnClearNutrients.addEventListener('click', () => { resetInputAlimento(); aggiornaColoreNutrienti(); });
-        btnAddWorkout.addEventListener('click', () => {
-            const desc = workoutDescInput.value.trim(), calories = parseFloat(workoutCaloriesInput.value);
+        document.getElementById('btn-add-workout').addEventListener('click', () => {
+            const desc = document.getElementById('workout-desc').value.trim(), calories = parseFloat(document.getElementById('workout-calories').value);
             if (!desc || isNaN(calories) || calories <= 0) { alert('Dati allenamento non validi.'); return; }
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             datiGiornalieri.log.push({ type: 'workout', desc: desc, kcal: calories });
             datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
             aggiornaUI();
             salvaGiorno(giornoVisualizzato, datiGiornalieri); 
-            workoutDescInput.value = ''; workoutCaloriesInput.value = '';
+            document.getElementById('workout-desc').value = ''; document.getElementById('workout-calories').value = '';
             renderMealBuilder(); 
         });
 
@@ -1363,6 +1294,7 @@
         });
 
         Object.values(inputFields).forEach(input => input.addEventListener('input', aggiornaColoreNutrienti));
+        builderFatTotal.addEventListener('input', aggiornaColoreNutrienti);
 
         btnCaricaGiorno.addEventListener('click', () => {
             const dataSelezionata = dataCaricamentoInput.value;
@@ -1381,11 +1313,30 @@
             if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
             const button = e.target;
             button.disabled = true; button.textContent = 'Caricamento…';
+            
+            const totalFatVal = parseFloat(builderFatTotal.value);
+            const satFatVal = parseFloat(builderFatSat.value);
+            let promptText = '';
+            
+            // Logica condizionale per il prompt
+            if (!isNaN(totalFatVal) && !isNaN(satFatVal)) {
+                const remainingFats = totalFatVal - satFatVal;
+                if(remainingFats < 0) {
+                    alert("Errore: I grassi saturi non possono essere maggiori dei grassi totali.");
+                    button.disabled = false; button.textContent = 'Compila AI';
+                    return;
+                }
+                const fatFieldsToFill = {"fatTrans": "g", "fatMono": "g", "fatPoly": "g", "omega3": "g", "omega6": "g"};
+                const jsonFormatForDeduction = JSON.stringify(fatFieldsToFill).replace(/:\"g\"/g, ':g');
+                promptText = `Per 100g di "${nome}", i grassi totali sono ${totalFatVal}g e i grassi saturi sono ${satFatVal}g. I restanti ${remainingFats.toFixed(1)}g di grassi sono principalmente insaturi. Fornisci una stima della ripartizione di questi ${remainingFats.toFixed(1)}g in grassi trans, monoinsaturi e polinsaturi (di cui omega 3 e omega 6). La somma di trans, monoinsaturi e polinsaturi deve approssimare ${remainingFats.toFixed(1)}g. Fornisci ESATTAMENTE questo oggetto JSON: ${jsonFormatForDeduction}`;
+            } else {
+                promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
+            }
 
             try {
                 const res = await fetch(GEMINI_ENDPOINT, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}` }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                 });
                 if (!res.ok) throw new Error(res.statusText);
                 const data = await res.json();
@@ -1393,7 +1344,9 @@
                 const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
                 for (const key in inputFields) {
                     if (inputFields[key].value === '' || (parseFloat(inputFields[key].value) === 0 && resObj[key] !== 0)) {
-                        inputFields[key].value = resObj[key] ?? 0;
+                        if (resObj[key] !== undefined) {
+                            inputFields[key].value = resObj[key];
+                        }
                     }
                 }
                 aggiornaColoreNutrienti();
@@ -1425,6 +1378,9 @@
         btnCaloriePlus.addEventListener('click', () => handleCalorieAdjustment(10));
 
         // --- Firebase & Sync Logic ---
+        const btnDownloadManual = document.getElementById('btn-download-manual');
+        const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
+        const cloudSyncSection = document.querySelector('.cloud-sync-section');
         try {
             if (!getApps().some(app => app.name === "globalTrackerApp")) { firebaseApp = initializeApp(firebaseConfig, "globalTrackerApp"); } else { firebaseApp = getApp("globalTrackerApp"); }
             db = getDatabase(firebaseApp);
@@ -1456,7 +1412,7 @@
                         if (lastCloudUpdate > lastLocalUpdate) {
                             await loadAllTrackerDataFromCloud(true);
                         } else if (lastLocalUpdate > lastCloudUpdate && confirm("I tuoi dati locali sono più recenti. Vuoi caricarli ora?")) {
-                            await handleManualUploadToCloud();
+                            await saveAllTrackerDataToCloud();
                         }
                     }, 500);
                 }
@@ -1472,10 +1428,9 @@
         btnLogin.addEventListener('click', async () => { try { await authHandlers.login(); alert("Accesso effettuato!"); } catch (e) { alert(e.message); } });
         btnSignOut.addEventListener('click', async () => { try { await authHandlers.signOut(); alert("Disconnessione avvenuta."); } catch (e) { alert(e.message); } });
         
-        function getUserDataRef() { return (db && currentUserUID) ? ref(db, `users/${currentUserUID}/tracker_data/`) : null; }
-
         async function saveAllTrackerDataToCloud() {
-            const dataRef = getUserDataRef(); if (!dataRef) return;
+            const dataRef = (db && currentUserUID) ? ref(db, `users/${currentUserUID}/tracker_data/`) : null;
+            if (!dataRef) return;
             const currentTimestamp = Date.now();
             localStorage.setItem(LOCAL_LAST_UPDATE_KEY, currentTimestamp);
             const dataToUpload = {};
@@ -1489,17 +1444,15 @@
         }
 
         async function loadAllTrackerDataFromCloud(skipConfirm = false) {
-            const dataRef = getUserDataRef(); if (!dataRef) { alert("Devi essere autenticato."); return; }
+            const dataRef = (db && currentUserUID) ? ref(db, `users/${currentUserUID}/tracker_data/`) : null;
+            if (!dataRef) { alert("Devi essere autenticato."); return; }
             if (!skipConfirm && !confirm("ATTENZIONE: i dati locali verranno SOVRASCRITTI. Continuare?")) return;
 
             try {
                 const snapshot = await get(dataRef);
                 if (snapshot.exists()) {
                     const cloudData = snapshot.val();
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key) || key.startsWith('lastMealTypeSelected_')) localStorage.removeItem(key);
-                    }
+                    Object.keys(localStorage).filter(key => key.startsWith('tracker') || key.startsWith('lastMeal')).forEach(key => localStorage.removeItem(key));
                     for (const key in cloudData) localStorage.setItem(key, typeof cloudData[key] === 'object' ? JSON.stringify(cloudData[key]) : cloudData[key]);
                     const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
                     localStorage.setItem(LOCAL_LAST_UPDATE_KEY, cloudTimestampSnapshot.exists() ? cloudTimestampSnapshot.val() : Date.now());
@@ -1508,18 +1461,12 @@
             } catch (error) { alert(`Errore download: ${error.message}`); }
         }
         
-        async function handleManualUploadToCloud() {
-            await saveAllTrackerDataToCloud();
-            alert("Sincronizzazione manuale completata!");
-        }
-
         btnDownloadManual.addEventListener('click', () => loadAllTrackerDataFromCloud(false));
 
         function eseguiMigrazioneStorico() {
-            const vecchioStoricoRaw = localStorage.getItem('trackerStorico');
-            if (!vecchioStoricoRaw) return;
+            if (!localStorage.getItem('trackerStorico')) return;
             try {
-                const vecchioStorico = JSON.parse(vecchioStoricoRaw);
+                const vecchioStorico = JSON.parse(localStorage.getItem('trackerStorico'));
                 if (Array.isArray(vecchioStorico)) {
                     vecchioStorico.forEach(giorno => { if (giorno.data && giorno.log) localStorage.setItem(`trackerStorico_${giorno.data}`, JSON.stringify(giorno)); });
                     localStorage.removeItem('trackerStorico'); 
@@ -1527,22 +1474,6 @@
                 }
             } catch (e) { console.error("Errore migrazione storico.", e); }
         }
-
-        btnCopyPrompt.addEventListener('click', async () => {
-            const nome = builderDesc.value.trim(); if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
-            const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
-            try { await navigator.clipboard.writeText(promptText); alert('Richiesta AI copiata!'); } catch (err) { alert('Impossibile copiare.'); }
-        });
-
-        btnConfirmJson.addEventListener('click', () => {
-            const jsonText = manualJsonInput.value.trim(); if (!jsonText) { alert('Incolla prima il testo JSON.'); return; }
-            try {
-                const resObj = JSON.parse(jsonText);
-                for (const key in inputFields) if (typeof resObj[key] !== 'undefined') inputFields[key].value = resObj[key];
-                if (builderDesc.value.trim()) { creaAlimentoDaInput(); manualJsonInput.value = ''; } else { alert('Alimento non specificato.'); }
-                aggiornaColoreNutrienti();
-            } catch (err) { alert('Errore nel formato JSON.'); }
-        });
     </script>
 </body>
 </html>
