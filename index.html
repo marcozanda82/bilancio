@@ -1141,9 +1141,9 @@
 
             allItems.forEach(item => {
                 let value = item[nutrientKey];
-                if(nutrientKey === 'fatTotal') { // Calcolo derivato per i grassi totali
+                if(nutrientKey === 'fatTotal') {
                     value = (item.fatSat || 0) + (item.fatTrans || 0) + (item.fatMono || 0) + (item.fatPoly || 0);
-                } else if(nutrientKey === 'fatUnsat') { // Calcolo derivato
+                } else if(nutrientKey === 'fatUnsat') {
                     value = (item.fatMono || 0) + (item.fatPoly || 0);
                 }
                 value = value || 0;
@@ -1372,7 +1372,7 @@
                 }
                 const fatFieldsToFill = {"fatTrans": "g", "fatMono": "g", "fatPoly": "g", "omega3": "g", "omega6": "g"};
                 const jsonFormatForDeduction = JSON.stringify(fatFieldsToFill).replace(/:\"g\"/g, ':g');
-                promptText = `Per 100g di "${nome}", i grassi totali sono ${totalFatVal}g e i grassi saturi sono ${satFatVal}g. I restanti ${remainingFats.toFixed(1)}g di grassi sono principalmente insaturi. Fornisci una stima della ripartizione di questi ${remainingFats.toFixed(1)}g in grassi trans, monoinsaturi e polinsaturi (di cui omega 3 e omega 6). La somma di trans, monoinsaturi e polinsaturi deve approssimare ${remainingFats.toFixed(1)}g. Fornisci ESATTAMENTE questo oggetto JSON: ${jsonFormatForDeduction}`;
+                promptText = `Il tuo compito è completare un oggetto JSON per 100g di "${nome}". Non usare frasi o spiegazioni. Rispondi SOLO con il JSON. Dati: grassi totali = ${totalFatVal}g, grassi saturi = ${satFatVal}g. I restanti grassi sono ${remainingFats.toFixed(1)}g. Calcola e compila i valori per 'fatTrans', 'fatMono', 'fatPoly', 'omega3', 'omega6' in modo che la loro somma si avvicini a ${remainingFats.toFixed(1)}g. Formato JSON da usare: ${jsonFormatForDeduction}`;
             } else {
                 promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
             }
