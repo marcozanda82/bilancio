@@ -695,12 +695,9 @@
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
 
         // --- Element References ---
-        // Sezioni principali
         const authSection = document.getElementById('auth-section');
         const mainTrackerContent = document.getElementById('main-tracker-content');
         const titoloGiornataEl = document.getElementById('titolo-giornata');
-        
-        // Autenticazione
         const userEmailInput = document.getElementById('user-email');
         const userPasswordInput = document.getElementById('user-password');
         const btnRegister = document.getElementById('btn-register');
@@ -709,8 +706,6 @@
         const authStatusP = document.getElementById('auth-status');
         const welcomeMessage = document.getElementById('welcome-message');
         const authFormFields = document.getElementById('auth-form-fields');
-        
-        // Controlli principali
         const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
         const btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
         const btnCaricaGiorno = document.getElementById('btn-carica-giorno');
@@ -718,19 +713,13 @@
         const calorieAdjustmentInput = document.getElementById('calorie-adjustment-input');
         const btnCalorieMinus = document.getElementById('btn-calorie-minus');
         const btnCaloriePlus = document.getElementById('btn-calorie-plus');
-
-        // Builder
         const foodDatalist = document.getElementById('food-database-list');
         const mealBuilderSezione = document.getElementById('meal-builder-sezione');
         const logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
         const btnSalvaPasto = document.getElementById('btn-salva-pasto');
         const mealTypeSelector = document.getElementById('meal-type-selector');
-        
-        // Riferimenti modali
         const infoVitSettimanaliBtn = document.getElementById('info-vit-settimanali');
         const infoOmegaRatioBtn = document.getElementById('info-omega-ratio');
-        
-        // Input Builder
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderFatTotal = document.getElementById('builder-fat-total');
@@ -741,8 +730,6 @@
         const builderB2 = document.getElementById('builder-b2'), builderB6 = document.getElementById('builder-b6');
         const builderFe = document.getElementById('builder-fe'), builderZn = document.getElementById('builder-zn'), builderCu = document.getElementById('builder-cu');
         const btnClearNutrients = document.getElementById('btn-clear-nutrients');
-        
-        // Riepilogo Spans & Progress
         const calorieBalanceText = document.getElementById('calorie-balance-text');
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanObiettivoProteine = document.getElementById('obiettivo-proteine'), progressProteine = document.getElementById('progress-proteine');
         const spanTotaleCalorie = document.getElementById('totale-calorie'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie'), progressCalorie = document.getElementById('progress-calorie');
@@ -864,7 +851,7 @@
                             });
                         } else {
                             consumatoProtAltriPasti += entry.prot || 0;
-                            consumatoCalAltriPasti += (item.kcal || item.cal) || 0;
+                            consumatoCalAltriPasti += (entry.kcal || item.cal) || 0;
                         }
                     }
                 });
@@ -1131,9 +1118,71 @@
             document.getElementById('nutrients-header').classList.toggle('nutrients-warning', hasEmptyFields);
         }
         
+        function toggleCollapsible(headerId, contentId) {
+            const header = document.getElementById(headerId);
+            const content = document.getElementById(contentId);
+            header.classList.toggle('expanded');
+            content.classList.toggle('expanded');
+            header.querySelector('.arrow').textContent = header.classList.contains('expanded') ? '▼' : '▶';
+        }
+
+        function showNutrientDetailsModal(nutrientKey, title, unit) {
+            const allItems = [];
+            (datiGiornalieri.log || []).forEach(entry => {
+                if (entry.type === 'meal') {
+                    entry.items.forEach(item => allItems.push(item));
+                } else if (entry.type === 'single') {
+                    allItems.push(entry);
+                }
+            });
+
+            let totalNutrient = 0;
+            const itemContributions = [];
+
+            allItems.forEach(item => {
+                let value = item[nutrientKey];
+                if(nutrientKey === 'fatTotal') { // Calcolo derivato per i grassi totali
+                    value = (item.fatSat || 0) + (item.fatTrans || 0) + (item.fatMono || 0) + (item.fatPoly || 0);
+                } else if(nutrientKey === 'fatUnsat') { // Calcolo derivato
+                    value = (item.fatMono || 0) + (item.fatPoly || 0);
+                }
+                value = value || 0;
+                totalNutrient += value;
+                if (value > 0) {
+                    itemContributions.push({ name: item.desc, value: value, unit: unit });
+                }
+            });
+
+            itemContributions.sort((a, b) => b.value - a.value);
+
+            document.getElementById('nutrient-detail-modal-title').textContent = `Dettaglio ${title}`;
+            const listEl = document.getElementById('nutrient-detail-modal-list');
+            listEl.innerHTML = '';
+            
+            if (itemContributions.length === 0) {
+                listEl.innerHTML = '<li>Nessun dato disponibile.</li>';
+            } else {
+                itemContributions.forEach(item => {
+                    const percentage = totalNutrient > 0 ? (item.value / totalNutrient) * 100 : 0;
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<span>${item.name}</span><span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>`;
+                    listEl.appendChild(listItem);
+                });
+            }
+            document.getElementById('nutrient-detail-modal').style.display = 'block';
+        }
+
+        // --- EVENT LISTENERS SETUP ---
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
+            
+            ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
+                const header = document.getElementById(id);
+                if (header) {
+                    header.addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
+                }
+            });
             
             const progressBars = { 'proteine': 'prot', 'calorie': 'kcal', 'fats-total': 'fatTotal', 'fat-sat': 'fatSat', 'fat-trans': 'fatTrans', 'fat-unsat': 'fatUnsat', 'fat-mono': 'fatMono', 'fat-poly': 'fatPoly', 'omega3': 'omega3', 'omega6': 'omega6', 'mg': 'mg', 'k': 'k', 'fe': 'fe', 'zn': 'zn', 'ca': 'ca', 'cu': 'cu', 'vitc': 'vitc', 'vit-a': 'vitA', 'vit-d': 'vitD', 'vit-e': 'vitE', 'vit-k': 'vitK', 'vit-b12': 'vitB12', 'b2': 'b2', 'b6': 'b6', 'b9': 'b9'};
             const progressInfo = { 'prot': ['Proteine', 'g'], 'kcal': ['Calorie', 'kcal'], 'fatTotal': ['Grassi Totali', 'g'], 'fatSat': ['Grassi Saturi', 'g'], 'fatTrans': ['Grassi Trans', 'g'], 'fatUnsat': ['Grassi Insaturi', 'g'], 'fatMono': ['Monoinsaturi', 'g'], 'fatPoly': ['Polinsaturi', 'g'], 'omega3': ['Omega 3', 'g'], 'omega6': ['Omega 6', 'g'], 'mg': ['Magnesio', 'mg'], 'k': ['Potassio', 'mg'], 'fe': ['Ferro', 'mg'], 'zn': ['Zinco', 'mg'], 'ca': ['Calcio', 'mg'], 'cu': ['Rame', 'mg'], 'vitc': ['Vitamina C', 'mg'], 'vitA': ['Vitamina A', 'µg'], 'vitD': ['Vitamina D', 'µg'], 'vitE': ['Vitamina E', 'mg'], 'vitK': ['Vitamina K', 'µg'], 'vitB12': ['Vitamina B12', 'µg'], 'b2': ['Vitamina B2', 'mg'], 'b6': ['Vitamina B6', 'mg'], 'b9': ['Folati (B9)', 'µg']};
@@ -1142,10 +1191,6 @@
                 const el = document.getElementById(`progress-${id}`);
                 if(el) el.addEventListener('click', () => showNutrientDetailsModal(key, progressInfo[key][0], progressInfo[key][1]));
             }
-        });
-
-        ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
-            document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
         
         const allModals = document.querySelectorAll('.modal');
@@ -1318,7 +1363,6 @@
             const satFatVal = parseFloat(builderFatSat.value);
             let promptText = '';
             
-            // Logica condizionale per il prompt
             if (!isNaN(totalFatVal) && !isNaN(satFatVal)) {
                 const remainingFats = totalFatVal - satFatVal;
                 if(remainingFats < 0) {
