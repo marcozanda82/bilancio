@@ -822,7 +822,6 @@
             let rawDataFromLocalStorage = localStorage.getItem(`trackerStorico_${data}`);
             try {
                 datiTrovati = JSON.parse(rawDataFromLocalStorage);
-                // Normalizza i dati dal localStorage
                 if (datiTrovati && datiTrovati.log) {
                     datiTrovati.log.forEach(entry => {
                         if (entry.type === 'meal') {
@@ -840,7 +839,6 @@
                         }
                     });
                     if (datiTrovati.workoutCalorie) {
-                        // Controlla e normalizza le calorie del workout se necessario
                         if (datiTrovati.workoutCalorie.cal && !datiTrovati.workoutCalorie.kcal) {
                             datiTrovati.workoutCalorie.kcal = datiTrovati.workoutCalorie.cal;
                             delete datiTrovati.workoutCalorie.cal;
@@ -915,7 +913,6 @@
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
             aggiornaDatalist();
             pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
-            // Normalizza i dati del pasto in costruzione
             pastoInCostruzione.forEach(item => {
                 if (item.cal && !item.kcal) {
                     item.kcal = item.cal;
@@ -951,7 +948,7 @@
                         totali.calorie += (item.kcal || item.cal) || 0;
                         totali.carboidrati += item.carb || 0;
                         totali.zuccheri += item.zuccheri || 0;
-                        totali.fatTotal += item.fatTotal || 0; // Somma il totale
+                        totali.fatTotal += item.fatTotal || 0;
                         totali.fatSat += item.fatSat || 0;
                         totali.fatTrans += item.fatTrans || 0;
                         totali.fatMono += item.fatMono || 0;
@@ -977,16 +974,13 @@
                 }
             });
 
-            // Calcoli derivati per i grassi insaturi
             totali.fatUnsat = totali.fatMono + totali.fatPoly;
 
-            // --- Update UI elements ---
             spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.proteine.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
             spanObiettivoCalorie.textContent = OBIETTIVI.kcal; spanTotaleCalorie.textContent = totali.calorie.toFixed(0); progressCalorie.max = OBIETTIVI.kcal; progressCalorie.value = totali.calorie;
             spanObiettivoCarboidrati.textContent = OBIETTIVI.carb; spanTotaleCarboidrati.textContent = totali.carboidrati.toFixed(1); progressCarboidrati.max = OBIETTIVI.carb; progressCarboidrati.value = totali.carboidrati;
             spanObiettivoZuccheri.textContent = OBIETTIVI.zuccheri; spanTotaleZuccheri.textContent = totali.zuccheri.toFixed(1); progressZuccheri.max = OBIETTIVI.zuccheri; progressZuccheri.value = totali.zuccheri;
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
-            // Fats
             spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal; spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1); progressFatsTotal.max = OBIETTIVI_FAT.fatTotal; progressFatsTotal.value = totali.fatTotal;
             spanObiettivoFatSat.textContent = OBIETTIVI_FAT.fatSat; spanTotaleFatSat.textContent = totali.fatSat.toFixed(1); progressFatSat.max = OBIETTIVI_FAT.fatSat; progressFatSat.value = totali.fatSat;
             spanObiettivoFatTrans.textContent = OBIETTIVI_FAT.fatTrans; spanTotaleFatTrans.textContent = totali.fatTrans.toFixed(1); progressFatTrans.max = OBIETTIVI_FAT.fatTrans; progressFatTrans.value = totali.fatTrans;
@@ -995,14 +989,12 @@
             spanObiettivoFatPoly.textContent = OBIETTIVI_FAT.fatPoly; spanTotaleFatPoly.textContent = totali.fatPoly.toFixed(1); progressFatPoly.max = OBIETTIVI_FAT.fatPoly; progressFatPoly.value = totali.fatPoly;
             spanObiettivoOmega3.textContent = OBIETTIVI_FAT.omega3; spanTotaleOmega3.textContent = totali.omega3.toFixed(1); progressOmega3.max = OBIETTIVI_FAT.omega3; progressOmega3.value = totali.omega3;
             spanObiettivoOmega6.textContent = OBIETTIVI_FAT.omega6; spanTotaleOmega6.textContent = totali.omega6.toFixed(1); progressOmega6.max = OBIETTIVI_FAT.omega6; progressOmega6.value = totali.omega6;
-            // Micros
             spanTotaleMg.textContent = totali.mg.toFixed(1); progressMg.max = OBIETTIVI.mg; progressMg.value = totali.mg;
             spanTotaleK.textContent = totali.k.toFixed(0); progressK.max = OBIETTIVI.k; progressK.value = totali.k;
             spanTotaleCa.textContent = totali.ca.toFixed(1); progressCa.max = OBIETTIVI.ca; progressCa.value = totali.ca;
             spanTotaleFe.textContent = totali.fe.toFixed(1); progressFe.max = OBIETTIVI.fe; progressFe.value = totali.fe;
             spanTotaleZn.textContent = totali.zn.toFixed(1); progressZn.max = OBIETTIVI.zn; progressZn.value = totali.zn;
             spanTotaleCu.textContent = totali.cu.toFixed(2); progressCu.max = OBIETTIVI.cu; progressCu.value = totali.cu;
-            // Vitamins
             spanTotaleVitC.textContent = totali.vitc.toFixed(1); progressVitC.max = OBIETTIVI.vitc; progressVitC.value = totali.vitc;
             spanTotaleVitA.textContent = totali.vitA.toFixed(1); progressVitA.max = OBIETTIVI.vitA; progressVitA.value = totali.vitA;
             spanTotaleVitB12.textContent = totali.vitB12.toFixed(1); progressVitB12.max = OBIETTIVI.vitB12; progressVitB12.value = totali.vitB12;
@@ -1013,19 +1005,17 @@
             spanTotaleB2.textContent = totali.b2.toFixed(2); progressB2.max = OBIETTIVI.b2; progressB2.value = totali.b2;
             spanTotaleB6.textContent = totali.b6.toFixed(2); progressB6.max = OBIETTIVI.b6; progressB6.value = totali.b6;
             
-            // Calcolo e visualizzazione rapporto Omega6:Omega3
             let ratioText = 'N/D';
             if (totali.omega3 > 0 && totali.omega6 > 0) {
                 const ratio = totali.omega6 / totali.omega3;
                 ratioText = `${ratio.toFixed(1)}:1`;
-                // Colora il rapporto: verde se bilanciato (3-6), rosso altrimenti
                 if (ratio >= 3 && ratio <= 6) {
                     omegaRatioValueEl.style.color = '#2e7d32'; 
                 } else {
                     omegaRatioValueEl.style.color = '#d32f2f';
                 }
             } else {
-                omegaRatioValueEl.style.color = '#333'; // Colore default
+                omegaRatioValueEl.style.color = '#333';
             }
             omegaRatioValueEl.textContent = ratioText;
 
@@ -1136,11 +1126,11 @@
                 foodItem[key] = ((value ?? 0) / 100) * qta;
             }
 
-            // Se il totale dei grassi non è stato inserito, calcolalo dalla somma dei componenti
             if (foodData.fatTotal === null && (foodData.fatSat !== null || foodData.fatTrans !== null || foodData.fatMono !== null || foodData.fatPoly !== null)) {
                 const total = (foodData.fatSat || 0) + (foodData.fatTrans || 0) + (foodData.fatMono || 0) + (foodData.fatPoly || 0);
                 foodData.fatTotal = total;
                 foodItem.fatTotal = (total / 100) * qta;
+                builderFatTotal.value = total.toFixed(1); 
             }
             
             foodDatabase[desc.toLowerCase()] = foodData;
@@ -1155,12 +1145,14 @@
             const desc = builderDesc.value.trim(), qta = parseFloat(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return; }
 
-            const emptyFields = Object.keys(inputFields).filter(key => inputFields[key].value === '');
+            const emptyFields = Object.keys(inputFields)
+                .filter(key => key !== 'fatTotal') 
+                .filter(key => inputFields[key].value === '');
+                
             if (emptyFields.length > 0) {
                 const confirmMsg = `Ci sono campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
                 if (confirm(confirmMsg)) {
                     await document.getElementById('btn-compila-ai').click();
-                    // Attendere un attimo per l'utente per verificare i dati prima di aggiungere
                     return; 
                 }
             }
@@ -1532,7 +1524,6 @@
                 const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
                 const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
-                // Riempie SOLO i campi vuoti, preservando i valori già inseriti
                 for (const key in inputFields) {
                     if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
                         inputFields[key].value = resObj[key] ?? '';
@@ -1682,7 +1673,6 @@
             if (!jsonText) { alert('Incolla prima il testo JSON.'); return; }
             try {
                 const resObj = JSON.parse(jsonText);
-                // Riempie SOLO i campi vuoti, preservando i valori già inseriti
                 for (const key in inputFields) {
                     if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
                         inputFields[key].value = resObj[key];
