@@ -331,46 +331,44 @@
                     Grassi <span class="arrow">▶</span>
                 </h3>
                 <div class="collapsible-content" id="fats-content">
-                    <div class="fats-bar-container">
-                        <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
-                        <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
-                        
-                        <div class="fats-group">
-                             <div class="fats-sub-bars-container">
-                                <div>
-                                    <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat"></span> g</p>
-                                    <progress id="progress-fat-sat" class="progress-fat-sat" value="0"></progress>
-                                </div>
-                                <div>
-                                    <p>Trans: <span id="totale-fat-trans">0</span> / <span id="obiettivo-fat-trans"></span> g</p>
-                                    <progress id="progress-fat-trans" value="0"></progress>
-                                </div>
+                    <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
+                    <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
+                    
+                    <div class="fats-group">
+                         <div class="fats-sub-bars-container">
+                            <div>
+                                <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat"></span> g</p>
+                                <progress id="progress-fat-sat" class="progress-fat-sat" value="0"></progress>
+                            </div>
+                            <div>
+                                <p>Trans: <span id="totale-fat-trans">0</span> / <span id="obiettivo-fat-trans"></span> g</p>
+                                <progress id="progress-fat-trans" value="0"></progress>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="fats-group">
-                            <h4>Grassi Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat"></span> g</h4>
-                            <progress id="progress-fat-unsat" value="0"></progress>
-                            <div style="padding-left: 15px;">
-                                <p>Monoinsaturi: <span id="totale-fat-mono">0</span> / <span id="obiettivo-fat-mono"></span> g</p>
-                                <progress id="progress-fat-mono" value="0"></progress>
-                                <p>Polinsaturi: <span id="totale-fat-poly">0</span> / <span id="obiettivo-fat-poly"></span> g</p>
-                                <progress id="progress-fat-poly" value="0"></progress>
-                                <div class="fats-group" style="border: none; padding-left: 10px; margin-top: 10px;">
-                                     <div class="fats-sub-bars-container">
-                                        <div>
-                                            <p>Omega 3: <span id="totale-omega3">0</span> / <span id="obiettivo-omega3"></span> g</p>
-                                            <progress id="progress-omega3" value="0"></progress>
-                                        </div>
-                                        <div>
-                                            <p>Omega 6: <span id="totale-omega6">0</span> / <span id="obiettivo-omega6"></span> g</p>
-                                            <progress id="progress-omega6" value="0"></progress>
-                                        </div>
-                                     </div>
-                                     <p style="text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.1em;">
-                                        Rapporto O6:O3: <span id="omega-ratio-value"></span>
-                                     </p>
-                                </div>
+                    <div class="fats-group">
+                        <h4>Grassi Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat"></span> g</h4>
+                        <progress id="progress-fat-unsat" value="0"></progress>
+                        <div style="padding-left: 15px;">
+                            <p>Monoinsaturi: <span id="totale-fat-mono">0</span> / <span id="obiettivo-fat-mono"></span> g</p>
+                            <progress id="progress-fat-mono" value="0"></progress>
+                            <p>Polinsaturi: <span id="totale-fat-poly">0</span> / <span id="obiettivo-fat-poly"></span> g</p>
+                            <progress id="progress-fat-poly" value="0"></progress>
+                            <div class="fats-group" style="border: none; padding-left: 10px; margin-top: 10px;">
+                                 <div class="fats-sub-bars-container">
+                                    <div>
+                                        <p>Omega 3: <span id="totale-omega3">0</span> / <span id="obiettivo-omega3"></span> g</p>
+                                        <progress id="progress-omega3" value="0"></progress>
+                                    </div>
+                                    <div>
+                                        <p>Omega 6: <span id="totale-omega6">0</span> / <span id="obiettivo-omega6"></span> g</p>
+                                        <progress id="progress-omega6" value="0"></progress>
+                                    </div>
+                                 </div>
+                                 <p style="text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.1em;">
+                                    Rapporto O6:O3: <span id="omega-ratio-value"></span>
+                                 </p>
                             </div>
                         </div>
                     </div>
@@ -443,9 +441,10 @@
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
                     <div><label>Carboidrati/100g</label><input type="number" id="builder-carb" step="0.1"></div>
                     <div><label>Zuccheri/100g</label><input type="number" id="builder-zuccheri" step="0.1"></div>
+                    <div><label>Grassi Totali/100g</label><input type="number" id="builder-fat-total" step="0.1"></div>
                 </div>
                 <h2 class="collapsible-header" id="nutrients-header">
-                    Dettagli Nutrizionali <span class="arrow">▶</span>
+                    Dettagli Nutrizionali (Grassi Specifici e Micronutrienti) <span class="arrow">▶</span>
                 </h2>
                 <div class="collapsible-content" id="nutrients-content">
                     <div class="builder-grid">
@@ -734,6 +733,7 @@
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderCarb = document.getElementById('builder-carb'), builderZuccheri = document.getElementById('builder-zuccheri');
+        const builderFatTotal = document.getElementById('builder-fat-total');
         const builderFatSat = document.getElementById('builder-fat-sat'), builderFatTrans = document.getElementById('builder-fat-trans'), builderFatMono = document.getElementById('builder-fat-mono'), builderFatPoly = document.getElementById('builder-fat-poly'), builderOmega3 = document.getElementById('builder-omega3'), builderOmega6 = document.getElementById('builder-omega6');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
         const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
@@ -823,26 +823,28 @@
             try {
                 datiTrovati = JSON.parse(rawDataFromLocalStorage);
                 // Normalizza i dati dal localStorage
-                datiTrovati.log.forEach(entry => {
-                    if (entry.type === 'meal') {
-                        entry.items.forEach(item => {
-                            if (item.cal && !item.kcal) {
-                                item.kcal = item.cal;
-                                delete item.cal;
+                if (datiTrovati && datiTrovati.log) {
+                    datiTrovati.log.forEach(entry => {
+                        if (entry.type === 'meal') {
+                            entry.items.forEach(item => {
+                                if (item.cal && !item.kcal) {
+                                    item.kcal = item.cal;
+                                    delete item.cal;
+                                }
+                            });
+                        } else {
+                            if (entry.cal && !entry.kcal) {
+                                entry.kcal = entry.cal;
+                                delete entry.cal;
                             }
-                        });
-                    } else {
-                        if (entry.cal && !entry.kcal) {
-                            entry.kcal = entry.cal;
-                            delete item.cal;
                         }
-                    }
-                });
-                if (datiTrovati.workoutCalorie) {
-                    // Controlla e normalizza le calorie del workout se necessario
-                    if (datiTrovati.workoutCalorie.cal && !datiTrovati.workoutCalorie.kcal) {
-                        datiTrovati.workoutCalorie.kcal = datiTrovati.workoutCalorie.cal;
-                        delete datiTrovati.workoutCalorie.cal;
+                    });
+                    if (datiTrovati.workoutCalorie) {
+                        // Controlla e normalizza le calorie del workout se necessario
+                        if (datiTrovati.workoutCalorie.cal && !datiTrovati.workoutCalorie.kcal) {
+                            datiTrovati.workoutCalorie.kcal = datiTrovati.workoutCalorie.cal;
+                            delete datiTrovati.workoutCalorie.cal;
+                        }
                     }
                 }
             } catch (e) {
@@ -939,7 +941,7 @@
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { proteine: 0, calorie: 0, carboidrati: 0, zuccheri: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0 };
+            let totali = { proteine: 0, calorie: 0, carboidrati: 0, zuccheri: 0, fatTotal: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0 };
             
             (datiGiornalieri.log || []).forEach(entry => {
                 if (entry.type !== 'workout') {
@@ -949,6 +951,7 @@
                         totali.calorie += (item.kcal || item.cal) || 0;
                         totali.carboidrati += item.carb || 0;
                         totali.zuccheri += item.zuccheri || 0;
+                        totali.fatTotal += item.fatTotal || 0; // Somma il totale
                         totali.fatSat += item.fatSat || 0;
                         totali.fatTrans += item.fatTrans || 0;
                         totali.fatMono += item.fatMono || 0;
@@ -974,9 +977,8 @@
                 }
             });
 
-            // Calcoli derivati per i grassi
+            // Calcoli derivati per i grassi insaturi
             totali.fatUnsat = totali.fatMono + totali.fatPoly;
-            totali.fatTotal = totali.fatSat + totali.fatTrans + totali.fatUnsat;
 
             // --- Update UI elements ---
             spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.proteine.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
@@ -1113,7 +1115,7 @@
         
         const inputFields = {
             prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
-            fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
+            fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
             mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
             vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
             vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, 
@@ -1132,6 +1134,13 @@
                 const value = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
                 foodData[key] = value;
                 foodItem[key] = ((value ?? 0) / 100) * qta;
+            }
+
+            // Se il totale dei grassi non è stato inserito, calcolalo dalla somma dei componenti
+            if (foodData.fatTotal === null && (foodData.fatSat !== null || foodData.fatTrans !== null || foodData.fatMono !== null || foodData.fatPoly !== null)) {
+                const total = (foodData.fatSat || 0) + (foodData.fatTrans || 0) + (foodData.fatMono || 0) + (foodData.fatPoly || 0);
+                foodData.fatTotal = total;
+                foodItem.fatTotal = (total / 100) * qta;
             }
             
             foodDatabase[desc.toLowerCase()] = foodData;
@@ -1500,24 +1509,20 @@
             button.disabled = true; button.textContent = 'Caricamento…';
 
             try {
-                // 1. Controlla i campi dei grassi già valorizzati
-                const fatFields = { fatSat: 'saturi', fatTrans: 'trans', fatMono: 'monoinsaturi', fatPoly: 'polinsaturi', omega3: 'omega 3', omega6: 'omega 6' };
-                const knownFats = [];
-                for (const key in fatFields) {
-                    const input = inputFields[key];
-                    if (input && input.value !== '') {
-                        knownFats.push(`${input.value}g di grassi ${fatFields[key]}`);
+                const totalFatVal = builderFatTotal.value;
+                const satFatVal = builderFatSat.value;
+                
+                let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}".`;
+
+                if (totalFatVal !== '' && satFatVal !== '') {
+                    const remainingFats = parseFloat(totalFatVal) - parseFloat(satFatVal);
+                    if (remainingFats >= 0) {
+                         promptText += ` L'alimento ha ${totalFatVal}g di grassi totali e ${satFatVal}g di grassi saturi. Distribuisci i restanti ${remainingFats.toFixed(1)}g tra grassi trans, monoinsaturi e polinsaturi in modo realistico. Stima anche gli omega 3 e 6 come parte dei polinsaturi. Assicurati che la somma di saturi, trans, mono e poli sia uguale a ${totalFatVal}g.`;
                     }
                 }
 
-                // 2. Costruisce la richiesta dinamica
-                let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}".`;
-                if (knownFats.length > 0) {
-                    promptText += ` Tieni conto che i seguenti valori per 100g sono già noti: ${knownFats.join(', ')}. Popola i restanti campi dei grassi (e tutti gli altri nutrienti non forniti) in modo coerente.`;
-                }
                 promptText += ` ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
-
-                // 3. Esegue la chiamata API
+                
                 const res = await fetch(GEMINI_ENDPOINT, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
@@ -1527,7 +1532,7 @@
                 const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
                 const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
-                // 4. Riempie SOLO i campi vuoti
+                // Riempie SOLO i campi vuoti, preservando i valori già inseriti
                 for (const key in inputFields) {
                     if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
                         inputFields[key].value = resObj[key] ?? '';
