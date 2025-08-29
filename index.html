@@ -822,7 +822,7 @@
                         } else {
                             if (entry.cal && !entry.kcal) {
                                 entry.kcal = entry.cal;
-                                delete entry.cal;
+                                delete item.cal;
                             }
                         }
                     });
@@ -1208,30 +1208,6 @@
             }
             document.getElementById('nutrient-detail-modal').style.display = 'block';
         }
-
-        // --- EVENT LISTENERS SETUP ---
-        document.addEventListener('DOMContentLoaded', () => {
-            eseguiMigrazioneStorico(); 
-            initAppUI(); 
-            
-            ['fats-header', 'carbs-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
-                const header = document.getElementById(id);
-                if (header) {
-                    header.addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
-                }
-            });
-            
-            const progressBars = { 'proteine': 'prot', 'carboidrati': 'carb', 'zuccheri': 'sugar', 'calorie': 'kcal', 'fats-total': 'fatTotal', 'fat-sat': 'fatSat', 'fat-trans': 'fatTrans', 'fat-unsat': 'fatUnsat', 'fat-mono': 'fatMono', 'fat-poly': 'fatPoly', 'omega3': 'omega3', 'omega6': 'omega6', 'mg': 'mg', 'k': 'k', 'fe': 'fe', 'zn': 'zn', 'ca': 'ca', 'cu': 'cu', 'vitc': 'vitc', 'vit-a': 'vitA', 'vit-d': 'vitD', 'vit-e': 'vitE', 'vit-k': 'vitK', 'vit-b12': 'vitB12', 'b2': 'b2', 'b6': 'b6', 'b9': 'b9'};
-            const progressInfo = { 'prot': ['Proteine', 'g'], 'carb': ['Carboidrati', 'g'], 'sugar': ['Zuccheri', 'g'], 'kcal': ['Calorie', 'kcal'], 'fatTotal': ['Grassi Totali', 'g'], 'fatSat': ['Grassi Saturi', 'g'], 'fatTrans': ['Grassi Trans', 'g'], 'fatUnsat': ['Grassi Insaturi', 'g'], 'fatMono': ['Monoinsaturi', 'g'], 'fatPoly': ['Polinsaturi', 'g'], 'omega3': ['Omega 3', 'g'], 'omega6': ['Omega 6', 'g'], 'mg': ['Magnesio', 'mg'], 'k': ['Potassio', 'mg'], 'fe': ['Ferro', 'mg'], 'zn': ['Zinco', 'mg'], 'ca': ['Calcio', 'mg'], 'cu': ['Rame', 'mg'], 'vitc': ['Vitamina C', 'mg'], 'vitA': ['Vitamina A', 'µg'], 'vitD': ['Vitamina D', 'µg'], 'vitE': ['Vitamina E', 'mg'], 'vitK': ['Vitamina K', 'µg'], 'vitB12': ['Vitamina B12', 'µg'], 'b2': ['Vitamina B2', 'mg'], 'b6': ['Vitamina B6', 'mg'], 'b9': ['Folati (B9)', 'µg']};
-            
-            for(const [id, key] of Object.entries(progressBars)){
-                const el = document.getElementById(`progress-${id}`);
-                if(el) el.addEventListener('click', () => showNutrientDetailsModal(key, progressInfo[key][0], progressInfo[key][1]));
-            }
-        });
-        
-        const allModals = document.querySelectorAll('.modal');
-        const allCloseButtons = document.querySelectorAll('.modal-close');
         
         function openWeeklyVitaminsModal() {
             const weeklyStats = calculateWeeklyVitaminStats();
@@ -1259,7 +1235,32 @@
             document.getElementById('weekly-vitamin-modal').style.display = 'block';
         }
 
+        // --- EVENT LISTENERS SETUP ---
+        document.addEventListener('DOMContentLoaded', () => {
+            eseguiMigrazioneStorico(); 
+            initAppUI(); 
+            
+            ['fats-header', 'carbs-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
+                const header = document.getElementById(id);
+                if (header) {
+                    header.addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
+                }
+            });
+            
+            const progressBars = { 'proteine': 'prot', 'carboidrati': 'carb', 'zuccheri': 'sugar', 'calorie': 'kcal', 'fats-total': 'fatTotal', 'fat-sat': 'fatSat', 'fat-trans': 'fatTrans', 'fat-unsat': 'fatUnsat', 'fat-mono': 'fatMono', 'fat-poly': 'fatPoly', 'omega3': 'omega3', 'omega6': 'omega6', 'mg': 'mg', 'k': 'k', 'fe': 'fe', 'zn': 'zn', 'ca': 'ca', 'cu': 'cu', 'vitc': 'vitc', 'vit-a': 'vitA', 'vit-d': 'vitD', 'vit-e': 'vitE', 'vit-k': 'vitK', 'vit-b12': 'vitB12', 'b2': 'b2', 'b6': 'b6', 'b9': 'b9'};
+            const progressInfo = { 'prot': ['Proteine', 'g'], 'carb': ['Carboidrati', 'g'], 'sugar': ['Zuccheri', 'g'], 'kcal': ['Calorie', 'kcal'], 'fatTotal': ['Grassi Totali', 'g'], 'fatSat': ['Grassi Saturi', 'g'], 'fatTrans': ['Grassi Trans', 'g'], 'fatUnsat': ['Grassi Insaturi', 'g'], 'fatMono': ['Monoinsaturi', 'g'], 'fatPoly': ['Polinsaturi', 'g'], 'omega3': ['Omega 3', 'g'], 'omega6': ['Omega 6', 'g'], 'mg': ['Magnesio', 'mg'], 'k': ['Potassio', 'mg'], 'fe': ['Ferro', 'mg'], 'zn': ['Zinco', 'mg'], 'ca': ['Calcio', 'mg'], 'cu': ['Rame', 'mg'], 'vitc': ['Vitamina C', 'mg'], 'vitA': ['Vitamina A', 'µg'], 'vitD': ['Vitamina D', 'µg'], 'vitE': ['Vitamina E', 'mg'], 'vitK': ['Vitamina K', 'µg'], 'vitB12': ['Vitamina B12', 'µg'], 'b2': ['Vitamina B2', 'mg'], 'b6': ['Vitamina B6', 'mg'], 'b9': ['Folati (B9)', 'µg']};
+            
+            for(const [id, key] of Object.entries(progressBars)){
+                const el = document.getElementById(`progress-${id}`);
+                if(el) el.addEventListener('click', () => showNutrientDetailsModal(key, progressInfo[key][0], progressInfo[key][1]));
+            }
+        });
+        
+        const allModals = document.querySelectorAll('.modal');
+        const allCloseButtons = document.querySelectorAll('.modal-close');
+        
         infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
+        
         infoOmegaRatioBtn.addEventListener('click', () => {
             const explanationEl = document.getElementById('omega-ratio-explanation');
             let explanationText = '';
