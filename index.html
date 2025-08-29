@@ -314,12 +314,17 @@
                 <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
+                <hr>
                 
-                <p>Carboidrati: <span id="totale-carboidrati">0</span> / <span id="obiettivo-carboidrati"></span> g</p>
-                <progress id="progress-carboidrati" class="macro-progress" value="0"></progress>
-                <p>di cui Zuccheri: <span id="totale-zuccheri">0</span> / <span id="obiettivo-zuccheri"></span> g</p>
-                <progress id="progress-zuccheri" class="macro-progress" value="0"></progress>
-                
+                <h3 class="collapsible-header" id="carbs-header">
+                    Carboidrati e Zuccheri <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="carbs-content">
+                    <p>Carboidrati: <span id="totale-carboidrati">0</span> / <span id="obiettivo-carboidrati"></span> g</p>
+                    <progress id="progress-carboidrati" class="macro-progress" value="0"></progress>
+                    <p>di cui Zuccheri: <span id="totale-zuccheri">0</span> / <span id="obiettivo-zuccheri"></span> g</p>
+                    <progress id="progress-zuccheri" class="macro-progress" value="0"></progress>
+                </div>
                 <hr>
                 
                 <h3 class="collapsible-header" id="fats-header">
@@ -1364,7 +1369,7 @@
             });
         });
         
-        ['fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
+        ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
             document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
         
