@@ -944,11 +944,17 @@
                 if (entry.type !== 'workout') {
                     const items = entry.type === 'meal' ? entry.items : [entry];
                     items.forEach(item => {
+                        
+                        let currentItemFatTotal = item.fatTotal;
+                        if (typeof currentItemFatTotal === 'undefined' || currentItemFatTotal === null) {
+                            currentItemFatTotal = (item.fatSat || 0) + (item.fatTrans || 0) + (item.fatMono || 0) + (item.fatPoly || 0);
+                        }
+
                         totali.proteine += item.prot || 0;
                         totali.calorie += (item.kcal || item.cal) || 0;
                         totali.carboidrati += item.carb || 0;
                         totali.zuccheri += item.zuccheri || 0;
-                        totali.fatTotal += item.fatTotal || 0;
+                        totali.fatTotal += currentItemFatTotal;
                         totali.fatSat += item.fatSat || 0;
                         totali.fatTrans += item.fatTrans || 0;
                         totali.fatMono += item.fatMono || 0;
