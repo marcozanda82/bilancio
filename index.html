@@ -315,7 +315,7 @@
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
                 <hr>
-                
+
                 <h3 class="collapsible-header" id="carbs-header">
                     Carboidrati e Zuccheri <span class="arrow">▶</span>
                 </h3>
@@ -1500,20 +1500,41 @@
             button.disabled = true; button.textContent = 'Caricamento…';
 
             try {
+                // 1. Controlla i campi dei grassi già valorizzati
+                const fatFields = { fatSat: 'saturi', fatTrans: 'trans', fatMono: 'monoinsaturi', fatPoly: 'polinsaturi', omega3: 'omega 3', omega6: 'omega 6' };
+                const knownFats = [];
+                for (const key in fatFields) {
+                    const input = inputFields[key];
+                    if (input && input.value !== '') {
+                        knownFats.push(`${input.value}g di grassi ${fatFields[key]}`);
+                    }
+                }
+
+                // 2. Costruisce la richiesta dinamica
+                let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}".`;
+                if (knownFats.length > 0) {
+                    promptText += ` Tieni conto che i seguenti valori per 100g sono già noti: ${knownFats.join(', ')}. Popola i restanti campi dei grassi (e tutti gli altri nutrienti non forniti) in modo coerente.`;
+                }
+                promptText += ` ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
+
+                // 3. Esegue la chiamata API
                 const res = await fetch(GEMINI_ENDPOINT, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}` }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                 });
                 if (!res.ok) throw new Error(res.statusText);
                 const data = await res.json();
                 const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
                 const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+                // 4. Riempie SOLO i campi vuoti
                 for (const key in inputFields) {
-                    if (inputFields[key].value === '' || (parseFloat(inputFields[key].value) === 0 && resObj[key] !== 0)) {
-                        inputFields[key].value = resObj[key] ?? 0;
+                    if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
+                        inputFields[key].value = resObj[key] ?? '';
                     }
                 }
                 aggiornaColoreNutrienti();
+
             } catch (err) { alert('Errore compilazione AI: ' + err.message);
             } finally { button.disabled = false; button.textContent = 'Compila AI'; }
         });
@@ -1652,11 +1673,17 @@
         });
 
         btnConfirmJson.addEventListener('click', () => {
-            const jsonText = manualJsonInput.value.trim(); if (!jsonText) { alert('Incolla prima il testo JSON.'); return; }
+            const jsonText = manualJsonInput.value.trim(); 
+            if (!jsonText) { alert('Incolla prima il testo JSON.'); return; }
             try {
                 const resObj = JSON.parse(jsonText);
-                for (const key in inputFields) if (typeof resObj[key] !== 'undefined') inputFields[key].value = resObj[key];
-                if (builderDesc.value.trim()) { creaAlimentoDaInput(); manualJsonInput.value = ''; } else { alert('Alimento non specificato.'); }
+                // Riempie SOLO i campi vuoti, preservando i valori già inseriti
+                for (const key in inputFields) {
+                    if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
+                        inputFields[key].value = resObj[key];
+                    }
+                }
+                manualJsonInput.value = '';
                 aggiornaColoreNutrienti();
             } catch (err) { alert('Errore nel formato JSON.'); }
         });
