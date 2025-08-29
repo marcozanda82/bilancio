@@ -379,17 +379,22 @@
                     Micronutrienti <span class="arrow">▶</span>
                 </h3>
                 <div class="collapsible-content" id="micro-content">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
                         <div>
                             <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
                             <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
-                            <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
                         </div>
                         <div>
+                            <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
                             <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
+                        </div>
+                        <div>
                             <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
                             <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
                         </div>
+                    </div>
+                     <div style="margin-top: 15px;">
+                        <p>Fosforo: <span id="totale-p">0</span> / 700 mg</p><progress id="progress-p" value="0" max="700"></progress>
                     </div>
                 </div>
                 <hr>
@@ -469,6 +474,7 @@
                         <div><label>Ferro (mg)/100g</label><input type="number" id="builder-fe" min="0" step="0.1"></div>
                         <div><label>Zinco (mg)/100g</label><input type="number" id="builder-zn" min="0" step="0.1"></div>
                         <div><label>Rame (mg)/100g</label><input type="number" id="builder-cu" min="0" step="0.01"></div>
+                        <div><label>Fosforo (mg)/100g</label><input type="number" id="builder-p" min="0"></div>
                     </div>
                     <div id="manual-fill-section">
                         <div class="button-group">
@@ -663,7 +669,7 @@
 
         const DEFICIT_PREIMPOSTATO_SETTIMANALE = { 0: -500, 1: -150, 2: -150, 3: -150, 4: -150, 5: -150, 6: -500 };
 
-        const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9 };
+        const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9, p: 700 };
         const OBIETTIVI_FAT = { 
             fatTotal: 85, fatSat: 20, fatTrans: 2, 
             fatUnsat: 65, fatMono: 45, fatPoly: 20, 
@@ -689,7 +695,7 @@
 
         const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg}`;
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg}`;
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
 
         // --- Element References ---
@@ -739,7 +745,7 @@
         const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
         const builderVitE = document.getElementById('builder-vit-e'), builderVitK = document.getElementById('builder-vit-k'), builderB9 = document.getElementById('builder-b9');
         const builderB2 = document.getElementById('builder-b2'), builderB6 = document.getElementById('builder-b6');
-        const builderFe = document.getElementById('builder-fe'), builderZn = document.getElementById('builder-zn'), builderCu = document.getElementById('builder-cu');
+        const builderFe = document.getElementById('builder-fe'), builderZn = document.getElementById('builder-zn'), builderCu = document.getElementById('builder-cu'), builderP = document.getElementById('builder-p');
 
         // Riepilogo Span & Progress References
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanObiettivoProteine = document.getElementById('obiettivo-proteine'), progressProteine = document.getElementById('progress-proteine');
@@ -764,6 +770,7 @@
         const spanTotaleFe = document.getElementById('totale-fe'), progressFe = document.getElementById('progress-fe');
         const spanTotaleZn = document.getElementById('totale-zn'), progressZn = document.getElementById('progress-zn');
         const spanTotaleCu = document.getElementById('totale-cu'), progressCu = document.getElementById('progress-cu');
+        const spanTotaleP = document.getElementById('totale-p'), progressP = document.getElementById('progress-p');
         const spanTotaleVitC = document.getElementById('totale-vitc'), progressVitC = document.getElementById('progress-vitc');
         const spanTotaleVitA = document.getElementById('totale-vit-a'), progressVitA = document.getElementById('progress-vit-a');
         const spanTotaleVitB12 = document.getElementById('totale-vit-b12'), progressVitB12 = document.getElementById('progress-vit-b12');
@@ -938,7 +945,7 @@
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { proteine: 0, calorie: 0, carboidrati: 0, zuccheri: 0, fatTotal: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0 };
+            let totali = { proteine: 0, calorie: 0, carboidrati: 0, zuccheri: 0, fatTotal: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, p: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0 };
             
             (datiGiornalieri.log || []).forEach(entry => {
                 if (entry.type !== 'workout') {
@@ -968,6 +975,7 @@
                         totali.fe += item.fe || 0;
                         totali.zn += item.zn || 0;
                         totali.cu += item.cu || 0;
+                        totali.p += item.p || 0;
                         totali.vitA += item.vitA || 0;
                         totali.vitB12 += item.vitB12 || 0;
                         totali.vitD += item.vitD || 0;
@@ -1001,6 +1009,7 @@
             spanTotaleFe.textContent = totali.fe.toFixed(1); progressFe.max = OBIETTIVI.fe; progressFe.value = totali.fe;
             spanTotaleZn.textContent = totali.zn.toFixed(1); progressZn.max = OBIETTIVI.zn; progressZn.value = totali.zn;
             spanTotaleCu.textContent = totali.cu.toFixed(2); progressCu.max = OBIETTIVI.cu; progressCu.value = totali.cu;
+            spanTotaleP.textContent = totali.p.toFixed(0); progressP.max = OBIETTIVI.p; progressP.value = totali.p;
             spanTotaleVitC.textContent = totali.vitc.toFixed(1); progressVitC.max = OBIETTIVI.vitc; progressVitC.value = totali.vitc;
             spanTotaleVitA.textContent = totali.vitA.toFixed(1); progressVitA.max = OBIETTIVI.vitA; progressVitA.value = totali.vitA;
             spanTotaleVitB12.textContent = totali.vitB12.toFixed(1); progressVitB12.max = OBIETTIVI.vitB12; progressVitB12.value = totali.vitB12;
@@ -1115,7 +1124,7 @@
             mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
             vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
             vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, 
-            fe: builderFe, zn: builderZn, cu: builderCu
+            fe: builderFe, zn: builderZn, cu: builderCu, p: builderP
         };
 
         function creaAlimentoDaInput(isSingle = false) {
@@ -1404,6 +1413,7 @@
             document.getElementById('progress-zn').addEventListener('click', () => showNutrientDetailsModal('zn', 'Zinco', 'mg'));
             document.getElementById('progress-ca').addEventListener('click', () => showNutrientDetailsModal('ca', 'Calcio', 'mg'));
             document.getElementById('progress-cu').addEventListener('click', () => showNutrientDetailsModal('cu', 'Rame', 'mg'));
+            document.getElementById('progress-p').addEventListener('click', () => showNutrientDetailsModal('p', 'Fosforo', 'mg'));
             document.getElementById('progress-vitc').addEventListener('click', () => showNutrientDetailsModal('vitc', 'Vitamina C', 'mg'));
             document.getElementById('progress-vit-a').addEventListener('click', () => showNutrientDetailsModal('vitA', 'Vitamina A', 'µg'));
             document.getElementById('progress-vit-d').addEventListener('click', () => showNutrientDetailsModal('vitD', 'Vitamina D', 'µg'));
