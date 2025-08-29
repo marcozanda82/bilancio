@@ -314,6 +314,12 @@
                 <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
                 <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
+                
+                <p>Carboidrati: <span id="totale-carboidrati">0</span> / <span id="obiettivo-carboidrati"></span> g</p>
+                <progress id="progress-carboidrati" class="macro-progress" value="0"></progress>
+                <p>di cui Zuccheri: <span id="totale-zuccheri">0</span> / <span id="obiettivo-zuccheri"></span> g</p>
+                <progress id="progress-zuccheri" class="macro-progress" value="0"></progress>
+                
                 <hr>
                 
                 <h3 class="collapsible-header" id="fats-header">
@@ -430,6 +436,8 @@
                     <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
+                    <div><label>Carboidrati/100g</label><input type="number" id="builder-carb" step="0.1"></div>
+                    <div><label>Zuccheri/100g</label><input type="number" id="builder-zuccheri" step="0.1"></div>
                 </div>
                 <h2 class="collapsible-header" id="nutrients-header">
                     Dettagli Nutrizionali <span class="arrow">▶</span>
@@ -640,13 +648,13 @@
         let currentUserUID = null; 
 
         const PIANO_SETTIMANALE = {
-            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140 },
-            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
-            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140 },
-            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140 },
-            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140 }
+            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 }
         };
 
         const DEFICIT_PREIMPOSTATO_SETTIMANALE = { 0: -500, 1: -150, 2: -150, 3: -150, 4: -150, 5: -150, 6: -500 };
@@ -720,6 +728,7 @@
         // Input Builder References
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
+        const builderCarb = document.getElementById('builder-carb'), builderZuccheri = document.getElementById('builder-zuccheri');
         const builderFatSat = document.getElementById('builder-fat-sat'), builderFatTrans = document.getElementById('builder-fat-trans'), builderFatMono = document.getElementById('builder-fat-mono'), builderFatPoly = document.getElementById('builder-fat-poly'), builderOmega3 = document.getElementById('builder-omega3'), builderOmega6 = document.getElementById('builder-omega6');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
         const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
@@ -730,6 +739,8 @@
         // Riepilogo Span & Progress References
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanObiettivoProteine = document.getElementById('obiettivo-proteine'), progressProteine = document.getElementById('progress-proteine');
         const spanTotaleCalorie = document.getElementById('totale-calorie'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie'), progressCalorie = document.getElementById('progress-calorie');
+        const spanTotaleCarboidrati = document.getElementById('totale-carboidrati'), spanObiettivoCarboidrati = document.getElementById('obiettivo-carboidrati'), progressCarboidrati = document.getElementById('progress-carboidrati');
+        const spanTotaleZuccheri = document.getElementById('totale-zuccheri'), spanObiettivoZuccheri = document.getElementById('obiettivo-zuccheri'), progressZuccheri = document.getElementById('progress-zuccheri');
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
         // Fats
         const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total'), progressFatsTotal = document.getElementById('progress-fats-total');
@@ -919,11 +930,11 @@
             const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
             
             const obiettivoCalorieTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
-            const OBIETTIVI = { prot: pianoDelGiorno.prot, kcal: obiettivoCalorieTotale, ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT };
+            const OBIETTIVI = { prot: pianoDelGiorno.prot, kcal: obiettivoCalorieTotale, carb: pianoDelGiorno.carb, zuccheri: pianoDelGiorno.zuccheri, ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT };
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { proteine: 0, calorie: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0 };
+            let totali = { proteine: 0, calorie: 0, carboidrati: 0, zuccheri: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0 };
             
             (datiGiornalieri.log || []).forEach(entry => {
                 if (entry.type !== 'workout') {
@@ -931,6 +942,8 @@
                     items.forEach(item => {
                         totali.proteine += item.prot || 0;
                         totali.calorie += (item.kcal || item.cal) || 0;
+                        totali.carboidrati += item.carb || 0;
+                        totali.zuccheri += item.zuccheri || 0;
                         totali.fatSat += item.fatSat || 0;
                         totali.fatTrans += item.fatTrans || 0;
                         totali.fatMono += item.fatMono || 0;
@@ -963,6 +976,8 @@
             // --- Update UI elements ---
             spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.proteine.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
             spanObiettivoCalorie.textContent = OBIETTIVI.kcal; spanTotaleCalorie.textContent = totali.calorie.toFixed(0); progressCalorie.max = OBIETTIVI.kcal; progressCalorie.value = totali.calorie;
+            spanObiettivoCarboidrati.textContent = OBIETTIVI.carb; spanTotaleCarboidrati.textContent = totali.carboidrati.toFixed(1); progressCarboidrati.max = OBIETTIVI.carb; progressCarboidrati.value = totali.carboidrati;
+            spanObiettivoZuccheri.textContent = OBIETTIVI.zuccheri; spanTotaleZuccheri.textContent = totali.zuccheri.toFixed(1); progressZuccheri.max = OBIETTIVI.zuccheri; progressZuccheri.value = totali.zuccheri;
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
             // Fats
             spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal; spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1); progressFatsTotal.max = OBIETTIVI_FAT.fatTotal; progressFatsTotal.value = totali.fatTotal;
@@ -1092,7 +1107,7 @@
         }
         
         const inputFields = {
-            prot: builderProt, kcal: builderKcal, 
+            prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
             fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
             mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
             vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
