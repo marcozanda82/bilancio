@@ -441,7 +441,7 @@
                 </div>
                 <div class="builder-grid">
                     <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
-                    <div><label>Quantità (g)</label><input type="number" id="builder-qta" min="0"></div>
+                    <div><label>Quantità (g)</label><input type="text" id="builder-qta"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
                     <div><label>Carboidrati/100g</label><input type="number" id="builder-carb" step="0.1"></div>
@@ -1127,9 +1127,24 @@
             fe: builderFe, zn: builderZn, cu: builderCu, p: builderP
         };
 
+        // NEW: Function to evaluate the quantity input
+        function evaluateQuantity(input) {
+            try {
+                let value = input.trim();
+                value = value.replace(',', '.');
+                const result = eval(value);
+                if (typeof result === 'number' && !isNaN(result)) {
+                    return result;
+                }
+            } catch (e) {
+                console.error("Errore nella valutazione del calcolo:", e);
+            }
+            return parseFloat(input.replace(',', '.'));
+        }
+
         function creaAlimentoDaInput(isSingle = false) {
             const desc = builderDesc.value.trim(); 
-            const qta = parseFloat(builderQta.value);
+            const qta = evaluateQuantity(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return null; }
             
             const foodData = { lastQta: qta };
@@ -1157,7 +1172,7 @@
         }
         
         async function handleAlimentoAddition(isForMealBuilder) {
-            const desc = builderDesc.value.trim(), qta = parseFloat(builderQta.value);
+            const desc = builderDesc.value.trim(), qta = evaluateQuantity(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return; }
 
             const emptyFields = Object.keys(inputFields)
