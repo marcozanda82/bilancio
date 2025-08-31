@@ -191,8 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
         5: { tipo: '🏃 Camminata', cal_base: 1200, prot: 60, carb: 100, zuccheri: 20 },
         6: { tipo: '🥗 Riposo (Deficit)', cal_base: 1200, prot: 60, carb: 100, zuccheri: 20 }
     };
-    const OBIETTIVO_ACQUA_ML = 2000;
-    const OBIETTIVO_SODIO_MG = 2000;
+    const OBIETTIVO_ACQUA_ML = 1500;
+    const OBIETTIVO_SODIO_MG = 250;
     
     function renderStorico() {
         const storico = caricaTuttoLoStorico();
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     popupMessage += `<br>- **Acqua**: hai bevuto solo ${(totaliGiorno.acqua / 1000).toFixed(2)} L, l'obiettivo è ${(OBIETTIVO_ACQUA_ML / 1000).toFixed(1)} L.`;
                 }
                 if (!obiettiviSoddisfatti.sodio) {
-                    popupMessage += `<br>- **Sodio**: hai consumato ${totaliGiorno.sodio.toFixed(0)} mg di sodio, l'obiettivo è di 2000 mg. Riduci cibi salati e processati.`;
+                    popupMessage += `<br>- **Sodio**: hai consumato ${totaliGiorno.sodio.toFixed(0)} mg di sodio, l'obiettivo è di 250 mg. Riduci cibi salati e processati.`;
                 }
             }
 
@@ -460,4 +460,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </body>
+
 </html>
