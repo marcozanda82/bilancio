@@ -524,8 +524,8 @@
                     <p>Pasto Selezionato: <span id="current-meal-type-display"></span></p>
                     <div class="progress-container">
                         <div class="progress-item">
-                            <p>Proteine: <span id="meal-prot-current">0</span> / <span id="meal-prot-target"></span> g (<span id="meal-prot-remaining"></span>)</p>
-                            <progress id="meal-progress-prot" value="0"></progress>
+                            <p>Sodio: <span id="meal-sodio-current">0</span> / <span id="meal-sodio-target"></span> mg (<span id="meal-sodio-remaining"></span>)</p>
+                            <progress id="meal-progress-sodio" value="0"></progress>
                         </div>
                         <div class="progress-item">
                             <p>Calorie: <span id="meal-cal-current">0</span> / <span id="meal-cal-target"></span> kcal (<span id="meal-cal-remaining"></span>)</p>
@@ -821,9 +821,9 @@
         
         // Meal Builder References
         const currentMealTypeDisplay = document.getElementById('current-meal-type-display');
-        const mealProtCurrent = document.getElementById('meal-prot-current'), mealProtTarget = document.getElementById('meal-prot-target'), mealProtRemaining = document.getElementById('meal-prot-remaining');
+        const mealSodioCurrent = document.getElementById('meal-sodio-current'), mealSodioTarget = document.getElementById('meal-sodio-target'), mealSodioRemaining = document.getElementById('meal-sodio-remaining');
         const mealCalCurrent = document.getElementById('meal-cal-current'), mealCalTarget = document.getElementById('meal-cal-target'), mealCalRemaining = document.getElementById('meal-cal-remaining');
-        const mealProgressProt = document.getElementById('meal-progress-prot'), mealProgressCal = document.getElementById('meal-progress-cal');
+        const mealProgressSodio = document.getElementById('meal-progress-sodio'), mealProgressCal = document.getElementById('meal-progress-cal');
         
         // Workout References
         const workoutDescInput = document.getElementById('workout-desc');
@@ -918,40 +918,39 @@
             const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
 
             const obiettivoCalTotaleGiornaliero = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalories || 0) + (datiGiornalieri.calorieAdjustment || 0);
-            const obiettivoProtTotaleGiornaliero = pianoDelGiorno.prot;
+            const obiettivoSodioTotaleGiornaliero = OBIETTIVI_MICRO.sodio;
 
-            let obiettivoPastoProt = 0, obiettivoPastoCal = 0;
+            let obiettivoPastoSodio = 0, obiettivoPastoCal = 0;
             const calRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType]?.cal_perc ?? 0;
-            const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType]?.prot_perc ?? 0;
 
             if (mealType === 'cena') {
-                let consumatoProtAltriPasti = 0, consumatoCalAltriPasti = 0;
+                let consumatoSodioAltriPasti = 0, consumatoCalAltriPasti = 0;
                 (datiGiornalieri.log || []).forEach(entry => {
                     if (entry.mealId && entry.mealId !== 'cena') {
                         if (entry.type === 'meal') {
                             entry.items.forEach(item => {
-                                consumatoProtAltriPasti += item.prot || 0;
+                                consumatoSodioAltriPasti += item.sodio || 0;
                                 consumatoCalAltriPasti += (item.kcal || item.cal) || 0;
                             });
                         } else {
-                            consumatoProtAltriPasti += entry.prot || 0;
-                            consumatoCalAltriPasti += (entry.kcal || item.cal) || 0;
+                            consumatoSodioAltriPasti += entry.sodio || 0;
+                            consumatoCalAltriPasti += (entry.kcal || entry.cal) || 0;
                         }
                     }
                 });
-                obiettivoPastoProt = Math.max(0, Math.round(obiettivoProtTotaleGiornaliero - consumatoProtAltriPasti));
+                obiettivoPastoSodio = Math.max(0, Math.round(obiettivoSodioTotaleGiornaliero - consumatoSodioAltriPasti));
                 obiettivoPastoCal = Math.max(0, Math.round(obiettivoCalTotaleGiornaliero - consumatoCalAltriPasti));
             } else {
-                obiettivoPastoProt = Math.round(obiettivoProtTotaleGiornaliero * protRatio);
+                obiettivoPastoSodio = Math.round(obiettivoSodioTotaleGiornaliero * calRatio);
                 obiettivoPastoCal = Math.round(obiettivoCalTotaleGiornaliero * calRatio);
             }
             
             const totaliPastoInCostruzione = pastoInCostruzione.reduce((acc, item) => {
-                acc.prot += item.prot || 0; acc.kcal += (item.kcal || item.cal) || 0; return acc;
-            }, { prot: 0, kcal: 0 });
+                acc.sodio += item.sodio || 0; acc.kcal += (item.kcal || item.cal) || 0; return acc;
+            }, { sodio: 0, kcal: 0 });
 
             return {
-                currentProt: totaliPastoInCostruzione.prot, targetProt: obiettivoPastoProt, remainingProt: obiettivoPastoProt - totaliPastoInCostruzione.prot,
+                currentSodio: totaliPastoInCostruzione.sodio, targetSodio: obiettivoPastoSodio, remainingSodio: obiettivoPastoSodio - totaliPastoInCostruzione.sodio,
                 currentCal: totaliPastoInCostruzione.kcal, targetCal: obiettivoPastoCal, remainingCal: obiettivoPastoCal - totaliPastoInCostruzione.kcal
             };
         }
@@ -1151,14 +1150,14 @@
             const selectedMealTypeText = mealTypeSelector?.options[mealTypeSelector.selectedIndex]?.text ?? '';
             const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
             const totaliPastoCorrenteSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
-                acc.prot += item.prot || 0; acc.kcal += (item.kcal || item.cal) || 0; return acc;
-            }, { prot: 0, kcal: 0 });
+                acc.sodio += item.sodio || 0; acc.kcal += (item.kcal || item.cal) || 0; return acc;
+            }, { sodio: 0, kcal: 0 });
             currentMealTypeDisplay.textContent = selectedMealTypeText;
-            mealProtCurrent.textContent = totaliPastoCorrenteSelezionati.prot.toFixed(1);
-            mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
-            mealProtRemaining.textContent = `${(obiettiviPasto.targetProt - totaliPastoCorrenteSelezionati.prot).toFixed(1)} g`;
-            mealProgressProt.max = obiettiviPasto.targetProt;
-            mealProgressProt.value = totaliPastoCorrenteSelezionati.prot;
+            mealSodioCurrent.textContent = totaliPastoCorrenteSelezionati.sodio.toFixed(0);
+            mealSodioTarget.textContent = obiettiviPasto.targetSodio.toFixed(0);
+            mealSodioRemaining.textContent = `${(obiettiviPasto.targetSodio - totaliPastoCorrenteSelezionati.sodio).toFixed(0)} mg`;
+            mealProgressSodio.max = obiettiviPasto.targetSodio;
+            mealProgressSodio.value = totaliPastoCorrenteSelezionati.sodio;
             mealCalCurrent.textContent = totaliPastoCorrenteSelezionati.kcal.toFixed(0);
             mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
             mealCalRemaining.textContent = `${(obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.kcal).toFixed(0)} kcal`;
@@ -1845,5 +1844,3 @@
     </script>
 </body>
 </html>
-
-
