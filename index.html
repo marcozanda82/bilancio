@@ -328,7 +328,11 @@
                 <hr>
                 
                 <h3 class="collapsible-header" id="fats-header">
-                    Grassi <span class="arrow">▶</span>
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        Grassi
+                        <i id="info-fats-settimanali" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2;"></i>
+                    </span>
+                    <span class="arrow">▶</span>
                 </h3>
                 <div class="collapsible-content" id="fats-content">
                     <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
@@ -622,6 +626,51 @@
         </div>
     </div>
 
+    <div id="weekly-fats-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="weekly-fats-modal">&times;</span>
+            <h2>Riepilogo Settimanale Grassi</h2>
+            <p style="font-size: 0.9em; color: #555;">Dati calcolati sugli ultimi 7 giorni, incluso oggi.</p>
+            
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Totali</h4>
+                <p>Totale: <span id="weekly-fat-total-total">0</span> / <span id="weekly-fat-total-goal"></span> g</p>
+                <progress id="weekly-progress-fat-total" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-total-avg">0.0</span> g (Obiettivo: <span id="daily-fat-total-goal"></span> g | <span id="weekly-fat-total-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Saturi</h4>
+                <p>Totale: <span id="weekly-fat-sat-total">0</span> / <span id="weekly-fat-sat-goal"></span> g</p>
+                <progress id="weekly-progress-fat-sat" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-sat-avg">0.0</span> g (Obiettivo: <span id="daily-fat-sat-goal"></span> g | <span id="weekly-fat-sat-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Monoinsaturi</h4>
+                <p>Totale: <span id="weekly-fat-mono-total">0</span> / <span id="weekly-fat-mono-goal"></span> g</p>
+                <progress id="weekly-progress-fat-mono" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-mono-avg">0.0</span> g (Obiettivo: <span id="daily-fat-mono-goal"></span> g | <span id="weekly-fat-mono-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Polinsaturi</h4>
+                <p>Totale: <span id="weekly-fat-poly-total">0</span> / <span id="weekly-fat-poly-goal"></span> g</p>
+                <progress id="weekly-progress-fat-poly" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-poly-avg">0.0</span> g (Obiettivo: <span id="daily-fat-poly-goal"></span> g | <span id="weekly-fat-poly-diff" class="diff-value"></span>)</i></p>
+            </div>
+             <div class="vitamin-weekly-summary">
+                <h4>Omega 3</h4>
+                <p>Totale: <span id="weekly-fat-omega3-total">0</span> / <span id="weekly-fat-omega3-goal"></span> g</p>
+                <progress id="weekly-progress-fat-omega3" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-omega3-avg">0.0</span> g (Obiettivo: <span id="daily-fat-omega3-goal"></span> g | <span id="weekly-fat-omega3-diff" class="diff-value"></span>)</i></p>
+            </div>
+             <div class="vitamin-weekly-summary">
+                <h4>Omega 6</h4>
+                <p>Totale: <span id="weekly-fat-omega6-total">0</span> / <span id="weekly-fat-omega6-goal"></span> g</p>
+                <progress id="weekly-progress-fat-omega6" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-omega6-avg">0.0</span> g (Obiettivo: <span id="daily-fat-omega6-goal"></span> g | <span id="weekly-fat-omega6-diff" class="diff-value"></span>)</i></p>
+            </div>
+        </div>
+    </div>
+
     <div id="nutrient-detail-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" data-modal="nutrient-detail-modal">&times;</span>
@@ -735,6 +784,10 @@
         const weeklyVitaminModal = document.getElementById('weekly-vitamin-modal');
         const infoVitSettimanaliBtn = document.getElementById('info-vit-settimanali');
         
+        // ***** MODIFICA #3: Nuovi riferimenti per modale grassi *****
+        const weeklyFatsModal = document.getElementById('weekly-fats-modal');
+        const infoFatsSettimanaliBtn = document.getElementById('info-fats-settimanali');
+
         // Input Builder References
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
@@ -1256,6 +1309,51 @@
             return vitaminsToTrack;
         }
 
+        // ***** MODIFICA #4: Nuova funzione per calcolo grassi settimanali *****
+        function calculateWeeklyFatStats() {
+            const fatsToTrack = {
+                'fatTotal': { total: 0, goal: OBIETTIVI_FAT.fatTotal * 7, id: 'total' },
+                'fatSat':   { total: 0, goal: OBIETTIVI_FAT.fatSat * 7,   id: 'sat' },
+                'fatMono':  { total: 0, goal: OBIETTIVI_FAT.fatMono * 7,  id: 'mono' },
+                'fatPoly':  { total: 0, goal: OBIETTIVI_FAT.fatPoly * 7,  id: 'poly' },
+                'omega3':   { total: 0, goal: OBIETTIVI_FAT.omega3 * 7,   id: 'omega3' },
+                'omega6':   { total: 0, goal: OBIETTIVI_FAT.omega6 * 7,   id: 'omega6' }
+            };
+
+            const today = new Date();
+
+            for (let i = 0; i < 7; i++) {
+                const dateToCheck = new Date(today);
+                dateToCheck.setDate(today.getDate() - i);
+                const dateString = dateToCheck.toISOString().split('T')[0];
+
+                const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
+                if (dailyDataRaw) {
+                    try {
+                        const dailyData = JSON.parse(dailyDataRaw);
+                        if (dailyData && dailyData.log) {
+                            dailyData.log.forEach(entry => {
+                                const items = entry.type === 'meal' ? entry.items : [entry];
+                                items.forEach(item => {
+                                    for (const key in fatsToTrack) {
+                                        let value = item[key] || 0;
+                                        // Gestisce il caso in cui fatTotal non sia esplicito
+                                        if (key === 'fatTotal' && !item.fatTotal) {
+                                            value = (item.fatSat || 0) + (item.fatTrans || 0) + (item.fatMono || 0) + (item.fatPoly || 0);
+                                        }
+                                        fatsToTrack[key].total += value;
+                                    }
+                                });
+                            });
+                        }
+                    } catch (e) {
+                        console.error(`Errore nel parsing dei dati per il giorno ${dateString}:`, e);
+                    }
+                }
+            }
+            return fatsToTrack;
+        }
+
         function openWeeklyVitaminsModal() {
             const weeklyStats = calculateWeeklyVitaminStats();
             
@@ -1287,6 +1385,40 @@
             }
 
             weeklyVitaminModal.style.display = 'block';
+        }
+
+        // ***** MODIFICA #5: Nuova funzione per aprire modale grassi *****
+        function openWeeklyFatsModal() {
+            const weeklyStats = calculateWeeklyFatStats();
+            
+            for (const key in weeklyStats) {
+                const stat = weeklyStats[key];
+                const { id, total, goal } = stat;
+                const avg = total / 7;
+                const dailyGoal = OBIETTIVI_FAT[key];
+                
+                const percentageDiff = dailyGoal > 0 ? (avg - dailyGoal) / dailyGoal * 100 : 0;
+                
+                document.getElementById(`weekly-fat-${id}-total`).textContent = total.toFixed(1);
+                document.getElementById(`weekly-fat-${id}-goal`).textContent = goal.toFixed(1);
+                document.getElementById(`daily-fat-${id}-goal`).textContent = dailyGoal.toFixed(1);
+                document.getElementById(`weekly-progress-fat-${id}`).value = total;
+                document.getElementById(`weekly-progress-fat-${id}`).max = goal;
+                document.getElementById(`weekly-fat-${id}-avg`).textContent = avg.toFixed(1);
+                
+                const diffSpan = document.getElementById(`weekly-fat-${id}-diff`);
+                
+                diffSpan.classList.remove('diff-surplus', 'diff-deficit');
+
+                if (avg > dailyGoal) { // Per i grassi (specialmente saturi), il surplus non è necessariamente positivo
+                    diffSpan.classList.add('diff-deficit'); // Usiamo la classe rossa per evidenziare il superamento
+                    diffSpan.textContent = `+${percentageDiff.toFixed(0)}%`;
+                } else {
+                    diffSpan.classList.add('diff-surplus'); // Usiamo la classe verde se si è sotto
+                    diffSpan.textContent = `${percentageDiff.toFixed(0)}%`;
+                }
+            }
+            weeklyFatsModal.style.display = 'block';
         }
 
         function toggleCollapsible(headerId, contentId) {
@@ -1447,6 +1579,9 @@
 
             infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
             
+            // ***** MODIFICA #6: Aggiunta event listener per modale grassi *****
+            infoFatsSettimanaliBtn.addEventListener('click', openWeeklyFatsModal);
+
             document.querySelectorAll('.modal-close').forEach(button => {
                 button.addEventListener('click', () => {
                     button.closest('.modal').style.display = 'none';
