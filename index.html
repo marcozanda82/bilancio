@@ -645,6 +645,12 @@
                 <p><i>Media giornaliera: <span id="weekly-fat-sat-avg">0.0</span> g (Obiettivo: <span id="daily-fat-sat-goal"></span> g | <span id="weekly-fat-sat-diff" class="diff-value"></span>)</i></p>
             </div>
             <div class="vitamin-weekly-summary">
+                <h4>Grassi Trans</h4>
+                <p>Totale: <span id="weekly-fat-trans-total">0</span> / <span id="weekly-fat-trans-goal"></span> g</p>
+                <progress id="weekly-progress-fat-trans" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-trans-avg">0.0</span> g (Obiettivo: <span id="daily-fat-trans-goal"></span> g | <span id="weekly-fat-trans-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
                 <h4>Grassi Monoinsaturi</h4>
                 <p>Totale: <span id="weekly-fat-mono-total">0</span> / <span id="weekly-fat-mono-goal"></span> g</p>
                 <progress id="weekly-progress-fat-mono" value="0"></progress>
@@ -668,6 +674,9 @@
                 <progress id="weekly-progress-fat-omega6" value="0"></progress>
                 <p><i>Media giornaliera: <span id="weekly-fat-omega6-avg">0.0</span> g (Obiettivo: <span id="daily-fat-omega6-goal"></span> g | <span id="weekly-fat-omega6-diff" class="diff-value"></span>)</i></p>
             </div>
+            <p style="text-align: center; font-weight: bold; margin-top: 15px; font-size: 1.2em; border-top: 1px solid #eee; padding-top: 15px;">
+                Rapporto O6:O3 Settimanale: <span id="weekly-omega-ratio-value">N/D</span>
+            </p>
         </div>
     </div>
 
@@ -784,7 +793,6 @@
         const weeklyVitaminModal = document.getElementById('weekly-vitamin-modal');
         const infoVitSettimanaliBtn = document.getElementById('info-vit-settimanali');
         
-        // ***** MODIFICA #3: Nuovi riferimenti per modale grassi *****
         const weeklyFatsModal = document.getElementById('weekly-fats-modal');
         const infoFatsSettimanaliBtn = document.getElementById('info-fats-settimanali');
 
@@ -1309,11 +1317,12 @@
             return vitaminsToTrack;
         }
 
-        // ***** MODIFICA #4: Nuova funzione per calcolo grassi settimanali *****
+        // ***** MODIFICA #2 (JS): Aggiunto fatTrans al calcolo *****
         function calculateWeeklyFatStats() {
             const fatsToTrack = {
                 'fatTotal': { total: 0, goal: OBIETTIVI_FAT.fatTotal * 7, id: 'total' },
                 'fatSat':   { total: 0, goal: OBIETTIVI_FAT.fatSat * 7,   id: 'sat' },
+                'fatTrans': { total: 0, goal: OBIETTIVI_FAT.fatTrans * 7, id: 'trans' },
                 'fatMono':  { total: 0, goal: OBIETTIVI_FAT.fatMono * 7,  id: 'mono' },
                 'fatPoly':  { total: 0, goal: OBIETTIVI_FAT.fatPoly * 7,  id: 'poly' },
                 'omega3':   { total: 0, goal: OBIETTIVI_FAT.omega3 * 7,   id: 'omega3' },
@@ -1337,7 +1346,6 @@
                                 items.forEach(item => {
                                     for (const key in fatsToTrack) {
                                         let value = item[key] || 0;
-                                        // Gestisce il caso in cui fatTotal non sia esplicito
                                         if (key === 'fatTotal' && !item.fatTotal) {
                                             value = (item.fatSat || 0) + (item.fatTrans || 0) + (item.fatMono || 0) + (item.fatPoly || 0);
                                         }
@@ -1386,8 +1394,7 @@
 
             weeklyVitaminModal.style.display = 'block';
         }
-
-        // ***** MODIFICA #5: Nuova funzione per aprire modale grassi *****
+        
         function openWeeklyFatsModal() {
             const weeklyStats = calculateWeeklyFatStats();
             
@@ -1410,14 +1417,33 @@
                 
                 diffSpan.classList.remove('diff-surplus', 'diff-deficit');
 
-                if (avg > dailyGoal) { // Per i grassi (specialmente saturi), il surplus non è necessariamente positivo
-                    diffSpan.classList.add('diff-deficit'); // Usiamo la classe rossa per evidenziare il superamento
+                if (avg > dailyGoal) {
+                    diffSpan.classList.add('diff-deficit');
                     diffSpan.textContent = `+${percentageDiff.toFixed(0)}%`;
                 } else {
-                    diffSpan.classList.add('diff-surplus'); // Usiamo la classe verde se si è sotto
+                    diffSpan.classList.add('diff-surplus');
                     diffSpan.textContent = `${percentageDiff.toFixed(0)}%`;
                 }
             }
+
+            const totalWeeklyOmega3 = weeklyStats['omega3'].total;
+            const totalWeeklyOmega6 = weeklyStats['omega6'].total;
+            const weeklyOmegaRatioEl = document.getElementById('weekly-omega-ratio-value');
+
+            let weeklyRatioText = 'N/D';
+            weeklyOmegaRatioEl.style.color = '#333';
+
+            if (totalWeeklyOmega3 > 0 && totalWeeklyOmega6 > 0) {
+                const ratio = totalWeeklyOmega6 / totalWeeklyOmega3;
+                weeklyRatioText = `${ratio.toFixed(1)}:1`;
+                if (ratio >= 3 && ratio <= 6) {
+                    weeklyOmegaRatioEl.style.color = '#2e7d32';
+                } else {
+                    weeklyOmegaRatioEl.style.color = '#d32f2f';
+                }
+            }
+            weeklyOmegaRatioEl.textContent = weeklyRatioText;
+
             weeklyFatsModal.style.display = 'block';
         }
 
@@ -1579,7 +1605,6 @@
 
             infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
             
-            // ***** MODIFICA #6: Aggiunta event listener per modale grassi *****
             infoFatsSettimanaliBtn.addEventListener('click', openWeeklyFatsModal);
 
             document.querySelectorAll('.modal-close').forEach(button => {
