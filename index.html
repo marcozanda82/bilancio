@@ -1555,7 +1555,14 @@
         });
         
         ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
-            document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
+            document.getElementById(id).addEventListener('click', (e) => {
+                // Check if the click is on the info icon, and if so, stop propagation
+                if (e.target.id.includes('info-')) {
+                    e.stopPropagation();
+                    return;
+                }
+                toggleCollapsible(id, id.replace('header', 'content'));
+            });
         });
         
         btnClearNutrients.addEventListener('click', () => { resetInputAlimento(); aggiornaColoreNutrienti(); });
