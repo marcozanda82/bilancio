@@ -1316,8 +1316,8 @@
             }
             return vitaminsToTrack;
         }
-
-        // ***** MODIFICA #2 (JS): Aggiunto fatTrans al calcolo *****
+        
+        // ***** MODIFICA #2 (JS): Funzione aggiornata per i grassi settimanali *****
         function calculateWeeklyFatStats() {
             const fatsToTrack = {
                 'fatTotal': { total: 0, goal: OBIETTIVI_FAT.fatTotal * 7, id: 'total' },
@@ -1568,6 +1568,7 @@
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
+            // Listeners per le barre di progressione GIORNALIERE
             document.getElementById('progress-proteine').addEventListener('click', () => showNutrientDetailsModal('prot', 'Proteine', 'g'));
             document.getElementById('progress-calorie').addEventListener('click', () => showNutrientDetailsModal('kcal', 'Calorie', 'kcal'));
             document.getElementById('progress-carboidrati').addEventListener('click', () => showNutrientDetailsModal('carb', 'Carboidrati', 'g'));
@@ -1597,14 +1598,24 @@
             document.getElementById('progress-b6').addEventListener('click', () => showNutrientDetailsModal('b6', 'Vitamina B6', 'mg'));
             document.getElementById('progress-b9').addEventListener('click', () => showNutrientDetailsModal('b9', 'Folati (B9)', 'µg'));
 
+            // Listeners per le barre di progressione SETTIMANALI (Vitamine)
             document.getElementById('weekly-progress-vit-a').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitA', 'Vitamina A (Settimanale)', 'µg'));
             document.getElementById('weekly-progress-vit-d').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitD', 'Vitamina D (Settimanale)', 'µg'));
             document.getElementById('weekly-progress-vit-e').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitE', 'Vitamina E (Settimanale)', 'mg'));
             document.getElementById('weekly-progress-vit-k').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitK', 'Vitamina K (Settimanale)', 'µg'));
             document.getElementById('weekly-progress-vit-b12').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitB12', 'Vitamina B12 (Settimanale)', 'µg'));
 
+            // ***** MODIFICA #3 (JS): Nuovi listeners per le barre di progressione SETTIMANALI (Grassi) *****
+            document.getElementById('weekly-progress-fat-total').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatTotal', 'Grassi Totali (Settimanale)', 'g'));
+            document.getElementById('weekly-progress-fat-sat').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatSat', 'Grassi Saturi (Settimanale)', 'g'));
+            document.getElementById('weekly-progress-fat-trans').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatTrans', 'Grassi Trans (Settimanale)', 'g'));
+            document.getElementById('weekly-progress-fat-mono').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatMono', 'Grassi Monoinsaturi (Settimanale)', 'g'));
+            document.getElementById('weekly-progress-fat-poly').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatPoly', 'Grassi Polinsaturi (Settimanale)', 'g'));
+            document.getElementById('weekly-progress-fat-omega3').addEventListener('click', () => showWeeklyNutrientDetailsModal('omega3', 'Omega 3 (Settimanale)', 'g'));
+            document.getElementById('weekly-progress-fat-omega6').addEventListener('click', () => showWeeklyNutrientDetailsModal('omega6', 'Omega 6 (Settimanale)', 'g'));
+
+            // Listeners per le icone "info" dei pop-up
             infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
-            
             infoFatsSettimanaliBtn.addEventListener('click', openWeeklyFatsModal);
 
             document.querySelectorAll('.modal-close').forEach(button => {
