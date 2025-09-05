@@ -51,7 +51,6 @@
         .expand-arrow { cursor: pointer; display: inline-block; width: 20px; text-align: center; }
         .sub-item-row td { padding-left: 25px !important; background-color: #fff; font-style: italic; color: #555; border-bottom: 1px dotted #ccc; }
         .sub-item-row td:last-child { visibility: hidden; }
-
         .nutrients-warning { color: #d32f2f !important; }
         #meal-builder-summary { margin-bottom: 20px; padding: 15px; background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; }
         #meal-builder-summary p { margin: 5px 0; font-weight: 600; color: #1e88e5; }
@@ -59,33 +58,27 @@
         #meal-builder-summary .progress-item { flex: 1; }
         #meal-builder-summary .progress-item p { font-size: 0.9em; margin-bottom: 5px; color: #3f51b5; }
         #meal-builder-summary .progress-item progress { height: 18px; border-radius: 4px; }
-
         #calorie-balance-text { display: block; text-align: center; font-weight: bold; font-size: 1.2em; margin-top: 15px; margin-bottom: 10px; padding: 8px 0; border-radius: 5px; }
         .balance-deficit { background-color: #ffebee; color: #d32f2f; }
         .balance-surplus { background-color: #e8f5e9; color: #2e7d32; }
         .balance-even { background-color: #e3f2fd; color: #1976d2; }
-
         .collapsible-header { cursor: pointer; padding: 10px 0; border-bottom: 1px solid #e0e0e0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; color: #0d47a1; font-size: 1.4em; }
         .collapsible-header:hover { color: #1976d2; }
         .collapsible-header .arrow { font-size: 0.8em; transition: transform 0.3s ease; }
         .collapsible-content { display: none; overflow: hidden; transition: max-height 0.3s ease-out; max-height: 0; }
-        .collapsible-content.expanded { display: block; max-height: 2000px; /* Aumentato per contenuti più lunghi */ }
+        .collapsible-content.expanded { display: block; max-height: 2000px; }
         .collapsible-header.expanded .arrow { transform: rotate(90deg); }
-
         #calorie-adjuster { display: flex; align-items: center; justify-content: center; margin-top: 10px; margin-bottom: 20px; gap: 10px; }
         #calorie-adjuster button { padding: 5px 12px; font-size: 1.2em; border-radius: 5px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
         #calorie-adjuster button.minus { background-color: #f44336; }
         #calorie-adjuster input[type="number"] { width: 80px; text-align: center; font-size: 1.1em; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
         #calorie-adjuster label { margin-bottom: 0; font-weight: normal; color: #333; }
-
         .cloud-sync-section { display: flex; gap: 10px; margin-top: 20px; padding: 15px; background-color: #e0f2f7; border: 1px solid #b2ebf2; border-radius: 8px; flex-wrap: wrap; }
         .cloud-sync-section button { flex: 1 1 auto; min-width: 150px; margin-bottom: 5px; }
-        .cloud-sync-section #btn-upload-manual { background-color: #00796b; }
         .cloud-sync-section #btn-download-manual { background-color: #e64a19; }
         .cloud-sync-status { width: 100%; text-align: center; font-size: 0.9em; color: #555; margin-top: 10px; }
         .cloud-sync-status.connected { color: #2e7d32; font-weight: bold; }
         .cloud-sync-status.disconnected { color: #c62828; font-weight: bold; }
-
         #auth-section { margin-bottom: 25px; padding: 20px; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; border-left-width: 5px; border-left-color: #673ab7; }
         #auth-section h2 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         #auth-section .auth-buttons { display: flex; gap: 10px; }
@@ -93,22 +86,17 @@
         #auth-section #btn-sign-out { background-color: #607d8b; display: none; margin-top: 15px; }
         #auth-status { text-align: center; font-weight: 600; margin-top: 15px; }
         #welcome-message { text-align: center; font-weight: bold; font-size: 1.2em; color: #0d47a1; margin-bottom: 10px; display: none; }
-        
         #main-tracker-content { display: none; }
         #main-tracker-content.authenticated { display: block; }
-        
         #auth-section.logged-in { padding: 10px 20px; background-color: #e3f2fd; border: 1px solid #90caf9; box-shadow: none; text-align: center; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; }
         #auth-section.logged-in #auth-header, #auth-section.logged-in #auth-form-fields, #auth-section.logged-in #auth-status { display: none !important; }
         #auth-section.logged-in #welcome-message { margin: 0; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #auth-section.logged-in #btn-sign-out { width: auto; padding: 5px 10px; font-size: 0.8em; margin: 0; flex-shrink: 0; }
-        
         .summary-header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 25px; }
         .summary-header-row h2 { margin: 0; border-bottom: none; }
-        
         #manual-fill-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
         #manual-fill-section textarea { width: 100%; height: 100px; margin-top: 10px; resize: vertical; }
         #manual-fill-section .button-group { justify-content: space-between; }
-        
         .fats-bar-container { margin-top: 15px; }
         .fats-group { padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px; }
         .fats-sub-bars-container { display: flex; gap: 20px; margin-top: 10px; }
@@ -119,33 +107,23 @@
         .progress-fat-sat.orange::-moz-progress-bar { background-color: #ff9800; }
         .progress-fat-sat.red::-webkit-progress-value { background-color: #f44336; }
         .progress-fat-sat.red::-moz-progress-bar { background-color: #f44336; }
-
         .food-adder-header { display: flex; justify-content: space-between; align-items: center; }
         #btn-clear-nutrients { background-color: transparent; color: #d32f2f; border: none; padding: 5px 10px; font-size: 1em; cursor: pointer; transition: color 0.3s; }
         #btn-clear-nutrients:hover { color: #ff1744; }
-
         .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
         #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        
-        /* NUOVI STILI PER TABELLA DIARIO CON COLONNA BLOCCATA */
         .diary-table-container { 
             overflow-x: auto; 
             -webkit-box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
             box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
         }
-        
-        #log-pasti {
-            /* Rimuoviamo la larghezza fissa per permettere lo scorrimento */
-        }
-        
         #log-pasti th, #log-pasti td {
             min-width: 60px;
             text-align: right;
             padding: 8px 10px;
             white-space: nowrap;
         }
-
-        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1) { /* Colonna Descrizione */
+        #log-pasti th:nth-child(1), #log-pasti td:nth-child(1) {
             min-width: 150px;
             text-align: left;
             position: -webkit-sticky;
@@ -154,24 +132,18 @@
             z-index: 2;
             border-right: 2px solid #e0e0e0;
         }
-
-        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) { /* Colonna Grammi */
+        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) {
             min-width: 50px;
             text-align: left;
         }
-        
-        #log-pasti th:last-child, #log-pasti td:last-child { /* Colonna Azione */
+        #log-pasti th:last-child, #log-pasti td:last-child {
             min-width: 80px;
             text-align: center;
         }
-
-        /* Sfondi per la colonna bloccata per evitare trasparenze */
         #log-pasti th:first-child { background-color: #f8f9fa; }
         #log-pasti td:first-child { background-color: #ffffff; }
         #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
         #log-pasti .sub-item-row td:first-child { background-color: #ffffff; }
-        
-        /* Stili per la finestra modale (pop-up) */
         .modal {
             display: none; 
             position: fixed; 
@@ -187,14 +159,13 @@
             animation-name: fadeIn;
             animation-duration: 0.4s;
         }
-
         .modal-content {
             background-color: #fefefe;
             margin: 10% auto;
             padding: 25px;
             border: 1px solid #888;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             -webkit-animation-name: slideIn;
@@ -202,7 +173,6 @@
             animation-name: slideIn;
             animation-duration: 0.4s;
         }
-
         .modal-close {
             color: #aaa;
             float: right;
@@ -210,14 +180,12 @@
             font-weight: bold;
             line-height: 1;
         }
-
         .modal-close:hover,
         .modal-close:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
-
         .vitamin-weekly-summary {
             margin-bottom: 20px;
             padding-bottom: 15px;
@@ -245,17 +213,13 @@
             width: 100%;
             height: 20px;
         }
-        
         .diff-value { font-weight: bold; }
-        .diff-surplus { color: #2e7d32; } /* Verde per surplus */
-        .diff-deficit { color: #d32f2f; } /* Rosso per carenza */
-
-        /* Animazioni per la modale */
+        .diff-surplus { color: #2e7d32; }
+        .diff-deficit { color: #d32f2f; }
         @-webkit-keyframes slideIn { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
         @keyframes slideIn { from {margin-top: 5%; opacity: 0} to {margin-top: 10%; opacity: 1} }
         @-webkit-keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
         @keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
-
         #nutrient-detail-modal-list li {
             padding: 10px;
             border-bottom: 1px solid #eee;
@@ -269,6 +233,17 @@
         #nutrient-detail-modal-list li span {
             font-weight: 600;
         }
+        .protein-score {
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.85em;
+            text-align: center;
+        }
+        .protein-score.low { background-color: #d32f2f; }
+        .protein-score.medium { background-color: #ff8f00; }
+        .protein-score.high { background-color: #2e7d32; }
     </style>
 </head>
 <body>
@@ -291,10 +266,10 @@
         </div>
         <div id="main-tracker-content">
             <h2 id="titolo-giornata"></h2>
-<div class="nav-links">
-    <a href="storico.html">📊 Storico</a>
-    <a href="stima_grassi.html">🫙 Stima Grassi</a>
-</div>
+            <div class="nav-links">
+                <a href="storico.html">📊 Storico</a>
+                <a href="stima_grassi.html">🫙 Stima Grassi</a>
+            </div>
             <div id="riepilogo" class="sezione">
                 <div class="summary-header-row">
                     <h2>Riepilogo di Oggi</h2>
@@ -309,7 +284,10 @@
                     <span>kcal</span>
                 </div>
 
-                <p>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</p>
+                <p style="display: flex; align-items: center; gap: 10px;">
+                    <span>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</span>
+                    <i id="info-proteine-giornata" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2; font-size: 1.2em;"></i>
+                </p>
                 <progress id="progress-proteine" class="macro-progress" value="0"></progress>
                 <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
                 <progress id="progress-calorie" class="macro-progress" value="0"></progress>
@@ -453,7 +431,7 @@
                     <div><label>Grassi Totali/100g</label><input type="number" id="builder-fat-total" step="0.1"></div>
                 </div>
                 <h2 class="collapsible-header" id="nutrients-header">
-                    Dettagli Nutrizionali (Grassi Specifici e Micronutrienti) <span class="arrow">▶</span>
+                    Dettagli Nutrizionali (Grassi, Micronutrienti, Amminoacidi) <span class="arrow">▶</span>
                 </h2>
                 <div class="collapsible-content" id="nutrients-content">
                     <div class="builder-grid">
@@ -479,6 +457,15 @@
                         <div><label>Zinco (mg)/100g</label><input type="number" id="builder-zn" min="0" step="0.1"></div>
                         <div><label>Rame (mg)/100g</label><input type="number" id="builder-cu" min="0" step="0.01"></div>
                         <div><label>Fosforo (mg)/100g</label><input type="number" id="builder-p" min="0"></div>
+                        <div><label>Leucina (mg)/100g</label><input type="number" id="builder-leu" min="0"></div>
+                        <div><label>Isoleucina (mg)/100g</label><input type="number" id="builder-iso" min="0"></div>
+                        <div><label>Valina (mg)/100g</label><input type="number" id="builder-val" min="0"></div>
+                        <div><label>Lisina (mg)/100g</label><input type="number" id="builder-lys" min="0"></div>
+                        <div><label>Metionina (mg)/100g</label><input type="number" id="builder-met" min="0"></div>
+                        <div><label>Fenilalanina (mg)/100g</label><input type="number" id="builder-phe" min="0"></div>
+                        <div><label>Treonina (mg)/100g</label><input type="number" id="builder-thr" min="0"></div>
+                        <div><label>Triptofano (mg)/100g</label><input type="number" id="builder-trp" min="0"></div>
+                        <div><label>Istidina (mg)/100g</label><input type="number" id="builder-his" min="0"></div>
                     </div>
                     <div id="manual-fill-section">
                         <div class="button-group">
@@ -501,7 +488,10 @@
                     <p>Pasto Selezionato: <span id="current-meal-type-display"></span></p>
                     <div class="progress-container">
                         <div class="progress-item">
-                            <p>Proteine: <span id="meal-prot-current">0</span> / <span id="meal-prot-target"></span> g (<span id="meal-prot-remaining"></span>)</p>
+                            <p style="display: flex; align-items: center; gap: 10px;">
+                                <span>Proteine: <span id="meal-prot-current">0</span> / <span id="meal-prot-target"></span> g (<span id="meal-prot-remaining"></span>)</span>
+                                <i id="info-proteine-pasto" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2; font-size: 1.2em;"></i>
+                            </p>
                             <progress id="meal-progress-prot" value="0"></progress>
                         </div>
                         <div class="progress-item">
@@ -531,7 +521,17 @@
                             <th>Descrizione</th>
                             <th>(g)</th>
                             <th>Prot</th>
+                            <th>Qualità</th>
                             <th>Kcal</th>
+                            <th>Leu</th>
+                            <th>Iso</th>
+                            <th>Val</th>
+                            <th>Lys</th>
+                            <th>Met</th>
+                            <th>Phe</th>
+                            <th>Thr</th>
+                            <th>Trp</th>
+                            <th>His</th>
                             <th>Gr. Sat</th>
                             <th>Gr. Trans</th>
                             <th>Gr. Mono</th>
@@ -687,6 +687,43 @@
             <ul id="nutrient-detail-modal-list"></ul>
         </div>
     </div>
+
+    <div id="amino-acid-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="amino-acid-modal">&times;</span>
+            <h2 id="modal-amino-title">Dettaglio Amminoacidi</h2>
+            
+            <div id="modal-amino-summary" style="text-align: center; margin-bottom: 20px;"></div>
+
+            <div id="modal-amino-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <p>Leucina: <span id="modal-amino-leu-total">0</span> / <span id="modal-amino-leu-goal"></span> mg</p>
+                    <progress id="modal-amino-leu-progress" value="0" style="width:100%"></progress>
+                    <p>Isoleucina: <span id="modal-amino-iso-total">0</span> / <span id="modal-amino-iso-goal"></span> mg</p>
+                    <progress id="modal-amino-iso-progress" value="0" style="width:100%"></progress>
+                    <p>Valina: <span id="modal-amino-val-total">0</span> / <span id="modal-amino-val-goal"></span> mg</p>
+                    <progress id="modal-amino-val-progress" value="0" style="width:100%"></progress>
+                    <p>Lisina: <span id="modal-amino-lys-total">0</span> / <span id="modal-amino-lys-goal"></span> mg</p>
+                    <progress id="modal-amino-lys-progress" value="0" style="width:100%"></progress>
+                </div>
+                <div>
+                    <p>Metionina: <span id="modal-amino-met-total">0</span> / <span id="modal-amino-met-goal"></span> mg</p>
+                    <progress id="modal-amino-met-progress" value="0" style="width:100%"></progress>
+                    <p>Fenilalanina: <span id="modal-amino-phe-total">0</span> / <span id="modal-amino-phe-goal"></span> mg</p>
+                    <progress id="modal-amino-phe-progress" value="0" style="width:100%"></progress>
+                    <p>Treonina: <span id="modal-amino-thr-total">0</span> / <span id="modal-amino-thr-goal"></span> mg</p>
+                    <progress id="modal-amino-thr-progress" value="0" style="width:100%"></progress>
+                    <p>Triptofano: <span id="modal-amino-trp-total">0</span> / <span id="modal-amino-trp-goal"></span> mg</p>
+                    <progress id="modal-amino-trp-progress" value="0" style="width:100%"></progress>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                 <p>Istidina: <span id="modal-amino-his-total">0</span> / <span id="modal-amino-his-goal"></span> mg</p>
+                 <progress id="modal-amino-his-progress" value="0" style="width:100%"></progress>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
@@ -734,6 +771,18 @@
             omega3: 2, omega6: 10 
         };
         const OBIETTIVI_VIT = { vitA: 900, vitB12: 2.4, vitD: 15, vitE: 15, vitK: 120, b9: 400, b2: 1.3, b6: 1.3 };
+        
+        const OBIETTIVI_AMINO = {
+            leu: 2900, iso: 1500, val: 1900, 
+            lys: 2200, met: 1100, phe: 1800, 
+            thr: 1100, trp: 300,  his: 750 
+        };
+
+        const PROFILO_AMINOACIDICO_RIFERIMENTO = {
+            leu: 59, iso: 30, val: 39,
+            lys: 45, met: 22, phe: 38,
+            thr: 23, trp: 6.0, his: 15
+        };
 
         const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
             merenda1: { prot: 30, cal_perc: 0.20 },
@@ -753,10 +802,9 @@
 
         const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg}`;
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
 
-        // --- Element References ---
         const authSection = document.getElementById('auth-section');
         const userEmailInput = document.getElementById('user-email');
         const userPasswordInput = document.getElementById('user-password');
@@ -789,14 +837,14 @@
         const manualJsonInput = document.getElementById('manual-json-input');
         const btnConfirmJson = document.getElementById('btn-confirm-json');
         const btnClearNutrients = document.getElementById('btn-clear-nutrients');
-        // Riferimenti per la modale delle vitamine settimanali
         const weeklyVitaminModal = document.getElementById('weekly-vitamin-modal');
         const infoVitSettimanaliBtn = document.getElementById('info-vit-settimanali');
-        
         const weeklyFatsModal = document.getElementById('weekly-fats-modal');
         const infoFatsSettimanaliBtn = document.getElementById('info-fats-settimanali');
-
-        // Input Builder References
+        const nutrientDetailModal = document.getElementById('nutrient-detail-modal');
+        const nutrientDetailTitle = document.getElementById('nutrient-detail-modal-title');
+        const nutrientDetailList = document.getElementById('nutrient-detail-modal-list');
+        
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderCarb = document.getElementById('builder-carb'), builderZuccheri = document.getElementById('builder-zuccheri');
@@ -807,14 +855,27 @@
         const builderVitE = document.getElementById('builder-vit-e'), builderVitK = document.getElementById('builder-vit-k'), builderB9 = document.getElementById('builder-b9');
         const builderB2 = document.getElementById('builder-b2'), builderB6 = document.getElementById('builder-b6');
         const builderFe = document.getElementById('builder-fe'), builderZn = document.getElementById('builder-zn'), builderCu = document.getElementById('builder-cu'), builderP = document.getElementById('builder-p');
+        const builderLeu = document.getElementById('builder-leu'), builderIso = document.getElementById('builder-iso'), builderVal = document.getElementById('builder-val');
+        const builderLys = document.getElementById('builder-lys'), builderMet = document.getElementById('builder-met'), builderPhe = document.getElementById('builder-phe');
+        const builderThr = document.getElementById('builder-thr'), builderTrp = document.getElementById('builder-trp'), builderHis = document.getElementById('builder-his');
 
-        // Riepilogo Span & Progress References
+        const inputFields = {
+            prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
+            fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
+            mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
+            vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
+            vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, 
+            fe: builderFe, zn: builderZn, cu: builderCu, p: builderP,
+            leu: builderLeu, iso: builderIso, val: builderVal,
+            lys: builderLys, met: builderMet, phe: builderPhe,
+            thr: builderThr, trp: builderTrp, his: builderHis
+        };
+        
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanObiettivoProteine = document.getElementById('obiettivo-proteine'), progressProteine = document.getElementById('progress-proteine');
         const spanTotaleCalorie = document.getElementById('totale-calorie'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie'), progressCalorie = document.getElementById('progress-calorie');
         const spanTotaleCarboidrati = document.getElementById('totale-carboidrati'), spanObiettivoCarboidrati = document.getElementById('obiettivo-carboidrati'), progressCarboidrati = document.getElementById('progress-carboidrati');
         const spanTotaleZuccheri = document.getElementById('totale-zuccheri'), spanObiettivoZuccheri = document.getElementById('obiettivo-zuccheri'), progressZuccheri = document.getElementById('progress-zuccheri');
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
-        // Fats
         const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total'), progressFatsTotal = document.getElementById('progress-fats-total');
         const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanObiettivoFatSat = document.getElementById('obiettivo-fat-sat'), progressFatSat = document.getElementById('progress-fat-sat');
         const spanTotaleFatTrans = document.getElementById('totale-fat-trans'), spanObiettivoFatTrans = document.getElementById('obiettivo-fat-trans'), progressFatTrans = document.getElementById('progress-fat-trans');
@@ -824,7 +885,6 @@
         const spanTotaleOmega3 = document.getElementById('totale-omega3'), spanObiettivoOmega3 = document.getElementById('obiettivo-omega3'), progressOmega3 = document.getElementById('progress-omega3');
         const spanTotaleOmega6 = document.getElementById('totale-omega6'), spanObiettivoOmega6 = document.getElementById('obiettivo-omega6'), progressOmega6 = document.getElementById('progress-omega6');
         const omegaRatioValueEl = document.getElementById('omega-ratio-value');
-        // Micros
         const spanTotaleMg = document.getElementById('totale-mg'), progressMg = document.getElementById('progress-mg');
         const spanTotaleK = document.getElementById('totale-k'), progressK = document.getElementById('progress-k');
         const spanTotaleCa = document.getElementById('totale-ca'), progressCa = document.getElementById('progress-ca');
@@ -841,23 +901,13 @@
         const spanTotaleB9 = document.getElementById('totale-b9'), progressB9 = document.getElementById('progress-b9');
         const spanTotaleB2 = document.getElementById('totale-b2'), progressB2 = document.getElementById('progress-b2');
         const spanTotaleB6 = document.getElementById('totale-b6'), progressB6 = document.getElementById('progress-b6');
-        
-        // Meal Builder References
         const currentMealTypeDisplay = document.getElementById('current-meal-type-display');
         const mealProtCurrent = document.getElementById('meal-prot-current'), mealProtTarget = document.getElementById('meal-prot-target'), mealProtRemaining = document.getElementById('meal-prot-remaining');
         const mealCalCurrent = document.getElementById('meal-cal-current'), mealCalTarget = document.getElementById('meal-cal-target'), mealCalRemaining = document.getElementById('meal-cal-remaining');
         const mealProgressProt = document.getElementById('meal-progress-prot'), mealProgressCal = document.getElementById('meal-progress-cal');
-        
-        // Workout References
         const workoutDescInput = document.getElementById('workout-desc');
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
-
-        // Riferimenti per la nuova modale dei dettagli
-        const nutrientDetailModal = document.getElementById('nutrient-detail-modal');
-        const nutrientDetailTitle = document.getElementById('nutrient-detail-modal-title');
-        const nutrientDetailList = document.getElementById('nutrient-detail-modal-list');
-
 
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
         
@@ -1002,58 +1052,36 @@
             const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
             
             const obiettivoCalorieTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
-            const OBIETTIVI = { prot: pianoDelGiorno.prot, kcal: obiettivoCalorieTotale, carb: pianoDelGiorno.carb, zuccheri: pianoDelGiorno.zuccheri, ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT };
+            const OBIETTIVI = { 
+                prot: pianoDelGiorno.prot, kcal: obiettivoCalorieTotale, carb: pianoDelGiorno.carb, zuccheri: pianoDelGiorno.zuccheri, 
+                ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT, ...OBIETTIVI_AMINO
+            };
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             
-            let totali = { proteine: 0, calorie: 0, carboidrati: 0, zuccheri: 0, fatTotal: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, p: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0 };
+            let totali = { 
+                prot: 0, kcal: 0, carb: 0, zuccheri: 0, fatTotal: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, 
+                mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, p: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0,
+                leu: 0, iso: 0, val: 0, lys: 0, met: 0, phe: 0, thr: 0, trp: 0, his: 0
+            };
             
             (datiGiornalieri.log || []).forEach(entry => {
                 if (entry.type !== 'workout') {
                     const items = entry.type === 'meal' ? entry.items : [entry];
                     items.forEach(item => {
-                        
-                        let currentItemFatTotal = item.fatTotal;
-                        if (typeof currentItemFatTotal === 'undefined' || currentItemFatTotal === null) {
-                            currentItemFatTotal = (item.fatSat || 0) + (item.fatTrans || 0) + (item.fatMono || 0) + (item.fatPoly || 0);
+                        for(const key in totali){
+                            totali[key] += item[key] || 0;
                         }
-
-                        totali.proteine += item.prot || 0;
-                        totali.calorie += (item.kcal || item.cal) || 0;
-                        totali.carboidrati += item.carb || 0;
-                        totali.zuccheri += item.zuccheri || 0;
-                        totali.fatTotal += currentItemFatTotal;
-                        totali.fatSat += item.fatSat || 0;
-                        totali.fatTrans += item.fatTrans || 0;
-                        totali.fatMono += item.fatMono || 0;
-                        totali.fatPoly += item.fatPoly || 0;
-                        totali.omega3 += item.omega3 || 0;
-                        totali.omega6 += item.omega6 || 0;
-                        totali.mg += item.mg || 0;
-                        totali.k += item.k || 0;
-                        totali.vitc += item.vitc || 0;
-                        totali.ca += item.ca || 0;
-                        totali.fe += item.fe || 0;
-                        totali.zn += item.zn || 0;
-                        totali.cu += item.cu || 0;
-                        totali.p += item.p || 0;
-                        totali.vitA += item.vitA || 0;
-                        totali.vitB12 += item.vitB12 || 0;
-                        totali.vitD += item.vitD || 0;
-                        totali.vitE += item.vitE || 0;
-                        totali.vitK += item.vitK || 0;
-                        totali.b9 += item.b9 || 0;
-                        totali.b2 += item.b2 || 0;
-                        totali.b6 += item.b6 || 0;
+                        if(item.cal && !item.kcal) totali.kcal += item.cal;
                     });
                 }
             });
 
             totali.fatUnsat = totali.fatMono + totali.fatPoly;
 
-            spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.proteine.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.proteine;
-            spanObiettivoCalorie.textContent = OBIETTIVI.kcal; spanTotaleCalorie.textContent = totali.calorie.toFixed(0); progressCalorie.max = OBIETTIVI.kcal; progressCalorie.value = totali.calorie;
-            spanObiettivoCarboidrati.textContent = OBIETTIVI.carb; spanTotaleCarboidrati.textContent = totali.carboidrati.toFixed(1); progressCarboidrati.max = OBIETTIVI.carb; progressCarboidrati.value = totali.carboidrati;
+            spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.prot.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.prot;
+            spanObiettivoCalorie.textContent = OBIETTIVI.kcal; spanTotaleCalorie.textContent = totali.kcal.toFixed(0); progressCalorie.max = OBIETTIVI.kcal; progressCalorie.value = totali.kcal;
+            spanObiettivoCarboidrati.textContent = OBIETTIVI.carb; spanTotaleCarboidrati.textContent = totali.carb.toFixed(1); progressCarboidrati.max = OBIETTIVI.carb; progressCarboidrati.value = totali.carb;
             spanObiettivoZuccheri.textContent = OBIETTIVI.zuccheri; spanTotaleZuccheri.textContent = totali.zuccheri.toFixed(1); progressZuccheri.max = OBIETTIVI.zuccheri; progressZuccheri.value = totali.zuccheri;
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
             spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal; spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1); progressFatsTotal.max = OBIETTIVI_FAT.fatTotal; progressFatsTotal.value = totali.fatTotal;
@@ -1096,7 +1124,7 @@
             omegaRatioValueEl.textContent = ratioText;
 
             const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
-            const calorieDifference = totali.calorie - targetCaloriesForBalanceText;
+            const calorieDifference = totali.kcal - targetCaloriesForBalanceText;
             calorieBalanceText.className = '';
             const tolerance = 50;
             if (calorieDifference < -tolerance) { calorieBalanceText.textContent = `Deficit: ${Math.abs(calorieDifference).toFixed(0)} kcal`; calorieBalanceText.classList.add('balance-deficit');
@@ -1109,8 +1137,12 @@
             document.getElementById('vit-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_VIT).some(k => totali[k] < OBIETTIVI_VIT[k] * 0.5));
             
             logBody.innerHTML = ''; 
-            const nutrientKeys = ['prot', 'kcal', 'fatSat', 'fatTrans', 'fatMono', 'fatPoly', 'omega3', 'omega6', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
-            const formatNumber = (key, value) => (value || 0).toFixed(['cu', 'b2', 'b6'].includes(key) ? 2 : (['kcal', 'k'].includes(key) ? 0 : 1));
+            const nutrientKeys = ['kcal', ...Object.keys(OBIETTIVI_AMINO), 'fatSat', 'fatTrans', 'fatMono', 'fatPoly', 'omega3', 'omega6', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
+            const formatNumber = (key, value) => {
+                const val = value || 0;
+                if (Object.keys(OBIETTIVI_AMINO).includes(key)) return val.toFixed(0);
+                return ['cu', 'b2', 'b6'].includes(key) ? val.toFixed(2) : (['kcal', 'k'].includes(key) ? val.toFixed(0) : val.toFixed(1));
+            };
 
             (datiGiornalieri.log || []).forEach((entry, index) => {
                 if (entry.type === 'meal') {
@@ -1120,9 +1152,16 @@
                         for (const key in item) if(typeof item[key] === 'number' && key !== 'qta') acc[key] = (acc[key] || 0) + item[key];
                         return acc;
                     }, {});
+                    
+                    const qualitaPasto = calcolaQualitaProteine(totaliPasto);
+                    const scoreClass = qualitaPasto.score < 70 ? 'low' : qualitaPasto.score < 90 ? 'medium' : 'high';
+                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaPasto.limiting}">${qualitaPasto.score}%</div>`;
+
                     rigaPasto.innerHTML = `
                         <td><span class="expand-arrow" data-index="${index}">${entry.isExpanded ? '▼' : '▶'}</span> ${entry.desc}</td>
                         <td>${entry.items.reduce((sum, item) => sum + item.qta, 0).toFixed(0)}</td>
+                        <td>${(totaliPasto.prot || 0).toFixed(1)}</td>
+                        <td>${qualitaCellHtml}</td>
                         ${nutrientKeys.map(k => `<td>${formatNumber(k, totaliPasto[k])}</td>`).join('')}
                         <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
 
@@ -1130,19 +1169,29 @@
                         entry.items.forEach(subItem => {
                             const rigaSubItem = logBody.insertRow();
                             rigaSubItem.classList.add('sub-item-row');
+                             const qualitaSubItem = calcolaQualitaProteine(subItem);
+                             const subScoreClass = qualitaSubItem.score < 70 ? 'low' : qualitaSubItem.score < 90 ? 'medium' : 'high';
+                             const subQualitaCellHtml = `<div class="protein-score ${subScoreClass}" title="Limitante: ${qualitaSubItem.limiting}">${qualitaSubItem.score}%</div>`;
                             rigaSubItem.innerHTML = `
-                                <td>${subItem.desc}</td><td>${subItem.qta}</td>
+                                <td>${subItem.desc}</td><td>${(subItem.qta || 0).toFixed(0)}</td>
+                                <td>${(subItem.prot || 0).toFixed(1)}</td>
+                                <td>${subQualitaCellHtml}</td>
                                 ${nutrientKeys.map(k => `<td>${formatNumber(k, subItem[k])}</td>`).join('')}
                                 <td></td>`;
                         });
                     }
                 } else if (entry.type === 'workout') {
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td>${(entry.kcal || 0).toFixed(0)}</td><td colspan="${nutrientKeys.length - 2}"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td></td><td></td><td>${(entry.kcal || 0).toFixed(0)}</td><td colspan="${nutrientKeys.length -1}"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 } else { 
                     const riga = logBody.insertRow();
+                    const qualitaSingola = calcolaQualitaProteine(entry);
+                    const scoreClass = qualitaSingola.score < 70 ? 'low' : qualitaSingola.score < 90 ? 'medium' : 'high';
+                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaSingola.limiting}">${qualitaSingola.score}%</div>`;
                     riga.innerHTML = `
-                        <td>${entry.desc}</td><td>${entry.qta}</td>
+                        <td>${entry.desc}</td><td>${(entry.qta || 0).toFixed(0)}</td>
+                        <td>${(entry.prot || 0).toFixed(1)}</td>
+                        <td>${qualitaCellHtml}</td>
                         ${nutrientKeys.map(k => `<td>${formatNumber(k, entry[k])}</td>`).join('')}
                         <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 }
@@ -1179,44 +1228,101 @@
             foodDatalist.innerHTML = Object.keys(foodDatabase).map(foodName => `<option value="${foodName.charAt(0).toUpperCase() + foodName.slice(1)}"></option>`).join('');
         }
         
-        const inputFields = {
-            prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
-            fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
-            mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
-            vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
-            vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, 
-            fe: builderFe, zn: builderZn, cu: builderCu, p: builderP
-        };
+        function calcolaQualitaProteine(item) {
+            if (!item || !item.prot || item.prot <= 0) {
+                return { score: 0, limiting: 'N/D' };
+            }
+            let minRatio = Infinity;
+            let limitingAmino = 'Nessuno';
+            for (const amino in PROFILO_AMINOACIDICO_RIFERIMENTO) {
+                const referenceValueMgPerG = PROFILO_AMINOACIDICO_RIFERIMENTO[amino];
+                const actualValueMg = item[amino] || 0;
+                const actualValueMgPerG = (actualValueMg / item.prot);
+                const ratio = Math.min(1, actualValueMgPerG / referenceValueMgPerG);
+                if (ratio < minRatio) {
+                    minRatio = ratio;
+                    limitingAmino = amino.charAt(0).toUpperCase() + amino.slice(1);
+                }
+            }
+            return {
+                score: Math.round(minRatio * 100),
+                limiting: limitingAmino
+            };
+        }
 
-        // NEW: Function to evaluate the quantity input
+        function apriModalAminoacidi(totali, titolo) {
+            const modal = document.getElementById('amino-acid-modal');
+            if (!modal) return;
+            document.getElementById('modal-amino-title').textContent = titolo;
+            const qualita = calcolaQualitaProteine(totali);
+            const scoreClass = qualita.score < 70 ? 'low' : qualita.score < 90 ? 'medium' : 'high';
+            const summaryDiv = document.getElementById('modal-amino-summary');
+            summaryDiv.innerHTML = `
+                <div class="protein-score ${scoreClass}" style="display: inline-block; padding: 5px 15px; font-size: 1.1em;" title="Limitante: ${qualita.limiting}">
+                    Qualità Proteica: ${qualita.score}%
+                </div>
+            `;
+            for (const amino in OBIETTIVI_AMINO) {
+                const obiettivo = OBIETTIVI_AMINO[amino];
+                const valore = totali[amino] || 0;
+                document.getElementById(`modal-amino-${amino}-total`).textContent = valore.toFixed(0);
+                document.getElementById(`modal-amino-${amino}-goal`).textContent = obiettivo;
+                const progress = document.getElementById(`modal-amino-${amino}-progress`);
+                progress.max = obiettivo;
+                progress.value = valore;
+            }
+            modal.style.display = 'block';
+        }
+
         function evaluateQuantity(input) {
             try {
-                let value = input.trim();
-                value = value.replace(',', '.');
-                const result = eval(value);
-                if (typeof result === 'number' && !isNaN(result)) {
-                    return result;
+                let value = input.trim().replace(',', '.');
+                if (/^[0-9+\-*/.\s()]+$/.test(value)) {
+                    const result = new Function(`return ${value}`)();
+                    if (typeof result === 'number' && !isNaN(result)) {
+                        return result;
+                    }
                 }
-            } catch (e) {
-                console.error("Errore nella valutazione del calcolo:", e);
-            }
+            } catch (e) { console.error("Errore valutazione quantità:", e); }
             return parseFloat(input.replace(',', '.'));
         }
 
         function creaAlimentoDaInput(isSingle = false) {
-            const desc = builderDesc.value.trim(); 
+            const desc = builderDesc.value.trim();
             const qta = evaluateQuantity(builderQta.value);
-            if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return null; }
-            
+            if (!desc || isNaN(qta) || qta <= 0) {
+                alert('Inserisci nome e quantità valide.');
+                return null;
+            }
+
             const foodData = { lastQta: qta };
             const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta };
             
             for (const key in inputFields) {
-                const value = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
-                foodData[key] = value;
-                foodItem[key] = ((value ?? 0) / 100) * qta;
+                inputFields[key].value = inputFields[key].value.replace(',', '.');
+                foodData[key] = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
             }
 
+            const protValue100g = foodData.prot || 0;
+            const isAnyAminoFilled = Object.keys(OBIETTIVI_AMINO).some(key => foodData[key] !== null && foodData[key] > 0);
+
+            if (protValue100g > 0 && !isAnyAminoFilled) {
+                for (const amino in PROFILO_AMINOACIDICO_RIFERIMENTO) {
+                    const referenceMgPerG = PROFILO_AMINOACIDICO_RIFERIMENTO[amino];
+                    const calculatedAminoMg = protValue100g * referenceMgPerG;
+                    foodData[amino] = calculatedAminoMg;
+                    if(inputFields[amino]) {
+                        inputFields[amino].value = calculatedAminoMg.toFixed(0);
+                    }
+                }
+            } 
+            
+            for (const key in foodData) {
+                if (key !== 'lastQta') {
+                    foodItem[key] = ((foodData[key] ?? 0) / 100) * qta;
+                }
+            }
+            
             if (foodData.fatTotal === null && (foodData.fatSat !== null || foodData.fatTrans !== null || foodData.fatMono !== null || foodData.fatPoly !== null)) {
                 const total = (foodData.fatSat || 0) + (foodData.fatTrans || 0) + (foodData.fatMono || 0) + (foodData.fatPoly || 0);
                 foodData.fatTotal = total;
@@ -1225,10 +1331,14 @@
             }
             
             foodDatabase[desc.toLowerCase()] = foodData;
-            salvaFoodDatabase(); 
+            salvaFoodDatabase();
             aggiornaDatalist();
             
-            if (isSingle) { foodItem.type = 'single'; } else { foodItem.selezionato = true; }
+            if (isSingle) {
+                foodItem.type = 'single';
+            } else {
+                foodItem.selezionato = true;
+            }
             return foodItem;
         }
         
@@ -1237,13 +1347,14 @@
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return; }
 
             const emptyFields = Object.keys(inputFields)
-                .filter(key => key !== 'fatTotal') 
+                .filter(key => key !== 'fatTotal' && !Object.keys(OBIETTIVI_AMINO).includes(key)) 
                 .filter(key => inputFields[key].value === '');
                 
-            if (emptyFields.length > 0) {
-                const confirmMsg = `Ci sono campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
+            if (emptyFields.length > 5) {
+                const confirmMsg = `Ci sono molti campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
                 if (confirm(confirmMsg)) {
                     await document.getElementById('btn-compila-ai').click();
+                    setTimeout(() => handleAlimentoAddition(isForMealBuilder), 1000);
                     return; 
                 }
             }
@@ -1273,7 +1384,9 @@
         }
 
         function aggiornaColoreNutrienti() {
-            const hasEmptyFields = Object.values(inputFields).some(input => input.value === '');
+            const hasEmptyFields = Object.keys(inputFields)
+                .filter(key => !Object.keys(OBIETTIVI_AMINO).includes(key))
+                .some(key => inputFields[key].value === '');
             document.getElementById('nutrients-header').classList.toggle('nutrients-warning', hasEmptyFields);
         }
         
@@ -1285,14 +1398,11 @@
                 'vitK': { total: 0, goal: OBIETTIVI_VIT.vitK * 7, id: 'k' },
                 'vitB12': { total: 0, goal: OBIETTIVI_VIT.vitB12 * 7, id: 'b12' }
             };
-
             const today = new Date();
-
             for (let i = 0; i < 7; i++) {
                 const dateToCheck = new Date(today);
                 dateToCheck.setDate(today.getDate() - i);
                 const dateString = dateToCheck.toISOString().split('T')[0];
-
                 const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
                 if (dailyDataRaw) {
                     try {
@@ -1302,40 +1412,29 @@
                                 const items = entry.type === 'meal' ? entry.items : [entry];
                                 items.forEach(item => {
                                     for (const key in vitaminsToTrack) {
-                                        if (item[key]) {
-                                            vitaminsToTrack[key].total += item[key];
-                                        }
+                                        if (item[key]) vitaminsToTrack[key].total += item[key];
                                     }
                                 });
                             });
                         }
-                    } catch (e) {
-                        console.error(`Errore nel parsing dei dati per il giorno ${dateString}:`, e);
-                    }
+                    } catch (e) { console.error(`Errore parsing dati per ${dateString}:`, e); }
                 }
             }
             return vitaminsToTrack;
         }
         
-        // ***** MODIFICA #2 (JS): Funzione aggiornata per i grassi settimanali *****
         function calculateWeeklyFatStats() {
             const fatsToTrack = {
-                'fatTotal': { total: 0, goal: OBIETTIVI_FAT.fatTotal * 7, id: 'total' },
-                'fatSat':   { total: 0, goal: OBIETTIVI_FAT.fatSat * 7,   id: 'sat' },
-                'fatTrans': { total: 0, goal: OBIETTIVI_FAT.fatTrans * 7, id: 'trans' },
-                'fatMono':  { total: 0, goal: OBIETTIVI_FAT.fatMono * 7,  id: 'mono' },
-                'fatPoly':  { total: 0, goal: OBIETTIVI_FAT.fatPoly * 7,  id: 'poly' },
-                'omega3':   { total: 0, goal: OBIETTIVI_FAT.omega3 * 7,   id: 'omega3' },
+                'fatTotal': { total: 0, goal: OBIETTIVI_FAT.fatTotal * 7, id: 'total' }, 'fatSat':   { total: 0, goal: OBIETTIVI_FAT.fatSat * 7,   id: 'sat' },
+                'fatTrans': { total: 0, goal: OBIETTIVI_FAT.fatTrans * 7, id: 'trans' }, 'fatMono':  { total: 0, goal: OBIETTIVI_FAT.fatMono * 7,  id: 'mono' },
+                'fatPoly':  { total: 0, goal: OBIETTIVI_FAT.fatPoly * 7,  id: 'poly' }, 'omega3':   { total: 0, goal: OBIETTIVI_FAT.omega3 * 7,   id: 'omega3' },
                 'omega6':   { total: 0, goal: OBIETTIVI_FAT.omega6 * 7,   id: 'omega6' }
             };
-
             const today = new Date();
-
             for (let i = 0; i < 7; i++) {
                 const dateToCheck = new Date(today);
                 dateToCheck.setDate(today.getDate() - i);
                 const dateString = dateToCheck.toISOString().split('T')[0];
-
                 const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
                 if (dailyDataRaw) {
                     try {
@@ -1354,9 +1453,7 @@
                                 });
                             });
                         }
-                    } catch (e) {
-                        console.error(`Errore nel parsing dei dati per il giorno ${dateString}:`, e);
-                    }
+                    } catch (e) { console.error(`Errore nel parsing dei dati per il giorno ${dateString}:`, e); }
                 }
             }
             return fatsToTrack;
@@ -1364,25 +1461,19 @@
 
         function openWeeklyVitaminsModal() {
             const weeklyStats = calculateWeeklyVitaminStats();
-            
             for (const key in weeklyStats) {
                 const stat = weeklyStats[key];
                 const { id, total, goal } = stat;
                 const avg = total / 7;
                 const dailyGoal = OBIETTIVI_VIT[key]; 
-                
                 const percentageDiff = (avg - dailyGoal) / dailyGoal * 100;
-                
                 document.getElementById(`weekly-vit-${id}-total`).textContent = total.toFixed(1);
                 document.getElementById(`weekly-vit-${id}-goal`).textContent = goal.toFixed(1);
                 document.getElementById(`weekly-progress-vit-${id}`).value = total;
                 document.getElementById(`weekly-progress-vit-${id}`).max = goal;
                 document.getElementById(`weekly-vit-${id}-avg`).textContent = avg.toFixed(1);
-                
                 const diffSpan = document.getElementById(`weekly-vit-${id}-diff`);
-                
                 diffSpan.classList.remove('diff-surplus', 'diff-deficit');
-
                 if (percentageDiff >= 0) {
                     diffSpan.classList.add('diff-surplus');
                     diffSpan.textContent = `+${percentageDiff.toFixed(0)}%`;
@@ -1391,32 +1482,25 @@
                     diffSpan.textContent = `${percentageDiff.toFixed(0)}%`;
                 }
             }
-
             weeklyVitaminModal.style.display = 'block';
         }
         
         function openWeeklyFatsModal() {
             const weeklyStats = calculateWeeklyFatStats();
-            
             for (const key in weeklyStats) {
                 const stat = weeklyStats[key];
                 const { id, total, goal } = stat;
                 const avg = total / 7;
                 const dailyGoal = OBIETTIVI_FAT[key];
-                
                 const percentageDiff = dailyGoal > 0 ? (avg - dailyGoal) / dailyGoal * 100 : 0;
-                
                 document.getElementById(`weekly-fat-${id}-total`).textContent = total.toFixed(1);
                 document.getElementById(`weekly-fat-${id}-goal`).textContent = goal.toFixed(1);
                 document.getElementById(`daily-fat-${id}-goal`).textContent = dailyGoal.toFixed(1);
                 document.getElementById(`weekly-progress-fat-${id}`).value = total;
                 document.getElementById(`weekly-progress-fat-${id}`).max = goal;
                 document.getElementById(`weekly-fat-${id}-avg`).textContent = avg.toFixed(1);
-                
                 const diffSpan = document.getElementById(`weekly-fat-${id}-diff`);
-                
                 diffSpan.classList.remove('diff-surplus', 'diff-deficit');
-
                 if (avg > dailyGoal) {
                     diffSpan.classList.add('diff-deficit');
                     diffSpan.textContent = `+${percentageDiff.toFixed(0)}%`;
@@ -1425,25 +1509,18 @@
                     diffSpan.textContent = `${percentageDiff.toFixed(0)}%`;
                 }
             }
-
             const totalWeeklyOmega3 = weeklyStats['omega3'].total;
             const totalWeeklyOmega6 = weeklyStats['omega6'].total;
             const weeklyOmegaRatioEl = document.getElementById('weekly-omega-ratio-value');
-
             let weeklyRatioText = 'N/D';
             weeklyOmegaRatioEl.style.color = '#333';
-
             if (totalWeeklyOmega3 > 0 && totalWeeklyOmega6 > 0) {
                 const ratio = totalWeeklyOmega6 / totalWeeklyOmega3;
                 weeklyRatioText = `${ratio.toFixed(1)}:1`;
-                if (ratio >= 3 && ratio <= 6) {
-                    weeklyOmegaRatioEl.style.color = '#2e7d32';
-                } else {
-                    weeklyOmegaRatioEl.style.color = '#d32f2f';
-                }
+                if (ratio >= 3 && ratio <= 6) { weeklyOmegaRatioEl.style.color = '#2e7d32';
+                } else { weeklyOmegaRatioEl.style.color = '#d32f2f'; }
             }
             weeklyOmegaRatioEl.textContent = weeklyRatioText;
-
             weeklyFatsModal.style.display = 'block';
         }
 
@@ -1471,53 +1548,36 @@
             const allItems = getNutrientData();
             let totalNutrient = 0;
             const itemContributions = [];
-
             allItems.forEach(item => {
                 const value = item[nutrientKey] || 0;
                 totalNutrient += value;
-                if (value > 0) {
-                    itemContributions.push({
-                        name: item.desc,
-                        value: value,
-                        unit: unit
-                    });
-                }
+                if (value > 0) { itemContributions.push({ name: item.desc, value: value, unit: unit }); }
             });
-
             itemContributions.sort((a, b) => b.value - a.value);
-
             nutrientDetailTitle.textContent = `Dettaglio Fonti ${title}`;
             nutrientDetailList.innerHTML = '';
-            
             if (itemContributions.length === 0) {
                 nutrientDetailList.innerHTML = '<li>Nessun dato disponibile.</li>';
             } else {
                 itemContributions.forEach(item => {
                     const percentage = totalNutrient > 0 ? (item.value / totalNutrient) * 100 : 0;
                     const listItem = document.createElement('li');
-                    listItem.innerHTML = `
-                        <span>${item.name}</span>
-                        <span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>
-                    `;
+                    listItem.innerHTML = `<span>${item.name}</span><span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>`;
                     nutrientDetailList.appendChild(listItem);
                 });
             }
-
             nutrientDetailModal.style.display = 'block';
         }
 
         function showWeeklyNutrientDetailsModal(nutrientKey, title, unit) {
             const contributions = {};
-
             const today = new Date();
             for (let i = 0; i < 7; i++) {
                 const dateToCheck = new Date(today);
                 dateToCheck.setDate(today.getDate() - i);
                 const dateString = dateToCheck.toISOString().split('T')[0];
-
                 const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
                 if (!dailyDataRaw) continue;
-
                 try {
                     const dailyData = JSON.parse(dailyDataRaw);
                     if (dailyData && dailyData.log) {
@@ -1532,89 +1592,96 @@
                             });
                         });
                     }
-                } catch (e) {
-                    console.error(`Errore nel parsing dei dati settimanali per ${dateString}:`, e);
-                }
+                } catch (e) { console.error(`Errore nel parsing dei dati settimanali per ${dateString}:`, e); }
             }
-
             const itemContributions = Object.entries(contributions)
                                           .map(([name, value]) => ({ name, value, unit }))
                                           .sort((a, b) => b.value - a.value);
-
             const totalNutrient = itemContributions.reduce((sum, item) => sum + item.value, 0);
-
             nutrientDetailTitle.textContent = `Dettaglio Fonti ${title}`;
             nutrientDetailList.innerHTML = '';
-            
             if (itemContributions.length === 0) {
                 nutrientDetailList.innerHTML = '<li>Nessun dato disponibile per questa settimana.</li>';
             } else {
                 itemContributions.forEach(item => {
                     const percentage = totalNutrient > 0 ? (item.value / totalNutrient) * 100 : 0;
                     const listItem = document.createElement('li');
-                    listItem.innerHTML = `
-                        <span>${item.name}</span>
-                        <span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>
-                    `;
+                    listItem.innerHTML = `<span>${item.name}</span><span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>`;
                     nutrientDetailList.appendChild(listItem);
                 });
             }
-
             nutrientDetailModal.style.display = 'block';
         }
-
-        // --- EVENT LISTENERS SETUP ---
+        
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
-            // Listeners per le barre di progressione GIORNALIERE
-            document.getElementById('progress-proteine').addEventListener('click', () => showNutrientDetailsModal('prot', 'Proteine', 'g'));
-            document.getElementById('progress-calorie').addEventListener('click', () => showNutrientDetailsModal('kcal', 'Calorie', 'kcal'));
-            document.getElementById('progress-carboidrati').addEventListener('click', () => showNutrientDetailsModal('carb', 'Carboidrati', 'g'));
-            document.getElementById('progress-zuccheri').addEventListener('click', () => showNutrientDetailsModal('zuccheri', 'Zuccheri', 'g'));
-            document.getElementById('progress-fats-total').addEventListener('click', () => showNutrientDetailsModal('fatTotal', 'Grassi Totali', 'g'));
-            document.getElementById('progress-fat-sat').addEventListener('click', () => showNutrientDetailsModal('fatSat', 'Grassi Saturi', 'g'));
-            document.getElementById('progress-fat-trans').addEventListener('click', () => showNutrientDetailsModal('fatTrans', 'Grassi Trans', 'g'));
-            document.getElementById('progress-fat-unsat').addEventListener('click', () => showNutrientDetailsModal('fatUnsat', 'Grassi Insaturi', 'g'));
-            document.getElementById('progress-fat-mono').addEventListener('click', () => showNutrientDetailsModal('fatMono', 'Grassi Monoinsaturi', 'g'));
-            document.getElementById('progress-fat-poly').addEventListener('click', () => showNutrientDetailsModal('fatPoly', 'Grassi Polinsaturi', 'g'));
-            document.getElementById('progress-omega3').addEventListener('click', () => showNutrientDetailsModal('omega3', 'Omega 3', 'g'));
-            document.getElementById('progress-omega6').addEventListener('click', () => showNutrientDetailsModal('omega6', 'Omega 6', 'g'));
-            document.getElementById('progress-mg').addEventListener('click', () => showNutrientDetailsModal('mg', 'Magnesio', 'mg'));
-            document.getElementById('progress-k').addEventListener('click', () => showNutrientDetailsModal('k', 'Potassio', 'mg'));
-            document.getElementById('progress-fe').addEventListener('click', () => showNutrientDetailsModal('fe', 'Ferro', 'mg'));
-            document.getElementById('progress-zn').addEventListener('click', () => showNutrientDetailsModal('zn', 'Zinco', 'mg'));
-            document.getElementById('progress-ca').addEventListener('click', () => showNutrientDetailsModal('ca', 'Calcio', 'mg'));
-            document.getElementById('progress-cu').addEventListener('click', () => showNutrientDetailsModal('cu', 'Rame', 'mg'));
-            document.getElementById('progress-p').addEventListener('click', () => showNutrientDetailsModal('p', 'Fosforo', 'mg'));
-            document.getElementById('progress-vitc').addEventListener('click', () => showNutrientDetailsModal('vitc', 'Vitamina C', 'mg'));
-            document.getElementById('progress-vit-a').addEventListener('click', () => showNutrientDetailsModal('vitA', 'Vitamina A', 'µg'));
-            document.getElementById('progress-vit-d').addEventListener('click', () => showNutrientDetailsModal('vitD', 'Vitamina D', 'µg'));
-            document.getElementById('progress-vit-e').addEventListener('click', () => showNutrientDetailsModal('vitE', 'Vitamina E', 'mg'));
-            document.getElementById('progress-vit-k').addEventListener('click', () => showNutrientDetailsModal('vitK', 'Vitamina K', 'µg'));
-            document.getElementById('progress-vit-b12').addEventListener('click', () => showNutrientDetailsModal('vitB12', 'Vitamina B12', 'µg'));
-            document.getElementById('progress-b2').addEventListener('click', () => showNutrientDetailsModal('b2', 'Vitamina B2', 'mg'));
-            document.getElementById('progress-b6').addEventListener('click', () => showNutrientDetailsModal('b6', 'Vitamina B6', 'mg'));
-            document.getElementById('progress-b9').addEventListener('click', () => showNutrientDetailsModal('b9', 'Folati (B9)', 'µg'));
+            ['progress-proteine', 'progress-calorie', 'progress-carboidrati', 'progress-zuccheri', 'progress-fats-total', 'progress-fat-sat', 
+             'progress-fat-trans', 'progress-fat-unsat', 'progress-fat-mono', 'progress-fat-poly', 'progress-omega3', 'progress-omega6', 
+             'progress-mg', 'progress-k', 'progress-fe', 'progress-zn', 'progress-ca', 'progress-cu', 'progress-p', 'progress-vitc', 
+             'progress-vit-a', 'progress-vit-d', 'progress-vit-e', 'progress-vit-k', 'progress-vit-b12', 'progress-b2', 'progress-b6', 'progress-b9']
+            .forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const nutrientMap = {
+                        'progress-proteine': { key: 'prot', title: 'Proteine', unit: 'g' },
+                        'progress-calorie': { key: 'kcal', title: 'Calorie', unit: 'kcal' },
+                        'progress-carboidrati': { key: 'carb', title: 'Carboidrati', unit: 'g' },
+                        'progress-zuccheri': { key: 'zuccheri', title: 'Zuccheri', unit: 'g' },
+                        'progress-fats-total': { key: 'fatTotal', title: 'Grassi Totali', unit: 'g'},
+                        'progress-fat-sat': { key: 'fatSat', title: 'Grassi Saturi', unit: 'g' },
+                        'progress-fat-trans': { key: 'fatTrans', title: 'Grassi Trans', unit: 'g' },
+                        'progress-fat-mono': { key: 'fatMono', title: 'Grassi Monoinsaturi', unit: 'g' },
+                        'progress-fat-poly': { key: 'fatPoly', title: 'Grassi Polinsaturi', unit: 'g' },
+                        'progress-omega3': { key: 'omega3', title: 'Omega 3', unit: 'g' },
+                        'progress-omega6': { key: 'omega6', title: 'Omega 6', unit: 'g' },
+                        'progress-mg': { key: 'mg', title: 'Magnesio', unit: 'mg' },
+                        'progress-k': { key: 'k', title: 'Potassio', unit: 'mg' },
+                        'progress-fe': { key: 'fe', title: 'Ferro', unit: 'mg' },
+                        'progress-zn': { key: 'zn', title: 'Zinco', unit: 'mg' },
+                        'progress-ca': { key: 'ca', title: 'Calcio', unit: 'mg' },
+                        'progress-cu': { key: 'cu', title: 'Rame', unit: 'mg' },
+                        'progress-p': { key: 'p', title: 'Fosforo', unit: 'mg' },
+                        'progress-vitc': { key: 'vitc', title: 'Vitamina C', unit: 'mg' },
+                        'progress-vit-a': { key: 'vitA', title: 'Vitamina A', unit: 'µg' },
+                        'progress-vit-d': { key: 'vitD', title: 'Vitamina D', unit: 'µg' },
+                        'progress-vit-e': { key: 'vitE', title: 'Vitamina E', unit: 'mg' },
+                        'progress-vit-k': { key: 'vitK', title: 'Vitamina K', unit: 'µg' },
+                        'progress-vit-b12': { key: 'vitB12', title: 'Vitamina B12', unit: 'µg' },
+                        'progress-b2': { key: 'b2', title: 'Vitamina B2', unit: 'mg' },
+                        'progress-b6': { key: 'b6', title: 'Vitamina B6', unit: 'mg' },
+                        'progress-b9': { key: 'b9', title: 'Folati (B9)', unit: 'µg' }
+                    };
+                    const info = nutrientMap[id];
+                    if (info) el.addEventListener('click', () => showNutrientDetailsModal(info.key, info.title, info.unit));
+                }
+            });
 
-            // Listeners per le barre di progressione SETTIMANALI (Vitamine)
-            document.getElementById('weekly-progress-vit-a').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitA', 'Vitamina A (Settimanale)', 'µg'));
-            document.getElementById('weekly-progress-vit-d').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitD', 'Vitamina D (Settimanale)', 'µg'));
-            document.getElementById('weekly-progress-vit-e').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitE', 'Vitamina E (Settimanale)', 'mg'));
-            document.getElementById('weekly-progress-vit-k').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitK', 'Vitamina K (Settimanale)', 'µg'));
-            document.getElementById('weekly-progress-vit-b12').addEventListener('click', () => showWeeklyNutrientDetailsModal('vitB12', 'Vitamina B12 (Settimanale)', 'µg'));
+            ['weekly-progress-vit-a', 'weekly-progress-vit-d', 'weekly-progress-vit-e', 'weekly-progress-vit-k', 'weekly-progress-vit-b12',
+             'weekly-progress-fat-total', 'weekly-progress-fat-sat', 'weekly-progress-fat-trans', 'weekly-progress-fat-mono', 'weekly-progress-fat-poly',
+             'weekly-progress-fat-omega3', 'weekly-progress-fat-omega6'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                     const nutrientMap = {
+                        'weekly-progress-vit-a': { key: 'vitA', title: 'Vitamina A (Sett.)', unit: 'µg' },
+                        'weekly-progress-vit-d': { key: 'vitD', title: 'Vitamina D (Sett.)', unit: 'µg' },
+                        'weekly-progress-vit-e': { key: 'vitE', title: 'Vitamina E (Sett.)', unit: 'mg' },
+                        'weekly-progress-vit-k': { key: 'vitK', title: 'Vitamina K (Sett.)', unit: 'µg' },
+                        'weekly-progress-vit-b12': { key: 'vitB12', title: 'Vitamina B12 (Sett.)', unit: 'µg' },
+                        'weekly-progress-fat-total': { key: 'fatTotal', title: 'Grassi Totali (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-sat': { key: 'fatSat', title: 'Grassi Saturi (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-trans': { key: 'fatTrans', title: 'Grassi Trans (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-mono': { key: 'fatMono', 'title': 'Grassi Monoinsaturi (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-poly': { key: 'fatPoly', title: 'Grassi Polinsaturi (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-omega3': { key: 'omega3', title: 'Omega 3 (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-omega6': { key: 'omega6', title: 'Omega 6 (Sett.)', unit: 'g' }
+                     };
+                     const info = nutrientMap[id];
+                     if(info) el.addEventListener('click', () => showWeeklyNutrientDetailsModal(info.key, info.title, info.unit));
+                }
+            });
 
-            // ***** MODIFICA #3 (JS): Nuovi listeners per le barre di progressione SETTIMANALI (Grassi) *****
-            document.getElementById('weekly-progress-fat-total').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatTotal', 'Grassi Totali (Settimanale)', 'g'));
-            document.getElementById('weekly-progress-fat-sat').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatSat', 'Grassi Saturi (Settimanale)', 'g'));
-            document.getElementById('weekly-progress-fat-trans').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatTrans', 'Grassi Trans (Settimanale)', 'g'));
-            document.getElementById('weekly-progress-fat-mono').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatMono', 'Grassi Monoinsaturi (Settimanale)', 'g'));
-            document.getElementById('weekly-progress-fat-poly').addEventListener('click', () => showWeeklyNutrientDetailsModal('fatPoly', 'Grassi Polinsaturi (Settimanale)', 'g'));
-            document.getElementById('weekly-progress-fat-omega3').addEventListener('click', () => showWeeklyNutrientDetailsModal('omega3', 'Omega 3 (Settimanale)', 'g'));
-            document.getElementById('weekly-progress-fat-omega6').addEventListener('click', () => showWeeklyNutrientDetailsModal('omega6', 'Omega 6 (Settimanale)', 'g'));
-
-            // Listeners per le icone "info" dei pop-up
             infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
             infoFatsSettimanaliBtn.addEventListener('click', openWeeklyFatsModal);
 
@@ -1629,13 +1696,76 @@
                     event.target.style.display = 'none';
                 }
             });
+
+            document.getElementById('info-proteine-giornata').addEventListener('click', () => {
+                const log = datiGiornalieri.log || [];
+                const totaliGiornata = log.reduce((acc, entry) => {
+                    const items = entry.type === 'meal' ? entry.items : (entry.type === 'workout' ? [] : [entry]);
+                    items.forEach(item => {
+                        for (const key in item) {
+                            if (typeof item[key] === 'number') acc[key] = (acc[key] || 0) + item[key];
+                        }
+                    });
+                    return acc;
+                }, {});
+                apriModalAminoacidi(totaliGiornata, "Dettaglio Proteine del Giorno");
+            });
+
+            document.getElementById('info-proteine-pasto').addEventListener('click', () => {
+                const totaliPasto = pastoInCostruzione.reduce((acc, item) => {
+                    for (const key in item) {
+                        if (typeof item[key] === 'number') acc[key] = (acc[key] || 0) + item[key];
+                    }
+                    return acc;
+                }, {});
+                apriModalAminoacidi(totaliPasto, "Dettaglio Proteine del Pasto");
+            });
+
+            const aminoModal = document.getElementById('amino-acid-modal');
+            if(aminoModal) {
+              aminoModal.querySelector('.modal-close').addEventListener('click', () => {
+                  aminoModal.style.display = 'none';
+              });
+            }
         });
         
         ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
             document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
         
-        btnClearNutrients.addEventListener('click', () => { resetInputAlimento(); aggiornaColoreNutrienti(); });
+        btnClearNutrients.addEventListener('click', () => { 
+            resetInputAlimento(); 
+            Object.keys(OBIETTIVI_AMINO).forEach(key => {
+                if(inputFields[key]) {
+                    inputFields[key].disabled = false;
+                    inputFields[key].style.backgroundColor = '#ffffff';
+                }
+            });
+            aggiornaColoreNutrienti(); 
+        });
+
+        builderProt.addEventListener('input', () => {
+            const protValue = parseFloat(builderProt.value.replace(',', '.'));
+            const aminoInputs = Object.keys(OBIETTIVI_AMINO).map(key => inputFields[key]);
+
+            if (!isNaN(protValue) && protValue > 0) {
+                aminoInputs.forEach(input => {
+                    if(!input) return;
+                    const aminoKey = Object.keys(inputFields).find(key => inputFields[key] === input);
+                    const referenceValue = PROFILO_AMINOACIDICO_RIFERIMENTO[aminoKey];
+                    input.value = (protValue * referenceValue).toFixed(0);
+                    input.disabled = true;
+                    input.style.backgroundColor = '#f2f2f2';
+                });
+            } else {
+                aminoInputs.forEach(input => {
+                    if(!input) return;
+                    input.disabled = false;
+                    input.style.backgroundColor = '#ffffff';
+                });
+            }
+        });
+
         btnAddWorkout.addEventListener('click', () => {
             const desc = workoutDescInput.value.trim(), calories = parseFloat(workoutCaloriesInput.value);
             if (!desc || isNaN(calories) || calories <= 0) { alert('Dati allenamento non validi.'); return; }
@@ -1735,13 +1865,15 @@
             if (foodData) {
                 builderQta.value = foodData.lastQta ?? '';
                 for(const key in inputFields) {
-                    inputFields[key].value = foodData[key] ?? '';
+                    if (inputFields[key]) {
+                        inputFields[key].value = foodData[key] ?? '';
+                    }
                 }
             }
             aggiornaColoreNutrienti();
         });
 
-        Object.values(inputFields).forEach(input => input.addEventListener('input', aggiornaColoreNutrienti));
+        Object.values(inputFields).forEach(input => { if (input) input.addEventListener('input', aggiornaColoreNutrienti) });
 
         btnCaricaGiorno.addEventListener('click', () => {
             const dataSelezionata = dataCaricamentoInput.value;
@@ -1819,7 +1951,6 @@
         btnCalorieMinus.addEventListener('click', () => handleCalorieAdjustment(-10));
         btnCaloriePlus.addEventListener('click', () => handleCalorieAdjustment(10));
 
-        // --- Firebase & Sync Logic ---
         try {
             if (!getApps().some(app => app.name === "globalTrackerApp")) { firebaseApp = initializeApp(firebaseConfig, "globalTrackerApp"); } else { firebaseApp = getApp("globalTrackerApp"); }
             db = getDatabase(firebaseApp);
@@ -1829,7 +1960,6 @@
             onAuthStateChanged(auth, async (user) => {
                 const isLoggedIn = !!user;
                 currentUserUID = user?.uid;
-
                 authFormFields.style.display = isLoggedIn ? 'none' : 'block';
                 document.getElementById('auth-header').style.display = isLoggedIn ? 'none' : 'block';
                 welcomeMessage.style.display = isLoggedIn ? 'block' : 'none';
