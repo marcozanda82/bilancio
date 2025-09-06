@@ -39,7 +39,6 @@
         .trend-up { color: #4caf50; }
         .trend-down { color: #f44336; }
         .trend-neutral { color: #9e9e9e; }
-        /* INIZIO MODIFICA: Stile per l'icona delle note */
         .note-icon {
             cursor: pointer;
             font-style: normal;
@@ -48,7 +47,6 @@
             text-align: center;
             width: 100%;
         }
-        /* FINE MODIFICA */
     </style>
 </head>
 <body>
@@ -72,7 +70,7 @@
                         <th>Grasso (g)</th>
                         <th>Massa Musc.</th>
                         <th>Note</th>
-                        </tr>
+                    </tr>
                 </thead>
                 <tbody id="storico-body"></tbody>
             </table>
@@ -132,9 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const storico = caricaTuttoLoStorico();
 
         if (storico.length === 0) {
-            // INIZIO MODIFICA: Aumento colspan per la nuova colonna
             storicoBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Nessun dato storico trovato.</td></tr>';
-            // FINE MODIFICA
             return;
         }
 
@@ -226,14 +222,11 @@ document.addEventListener('DOMContentLoaded', () => {
             summaryRow.dataset.giornoIndex = giornoIndex;
             const dataFormatted = dataDelGiorno.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
             
-            // INIZIO MODIFICA: Logica per creare la cella delle note
             const notaDelGiorno = giorno.note || '';
-            let noteHtml = '<td></td>'; // Cella vuota di default
+            let noteHtml = '<td></td>';
             if (notaDelGiorno.trim() !== '') {
-                // Crea l'icona cliccabile e memorizza la nota in un data-attribute
                 noteHtml = `<td><span class="note-icon" title="Clicca per leggere la nota" data-note="${notaDelGiorno.replace(/"/g, '&quot;')}">ℹ️</span></td>`;
             }
-            // FINE MODIFICA
 
             summaryRow.innerHTML = `
                 <td><span class="expand-arrow">▶</span> ${dataFormatted}</td>
@@ -250,9 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const detailRow = document.createElement('tr');
             detailRow.className = 'day-detail-row';
             const detailCell = document.createElement('td');
-            // INIZIO MODIFICA: Aumento colspan per la nuova colonna
             detailCell.colSpan = 8;
-            // FINE MODIFICA
             detailCell.className = 'detail-cell';
             
             let detailHtml = `<h4>Dettaglio Pasti e Alimenti</h4>`;
@@ -281,7 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                           </tr>`;
                         });
                     } else if (entry.type === 'single') { 
-                        detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${((item.cal || item.kcal) || 0).toFixed(0)} Kcal</td></tr>`;
+                        // INIZIO MODIFICA: Corretto 'item' con 'entry'
+                        detailHtml += `<tr><td>${entry.desc}</td><td>${entry.qta} g</td><td>${(entry.prot || 0).toFixed(1)} g</td><td>${((entry.cal || entry.kcal) || 0).toFixed(0)} Kcal</td></tr>`;
+                        // FINE MODIFICA
                     } else if (entry.type === 'workout') { 
                          detailHtml += `<tr><td>${entry.desc}</td><td></td><td></td><td>${((entry.cal || entry.kcal) || 0).toFixed(0)} Kcal (bruciate)</td></tr>`;
                     }
@@ -298,17 +291,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     storicoBody.addEventListener('click', (e) => {
-        // Logica per espandere i dettagli del giorno
         const summaryRow = e.target.closest('.day-summary-row');
         if (summaryRow) {
-            // Non far scattare l'espansione se si clicca sull'icona della nota
             if (!e.target.classList.contains('note-icon')) {
                 summaryRow.classList.toggle('expanded');
                 summaryRow.nextElementSibling.classList.toggle('expanded');
             }
         }
 
-        // Logica per espandere i pasti dentro i dettagli
         const mealRow = e.target.closest('.meal-group-row');
         if (mealRow) {
             mealRow.classList.toggle('expanded');
@@ -319,18 +309,91 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // INIZIO MODIFICA: Logica per mostrare la nota al click sull'icona
         const noteIcon = e.target.closest('.note-icon');
         if (noteIcon) {
             const noteText = noteIcon.dataset.note;
             alert('Nota del giorno:\n\n' + noteText);
         }
-        // FINE MODIFICA
     });
 
     function esportaInExcel() {
-        // Logica per l'esportazione in Excel, non richiede modifiche
-        // ... (il codice rimane invariato)
+        const storico = caricaTuttoLoStorico();
+        if (storico.length === 0) {
+            alert("Nessun dato da esportare.");
+            return;
+        }
+
+        let csvContent = "Data,Proteine (g),Calorie (kcal),Workout (kcal),Deficit/Surplus (kcal),Variazione Grasso (g),Trend Muscolare\n";
+
+        storico.forEach(giorno => {
+            const dataDelGiorno = new Date(giorno.data);
+            const dataFormatted = dataDelGiorno.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+            const giornoSettimana = dataDelGiorno.getDay();
+            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
+
+            let totaliGiorno = { proteine: 0, calorie: 0 };
+            let totalWorkoutCaloriesLogged = 0;
+            (giorno.log || []).forEach(entry => {
+                if (entry.type === 'meal' && entry.items) {
+                    entry.items.forEach(item => {
+                        totaliGiorno.proteine += item.prot || 0;
+                        totaliGiorno.calorie += (item.cal || item.kcal) || 0;
+                    });
+                } else if (entry.type === 'single') {
+                    totaliGiorno.proteine += entry.prot || 0;
+                    totaliGiorno.calorie += (entry.cal || entry.kcal) || 0;
+                } else if (entry.type === 'workout') {
+                    totalWorkoutCaloriesLogged += (entry.cal || entry.kcal) || 0;
+                }
+            });
+            const workoutCalories = totalWorkoutCaloriesLogged;
+            const obiettivoCalorieTotale = pianoDelGiorno.cal + workoutCalories;
+            const deficitEffettivo = totaliGiorno.calorie - obiettivoCalorieTotale;
+            const deficitArrotondato = Math.round(deficitEffettivo);
+
+            let variazioneGrasso = 0;
+            if (deficitArrotondato < 0) {
+                variazioneGrasso = (Math.abs(deficitArrotondato) / 7.7);
+            } else if (deficitArrotondato > 0) {
+                variazioneGrasso = -(deficitArrotondato / 7.7);
+            }
+
+            let scoreMuscolo = 0;
+            if (totaliGiorno.proteine >= (pianoDelGiorno.prot * 0.95)) {
+                scoreMuscolo++;
+            } else {
+                scoreMuscolo--;
+            }
+            if (pianoDelGiorno.tipo.includes('Forza')) {
+                scoreMuscolo++;
+                if (deficitArrotondato < -200) {
+                    scoreMuscolo--;
+                }
+            }
+            let trendMuscolareText = 'Neutrale';
+            if (scoreMuscolo > 0) {
+                trendMuscolareText = 'Positivo';
+            } else if (scoreMuscolo < 0) {
+                trendMuscolareText = 'Negativo';
+            }
+
+            csvContent += `"${dataFormatted}",${totaliGiorno.proteine.toFixed(1)},${totaliGiorno.calorie.toFixed(0)},${workoutCalories},${deficitArrotondato},${variazioneGrasso.toFixed(1)},"${trendMuscolareText}"\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "storico_tracker.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            alert("Il tuo browser non supporta il download diretto. Copia e incolla il contenuto.");
+        }
     }
 
     document.getElementById('btn-esporta-excel').addEventListener('click', esportaInExcel);
