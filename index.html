@@ -26,8 +26,6 @@
         #form-allenamento button { background-color: #2e7d32; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
         .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
-        .sync-button-container { text-align: center; margin-top: 20px; }
-        .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; cursor: pointer; }
         progress.macro-progress { height: 25px; }
@@ -97,24 +95,9 @@
         #auth-section.logged-in #btn-sign-out { width: auto; padding: 5px 10px; font-size: 0.8em; margin: 0; flex-shrink: 0; }
         .summary-header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 25px; }
         .summary-header-row h2 { margin: 0; border-bottom: none; }
-        #manual-fill-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
-        #manual-fill-section textarea { width: 100%; height: 100px; margin-top: 10px; resize: vertical; }
-        #manual-fill-section .button-group { justify-content: space-between; }
-        .fats-bar-container { margin-top: 15px; }
-        .fats-group { padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px; }
-        .fats-sub-bars-container { display: flex; gap: 20px; margin-top: 10px; }
-        .fats-sub-bars-container > div { flex-grow: 1; flex-basis: 0; }
-        .progress-fat-sat.green::-webkit-progress-value { background-color: #4CAF50; }
-        .progress-fat-sat.green::-moz-progress-bar { background-color: #4CAF50; }
-        .progress-fat-sat.orange::-webkit-progress-value { background-color: #ff9800; }
-        .progress-fat-sat.orange::-moz-progress-bar { background-color: #ff9800; }
-        .progress-fat-sat.red::-webkit-progress-value { background-color: #f44336; }
-        .progress-fat-sat.red::-moz-progress-bar { background-color: #f44336; }
         .food-adder-header { display: flex; justify-content: space-between; align-items: center; }
         #btn-clear-nutrients { background-color: transparent; color: #d32f2f; border: none; padding: 5px 10px; font-size: 1em; cursor: pointer; transition: color 0.3s; }
         #btn-clear-nutrients:hover { color: #ff1744; }
-        .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
-        #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .diary-table-container { 
             overflow-x: auto; 
             -webkit-box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
@@ -133,20 +116,13 @@
             position: sticky;
             left: 0;
             z-index: 2;
+            background-color: #f8f9fa; 
             border-right: 2px solid #e0e0e0;
         }
-        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) {
-            min-width: 50px;
-            text-align: left;
+        #log-pasti td:nth-child(1) {
+             background-color: #ffffff;
         }
-        #log-pasti th:last-child, #log-pasti td:last-child {
-            min-width: 80px;
-            text-align: center;
-        }
-        #log-pasti th:first-child { background-color: #f8f9fa; }
-        #log-pasti td:first-child { background-color: #ffffff; }
         #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
-        #log-pasti .sub-item-row td:first-child { background-color: #ffffff; }
         .modal {
             display: none; 
             position: fixed; 
@@ -157,10 +133,6 @@
             height: 100%;
             overflow: auto; 
             background-color: rgba(0,0,0,0.6); 
-            -webkit-animation-name: fadeIn;
-            -webkit-animation-duration: 0.4s;
-            animation-name: fadeIn;
-            animation-duration: 0.4s;
         }
         .modal-content {
             background-color: #fefefe;
@@ -171,10 +143,6 @@
             max-width: 700px;
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            -webkit-animation-name: slideIn;
-            -webkit-animation-duration: 0.4s;
-            animation-name: slideIn;
-            animation-duration: 0.4s;
         }
         .modal-close {
             color: #aaa;
@@ -188,53 +156,6 @@
             color: black;
             text-decoration: none;
             cursor: pointer;
-        }
-        .vitamin-weekly-summary {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        .vitamin-weekly-summary:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-        .vitamin-weekly-summary h4 {
-            margin-top: 0;
-            margin-bottom: 8px;
-            color: #1565c0;
-            border: none;
-        }
-        .vitamin-weekly-summary p {
-            margin: 4px 0;
-            font-size: 0.95em;
-        }
-        .vitamin-weekly-summary i {
-            color: #555;
-            font-size: 0.9em;
-        }
-        .vitamin-weekly-summary progress {
-            width: 100%;
-            height: 20px;
-        }
-        .diff-value { font-weight: bold; }
-        .diff-surplus { color: #2e7d32; }
-        .diff-deficit { color: #d32f2f; }
-        @-webkit-keyframes slideIn { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
-        @keyframes slideIn { from {margin-top: 5%; opacity: 0} to {margin-top: 10%; opacity: 1} }
-        @-webkit-keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
-        @keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
-        #nutrient-detail-modal-list li {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #nutrient-detail-modal-list li:last-child {
-            border-bottom: none;
-        }
-        #nutrient-detail-modal-list li span {
-            font-weight: 600;
         }
         .protein-score {
             font-weight: bold;
@@ -252,17 +173,374 @@
 
 <body>
     <div class="container">
-
         <h1>Tracker Nutrizionale</h1>
+        
+        <div id="auth-section" class="sezione">
+            <h2 id="auth-header">Accedi / Registrati</h2>
+            <p id="welcome-message"></p>
+            <div id="auth-form-fields">
+                <div><label for="user-email">Email</label><input type="email" id="user-email"></div>
+                <div><label for="user-password">Password</label><input type="password" id="user-password"></div>
+                <div class="auth-buttons">
+                    <button id="btn-register">Registrati</button>
+                    <button id="btn-login">Accedi</button>
+                </div>
+            </div>
+            <button id="btn-sign-out">Esci</button>
+            <p id="auth-status"></p>
+        </div>
+        <div id="main-tracker-content">
+            <h2 id="titolo-giornata"></h2>
+            <div class="nav-links">
+                <a href="storico.html">📊 Storico</a>
+                <a href="stima_grassi.html">🫙 Stima Grassi</a>
+            </div>
+            <div id="riepilogo" class="sezione">
+                <div class="summary-header-row">
+                    <h2>Riepilogo di Oggi</h2>
+                </div>
+                
+                <span id="calorie-balance-text"></span>
 
-        ```
+                <div id="calorie-adjuster">
+                    <label for="calorie-adjustment-input">Correzione Obiettivo:</label>
+                    <button id="btn-calorie-minus" class="minus">-</button>
+                    <input type="number" id="calorie-adjustment-input" value="0"> <button id="btn-calorie-plus">+</button>
+                    <span>kcal</span>
+                </div>
 
-### Cosa Ho Fatto
+                <p style="display: flex; align-items: center; gap: 10px;">
+                    <span>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</span>
+                    <i id="info-proteine-giornata" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2; font-size: 1.2em;"></i>
+                </p>
+                <progress id="progress-proteine" class="macro-progress" value="0"></progress>
+                <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+                <progress id="progress-calorie" class="macro-progress" value="0"></progress>
+                <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
+                <hr>
 
-* **Struttura Standard:** Ho usato la struttura base di un documento HTML5, con le dichiarazioni `<!DOCTYPE html>` e `<html lang="it">`.
-* **Meta Tag Essenziali:** Ho incluso i tag `<meta>` per la codifica dei caratteri (`UTF-8`) e per la corretta visualizzazione su dispositivi mobili (`viewport`), che sono fondamentali per ogni pagina web moderna.
-* **Titolo Chiaro:** Ho accorciato leggermente il titolo della pagina in "Tracker Nutrizionale" per renderlo più conciso.
-* **Commenti:** Ho aggiunto alcuni commenti per spiegare a cosa servono le varie sezioni, rendendo il codice più facile da capire in futuro.
-* **Stili CSS:** Ho lasciato il tuo blocco `<style>` esattamente com'era, perché funziona bene per un'applicazione contenuta in un unico file. Ho solo aggiunto una nota che suggerisce di spostarlo in un file esterno (`.css`) se il progetto dovesse diventare più complesso.
+                <h3 class="collapsible-header" id="carbs-header">
+                    Carboidrati e Zuccheri <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="carbs-content">
+                    <p>Carboidrati: <span id="totale-carboidrati">0</span> / <span id="obiettivo-carboidrati"></span> g</p>
+                    <progress id="progress-carboidrati" class="macro-progress" value="0"></progress>
+                    <p>di cui Zuccheri: <span id="totale-zuccheri">0</span> / <span id="obiettivo-zuccheri"></span> g</p>
+                    <progress id="progress-zuccheri" class="macro-progress" value="0"></progress>
+                </div>
+                <hr>
+                
+                <h3 class="collapsible-header" id="fibre-header">
+                    Fibre <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="fibre-content">
+                    <p>Fibre Totali: <span id="totale-fibre-totali">0</span> / <span id="obiettivo-fibre-totali"></span> g</p>
+                    <progress id="progress-fibre-totali" class="macro-progress" value="0"></progress>
+                    <div style="padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px;">
+                        <p>Solubili: <span id="totale-fibre-solubili">0</span> / <span id="obiettivo-fibre-solubili"></span> g</p>
+                        <progress id="progress-fibre-solubili" value="0"></progress>
+                        <p>Insolubili: <span id="totale-fibre-insolubili">0</span> / <span id="obiettivo-fibre-insolubili"></span> g</p>
+                        <progress id="progress-fibre-insolubili" value="0"></progress>
+                    </div>
+                </div>
+                <hr>
+                
+                <h3 class="collapsible-header" id="fats-header">
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        Grassi
+                        <i id="info-fats-settimanali" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2;"></i>
+                    </span>
+                    <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="fats-content">
+                    <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
+                    <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
+                    
+                    <div class="fats-group">
+                         <div class="fats-sub-bars-container">
+                            <div>
+                                <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat"></span> g</p>
+                                <progress id="progress-fat-sat" class="progress-fat-sat" value="0"></progress>
+                            </div>
+                            <div>
+                                <p>Trans: <span id="totale-fat-trans">0</span> / <span id="obiettivo-fat-trans"></span> g</p>
+                                <progress id="progress-fat-trans" value="0"></progress>
+                            </div>
+                        </div>
+                    </div>
 
-**Importante:** queste modifiche non alterano in alcun modo il funzionamento dell'applicazione, ma la rendono solo più pulita, organizzata e aderente agli standard moderni. Puoi usare questo blocco di codice come l'inizio del tuo file, per poi far seguire il resto del `<body>` e lo `<script>`.
+                    <div class="fats-group">
+                        <h4>Grassi Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat"></span> g</h4>
+                        <progress id="progress-fat-unsat" value="0"></progress>
+                        <div style="padding-left: 15px;">
+                            <p>Monoinsaturi: <span id="totale-fat-mono">0</span> / <span id="obiettivo-fat-mono"></span> g</p>
+                            <progress id="progress-fat-mono" value="0"></progress>
+                            <p>Polinsaturi: <span id="totale-fat-poly">0</span> / <span id="obiettivo-fat-poly"></span> g</p>
+                            <progress id="progress-fat-poly" value="0"></progress>
+                            <div style="border: none; padding-left: 10px; margin-top: 10px;">
+                                 <div class="fats-sub-bars-container">
+                                    <div>
+                                        <p>Omega 3: <span id="totale-omega3">0</span> / <span id="obiettivo-omega3"></span> g</p>
+                                        <progress id="progress-omega3" value="0"></progress>
+                                    </div>
+                                    <div>
+                                        <p>Omega 6: <span id="totale-omega6">0</span> / <span id="obiettivo-omega6"></span> g</p>
+                                        <progress id="progress-omega6" value="0"></progress>
+                                    </div>
+                                 </div>
+                                 <p style="text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.1em;">
+                                    Rapporto O6:O3: <span id="omega-ratio-value"></span>
+                                 </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                
+                <h3 class="collapsible-header" id="micro-header">
+                    Micronutrienti <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="micro-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        <div>
+                            <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
+                            <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
+                        </div>
+                        <div>
+                            <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
+                            <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
+                        </div>
+                        <div>
+                            <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
+                            <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
+                        </div>
+                    </div>
+                     <div style="margin-top: 15px;">
+                        <p>Fosforo: <span id="totale-p">0</span> / 700 mg</p><progress id="progress-p" value="0" max="700"></progress>
+                    </div>
+                </div>
+                <hr>
+
+                <h3 class="collapsible-header" id="vit-header">
+                    Vitamine <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="vit-content">
+                    <div class="vitamin-group">
+                        <h4 style="display: flex; align-items: center; gap: 8px;">
+                            Accumulabili (Liposolubili / Fegato) 
+                            <i id="info-vit-settimanali" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2;"></i>
+                        </h4>
+                        <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p><progress id="progress-vit-a" value="0" max="900"></progress>
+                        <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p><progress id="progress-vit-d" value="0" max="15"></progress>
+                        <p>Vitamina E: <span id="totale-vit-e">0</span> / 15 mg</p><progress id="progress-vit-e" value="0" max="15"></progress>
+                        <p>Vitamina K: <span id="totale-vit-k">0</span> / 120 µg</p><progress id="progress-vit-k" value="0" max="120"></progress>
+                        <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p><progress id="progress-vit-b12" value="0" max="2.4"></progress>
+                    </div>
+                     <div class="vitamin-group">
+                        <h4>Giornaliere (Idrosolubili)</h4>
+                        <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0" max="90"></progress>
+                        <p>Vitamina B2: <span id="totale-b2">0</span> / 1.3 mg</p><progress id="progress-b2" value="0" max="1.3"></progress>
+                        <p>Vitamina B6: <span id="totale-b6">0</span> / 1.3 mg</p><progress id="progress-b6" value="0" max="1.3"></progress>
+                        <p>Folati (B9): <span id="totale-b9">0</span> / 400 µg</p><progress id="progress-b9" value="0" max="400"></progress>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <label for="daily-notes">Note del Giorno</label>
+                    <textarea id="daily-notes" rows="3" placeholder="Aggiungi note per la giornata..."></textarea>
+                </div>
+            </div>
+
+            <div id="form-allenamento" class="sezione">
+                <h2 class="collapsible-header" id="workout-header">Registra Allenamento <span class="arrow">▶</span></h2>
+                <div class="collapsible-content" id="workout-content">
+                    <label for="workout-desc">Descrizione Allenamento</label>
+                    <input type="text" id="workout-desc" placeholder="es. Corsa 30 min, Pesistica">
+                    <label for="workout-calories">Calorie Bruciate (kcal)</label>
+                    <input type="number" id="workout-calories" min="0">
+                    <button id="btn-add-workout">Aggiungi Allenamento</button>
+                </div>
+            </div>
+            <div id="food-adder" class="sezione">
+                <div class="food-adder-header">
+                    <h2>Aggiungi Alimento</h2>
+                    <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
+                </div>
+                <div class="builder-grid">
+                    <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
+                    <div><label>Quantità (g)</label><input type="text" id="builder-qta"></div>
+                    <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
+                    <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
+                    <div><label>Carboidrati/100g</label><input type="number" id="builder-carb" step="0.1"></div>
+                    <div><label>Zuccheri/100g</label><input type="number" id="builder-zuccheri" step="0.1"></div>
+                    <div><label>Grassi Totali/100g</label><input type="number" id="builder-fat-total" step="0.1"></div>
+                    <div><label>Fibre Totali/100g</label><input type="number" id="builder-fibre-totali" step="0.1"></div>
+                    <div><label>Fibre Solubili/100g</label><input type="number" id="builder-fibre-solubili" step="0.1"></div>
+                    <div><label>Fibre Insolubili/100g</label><input type="number" id="builder-fibre-insolubili" step="0.1"></div>
+                </div>
+                <h2 class="collapsible-header" id="nutrients-header">
+                    Dettagli Nutrizionali (Grassi, Micronutrienti, Amminoacidi) <span class="arrow">▶</span>
+                </h2>
+                <div class="collapsible-content" id="nutrients-content">
+                    <div class="builder-grid">
+                        <div><label>Gr. Saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
+                        <div><label>Gr. Trans/100g</label><input type="number" id="builder-fat-trans" min="0" step="0.1"></div>
+                        <div><label>Gr. Monoinsaturi/100g</label><input type="number" id="builder-fat-mono" min="0" step="0.1"></div>
+                        <div><label>Gr. Polinsaturi/100g</label><input type="number" id="builder-fat-poly" min="0" step="0.1"></div>
+                        <div><label>Omega 3/100g</label><input type="number" id="builder-omega3" min="0" step="0.1"></div>
+                        <div><label>Omega 6/100g</label><input type="number" id="builder-omega6" min="0" step="0.1"></div>
+                        <div><label>Vit. A (μg)/100g</label><input type="number" id="builder-vit-a" min="0"></div>
+                        <div><label>Vit. B2 (mg)/100g</label><input type="number" id="builder-b2" min="0" step="0.01"></div>
+                        <div><label>Vit. B6 (mg)/100g</label><input type="number" id="builder-b6" min="0" step="0.01"></div>
+                        <div><label>Vit. B12 (μg)/100g</label><input type="number" id="builder-vit-b12" min="0" step="0.01"></div>
+                        <div><label>Vit. D (μg)/100g</label><input type="number" id="builder-vit-d" min="0" step="0.01"></div>
+                        <div><label>Vit. E (mg)/100g</label><input type="number" id="builder-vit-e" min="0" step="0.1"></div>
+                        <div><label>Vit. K (μg)/100g</label><input type="number" id="builder-vit-k" min="0"></div>
+                        <div><label>Folati B9 (μg)/100g</label><input type="number" id="builder-b9" min="0"></div>
+                        <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
+                        <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
+                        <div><label>Vitamina C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
+                        <div><label>Calcio (mg)/100g</label><input type="number" id="builder-ca" min="0"></div>
+                        <div><label>Ferro (mg)/100g</label><input type="number" id="builder-fe" min="0" step="0.1"></div>
+                        <div><label>Zinco (mg)/100g</label><input type="number" id="builder-zn" min="0" step="0.1"></div>
+                        <div><label>Rame (mg)/100g</label><input type="number" id="builder-cu" min="0" step="0.01"></div>
+                        <div><label>Fosforo (mg)/100g</label><input type="number" id="builder-p" min="0"></div>
+                        <div><label>Leucina (mg)/100g</label><input type="number" id="builder-leu" min="0"></div>
+                        <div><label>Isoleucina (mg)/100g</label><input type="number" id="builder-iso" min="0"></div>
+                        <div><label>Valina (mg)/100g</label><input type="number" id="builder-val" min="0"></div>
+                        <div><label>Lisina (mg)/100g</label><input type="number" id="builder-lys" min="0"></div>
+                        <div><label>Metionina (mg)/100g</label><input type="number" id="builder-met" min="0"></div>
+                        <div><label>Fenilalanina (mg)/100g</label><input type="number" id="builder-phe" min="0"></div>
+                        <div><label>Treonina (mg)/100g</label><input type="number" id="builder-thr" min="0"></div>
+                        <div><label>Triptofano (mg)/100g</label><input type="number" id="builder-trp" min="0"></div>
+                        <div><label>Istidina (mg)/100g</label><input type="number" id="builder-his" min="0"></div>
+                    </div>
+                    <div id="manual-fill-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc;">
+                        <div class="button-group" style="justify-content: space-between;">
+                            <button id="btn-copy-prompt">Copia Richiesta AI</button>
+                            <button id="btn-confirm-json" style="background-color: #2e7d32;">Conferma Dati da JSON</button>
+                        </div>
+                        <textarea id="manual-json-input" placeholder="Incolla qui l'oggetto JSON con i valori nutrizionali, come da richiesta." style="width: 100%; height: 100px; margin-top: 10px; resize: vertical;"></textarea>
+                    </div>
+                </div>
+                <datalist id="food-database-list"></datalist>
+                <div class="button-group">
+                    <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
+                    <button id="btn-aggiungi-singolo">Aggiungi al Diario</button>
+                    <button id="btn-compila-ai" style="background-color: #0d47a1;">Compila AI</button>
+                </div>
+            </div>
+            <div id="meal-builder-sezione" class="sezione" data-visible="false">
+                <h2>Costruttore Pasto</h2>
+                <div id="meal-builder-summary">
+                    <p>Pasto Selezionato: <span id="current-meal-type-display"></span></p>
+                    <div class="progress-container">
+                        <div class="progress-item">
+                            <p style="display: flex; align-items: center; gap: 10px;">
+                                <span>Proteine: <span id="meal-prot-current">0</span> / <span id="meal-prot-target"></span> g (<span id="meal-prot-remaining"></span>)</span>
+                                <i id="info-proteine-pasto" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2; font-size: 1.2em;"></i>
+                            </p>
+                            <progress id="meal-progress-prot" value="0"></progress>
+                        </div>
+                        <div class="progress-item">
+                            <p>Calorie: <span id="meal-cal-current">0</span> / <span id="meal-cal-target"></span> kcal (<span id="meal-cal-remaining"></span>)</p>
+                            <progress id="meal-progress-cal" value="0"></progress>
+                        </div>
+                    </div>
+                </div>
+                <select id="meal-type-selector">
+                    <option value="merenda1">Merenda AM</option>
+                    <option value="pranzo">Pranzo</option>
+                    <option value="merenda2">Merenda PM</option>
+                    <option value="cena">Cena</option>
+                </select>
+                <table id="log-pasto-builder">
+                    <thead><tr><th>Sel.</th><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
+                    <tbody id="log-pasto-builder-body"></tbody>
+                </table>
+                <button id="btn-salva-pasto">Salva Pasto nel Diario</button>
+            </div>
+            <div class="sezione">
+                <h2>Diario Giornaliero</h2>
+                <div class="diary-table-container">
+                <table id="log-pasti">
+                    <thead>
+                        <tr>
+                            <th>Descrizione</th>
+                            <th>(g)</th>
+                            <th>Prot</th>
+                            <th>Qualità</th>
+                            <th>Kcal</th>
+                            <th>Fibre Tot</th>
+                            <th>Fibre Sol</th>
+                            <th>Fibre Ins</th>
+                            <th>Leu</th>
+                            <th>Iso</th>
+                            <th>Val</th>
+                            <th>Lys</th>
+                            <th>Met</th>
+                            <th>Phe</th>
+                            <th>Thr</th>
+                            <th>Trp</th>
+                            <th>His</th>
+                            <th>Gr. Sat</th>
+                            <th>Gr. Trans</th>
+                            <th>Gr. Mono</th>
+                            <th>Gr. Poly</th>
+                            <th>Omega 3</th>
+                            <th>Omega 6</th>
+                            <th>Mg</th>
+                            <th>K</th>
+                            <th>Vit.C</th>
+                            <th>Ca</th>
+                            <th>Fe</th>
+                            <th>Zn</th>
+                            <th>Cu</th>
+                            <th>Vit. A</th>
+                            <th>Vit. B12</th>
+                            <th>Vit. D</th>
+                            <th>Vit. E</th>
+                            <th>Vit. K</th>
+                            <th>B9</th>
+                            <th>B2</th>
+                            <th>B6</th>
+                            <th>P</th>
+                            <th>Azione</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-body"></tbody>
+                </table>
+                </div>
+                <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
+                    <h3 style="margin:0 0 10px 0; font-size:1em;">Navigazione Diario</h3>
+                    <div>
+                        <input type="date" id="data-caricamento">
+                        <button id="btn-vai-a-oggi">Oggi</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sezione">
+                <h2>Sincronizzazione Cloud Manuale</h2>
+                <div class="cloud-sync-section">
+                    <button id="btn-download-manual">⬇️ Scarica Dati dal Cloud</button>
+                    <span id="cloud-sync-status" class="cloud-sync-status disconnected">Connessione Cloud: Disconnesso</span>
+                </div>
+                <p style="font-size: 0.85em; color: #777; margin-top: 10px;">
+                    Una volta autenticato, puoi sincronizzare i dati. Lo scaricamento manuale sovrascrive i dati locali.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
+    <script type="module">
+        //
+        // Qui va inserito l'intero blocco di codice JavaScript che abbiamo sviluppato
+        //
+        // Assicurati di copiare l'ultima versione completa dello script che ti ho fornito in precedenza.
+        //
+    </script>
+</body>
+</html>
