@@ -244,22 +244,27 @@
         .protein-score.medium { background-color: #ff8f00; }
         .protein-score.high { background-color: #2e7d32; }
 
-        .food-input-container {
+        /* NUOVO STILE MODIFICATO */
+        .food-label-container {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            margin-bottom: 8px;
         }
-        .food-input-container input {
-            flex-grow: 1;
-            margin-bottom: 0;
+        .food-label-container label {
+            margin-bottom: 0; /* Rimuove il margine inferiore dalla label */
         }
         #btn-edit-ingredients {
-            padding: 8px 12px;
-            font-size: 1.2em;
-            background-color: #f0f0f0;
-            color: #333;
-            border: 1px solid #ccc;
+            background: none;
+            border: none;
+            font-size: 1.1em; /* Dimensione ridotta */
+            color: #607d8b;
+            cursor: pointer;
+            padding: 0;
             line-height: 1;
+        }
+        #btn-edit-ingredients:hover {
+            color: #1976d2;
         }
         .ingredient-icon {
             cursor: pointer;
@@ -299,6 +304,7 @@
             font-family: monospace;
             font-size: 1em;
         }
+        /* FINE NUOVO STILE */
     </style>
 </head>
 <body>
@@ -497,11 +503,11 @@
                 </div>
                 <div class="builder-grid">
                     <div>
-                        <label>Alimento</label>
-                        <div class="food-input-container">
-                            <input type="text" id="builder-desc" list="food-database-list">
+                        <div class="food-label-container">
+                            <label for="builder-desc">Alimento</label>
                             <button id="btn-edit-ingredients" title="Modifica Lista Ingredienti">📜</button>
                         </div>
+                        <input type="text" id="builder-desc" list="food-database-list">
                     </div>
                     <div><label>Quantità (g)</label><input type="text" id="builder-qta"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
@@ -956,7 +962,6 @@
         const builderLys = document.getElementById('builder-lys'), builderMet = document.getElementById('builder-met'), builderPhe = document.getElementById('builder-phe');
         const builderThr = document.getElementById('builder-thr'), builderTrp = document.getElementById('builder-trp'), builderHis = document.getElementById('builder-his');
         const dailyNotesTextarea = document.getElementById('daily-notes');
-        
         const btnEditIngredients = document.getElementById('btn-edit-ingredients');
         const ingredientModal = document.getElementById('ingredient-modal');
         const ingredientModalTitle = document.getElementById('ingredient-modal-title');
@@ -1270,7 +1275,7 @@
             
             const createDescriptionCellHTML = (item) => {
                 let html = '';
-                if (item.ingredienti) {
+                if (item.ingredienti && item.ingredienti.trim() !== '') {
                     html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}">📜</span>`;
                 }
                 html += (item.desc || '');
@@ -1354,7 +1359,7 @@
             
             const createBuilderDescriptionCellHTML = (item) => {
                 let html = '';
-                if (item.ingredienti) {
+                if (item.ingredienti && item.ingredienti.trim() !== '') {
                     html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}">📜</span>`;
                 }
                 html += item.desc;
@@ -1453,7 +1458,12 @@
             foodData.lastQta = qta;
             foodData.desc = desc; 
             
-            const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta, ingredienti: foodData.ingredienti || '' };
+            // CORREZIONE BUG: Assicura che la proprietà ingredienti sia nel foodItem
+            const foodItem = { 
+                desc: desc.charAt(0).toUpperCase() + desc.slice(1), 
+                qta, 
+                ingredienti: foodData.ingredienti || null 
+            };
             
             for (const key in inputFields) {
                 inputFields[key].value = inputFields[key].value.replace(',', '.');
@@ -2302,7 +2312,8 @@
                 ingredientModalTextarea.value = "Generazione in corso...";
 
                 try {
-                    const prompt = `Fornisci una lista di ingredienti plausibile e ordinata per quantità con percentuali stimate per il prodotto "${foodName}". Se è un prodotto semplice (es. 'Mela'), rispondi solo con il nome stesso. Formatta la risposta come un elenco puntato.`;
+                    // PROMPT MIGLIORATO
+                    const prompt = `Cerca la lista ingredienti ufficiale dell'etichetta del prodotto commerciale "${foodName}". Elenca gli ingredienti in ordine decrescente di quantità, con percentuali stimate ove possibile. Evita di includere ingredienti tipici di una ricetta casalinga (es. acqua aggiunta in cottura, sale q.b.) a meno che non siano esplicitamente parte del prodotto confezionato. Se non trovi una lista ufficiale, creane una verosimile per un prodotto analogo venduto in un supermercato.`;
                     const res = await fetch(GEMINI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -2321,7 +2332,8 @@
 
             btnCopyIngredientsPrompt.addEventListener('click', async () => {
                 const foodName = ingredientModalTitle.textContent;
-                const prompt = `Per favore, forniscimi una lista di ingredienti plausibile e ordinata per quantità, includendo delle percentuali stimate, per il seguente prodotto: "${foodName}". Se si tratta di un prodotto semplice come frutta o verdura, indica semplicemente il nome del prodotto.`;
+                // PROMPT MIGLIORATO
+                const prompt = `Per favore, cerca la lista ingredienti ufficiale che si trova sull'etichetta del prodotto commerciale "${foodName}". Elenca gli ingredienti in ordine decrescente di quantità, includendo percentuali se disponibili. Se non trovi l'etichetta ufficiale, crea una lista di ingredienti realistica per un prodotto confezionato simile, evitando ingredienti da ricetta casalinga.`;
                 try {
                     await navigator.clipboard.writeText(prompt);
                     alert('Prompt per ingredienti copiato!');
