@@ -66,7 +66,7 @@
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background-color: #f2f2f2; font-weight: 600; }
         .builder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .grid-full-width { grid-column: 1 / -1; } /* Nuova classe per lo span su tutta la riga */
+        .grid-full-width { grid-column: 1 / -1; }
         .button-group { display: flex; gap: 10px; margin-top: 15px; }
         #btn-costruisci-pasto { background-color: #ff8f00; }
         #btn-aggiungi-singolo { background-color: #5c6bc0; }
@@ -225,10 +225,14 @@
             font-size: 1.5em;
             color: #6a1b9a;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: transform 0.3s, color 0.3s;
         }
         #magic-wand-icon:hover {
             transform: scale(1.2);
+            color: #9c27b0;
+        }
+        #magic-wand-icon.fa-spin {
+             color: #9c27b0;
         }
         .modal-close {
             color: #aaa;
@@ -497,13 +501,13 @@
                     <h2>Aggiungi Alimento</h2>
                     <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
                 </div>
-                <div class="builder-grid">
+                <div class="builder-grid" id="food-adder-grid">
                     <div class="grid-full-width">
                         <label for="builder-desc">Nome Alimento</label>
                         <input type="text" id="builder-desc" list="food-database-list">
                     </div>
                     <div class="grid-full-width">
-                        <div class="label-with-icon">
+                         <div class="label-with-icon">
                             <label for="builder-ingredients">Ingredienti (opzionale)</label>
                             <i id="edit-ingredients-icon" class="fas fa-pencil-alt" title="Modifica/Genera Ingredienti"></i>
                         </div>
@@ -694,11 +698,12 @@
             <p id="ingredient-display-content" style="white-space: pre-wrap;"></p>
         </div>
     </div>
+
     <div id="weekly-vitamin-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Riepilogo Settimanale Vitamine Accumulabili</h2>
-                <span class="modal-close" data-modal="weekly-vitamin-modal">&times;</span>
+                 <span class="modal-close" data-modal="weekly-vitamin-modal">&times;</span>
             </div>
             <p style="font-size: 0.9em; color: #555;">Dati calcolati sugli ultimi 7 giorni, incluso oggi.</p>
             
@@ -737,7 +742,7 @@
 
     <div id="weekly-fats-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
+             <div class="modal-header">
                 <h2>Riepilogo Settimanale Grassi</h2>
                 <span class="modal-close" data-modal="weekly-fats-modal">&times;</span>
             </div>
@@ -793,7 +798,7 @@
 
     <div id="nutrient-detail-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
+             <div class="modal-header">
                 <h2 id="nutrient-detail-modal-title"></h2>
                 <span class="modal-close" data-modal="nutrient-detail-modal">&times;</span>
             </div>
@@ -846,8 +851,10 @@
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        
+        // Mossa qui per essere disponibile globalmente
+        function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
 
-        // ... (Firebase config e costanti globali rimangono invariate) ...
         const firebaseConfig = {
           apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
           authDomain: "mio-tracker.firebaseapp.com",
@@ -857,343 +864,9 @@
           messagingSenderId: "382993217593",
           appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
         };
-
-        let giornoVisualizzato = getTodayString('ymd');
-        let datiGiornalieri = {};
-        let foodDatabase = {};
-        let pastoInCostruzione = [];
         
-        let db; 
-        let auth; 
-        let firebaseApp; 
-        let currentUserUID = null; 
+        // ... (resto dello script)
 
-        const PIANO_SETTIMANALE = {
-            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
-            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
-            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
-            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
-            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
-            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
-            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 }
-        };
-
-        const DEFICIT_PREIMPOSTATO_SETTIMANALE = { 0: -500, 1: -150, 2: -150, 3: -150, 4: -150, 5: -150, 6: -500 };
-
-        const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9, p: 700 };
-        const OBIETTIVI_FAT = { 
-            fatTotal: 85, fatSat: 20, fatTrans: 2, 
-            fatUnsat: 65, fatMono: 45, fatPoly: 20, 
-            omega3: 2, omega6: 10 
-        };
-        const OBIETTIVI_FIBRE = { fibreTotali: 30, fibreSolubili: 10, fibreInsolubili: 20 };
-        const OBIETTIVI_VIT = { vitA: 900, vitB12: 2.4, vitD: 15, vitE: 15, vitK: 120, b9: 400, b2: 1.3, b6: 1.3 };
-        
-        const OBIETTIVI_AMINO = {
-            leu: 2900, iso: 1500, val: 1900, 
-            lys: 2200, met: 1100, phe: 1800, 
-            thr: 1100, trp: 300,  his: 750 
-        };
-
-        const PROFILO_AMINOACIDICO_RIFERIMENTO = {
-            leu: 59, iso: 30, val: 39,
-            lys: 45, met: 22, phe: 38,
-            thr: 23, trp: 6.0, his: 15
-        };
-
-        const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
-            merenda1: { prot: 30, cal_perc: 0.20 },
-            pranzo: { prot: 40, cal_perc: 0.35 },
-            merenda2: { prot: 30, cal_perc: 0.15 },
-            cena: { prot: 40, cal_perc: 0.30 }
-        };
-        const totalProtForza = Object.values(OBIETTIVI_MACRO_PASTO_BASE_FORZA).reduce((sum, p) => sum + p.prot, 0);
-        for (const mealType in OBIETTIVI_MACRO_PASTO_BASE_FORZA) {
-            OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot / totalProtForza;
-        }
-
-        const MEAL_TYPE_SEQUENCE = ['merenda1', 'pranzo', 'merenda2', 'cena'];
-        const LOCAL_STORAGE_SYNC_KEYS = ['trackerFoodDatabase', 'trackerPesate', 'trackerMealType', 'trackerPastoInCostruzione'];
-        const LOCAL_LAST_UPDATE_KEY = 'lastLocalUpdateTimestamp';
-        const CLOUD_LAST_UPDATE_PATH = 'lastCloudUpdateTimestamp';
-
-        const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
-        const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"fibreTotali":g,"fibreSolubili":g,"fibreInsolubili":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
-        const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
-
-        // ... (dichiarazione delle costanti per gli elementi del DOM, escluse quelle nuove/modificate)
-        const builderDesc = document.getElementById('builder-desc');
-        const builderIngredients = document.getElementById('builder-ingredients'); // Nuovo campo ingredienti
-        const builderQta = document.getElementById('builder-qta');
-        // ... (il resto delle costanti rimane invariato)
-
-        // **** INIZIO NUOVE COSTANTI PER MODAL ****
-        const ingredientEditorModal = document.getElementById('ingredient-editor-modal');
-        const ingredientDisplayModal = document.getElementById('ingredient-display-modal');
-        const editIngredientsIcon = document.getElementById('edit-ingredients-icon');
-        const magicWandIcon = document.getElementById('magic-wand-icon');
-        const modalIngredientsTextarea = document.getElementById('modal-ingredients-textarea');
-        const btnSaveIngredients = document.getElementById('btn-save-ingredients');
-        const ingredientDisplayTitle = document.getElementById('ingredient-display-title');
-        const ingredientDisplayContent = document.getElementById('ingredient-display-content');
-        // **** FINE NUOVE COSTANTI PER MODAL ****
-
-        // La funzione creaAlimentoDaInput ora gestisce anche gli ingredienti
-        function creaAlimentoDaInput(isSingle = false) {
-            const desc = builderDesc.value.trim();
-            const ingredients = builderIngredients.value.trim(); // Legge il nuovo campo
-            const qta = evaluateQuantity(builderQta.value);
-
-            if (!desc || isNaN(qta) || qta <= 0) {
-                alert('Inserisci nome e quantità valide.');
-                return null;
-            }
-
-            const foodData = { lastQta: qta, desc: desc, ingredients: ingredients }; // Salva anche gli ingredienti
-            const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta, ingredients: ingredients };
-            
-            // ... (il resto della funzione rimane invariato)
-            for (const key in inputFields) {
-                inputFields[key].value = inputFields[key].value.replace(',', '.');
-                foodData[key] = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
-            }
-            
-            if (foodData.fibreSolubili !== null && foodData.fibreInsolubili !== null && foodData.fibreTotali === null) {
-                const totalFibre = (foodData.fibreSolubili || 0) + (foodData.fibreInsolubili || 0);
-                foodData.fibreTotali = totalFibre;
-                builderFibreTotali.value = totalFibre.toFixed(1);
-            }
-
-            const protValue100g = foodData.prot || 0;
-            const isAnyAminoFilled = Object.keys(OBIETTIVI_AMINO).some(key => foodData[key] !== null && foodData[key] > 0);
-
-            if (protValue100g > 0 && !isAnyAminoFilled) {
-                for (const amino in PROFILO_AMINOACIDICO_RIFERIMENTO) {
-                    const referenceMgPerG = PROFILO_AMINOACIDICO_RIFERIMENTO[amino];
-                    const calculatedAminoMg = protValue100g * referenceMgPerG;
-                    foodData[amino] = calculatedAminoMg;
-                    if(inputFields[amino]) {
-                        inputFields[amino].value = calculatedAminoMg.toFixed(0);
-                    }
-                }
-            } 
-            
-            for (const key in foodData) {
-                if (key !== 'lastQta' && key !== 'desc' && key !== 'ingredients') {
-                    foodItem[key] = ((foodData[key] ?? 0) / 100) * qta;
-                }
-            }
-            
-            if (foodData.fatTotal === null && (foodData.fatSat !== null || foodData.fatTrans !== null || foodData.fatMono !== null || foodData.fatPoly !== null)) {
-                const total = (foodData.fatSat || 0) + (foodData.fatTrans || 0) + (foodData.fatMono || 0) + (foodData.fatPoly || 0);
-                foodData.fatTotal = total;
-                foodItem.fatTotal = (total / 100) * qta;
-                builderFatTotal.value = total.toFixed(1); 
-            }
-            
-            // Costruisce una chiave unica che include il nome e gli ingredienti per il database
-            const uniqueKey = `${desc} ${ingredients}`.trim().toLowerCase();
-            const sanitizedKey = sanitizeFirebaseKey(uniqueKey);
-            foodDatabase[sanitizedKey] = foodData;
-            salvaFoodDatabase();
-            aggiornaDatalist();
-            
-            if (isSingle) {
-                foodItem.type = 'single';
-            } else {
-                foodItem.selezionato = true;
-            }
-            return foodItem;
-        }
-
-        // La funzione reset ora pulisce anche il campo ingredienti
-        function resetInputAlimento() { 
-            builderDesc.value = '';
-            builderIngredients.value = ''; // Pulisce il campo ingredienti
-            builderQta.value = '';
-            Object.values(inputFields).forEach(el => { if (el) el.value = ''; });
-            builderDesc.focus();
-        }
-
-        // La funzione di aggiornamento UI ora mostra l'icona degli ingredienti
-        function aggiornaUI() {
-            // ... (tutta la logica di calcolo dei totali rimane invariata)
-            // All'interno del ciclo forEach per renderizzare il diario:
-            (datiGiornalieri.log || []).forEach((entry, index) => {
-                if (entry.type === 'meal') {
-                    // ...
-                    const mealDesc = entry.desc;
-                    // Controlliamo se ALMENO UN item nel pasto ha ingredienti per mostrare l'icona
-                    const hasIngredients = entry.items.some(subItem => subItem.ingredients && subItem.ingredients.trim() !== '');
-                    const ingredientsIconHtml = hasIngredients ? `<i class="fas fa-file-alt ingredient-display-icon" data-type="meal" data-index="${index}" title="Mostra Ingredienti"></i>` : '';
-                    
-                    rigaPasto.querySelector('td:first-child').innerHTML += ingredientsIconHtml;
-
-                    if (entry.isExpanded) {
-                        entry.items.forEach(subItem => {
-                            // ...
-                            const subItemIngredientsIcon = subItem.ingredients ? `<i class="fas fa-file-alt ingredient-display-icon" data-type="sub-item" data-index="${index}" data-sub-desc="${subItem.desc}" title="Mostra Ingredienti"></i>` : '';
-                             rigaSubItem.querySelector('td:first-child').innerHTML += subItemIngredientsIcon;
-                        });
-                    }
-                } else if (entry.type !== 'workout') {
-                    // ...
-                    const ingredientsIconHtml = entry.ingredients ? `<i class="fas fa-file-alt ingredient-display-icon" data-type="single" data-index="${index}" title="Mostra Ingredienti"></i>` : '';
-                    riga.querySelector('td:first-child').innerHTML += ingredientsIconHtml;
-                }
-            });
-             // Il resto della funzione rimane invariato
-        }
-
-        // **** INIZIO NUOVE FUNZIONI JAVASCRIPT ****
-        async function generaIngredientiAI() {
-            const nomeProdotto = builderDesc.value.trim();
-            if (!nomeProdotto) {
-                alert("Scrivi prima il nome del prodotto da analizzare.");
-                return;
-            }
-            magicWandIcon.classList.add('fa-spin'); // Animazione
-
-            try {
-                console.log("Richiesta lista ingredienti...");
-                const promptIngredienti = `Per il prodotto "${nomeProdotto}", forniscimi la lista degli ingredienti in formato testuale, uno per riga. Se conosci le percentuali, indicale. Se non le conosci, omettile. Sii conciso.`;
-
-                const response = await fetch(GEMINI_ENDPOINT, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: promptIngredienti }] }] })
-                });
-                if (!response.ok) throw new Error('Errore API durante la generazione degli ingredienti');
-                const data = await response.json();
-                const ingredientiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                
-                modalIngredientsTextarea.value = ingredientiText.replace(/```|json/g, '').trim();
-
-            } catch (err) {
-                alert('Errore durante la generazione AI: ' + err.message);
-            } finally {
-                magicWandIcon.classList.remove('fa-spin');
-            }
-        }
-        
-        function apriModalIngredienti(titolo, contenuto) {
-            ingredientDisplayTitle.textContent = titolo;
-            ingredientDisplayContent.textContent = contenuto;
-            ingredientDisplayModal.style.display = 'block';
-        }
-        // **** FINE NUOVE FUNZIONI JAVASCRIPT ****
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // ... (tutto il codice di inizializzazione esistente)
-            
-            // **** INIZIO NUOVA LOGICA PER MODAL INGREDIENTI ****
-            editIngredientsIcon.addEventListener('click', () => {
-                modalIngredientsTextarea.value = builderIngredients.value;
-                ingredientEditorModal.style.display = 'block';
-            });
-
-            magicWandIcon.addEventListener('click', generaIngredientiAI);
-
-            btnSaveIngredients.addEventListener('click', () => {
-                builderIngredients.value = modalIngredientsTextarea.value;
-                ingredientEditorModal.style.display = 'none';
-            });
-
-            document.body.addEventListener('click', (e) => {
-                if (e.target.classList.contains('ingredient-display-icon')) {
-                    const type = e.target.dataset.type;
-                    const index = parseInt(e.target.dataset.index, 10);
-                    let item;
-                    let title;
-
-                    if (type === 'meal') {
-                        const mealItems = datiGiornalieri.log[index].items;
-                        title = `Ingredienti di: ${datiGiornalieri.log[index].desc}`;
-                        // Combina gli ingredienti di tutti i sub-item
-                        const combinedIngredients = mealItems
-                            .filter(sub => sub.ingredients)
-                            .map(sub => `--- ${sub.desc} ---\n${sub.ingredients}`)
-                            .join('\n\n');
-                        apriModalIngredienti(title, combinedIngredients || "Nessun ingrediente specificato per gli elementi di questo pasto.");
-                        return;
-
-                    } else if (type === 'single') {
-                        item = datiGiornalieri.log[index];
-                    } else if (type === 'sub-item') {
-                        const subDesc = e.target.dataset.subDesc;
-                        item = datiGiornalieri.log[index].items.find(i => i.desc === subDesc);
-                    }
-                    
-                    if (item) {
-                        title = `Ingredienti di: ${item.desc}`;
-                        apriModalIngredienti(title, item.ingredients || "Nessun ingrediente specificato.");
-                    }
-                }
-
-                // Chiusura dei modal
-                if (e.target.classList.contains('modal-close')) {
-                    const modalId = e.target.dataset.modal;
-                    document.getElementById(modalId).style.display = 'none';
-                }
-            });
-
-            window.addEventListener('click', (event) => {
-                if (event.target.classList.contains('modal')) {
-                    event.target.style.display = 'none';
-                }
-            });
-            // **** FINE NUOVA LOGICA PER MODAL INGREDIENTI ****
-
-            // Modifica alla logica del pulsante "Compila AI"
-            document.getElementById('btn-compila-ai').addEventListener('click', async (e) => {
-                const nome = builderDesc.value.trim();
-                const ingredienti = builderIngredients.value.trim();
-                if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
-
-                // Combina nome e ingredienti per un prompt più ricco
-                const nomeCompleto = ingredienti ? `${nome} (ingredienti: ${ingredienti})` : nome;
-
-                const button = e.target;
-                button.disabled = true; button.textContent = 'Caricamento…';
-
-                try {
-                    let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nomeCompleto}". Presta particolare attenzione: i valori per Omega 3 e Omega 6 devono essere in grammi (g), non in milligrammi (mg). ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
-                    
-                    const res = await fetch(GEMINI_ENDPOINT, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-                    });
-                    if (!res.ok) throw new Error(`Errore dal server AI: ${res.statusText}`);
-                    const data = await res.json();
-                    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
-
-                    // Popola solo i campi vuoti per non sovrascrivere dati inseriti manualmente
-                    for (const key in inputFields) {
-                        if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
-                            inputFields[key].value = resObj[key] ?? '';
-                        }
-                    }
-                    aggiornaColoreNutrienti();
-
-                } catch (err) { alert('Errore compilazione AI: ' + err.message);
-                } finally { button.disabled = false; button.textContent = 'Compila AI'; }
-            });
-
-            // Modifica alla logica del pulsante "Copia Richiesta AI"
-            document.getElementById('btn-copy-prompt').addEventListener('click', async () => {
-                const nome = builderDesc.value.trim();
-                const ingredienti = builderIngredients.value.trim();
-                if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
-                
-                const nomeCompleto = ingredienti ? `${nome} (ingredienti: ${ingredienti})` : nome;
-
-                const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nomeCompleto}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
-                try { await navigator.clipboard.writeText(promptText); alert('Richiesta AI copiata!'); } catch (err) { alert('Impossibile copiare.'); }
-            });
-
-            // ... (tutto il resto del codice in DOMContentLoaded rimane invariato)
-        });
     </script>
 </body>
 </html>
