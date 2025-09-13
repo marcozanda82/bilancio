@@ -1396,8 +1396,19 @@
             return foodItem;
         }
         
-        async function handleAlimentoAddition(isForMealBuilder) {
-            const desc = builderDesc.value.trim(), qta = evaluateQuantity(builderQta.value);
+async function handleAlimentoAddition(isForMealBuilder) {
+            const desc = builderDesc.value.trim();
+            
+            // --- INIZIO MODIFICA ---
+            // Aggiungo un controllo per i caratteri non validi in Firebase
+            const invalidFirebaseChars = /[.#$[\]/]/; // Regex che cerca i caratteri proibiti
+            if (invalidFirebaseChars.test(desc)) {
+                alert("Il nome dell'alimento contiene caratteri non validi per il salvataggio (es. . # $ [ ] / ).\n\nPer favore, rimuovili e riprova.");
+                return; // Interrompo l'esecuzione della funzione
+            }
+            // --- FINE MODIFICA ---
+
+            const qta = evaluateQuantity(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return; }
 
             const emptyFields = Object.keys(inputFields)
@@ -2124,4 +2135,5 @@
     </script>
 </body>
 </html>
+
 
