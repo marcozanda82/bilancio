@@ -93,7 +93,6 @@
         #auth-section.logged-in #welcome-message { margin: 0; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #auth-section.logged-in #btn-sign-out { width: auto; padding: 5px 10px; font-size: 0.8em; margin: 0; flex-shrink: 0; }
         .summary-header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 25px; }
-        .summary-header-row h2 { margin: 0; border-bottom: none; }
         #manual-fill-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
         #manual-fill-section textarea { width: 100%; height: 100px; margin-top: 10px; resize: vertical; }
         #manual-fill-section .button-group { justify-content: space-between; }
@@ -244,6 +243,64 @@
         .protein-score.low { background-color: #d32f2f; }
         .protein-score.medium { background-color: #ff8f00; }
         .protein-score.high { background-color: #2e7d32; }
+
+        /* */
+        .food-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .food-input-container input {
+            flex-grow: 1;
+            margin-bottom: 0;
+        }
+        #btn-edit-ingredients {
+            padding: 8px 12px;
+            font-size: 1.2em;
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+            line-height: 1;
+        }
+        .ingredient-icon {
+            cursor: pointer;
+            color: #607d8b;
+            margin-right: 8px;
+            font-size: 1.1em;
+        }
+        .ingredient-icon:hover {
+            color: #1976d2;
+        }
+        #ingredient-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        #ingredient-modal-title {
+            margin: 0;
+            font-size: 1.5em;
+            color: #0d47a1;
+        }
+        #ingredient-modal-actions button {
+            background: none;
+            border: none;
+            font-size: 1.8em;
+            cursor: pointer;
+            padding: 5px;
+            color: #555;
+        }
+        #ingredient-modal-actions button:hover {
+            color: #0d47a1;
+        }
+        #ingredient-modal-textarea {
+            width: 100%;
+            height: 200px;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 1em;
+        }
+        /* */
     </style>
 </head>
 <body>
@@ -441,7 +498,15 @@
                     <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
                 </div>
                 <div class="builder-grid">
-                    <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
+                    -->
+                    <div>
+                        <label>Alimento</label>
+                        <div class="food-input-container">
+                            <input type="text" id="builder-desc" list="food-database-list">
+                            <button id="btn-edit-ingredients" title="Modifica Lista Ingredienti">📜</button>
+                        </div>
+                    </div>
+                    -->
                     <div><label>Quantità (g)</label><input type="text" id="builder-qta"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
@@ -742,6 +807,23 @@
             </div>
         </div>
     </div>
+    
+    -->
+    <div id="ingredient-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="ingredient-modal">&times;</span>
+            <div id="ingredient-modal-header">
+                <h2 id="ingredient-modal-title"></h2>
+                <div id="ingredient-modal-actions">
+                    <button id="btn-generate-ingredients-ai" title="Genera ingredienti con AI">🪄</button>
+                    <button id="btn-copy-ingredients-prompt" title="Copia prompt per AI">📋</button>
+                </div>
+            </div>
+            <textarea id="ingredient-modal-textarea" placeholder="Inserisci la lista ingredienti qui..."></textarea>
+            <button id="btn-save-ingredients" style="width: 100%; margin-top: 15px; background-color: #2e7d32;">Salva Ingredienti</button>
+        </div>
+    </div>
+    -->
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
@@ -880,7 +962,16 @@
         const builderLys = document.getElementById('builder-lys'), builderMet = document.getElementById('builder-met'), builderPhe = document.getElementById('builder-phe');
         const builderThr = document.getElementById('builder-thr'), builderTrp = document.getElementById('builder-trp'), builderHis = document.getElementById('builder-his');
         const dailyNotesTextarea = document.getElementById('daily-notes');
-        const inputFields = {
+        
+        // const btnEditIngredients = document.getElementById('btn-edit-ingredients');
+        const ingredientModal = document.getElementById('ingredient-modal');
+        const ingredientModalTitle = document.getElementById('ingredient-modal-title');
+        const ingredientModalTextarea = document.getElementById('ingredient-modal-textarea');
+        const ingredientModalActions = document.getElementById('ingredient-modal-actions');
+        const btnGenerateIngredientsAi = document.getElementById('btn-generate-ingredients-ai');
+        const btnCopyIngredientsPrompt = document.getElementById('btn-copy-ingredients-prompt');
+        const btnSaveIngredients = document.getElementById('btn-save-ingredients');
+        // const inputFields = {
             prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
             fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
             fibreTotali: builderFibreTotali, fibreSolubili: builderFibreSolubili, fibreInsolubili: builderFibreInsolubili,
@@ -1181,8 +1272,16 @@
                 if (Object.keys(OBIETTIVI_AMINO).includes(key)) return val.toFixed(0);
                 return ['cu', 'b2', 'b6'].includes(key) ? val.toFixed(2) : (['kcal', 'k', 'p'].includes(key) ? val.toFixed(0) : val.toFixed(1));
             };
-
-            (datiGiornalieri.log || []).forEach((entry, index) => {
+            
+            // const createDescriptionCellHTML = (item) => {
+                let html = '';
+                if (item.ingredienti) {
+                    html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}" data-ingredients="${item.ingredienti}">📜</span>`;
+                }
+                html += (item.desc || '');
+                return html;
+            };
+            // (datiGiornalieri.log || []).forEach((entry, index) => {
                 if (entry.type === 'meal') {
                     const rigaPasto = logBody.insertRow();
                     rigaPasto.classList.add('meal-group-row');
@@ -1194,8 +1293,8 @@
                     const qualitaPasto = calcolaQualitaProteine(totaliPasto);
                     const scoreClass = qualitaPasto.score < 70 ? 'low' : qualitaPasto.score < 90 ? 'medium' : 'high';
                     const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaPasto.limiting}">${qualitaPasto.score}%</div>`;
-
-                    rigaPasto.innerHTML = `
+                    
+                    // rigaPasto.innerHTML = `
                         <td><span class="expand-arrow" data-index="${index}">${entry.isExpanded ? '▼' : '▶'}</span> ${entry.desc}</td>
                         <td>${entry.items.reduce((sum, item) => sum + item.qta, 0).toFixed(0)}</td>
                         <td>${(totaliPasto.prot || 0).toFixed(1)}</td>
@@ -1210,8 +1309,8 @@
                              const qualitaSubItem = calcolaQualitaProteine(subItem);
                              const subScoreClass = qualitaSubItem.score < 70 ? 'low' : qualitaSubItem.score < 90 ? 'medium' : 'high';
                              const subQualitaCellHtml = `<div class="protein-score ${subScoreClass}" title="Limitante: ${qualitaSubItem.limiting}">${qualitaSubItem.score}%</div>`;
-                            rigaSubItem.innerHTML = `
-                                <td>${subItem.desc}</td><td>${(subItem.qta || 0).toFixed(0)}</td>
+                            // rigaSubItem.innerHTML = `
+                                <td>${createDescriptionCellHTML(subItem)}</td><td>${(subItem.qta || 0).toFixed(0)}</td>
                                 <td>${(subItem.prot || 0).toFixed(1)}</td>
                                 <td>${subQualitaCellHtml}</td>
                                 ${nutrientKeys.map(k => `<td>${formatNumber(k, subItem[k])}</td>`).join('')}
@@ -1226,8 +1325,8 @@
                     const qualitaSingola = calcolaQualitaProteine(entry);
                     const scoreClass = qualitaSingola.score < 70 ? 'low' : qualitaSingola.score < 90 ? 'medium' : 'high';
                     const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaSingola.limiting}">${qualitaSingola.score}%</div>`;
-                    riga.innerHTML = `
-                        <td>${entry.desc}</td><td>${(entry.qta || 0).toFixed(0)}</td>
+                    // riga.innerHTML = `
+                        <td>${createDescriptionCellHTML(entry)}</td><td>${(entry.qta || 0).toFixed(0)}</td>
                         <td>${(entry.prot || 0).toFixed(1)}</td>
                         <td>${qualitaCellHtml}</td>
                         ${nutrientKeys.map(k => `<td>${formatNumber(k, entry[k])}</td>`).join('')}
@@ -1236,11 +1335,7 @@
             });
         }
 
-        // ...
-        // Le funzioni da 'renderMealBuilder' in poi rimangono quasi invariate
-        // tranne per le modifiche già discusse
-        // ...
-        function renderMealBuilder() {
+        // function renderMealBuilder() {
             mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
             logPastoBuilderBody.innerHTML = ''; 
             const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
@@ -1260,13 +1355,27 @@
             mealCalRemaining.textContent = `${(obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.kcal).toFixed(0)} kcal`;
             mealProgressCal.max = obiettiviPasto.targetCal;
             mealProgressCal.value = totaliPastoCorrenteSelezionati.kcal;
+            
+            // const createBuilderDescriptionCellHTML = (item) => {
+                let html = '';
+                if (item.ingredienti) {
+                    html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}" data-ingredients="${item.ingredienti}">📜</span>`;
+                }
+                html += item.desc;
+                return html;
+            };
+
             pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
-                riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}</td><td>${(item.prot || 0).toFixed(1)}</td><td>${((item.kcal || item.cal) || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
+                // riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td>
+                                <td>${createBuilderDescriptionCellHTML(item)}</td>
+                                <td>${item.qta}</td>
+                                <td>${(item.prot || 0).toFixed(1)}</td>
+                                <td>${((item.kcal || item.cal) || 0).toFixed(0)}</td>
+                                <td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
             });
         }
-
-        function aggiornaDatalist() {
+        // function aggiornaDatalist() {
             foodDatalist.innerHTML = Object.keys(foodDatabase)
                 .map(sanitizedKey => {
                     // Dato che le chiavi sono sanificate, dobbiamo recuperare il nome originale per la visualizzazione
@@ -1334,7 +1443,7 @@
             return parseFloat(input.replace(',', '.'));
         }
 
-        function creaAlimentoDaInput(isSingle = false) {
+        // function creaAlimentoDaInput(isSingle = false) {
             const desc = builderDesc.value.trim();
             const qta = evaluateQuantity(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) {
@@ -1342,8 +1451,16 @@
                 return null;
             }
 
-            const foodData = { lastQta: qta, desc: desc }; // Salva anche la descrizione originale
-            const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta };
+            const sanitizedKey = sanitizeFirebaseKey(desc.toLowerCase());
+            // Precarica i dati esistenti, se ci sono
+            const foodData = foodDatabase[sanitizedKey] || {};
+            
+            // Aggiorna i dati con i valori correnti dagli input
+            foodData.lastQta = qta;
+            foodData.desc = desc; 
+            // La lista ingredienti rimane quella già salvata, non viene letta dagli input
+            
+            const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta, ingredienti: foodData.ingredienti || '' };
             
             for (const key in inputFields) {
                 inputFields[key].value = inputFields[key].value.replace(',', '.');
@@ -1371,7 +1488,7 @@
             } 
             
             for (const key in foodData) {
-                if (key !== 'lastQta' && key !== 'desc') {
+                if (key !== 'lastQta' && key !== 'desc' && key !== 'ingredienti') {
                     foodItem[key] = ((foodData[key] ?? 0) / 100) * qta;
                 }
             }
@@ -1383,7 +1500,6 @@
                 builderFatTotal.value = total.toFixed(1); 
             }
             
-            const sanitizedKey = sanitizeFirebaseKey(desc.toLowerCase());
             foodDatabase[sanitizedKey] = foodData;
             salvaFoodDatabase();
             aggiornaDatalist();
@@ -1395,19 +1511,14 @@
             }
             return foodItem;
         }
-        
-async function handleAlimentoAddition(isForMealBuilder) {
+        // async function handleAlimentoAddition(isForMealBuilder) {
             const desc = builderDesc.value.trim();
-            
-            // --- INIZIO MODIFICA ---
-            // Aggiungo un controllo per i caratteri non validi in Firebase
-            const invalidFirebaseChars = /[.#$[\]/]/; // Regex che cerca i caratteri proibiti
+            const invalidFirebaseChars = /[.#$[\]/]/; 
             if (invalidFirebaseChars.test(desc)) {
                 alert("Il nome dell'alimento contiene caratteri non validi per il salvataggio (es. . # $ [ ] / ).\n\nPer favore, rimuovili e riprova.");
-                return; // Interrompo l'esecuzione della funzione
+                return; 
             }
-            // --- FINE MODIFICA ---
-
+            
             const qta = evaluateQuantity(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return; }
 
@@ -1678,7 +1789,24 @@ async function handleAlimentoAddition(isForMealBuilder) {
             nutrientDetailModal.style.display = 'block';
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
+        // function openIngredientModal(foodName, isReadOnly = false) {
+            if (!foodName) {
+                alert("Inserisci prima il nome dell'alimento.");
+                return;
+            }
+            const sanitizedKey = sanitizeFirebaseKey(foodName.toLowerCase());
+            const foodData = foodDatabase[sanitizedKey];
+
+            ingredientModalTitle.textContent = foodName;
+            ingredientModalTextarea.value = foodData?.ingredienti || '';
+            ingredientModalTextarea.readOnly = isReadOnly;
+            
+            ingredientModalActions.style.display = isReadOnly ? 'none' : 'flex';
+            btnSaveIngredients.style.display = isReadOnly ? 'none' : 'block';
+
+            ingredientModal.style.display = 'block';
+        }
+        // document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
@@ -1907,6 +2035,13 @@ async function handleAlimentoAddition(isForMealBuilder) {
             });
 
             document.body.addEventListener('click', (e) => {
+                // if (e.target.classList.contains('ingredient-icon')) {
+                    const foodName = e.target.dataset.foodName;
+                    // Invece di passare tutta la stringa, la recupero dal DB per consistenza
+                    openIngredientModal(foodName, true); // true per modalità sola lettura
+                    return; // Interrompo per non attivare altre logiche
+                }
+                
                 const target = e.target.closest('button, .expand-arrow');
                 if (!target) return;
 
@@ -1951,7 +2086,7 @@ async function handleAlimentoAddition(isForMealBuilder) {
                 }
             });
             
-            builderDesc.addEventListener('input', (e) => {
+            // builderDesc.addEventListener('input', (e) => {
                 const sanitizedKey = sanitizeFirebaseKey(e.target.value.trim().toLowerCase());
                 const foodData = foodDatabase[sanitizedKey]; 
                 if (foodData) {
@@ -1961,20 +2096,28 @@ async function handleAlimentoAddition(isForMealBuilder) {
                             inputFields[key].value = foodData[key] ?? '';
                         }
                     }
+                    // La lista ingredienti non viene mostrata qui, ma è associata
                 }
                 aggiornaColoreNutrienti();
             });
 
             Object.values(inputFields).forEach(input => { if (input) input.addEventListener('input', aggiornaColoreNutrienti) });
             
-            document.getElementById('btn-compila-ai').addEventListener('click', async (e) => {
+            // document.getElementById('btn-compila-ai').addEventListener('click', async (e) => {
                 const nome = builderDesc.value.trim();
                 if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
                 const button = e.target;
                 button.disabled = true; button.textContent = 'Caricamento…';
 
                 try {
-                    let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". Presta particolare attenzione: i valori per Omega 3 e Omega 6 devono essere in grammi (g), non in milligrammi (mg). ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
+                    const sanitizedKey = sanitizeFirebaseKey(nome.toLowerCase());
+                    const foodData = foodDatabase[sanitizedKey];
+                    let ingredientiInfo = '';
+                    if (foodData && foodData.ingredienti) {
+                        ingredientiInfo = `Considerando questa lista ingredienti: "${foodData.ingredienti}".`;
+                    }
+
+                    let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${ingredientiInfo} Presta particolare attenzione: i valori per Omega 3 e Omega 6 devono essere in grammi (g), non in milligrammi (mg). ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
                     
                     const res = await fetch(GEMINI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2111,9 +2254,17 @@ async function handleAlimentoAddition(isForMealBuilder) {
                 } catch (e) { console.error("Errore migrazione storico.", e); }
             }
 
-            btnCopyPrompt.addEventListener('click', async () => {
+            // btnCopyPrompt.addEventListener('click', async () => {
                 const nome = builderDesc.value.trim(); if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
-                const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
+
+                const sanitizedKey = sanitizeFirebaseKey(nome.toLowerCase());
+                const foodData = foodDatabase[sanitizedKey];
+                let ingredientiInfo = '';
+                if (foodData && foodData.ingredienti) {
+                    ingredientiInfo = `Considerando questa lista ingredienti: "${foodData.ingredienti}".`;
+                }
+
+                const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${ingredientiInfo} ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
                 try { await navigator.clipboard.writeText(promptText); alert('Richiesta AI copiata!'); } catch (err) { alert('Impossibile copiare.'); }
             });
 
@@ -2131,7 +2282,62 @@ async function handleAlimentoAddition(isForMealBuilder) {
                     aggiornaColoreNutrienti();
                 } catch (err) { alert('Errore nel formato JSON.'); }
             });
-        });
+
+            // btnEditIngredients.addEventListener('click', () => {
+                const foodName = builderDesc.value.trim();
+                openIngredientModal(foodName, false); // false = modalità modifica
+            });
+
+            btnSaveIngredients.addEventListener('click', () => {
+                const foodName = ingredientModalTitle.textContent;
+                const sanitizedKey = sanitizeFirebaseKey(foodName.toLowerCase());
+                
+                if (!foodDatabase[sanitizedKey]) {
+                    foodDatabase[sanitizedKey] = { desc: foodName };
+                }
+                
+                foodDatabase[sanitizedKey].ingredienti = ingredientModalTextarea.value.trim();
+                salvaFoodDatabase();
+                alert(`Ingredienti per "${foodName}" salvati.`);
+                ingredientModal.style.display = 'none';
+            });
+
+            btnGenerateIngredientsAi.addEventListener('click', async (e) => {
+                const foodName = ingredientModalTitle.textContent;
+                if (!foodName) return;
+                const button = e.target;
+                button.disabled = true;
+                ingredientModalTextarea.value = "Generazione in corso...";
+
+                try {
+                    const prompt = `Fornisci una lista di ingredienti plausibile e ordinata per quantità con percentuali stimate per il prodotto "${foodName}". Se è un prodotto semplice (es. 'Mela'), rispondi solo con il nome stesso. Formatta la risposta come un elenco puntato.`;
+                    const res = await fetch(GEMINI_ENDPOINT, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
+                    const data = await res.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nessuna risposta dall\'AI.';
+                    ingredientModalTextarea.value = text.replace(/[\*]/g, '-');
+                } catch (err) {
+                    alert('Errore generazione ingredienti: ' + err.message);
+                    ingredientModalTextarea.value = "Errore.";
+                } finally {
+                    button.disabled = false;
+                }
+            });
+
+            btnCopyIngredientsPrompt.addEventListener('click', async () => {
+                const foodName = ingredientModalTitle.textContent;
+                const prompt = `Per favore, forniscimi una lista di ingredienti plausibile e ordinata per quantità, includendo delle percentuali stimate, per il seguente prodotto: "${foodName}". Se si tratta di un prodotto semplice come frutta o verdura, indica semplicemente il nome del prodotto.`;
+                try {
+                    await navigator.clipboard.writeText(prompt);
+                    alert('Prompt per ingredienti copiato!');
+                } catch (err) {
+                    alert('Impossibile copiare il prompt.');
+                }
+            });
+            // });
     </script>
 </body>
 </html>
