@@ -244,7 +244,6 @@
         .protein-score.medium { background-color: #ff8f00; }
         .protein-score.high { background-color: #2e7d32; }
 
-        /* */
         .food-input-container {
             display: flex;
             align-items: center;
@@ -300,7 +299,6 @@
             font-family: monospace;
             font-size: 1em;
         }
-        /* */
     </style>
 </head>
 <body>
@@ -498,7 +496,6 @@
                     <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
                 </div>
                 <div class="builder-grid">
-                    -->
                     <div>
                         <label>Alimento</label>
                         <div class="food-input-container">
@@ -506,7 +503,6 @@
                             <button id="btn-edit-ingredients" title="Modifica Lista Ingredienti">📜</button>
                         </div>
                     </div>
-                    -->
                     <div><label>Quantità (g)</label><input type="text" id="builder-qta"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
@@ -808,7 +804,6 @@
         </div>
     </div>
     
-    -->
     <div id="ingredient-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" data-modal="ingredient-modal">&times;</span>
@@ -823,7 +818,6 @@
             <button id="btn-save-ingredients" style="width: 100%; margin-top: 15px; background-color: #2e7d32;">Salva Ingredienti</button>
         </div>
     </div>
-    -->
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
@@ -963,7 +957,7 @@
         const builderThr = document.getElementById('builder-thr'), builderTrp = document.getElementById('builder-trp'), builderHis = document.getElementById('builder-his');
         const dailyNotesTextarea = document.getElementById('daily-notes');
         
-        // const btnEditIngredients = document.getElementById('btn-edit-ingredients');
+        const btnEditIngredients = document.getElementById('btn-edit-ingredients');
         const ingredientModal = document.getElementById('ingredient-modal');
         const ingredientModalTitle = document.getElementById('ingredient-modal-title');
         const ingredientModalTextarea = document.getElementById('ingredient-modal-textarea');
@@ -971,7 +965,8 @@
         const btnGenerateIngredientsAi = document.getElementById('btn-generate-ingredients-ai');
         const btnCopyIngredientsPrompt = document.getElementById('btn-copy-ingredients-prompt');
         const btnSaveIngredients = document.getElementById('btn-save-ingredients');
-        // const inputFields = {
+
+        const inputFields = {
             prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
             fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
             fibreTotali: builderFibreTotali, fibreSolubili: builderFibreSolubili, fibreInsolubili: builderFibreInsolubili,
@@ -1171,7 +1166,7 @@
             console.log("Interfaccia app avviata con successo con dati locali.");
         }
 
-function aggiornaUI() {
+        function aggiornaUI() {
             const dataVisualizzata = new Date(giornoVisualizzato);
             const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
             
@@ -1273,16 +1268,16 @@ function aggiornaUI() {
                 return ['cu', 'b2', 'b6'].includes(key) ? val.toFixed(2) : (['kcal', 'k', 'p'].includes(key) ? val.toFixed(0) : val.toFixed(1));
             };
             
-            // const createDescriptionCellHTML = (item) => {
+            const createDescriptionCellHTML = (item) => {
                 let html = '';
                 if (item.ingredienti) {
-                    // Rimossa la parte "data-ingredients" che causava l'errore
                     html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}">📜</span>`;
                 }
                 html += (item.desc || '');
                 return html;
             };
-            // (datiGiornalieri.log || []).forEach((entry, index) => {
+
+            (datiGiornalieri.log || []).forEach((entry, index) => {
                 if (entry.type === 'meal') {
                     const rigaPasto = logBody.insertRow();
                     rigaPasto.classList.add('meal-group-row');
@@ -1335,61 +1330,8 @@ function aggiornaUI() {
                 }
             });
         }
-            // (datiGiornalieri.log || []).forEach((entry, index) => {
-                if (entry.type === 'meal') {
-                    const rigaPasto = logBody.insertRow();
-                    rigaPasto.classList.add('meal-group-row');
-                    const totaliPasto = entry.items.reduce((acc, item) => {
-                        for (const key in item) if(typeof item[key] === 'number' && key !== 'qta') acc[key] = (acc[key] || 0) + item[key];
-                        return acc;
-                    }, {});
-                    
-                    const qualitaPasto = calcolaQualitaProteine(totaliPasto);
-                    const scoreClass = qualitaPasto.score < 70 ? 'low' : qualitaPasto.score < 90 ? 'medium' : 'high';
-                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaPasto.limiting}">${qualitaPasto.score}%</div>`;
-                    
-                    // rigaPasto.innerHTML = `
-                        <td><span class="expand-arrow" data-index="${index}">${entry.isExpanded ? '▼' : '▶'}</span> ${entry.desc}</td>
-                        <td>${entry.items.reduce((sum, item) => sum + item.qta, 0).toFixed(0)}</td>
-                        <td>${(totaliPasto.prot || 0).toFixed(1)}</td>
-                        <td>${qualitaCellHtml}</td>
-                        ${nutrientKeys.map(k => `<td>${formatNumber(k, totaliPasto[k])}</td>`).join('')}
-                        <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
 
-                    if (entry.isExpanded) {
-                        entry.items.forEach(subItem => {
-                            const rigaSubItem = logBody.insertRow();
-                            rigaSubItem.classList.add('sub-item-row');
-                             const qualitaSubItem = calcolaQualitaProteine(subItem);
-                             const subScoreClass = qualitaSubItem.score < 70 ? 'low' : qualitaSubItem.score < 90 ? 'medium' : 'high';
-                             const subQualitaCellHtml = `<div class="protein-score ${subScoreClass}" title="Limitante: ${qualitaSubItem.limiting}">${qualitaSubItem.score}%</div>`;
-                            // rigaSubItem.innerHTML = `
-                                <td>${createDescriptionCellHTML(subItem)}</td><td>${(subItem.qta || 0).toFixed(0)}</td>
-                                <td>${(subItem.prot || 0).toFixed(1)}</td>
-                                <td>${subQualitaCellHtml}</td>
-                                ${nutrientKeys.map(k => `<td>${formatNumber(k, subItem[k])}</td>`).join('')}
-                                <td></td>`;
-                        });
-                    }
-                } else if (entry.type === 'workout') {
-                    const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td></td><td>${(entry.kcal || 0).toFixed(0)}</td><td colspan="${nutrientKeys.length -1}"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
-                } else { 
-                    const riga = logBody.insertRow();
-                    const qualitaSingola = calcolaQualitaProteine(entry);
-                    const scoreClass = qualitaSingola.score < 70 ? 'low' : qualitaSingola.score < 90 ? 'medium' : 'high';
-                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaSingola.limiting}">${qualitaSingola.score}%</div>`;
-                    // riga.innerHTML = `
-                        <td>${createDescriptionCellHTML(entry)}</td><td>${(entry.qta || 0).toFixed(0)}</td>
-                        <td>${(entry.prot || 0).toFixed(1)}</td>
-                        <td>${qualitaCellHtml}</td>
-                        ${nutrientKeys.map(k => `<td>${formatNumber(k, entry[k])}</td>`).join('')}
-                        <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
-                }
-            });
-        }
-
-function renderMealBuilder() {
+        function renderMealBuilder() {
             mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
             logPastoBuilderBody.innerHTML = ''; 
             const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
@@ -1410,16 +1352,16 @@ function renderMealBuilder() {
             mealProgressCal.max = obiettiviPasto.targetCal;
             mealProgressCal.value = totaliPastoCorrenteSelezionati.kcal;
             
-            // const createBuilderDescriptionCellHTML = (item) => {
+            const createBuilderDescriptionCellHTML = (item) => {
                 let html = '';
                 if (item.ingredienti) {
-                     // Rimossa la parte "data-ingredients" che causava l'errore
                     html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}">📜</span>`;
                 }
                 html += item.desc;
                 return html;
             };
-            // pastoInCostruzione.forEach((item, index) => { 
+
+            pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
                 riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td>
                                 <td>${createBuilderDescriptionCellHTML(item)}</td>
@@ -1428,6 +1370,36 @@ function renderMealBuilder() {
                                 <td>${((item.kcal || item.cal) || 0).toFixed(0)}</td>
                                 <td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
             });
+        }
+
+        function aggiornaDatalist() {
+            foodDatalist.innerHTML = Object.keys(foodDatabase)
+                .map(sanitizedKey => {
+                    const originalDesc = foodDatabase[sanitizedKey]?.desc || sanitizedKey.replace(/_/g, ' ');
+                    return `<option value="${originalDesc.charAt(0).toUpperCase() + originalDesc.slice(1)}"></option>`
+                }).join('');
+        }
+        
+        function calcolaQualitaProteine(item) {
+            if (!item || !item.prot || item.prot <= 0) {
+                return { score: 0, limiting: 'N/D' };
+            }
+            let minRatio = Infinity;
+            let limitingAmino = 'Nessuno';
+            for (const amino in PROFILO_AMINOACIDICO_RIFERIMENTO) {
+                const referenceValueMgPerG = PROFILO_AMINOACIDICO_RIFERIMENTO[amino];
+                const actualValueMg = item[amino] || 0;
+                const actualValueMgPerG = (actualValueMg / item.prot);
+                const ratio = Math.min(1, actualValueMgPerG / referenceValueMgPerG);
+                if (ratio < minRatio) {
+                    minRatio = ratio;
+                    limitingAmino = amino.charAt(0).toUpperCase() + amino.slice(1);
+                }
+            }
+            return {
+                score: Math.round(minRatio * 100),
+                limiting: limitingAmino
+            };
         }
 
         function apriModalAminoacidi(totali, titolo) {
@@ -1467,7 +1439,7 @@ function renderMealBuilder() {
             return parseFloat(input.replace(',', '.'));
         }
 
-        // function creaAlimentoDaInput(isSingle = false) {
+        function creaAlimentoDaInput(isSingle = false) {
             const desc = builderDesc.value.trim();
             const qta = evaluateQuantity(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) {
@@ -1476,13 +1448,10 @@ function renderMealBuilder() {
             }
 
             const sanitizedKey = sanitizeFirebaseKey(desc.toLowerCase());
-            // Precarica i dati esistenti, se ci sono
             const foodData = foodDatabase[sanitizedKey] || {};
             
-            // Aggiorna i dati con i valori correnti dagli input
             foodData.lastQta = qta;
             foodData.desc = desc; 
-            // La lista ingredienti rimane quella già salvata, non viene letta dagli input
             
             const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta, ingredienti: foodData.ingredienti || '' };
             
@@ -1535,7 +1504,8 @@ function renderMealBuilder() {
             }
             return foodItem;
         }
-        // async function handleAlimentoAddition(isForMealBuilder) {
+        
+        async function handleAlimentoAddition(isForMealBuilder) {
             const desc = builderDesc.value.trim();
             const invalidFirebaseChars = /[.#$[\]/]/; 
             if (invalidFirebaseChars.test(desc)) {
@@ -1554,7 +1524,6 @@ function renderMealBuilder() {
                 const confirmMsg = `Ci sono molti campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
                 if (confirm(confirmMsg)) {
                     await document.getElementById('btn-compila-ai').click();
-                    // Aspettiamo che i campi si popolino
                     setTimeout(() => handleAlimentoAddition(isForMealBuilder), 500);
                     return; 
                 }
@@ -1813,7 +1782,7 @@ function renderMealBuilder() {
             nutrientDetailModal.style.display = 'block';
         }
         
-        // function openIngredientModal(foodName, isReadOnly = false) {
+        function openIngredientModal(foodName, isReadOnly = false) {
             if (!foodName) {
                 alert("Inserisci prima il nome dell'alimento.");
                 return;
@@ -1830,7 +1799,8 @@ function renderMealBuilder() {
 
             ingredientModal.style.display = 'block';
         }
-        // document.addEventListener('DOMContentLoaded', () => {
+
+        document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
@@ -2059,11 +2029,10 @@ function renderMealBuilder() {
             });
 
             document.body.addEventListener('click', (e) => {
-                // if (e.target.classList.contains('ingredient-icon')) {
+                if (e.target.classList.contains('ingredient-icon')) {
                     const foodName = e.target.dataset.foodName;
-                    // Invece di passare tutta la stringa, la recupero dal DB per consistenza
-                    openIngredientModal(foodName, true); // true per modalità sola lettura
-                    return; // Interrompo per non attivare altre logiche
+                    openIngredientModal(foodName, true);
+                    return;
                 }
                 
                 const target = e.target.closest('button, .expand-arrow');
@@ -2110,7 +2079,7 @@ function renderMealBuilder() {
                 }
             });
             
-            // builderDesc.addEventListener('input', (e) => {
+            builderDesc.addEventListener('input', (e) => {
                 const sanitizedKey = sanitizeFirebaseKey(e.target.value.trim().toLowerCase());
                 const foodData = foodDatabase[sanitizedKey]; 
                 if (foodData) {
@@ -2120,14 +2089,13 @@ function renderMealBuilder() {
                             inputFields[key].value = foodData[key] ?? '';
                         }
                     }
-                    // La lista ingredienti non viene mostrata qui, ma è associata
                 }
                 aggiornaColoreNutrienti();
             });
 
             Object.values(inputFields).forEach(input => { if (input) input.addEventListener('input', aggiornaColoreNutrienti) });
             
-            // document.getElementById('btn-compila-ai').addEventListener('click', async (e) => {
+            document.getElementById('btn-compila-ai').addEventListener('click', async (e) => {
                 const nome = builderDesc.value.trim();
                 if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
                 const button = e.target;
@@ -2278,7 +2246,7 @@ function renderMealBuilder() {
                 } catch (e) { console.error("Errore migrazione storico.", e); }
             }
 
-            // btnCopyPrompt.addEventListener('click', async () => {
+            btnCopyPrompt.addEventListener('click', async () => {
                 const nome = builderDesc.value.trim(); if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
 
                 const sanitizedKey = sanitizeFirebaseKey(nome.toLowerCase());
@@ -2307,9 +2275,9 @@ function renderMealBuilder() {
                 } catch (err) { alert('Errore nel formato JSON.'); }
             });
 
-            // btnEditIngredients.addEventListener('click', () => {
+            btnEditIngredients.addEventListener('click', () => {
                 const foodName = builderDesc.value.trim();
-                openIngredientModal(foodName, false); // false = modalità modifica
+                openIngredientModal(foodName, false);
             });
 
             btnSaveIngredients.addEventListener('click', () => {
@@ -2361,9 +2329,7 @@ function renderMealBuilder() {
                     alert('Impossibile copiare il prompt.');
                 }
             });
-            // });
+        });
     </script>
 </body>
 </html>
-
-
