@@ -32,7 +32,7 @@
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; vertical-align: middle; }
         th { background-color: #f2f2f2; font-weight: 600; }
         .builder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-        .button-group { display: flex; gap: 10px; margin-top: 15px; }
+        .button-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
         .action-buttons { display: flex; justify-content: center; align-items: center; gap: 8px; }
         .action-buttons button { background: none; border: none; padding: 4px; font-size: 1.3em; line-height: 1; cursor: pointer; }
         .meal-group-row { background-color: #f0f4f8; font-weight: bold; }
@@ -46,9 +46,19 @@
         .collapsible-content { display: none; overflow: hidden; transition: max-height 0.3s ease-out; max-height: 0; }
         .collapsible-content.expanded { display: block; max-height: 2000px; }
         .collapsible-header.expanded .arrow { transform: rotate(90deg); }
+        .diary-table-container { 
+            overflow-x: auto; 
+            -webkit-box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
+            box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
+        }
+        #log-pasti th, #log-pasti td {
+            min-width: 60px; text-align: right; padding: 8px 10px; white-space: nowrap;
+        }
         #log-pasti th:nth-child(1), #log-pasti td:nth-child(1) {
             min-width: 150px; text-align: left; position: -webkit-sticky; position: sticky; left: 0; z-index: 2; border-right: 2px solid #e0e0e0;
         }
+        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) { min-width: 50px; text-align: left; }
+        #log-pasti th:last-child, #log-pasti td:last-child { min-width: 80px; text-align: center; }
         #log-pasti th:first-child { background-color: #f8f9fa; }
         #log-pasti td:first-child { background-color: #ffffff; }
         #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
@@ -95,7 +105,19 @@
         <h1>Tracker Nutrizionale Marco</h1>
         
         <div id="auth-section" class="sezione">
-             </div>
+            <h2 id="auth-header">Accedi / Registrati</h2>
+            <p id="welcome-message"></p>
+            <div id="auth-form-fields">
+                <div><label for="user-email">Email</label><input type="email" id="user-email"></div>
+                <div><label for="user-password">Password</label><input type="password" id="user-password"></div>
+                <div class="auth-buttons">
+                    <button id="btn-register">Registrati</button>
+                    <button id="btn-login">Accedi</button>
+                </div>
+            </div>
+            <button id="btn-sign-out">Esci</button>
+            <p id="auth-status"></p>
+        </div>
 
         <div id="main-tracker-content">
             <h2 id="titolo-giornata"></h2>
@@ -104,10 +126,170 @@
                 <a href="stima_grassi.html">🫙 Stima Grassi</a>
             </div>
             <div id="riepilogo" class="sezione">
+                <div class="summary-header-row">
+                    <h2>Riepilogo di Oggi</h2>
+                </div>
+                
+                <span id="calorie-balance-text"></span>
+
+                <div id="calorie-adjuster">
+                    <label for="calorie-adjustment-input">Correzione Obiettivo:</label>
+                    <button id="btn-calorie-minus" class="minus">-</button>
+                    <input type="number" id="calorie-adjustment-input" value="0"> <button id="btn-calorie-plus">+</button>
+                    <span>kcal</span>
                 </div>
 
-            <div id="form-allenamento" class="sezione">
+                <p style="display: flex; align-items: center; gap: 10px;">
+                    <span>Proteine: <span id="totale-proteine">0</span> / <span id="obiettivo-proteine"></span> g</span>
+                    <i id="info-proteine-giornata" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2; font-size: 1.2em;"></i>
+                </p>
+                <progress id="progress-proteine" class="macro-progress" value="0"></progress>
+                <p>Calorie: <span id="totale-calorie">0</span> / <span id="obiettivo-calorie"></span> kcal</p>
+                <progress id="progress-calorie" class="macro-progress" value="0"></progress>
+                <p>Workout: <span id="workout-calories-totali">0</span> kcal</p>
+                <hr>
+
+                <h3 class="collapsible-header" id="carbs-header">
+                    Carboidrati e Zuccheri <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="carbs-content">
+                    <p>Carboidrati: <span id="totale-carboidrati">0</span> / <span id="obiettivo-carboidrati"></span> g</p>
+                    <progress id="progress-carboidrati" class="macro-progress" value="0"></progress>
+                    <p>di cui Zuccheri: <span id="totale-zuccheri">0</span> / <span id="obiettivo-zuccheri"></span> g</p>
+                    <progress id="progress-zuccheri" class="macro-progress" value="0"></progress>
                 </div>
+                <hr>
+                
+                <h3 class="collapsible-header" id="fibre-header">
+                    Fibre <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="fibre-content">
+                    <p>Fibre Totali: <span id="totale-fibre-totali">0</span> / <span id="obiettivo-fibre-totali"></span> g</p>
+                    <progress id="progress-fibre-totali" class="macro-progress" value="0"></progress>
+                    <div class="fats-group" style="padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px;">
+                        <p>Solubili: <span id="totale-fibre-solubili">0</span> / <span id="obiettivo-fibre-solubili"></span> g</p>
+                        <progress id="progress-fibre-solubili" value="0"></progress>
+                        <p>Insolubili: <span id="totale-fibre-insolubili">0</span> / <span id="obiettivo-fibre-insolubili"></span> g</p>
+                        <progress id="progress-fibre-insolubili" value="0"></progress>
+                    </div>
+                </div>
+                <hr>
+                
+                <h3 class="collapsible-header" id="fats-header">
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        Grassi
+                        <i id="info-fats-settimanali" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2;"></i>
+                    </span>
+                    <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="fats-content">
+                    <p>Grassi Totali: <span id="totale-fats-total">0</span> / <span id="obiettivo-fats-total"></span> g</p>
+                    <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
+                    
+                    <div class="fats-group">
+                         <div class="fats-sub-bars-container">
+                            <div>
+                                <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat"></span> g</p>
+                                <progress id="progress-fat-sat" class="progress-fat-sat" value="0"></progress>
+                            </div>
+                            <div>
+                                <p>Trans: <span id="totale-fat-trans">0</span> / <span id="obiettivo-fat-trans"></span> g</p>
+                                <progress id="progress-fat-trans" value="0"></progress>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fats-group">
+                        <h4>Grassi Insaturi: <span id="totale-fat-unsat">0</span> / <span id="obiettivo-fat-unsat"></span> g</h4>
+                        <progress id="progress-fat-unsat" value="0"></progress>
+                        <div style="padding-left: 15px;">
+                            <p>Monoinsaturi: <span id="totale-fat-mono">0</span> / <span id="obiettivo-fat-mono"></span> g</p>
+                            <progress id="progress-fat-mono" value="0"></progress>
+                            <p>Polinsaturi: <span id="totale-fat-poly">0</span> / <span id="obiettivo-fat-poly"></span> g</p>
+                            <progress id="progress-fat-poly" value="0"></progress>
+                            <div class="fats-group" style="border: none; padding-left: 10px; margin-top: 10px;">
+                                 <div class="fats-sub-bars-container">
+                                    <div>
+                                        <p>Omega 3: <span id="totale-omega3">0</span> / <span id="obiettivo-omega3"></span> g</p>
+                                        <progress id="progress-omega3" value="0"></progress>
+                                    </div>
+                                    <div>
+                                        <p>Omega 6: <span id="totale-omega6">0</span> / <span id="obiettivo-omega6"></span> g</p>
+                                        <progress id="progress-omega6" value="0"></progress>
+                                    </div>
+                                 </div>
+                                 <p style="text-align: center; font-weight: bold; margin-top: 10px; font-size: 1.1em;">
+                                    Rapporto O6:O3: <span id="omega-ratio-value"></span>
+                                 </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                
+                <h3 class="collapsible-header" id="micro-header">
+                    Micronutrienti <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="micro-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        <div>
+                            <p>Magnesio: <span id="totale-mg">0</span> / 420 mg</p><progress id="progress-mg" value="0"></progress>
+                            <p>Potassio: <span id="totale-k">0</span> / 3400 mg</p><progress id="progress-k" value="0"></progress>
+                        </div>
+                        <div>
+                            <p>Ferro: <span id="totale-fe">0</span> / 18 mg</p><progress id="progress-fe" value="0"></progress>
+                            <p>Zinco: <span id="totale-zn">0</span> / 11 mg</p><progress id="progress-zn" value="0"></progress>
+                        </div>
+                        <div>
+                            <p>Calcio: <span id="totale-ca">0</span> / 1000 mg</p><progress id="progress-ca" value="0"></progress>
+                            <p>Rame: <span id="totale-cu">0</span> / 0.9 mg</p><progress id="progress-cu" value="0" max="0.9"></progress>
+                        </div>
+                    </div>
+                     <div style="margin-top: 15px;">
+                        <p>Fosforo: <span id="totale-p">0</span> / 700 mg</p><progress id="progress-p" value="0" max="700"></progress>
+                    </div>
+                </div>
+                <hr>
+
+                <h3 class="collapsible-header" id="vit-header">
+                    Vitamine <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="vit-content">
+                    <div class="vitamin-group">
+                        <h4 style="display: flex; align-items: center; gap: 8px;">
+                            Accumulabili (Liposolubili / Fegato) 
+                            <i id="info-vit-settimanali" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2;"></i>
+                        </h4>
+                        <p>Vitamina A: <span id="totale-vit-a">0</span> / 900 µg</p><progress id="progress-vit-a" value="0" max="900"></progress>
+                        <p>Vitamina D: <span id="totale-vit-d">0</span> / 15 µg</p><progress id="progress-vit-d" value="0" max="15"></progress>
+                        <p>Vitamina E: <span id="totale-vit-e">0</span> / 15 mg</p><progress id="progress-vit-e" value="0" max="15"></progress>
+                        <p>Vitamina K: <span id="totale-vit-k">0</span> / 120 µg</p><progress id="progress-vit-k" value="0" max="120"></progress>
+                        <p>Vitamina B12: <span id="totale-vit-b12">0</span> / 2.4 µg</p><progress id="progress-vit-b12" value="0" max="2.4"></progress>
+                    </div>
+                     <div class="vitamin-group">
+                        <h4>Giornaliere (Idrosolubili)</h4>
+                        <p>Vitamina C: <span id="totale-vitc">0</span> / 90 mg</p><progress id="progress-vitc" value="0" max="90"></progress>
+                        <p>Vitamina B2: <span id="totale-b2">0</span> / 1.3 mg</p><progress id="progress-b2" value="0" max="1.3"></progress>
+                        <p>Vitamina B6: <span id="totale-b6">0</span> / 1.3 mg</p><progress id="progress-b6" value="0" max="1.3"></progress>
+                        <p>Folati (B9): <span id="totale-b9">0</span> / 400 µg</p><progress id="progress-b9" value="0" max="400"></progress>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <label for="daily-notes">Note del Giorno</label>
+                    <textarea id="daily-notes" rows="3" placeholder="Aggiungi note per la giornata..."></textarea>
+                </div>
+            </div>
+
+            <div id="form-allenamento" class="sezione">
+                <h2 class="collapsible-header" id="workout-header">Registra Allenamento <span class="arrow">▶</span></h2>
+                <div class="collapsible-content" id="workout-content">
+                    <label for="workout-desc">Descrizione Allenamento</label>
+                    <input type="text" id="workout-desc" placeholder="es. Corsa 30 min, Pesistica">
+                    <label for="workout-calories">Calorie Bruciate (kcal)</label>
+                    <input type="number" id="workout-calories" min="0">
+                    <button id="btn-add-workout">Aggiungi Allenamento</button>
+                </div>
+            </div>
             
             <div id="food-adder" class="sezione">
                 <div class="food-adder-header">
@@ -127,12 +309,51 @@
                     <div><label>Quantità (g)</label><input type="text" id="builder-qta"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
-                    </div>
+                    <div><label>Carboidrati/100g</label><input type="number" id="builder-carb" step="0.1"></div>
+                    <div><label>Zuccheri/100g</label><input type="number" id="builder-zuccheri" step="0.1"></div>
+                    <div><label>Grassi Totali/100g</label><input type="number" id="builder-fat-total" step="0.1"></div>
+                    <div><label>Fibre Totali/100g</label><input type="number" id="builder-fibre-totali" step="0.1"></div>
+                    <div><label>Fibre Solubili/100g</label><input type="number" id="builder-fibre-solubili" step="0.1"></div>
+                    <div><label>Fibre Insolubili/100g</label><input type="number" id="builder-fibre-insolubili" step="0.1"></div>
+                </div>
                 <h2 class="collapsible-header" id="nutrients-header">
                     Dettagli Nutrizionali (Grassi, Micronutrienti, Amminoacidi) <span class="arrow">▶</span>
                 </h2>
                 <div class="collapsible-content" id="nutrients-content">
+                    <div class="builder-grid">
+                        <div><label>Gr. Saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
+                        <div><label>Gr. Trans/100g</label><input type="number" id="builder-fat-trans" min="0" step="0.1"></div>
+                        <div><label>Gr. Monoinsaturi/100g</label><input type="number" id="builder-fat-mono" min="0" step="0.1"></div>
+                        <div><label>Gr. Polinsaturi/100g</label><input type="number" id="builder-fat-poly" min="0" step="0.1"></div>
+                        <div><label>Omega 3/100g</label><input type="number" id="builder-omega3" min="0" step="0.1"></div>
+                        <div><label>Omega 6/100g</label><input type="number" id="builder-omega6" min="0" step="0.1"></div>
+                        <div><label>Vit. A (μg)/100g</label><input type="number" id="builder-vit-a" min="0"></div>
+                        <div><label>Vit. B2 (mg)/100g</label><input type="number" id="builder-b2" min="0" step="0.01"></div>
+                        <div><label>Vit. B6 (mg)/100g</label><input type="number" id="builder-b6" min="0" step="0.01"></div>
+                        <div><label>Vit. B12 (μg)/100g</label><input type="number" id="builder-vit-b12" min="0" step="0.01"></div>
+                        <div><label>Vit. D (μg)/100g</label><input type="number" id="builder-vit-d" min="0" step="0.01"></div>
+                        <div><label>Vit. E (mg)/100g</label><input type="number" id="builder-vit-e" min="0" step="0.1"></div>
+                        <div><label>Vit. K (μg)/100g</label><input type="number" id="builder-vit-k" min="0"></div>
+                        <div><label>Folati B9 (μg)/100g</label><input type="number" id="builder-b9" min="0"></div>
+                        <div><label>Magnesio (mg)/100g</label><input type="number" id="builder-mg" min="0"></div>
+                        <div><label>Potassio (mg)/100g</label><input type="number" id="builder-k" min="0"></div>
+                        <div><label>Vitamina C (mg)/100g</label><input type="number" id="builder-vitc" min="0"></div>
+                        <div><label>Calcio (mg)/100g</label><input type="number" id="builder-ca" min="0"></div>
+                        <div><label>Ferro (mg)/100g</label><input type="number" id="builder-fe" min="0" step="0.1"></div>
+                        <div><label>Zinco (mg)/100g</label><input type="number" id="builder-zn" min="0" step="0.1"></div>
+                        <div><label>Rame (mg)/100g</label><input type="number" id="builder-cu" min="0" step="0.01"></div>
+                        <div><label>Fosforo (mg)/100g</label><input type="number" id="builder-p" min="0"></div>
+                        <div><label>Leucina (mg)/100g</label><input type="number" id="builder-leu" min="0"></div>
+                        <div><label>Isoleucina (mg)/100g</label><input type="number" id="builder-iso" min="0"></div>
+                        <div><label>Valina (mg)/100g</label><input type="number" id="builder-val" min="0"></div>
+                        <div><label>Lisina (mg)/100g</label><input type="number" id="builder-lys" min="0"></div>
+                        <div><label>Metionina (mg)/100g</label><input type="number" id="builder-met" min="0"></div>
+                        <div><label>Fenilalanina (mg)/100g</label><input type="number" id="builder-phe" min="0"></div>
+                        <div><label>Treonina (mg)/100g</label><input type="number" id="builder-thr" min="0"></div>
+                        <div><label>Triptofano (mg)/100g</label><input type="number" id="builder-trp" min="0"></div>
+                        <div><label>Istidina (mg)/100g</label><input type="number" id="builder-his" min="0"></div>
                     </div>
+                </div>
                 <datalist id="food-database-list"></datalist>
                 <div class="button-group">
                     <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
@@ -143,17 +364,70 @@
             </div>
 
             <div id="meal-builder-sezione" class="sezione" data-visible="false">
+                 <h2>Costruttore Pasto</h2>
+                <div id="meal-builder-summary">
+                    <p>Pasto Selezionato: <span id="current-meal-type-display"></span></p>
+                    <div class="progress-container">
+                        <div class="progress-item">
+                            <p style="display: flex; align-items: center; gap: 10px;">
+                                <span>Proteine: <span id="meal-prot-current">0</span> / <span id="meal-prot-target"></span> g (<span id="meal-prot-remaining"></span>)</span>
+                                <i id="info-proteine-pasto" class="fas fa-info-circle" style="cursor: pointer; color: #1976d2; font-size: 1.2em;"></i>
+                            </p>
+                            <progress id="meal-progress-prot" value="0"></progress>
+                        </div>
+                        <div class="progress-item">
+                            <p>Calorie: <span id="meal-cal-current">0</span> / <span id="meal-cal-target"></span> kcal (<span id="meal-cal-remaining"></span>)</p>
+                            <progress id="meal-progress-cal" value="0"></progress>
+                        </div>
+                    </div>
                 </div>
+                <select id="meal-type-selector">
+                    <option value="merenda1">Merenda AM</option>
+                    <option value="pranzo">Pranzo</option>
+                    <option value="merenda2">Merenda PM</option>
+                    <option value="cena">Cena</option>
+                </select>
+                <table id="log-pasto-builder">
+                    <thead><tr><th>Sel.</th><th>Descrizione</th><th>(g)</th><th>Prot</th><th>Kcal</th><th>Azione</th></tr></thead>
+                    <tbody id="log-pasto-builder-body"></tbody>
+                </table>
+                <button id="btn-salva-pasto">Salva Pasto nel Diario</button>
+            </div>
 
             <div class="sezione">
                 <h2>Diario Giornaliero</h2>
                 <div class="diary-table-container">
                     <table id="log-pasti">
-                        </table>
+                         <thead>
+                            <tr>
+                                <th>Descrizione</th><th>(g)</th><th>Prot</th><th>Qualità</th><th>Kcal</th><th>Fibre Tot</th><th>Fibre Sol</th><th>Fibre Ins</th>
+                                <th>Leu</th><th>Iso</th><th>Val</th><th>Lys</th><th>Met</th><th>Phe</th><th>Thr</th><th>Trp</th><th>His</th>
+                                <th>Gr. Sat</th><th>Gr. Trans</th><th>Gr. Mono</th><th>Gr. Poly</th><th>Omega 3</th><th>Omega 6</th>
+                                <th>Mg</th><th>K</th><th>Vit.C</th><th>Ca</th><th>Fe</th><th>Zn</th><th>Cu</th>
+                                <th>Vit. A</th><th>Vit. B12</th><th>Vit. D</th><th>Vit. E</th><th>Vit. K</th><th>B9</th><th>B2</th><th>B6</th>
+                                <th>Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-body"></tbody>
+                    </table>
                 </div>
+                 <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
+                    <h3 style="margin:0 0 10px 0; font-size:1em;">Visualizza un Altro Giorno</h3>
+                    <div>
+                        <input type="date" id="data-caricamento">
+                        <button id="btn-vai-a-oggi">Oggi</button>
+                    </div>
                 </div>
-
             </div>
+            
+            <div class="sezione">
+                <h2>Sincronizzazione Cloud Manuale</h2>
+                <div class="cloud-sync-section">
+                    <button id="btn-download-manual">⬇️ Scarica Dati dal Cloud</button>
+                    <span id="cloud-sync-status" class="cloud-sync-status disconnected">Connessione Cloud: Disconnesso</span>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div id="recipe-modal" class="modal">
@@ -163,8 +437,7 @@
             <p style="font-size: 0.9em; color: #555;">
                 Aggiungi gli ingredienti e le loro percentuali sul peso totale. La somma deve essere 100%.
             </p>
-            <div id="recipe-list-container">
-                </div>
+            <div id="recipe-list-container"></div>
             <button id="btn-add-ingredient-row" style="width: auto; padding: 8px 15px; font-size: 0.9em; background-color: #607d8b;">+ Aggiungi Ingrediente</button>
             
             <div id="percentage-total-container">
@@ -186,19 +459,63 @@
         </div>
     </div>
 
+    <div id="amino-acid-modal" class="modal">
+        </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
     <script type="module">
-        // Import Firebase (invariato)
-        // ...
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-        // --- INIZIO SCRIPT MODIFICATO ---
+        // ... Config Firebase ...
+        const firebaseConfig = {
+          apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
+          authDomain: "mio-tracker.firebaseapp.com",
+          databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+          projectId: "mio-tracker",
+          storageBucket: "mio-tracker.firebasestorage.app",
+          messagingSenderId: "382993217593",
+          appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+        };
         
-        // ... Dichiarazioni costanti e variabili (in gran parte invariate) ...
-        let ricettaInCostruzione = []; // NUOVA: Memorizza la ricetta in %
+        let giornoVisualizzato;
+        let datiGiornalieri = {};
+        let foodDatabase = {};
+        let pastoInCostruzione = [];
+        let ricettaInCostruzione = [];
+        let db, auth, firebaseApp, currentUserUID = null;
 
-        // ... Costanti per gli elementi del DOM (aggiunte quelle nuove per la modale ricetta) ...
+        // ... Costanti OBIETTIVI e PIANI (invariate) ...
+        const PIANO_SETTIMANALE = {
+            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 }
+        };
+
+        const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${firebaseConfig.apiKey}`;
+        
+        const builderDesc = document.getElementById('builder-desc');
+        // Aggiungere tutte le altre dichiarazioni di costanti per gli elementi DOM qui
+        const builderQta = document.getElementById('builder-qta');
+        const inputFields = {
+            prot: document.getElementById('builder-prot'), kcal: document.getElementById('builder-kcal'), carb: document.getElementById('builder-carb'), zuccheri: document.getElementById('builder-zuccheri'),
+            fatTotal: document.getElementById('builder-fat-total'), fatSat: document.getElementById('builder-fat-sat'), fatTrans: document.getElementById('builder-fat-trans'), fatMono: document.getElementById('builder-fat-mono'), fatPoly: document.getElementById('builder-fat-poly'), omega3: document.getElementById('builder-omega3'), omega6: document.getElementById('builder-omega6'),
+            fibreTotali: document.getElementById('builder-fibre-totali'), fibreSolubili: document.getElementById('builder-fibre-solubili'), fibreInsolubili: document.getElementById('builder-fibre-insolubili'),
+            mg: document.getElementById('builder-mg'), k: document.getElementById('builder-k'), vitc: document.getElementById('builder-vitc'), ca: document.getElementById('builder-ca'),
+            vitA: document.getElementById('builder-vit-a'), vitB12: document.getElementById('builder-vit-b12'), vitD: document.getElementById('builder-vit-d'),
+            vitE: document.getElementById('builder-vit-e'), vitK: document.getElementById('builder-vit-k'), b9: document.getElementById('builder-b9'), b2: document.getElementById('builder-b2'), b6: document.getElementById('builder-b6'), 
+            fe: document.getElementById('builder-fe'), zn: document.getElementById('builder-zn'), cu: document.getElementById('builder-cu'), p: document.getElementById('builder-p'),
+            leu: document.getElementById('builder-leu'), iso: document.getElementById('builder-iso'), val: document.getElementById('builder-val'),
+            lys: document.getElementById('builder-lys'), met: document.getElementById('builder-met'), phe: document.getElementById('builder-phe'),
+            thr: document.getElementById('builder-thr'), trp: document.getElementById('builder-trp'), his: document.getElementById('builder-his')
+        };
         const recipeModal = document.getElementById('recipe-modal');
         const btnEditRecipe = document.getElementById('btn-edit-recipe');
         const recipeModalFoodName = document.getElementById('recipe-modal-food-name');
@@ -208,61 +525,22 @@
         const btnSuggestRecipeAi = document.getElementById('btn-suggest-recipe-ai');
         const btnSaveRecipe = document.getElementById('btn-save-recipe');
         const btnCalculateFromRecipe = document.getElementById('btn-calculate-from-recipe');
+        const foodDatalist = document.getElementById('food-database-list');
 
-        // ... Funzioni principali (salvaGiorno, caricaGiorno, etc. invariate) ...
-
-        function aggiornaUI() {
-            // ... (logica di aggiornamento UI principale invariata) ...
-            
-            // Logica di rendering del diario modificata per mostrare l'icona della ricetta
-            const renderRow = (item, isSubItem = false) => {
-                // ... (logica di rendering riga esistente) ...
-                
-                let descHtml = item.desc;
-                // NUOVA LOGICA PER MOSTRARE RICETTA
-                if (item.ricetta && item.ricetta.length > 0) {
-                    const recipeTooltip = item.ricetta.map(ing => `${ing.ingrediente}: ${ing.percentuale}%`).join('\n');
-                    descHtml += ` <i class="fas fa-receipt recipe-icon" title="${recipeTooltip}"></i>`;
-                }
-                
-                // ... (il resto della funzione di rendering riga) ...
-            };
-            
-            // ... (il resto di aggiornaUI) ...
+        function sanitizeFirebaseKey(str) {
+            if (!str) return '';
+            return str.replace(/[.#$/\[\]]/g, '_');
         }
 
-        function creaAlimentoDaInput(isSingle = false) {
-            // ... (logica esistente per desc e qta) ...
-
-            const foodData = { lastQta: qta, desc: desc };
-            const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta };
-            
-            // NUOVO: Aggiungo la ricetta se presente
-            if (ricettaInCostruzione.length > 0) {
-                foodData.ricetta = ricettaInCostruzione;
-                foodItem.ricetta = ricettaInCostruzione;
-            }
-
-            // ... (tutta la logica esistente per calcolare i nutrienti dall'input form) ...
-            // Questa parte resta, perché i valori sono già stati calcolati e inseriti nei campi
-            // dalla nuova funzione `calcolaNutrientiDaRicetta`.
-
-            return foodItem;
+        function aggiornaDatalist() {
+            foodDatalist.innerHTML = Object.keys(foodDatabase)
+                .map(sanitizedKey => {
+                    const originalDesc = foodDatabase[sanitizedKey]?.desc || sanitizedKey.replace(/_/g, ' ');
+                    return `<option value="${originalDesc.charAt(0).toUpperCase() + originalDesc.slice(1)}"></option>`
+                }).join('');
         }
-
-        function resetInputAlimento() { 
-            [builderDesc, builderQta, ...Object.values(inputFields)].forEach(el => {
-                el.value = '';
-                el.readOnly = false; // Rendi i campi di nuovo editabili
-                el.style.backgroundColor = '#ffffff';
-            }); 
-            ricettaInCostruzione = [];
-            btnEditRecipe.classList.remove('has-recipe');
-            btnCalculateFromRecipe.style.display = 'none'; // Nascondi il pulsante di calcolo
-            builderDesc.focus(); 
-        }
-
-        // --- NUOVE FUNZIONI PER LA GESTIONE DELLE RICETTE ---
+        
+        // ... (tutte le altre funzioni JavaScript che avevamo)
 
         /**
          * Renderizza le righe degli ingredienti nella modale basandosi sull'array `ricettaInCostruzione`.
@@ -277,7 +555,7 @@
                 const percInput = template.querySelector('.ingredient-percentage');
                 const removeBtn = template.querySelector('.remove-ingredient-btn');
 
-                nameInput.value = item.ingrediente;
+                nameInput.value = item.ingrediente || '';
                 percInput.value = item.percentuale > 0 ? item.percentuale : '';
                 totalPercentage += parseFloat(item.percentuale) || 0;
 
@@ -293,12 +571,6 @@
             btnSaveRecipe.disabled = totalPercentage !== 100;
         }
 
-        /**
-         * Calcola i nutrienti finali per 100g di un prodotto basandosi sulla sua ricetta.
-         * @param {Array} ricetta - L'array con gli oggetti ingrediente/percentuale.
-         * @returns {Object} Un oggetto con tutti i nutrienti calcolati.
-         * @throws {Error} Se un ingrediente non è presente nel foodDatabase.
-         */
         function calcolaNutrientiDaRicetta(ricetta) {
             const tuttiNutrienti = Object.keys(inputFields);
             const nutrientiFinali = {};
@@ -324,11 +596,59 @@
             return nutrientiFinali;
         }
 
+        function creaAlimentoDaInput(isSingle = false) {
+            const desc = builderDesc.value.trim();
+            const qta = parseFloat(builderQta.value.replace(',', '.')); // Semplificato
+            if (!desc || isNaN(qta) || qta <= 0) {
+                alert('Inserisci nome e quantità valide.');
+                return null;
+            }
+
+            const foodData = { lastQta: qta, desc: desc };
+            const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta };
+            
+            if (ricettaInCostruzione.length > 0) {
+                foodData.ricetta = ricettaInCostruzione;
+                foodItem.ricetta = ricettaInCostruzione;
+            }
+
+            for (const key in inputFields) {
+                const valuePer100g = parseFloat(inputFields[key].value) || 0;
+                foodData[key] = valuePer100g;
+                foodItem[key] = (valuePer100g / 100) * qta;
+            }
+            
+            const sanitizedKey = sanitizeFirebaseKey(desc.toLowerCase());
+            foodDatabase[sanitizedKey] = foodData;
+            // salvaFoodDatabase(); // La salveremo dopo l'aggiunta al diario
+            aggiornaDatalist();
+            
+            if (isSingle) {
+                foodItem.type = 'single';
+            } else {
+                foodItem.selezionato = true;
+            }
+            return foodItem;
+        }
+
+        function resetInputAlimento() { 
+            builderDesc.value = '';
+            builderQta.value = '';
+            Object.values(inputFields).forEach(el => {
+                el.value = '';
+                el.readOnly = false;
+                el.style.backgroundColor = '#ffffff';
+            }); 
+            ricettaInCostruzione = [];
+            btnEditRecipe.classList.remove('has-recipe');
+            btnCalculateFromRecipe.style.display = 'none';
+            builderDesc.focus(); 
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // ... (tutto il codice esistente in DOMContentLoaded) ...
-
-            // --- NUOVI EVENT LISTENER PER LA MODALE RICETTA ---
-
+            // ... (logica di initAppUI, caricamento dati, etc.)
+            
+            // Listener per il pulsante MODIFICA RICETTA
             btnEditRecipe.addEventListener('click', () => {
                 const foodName = builderDesc.value.trim();
                 if (!foodName) {
@@ -336,26 +656,30 @@
                     return;
                 }
                 recipeModalFoodName.textContent = foodName;
+                if(ricettaInCostruzione.length === 0) { // Aggiungi una riga vuota se la ricetta è nuova
+                    ricettaInCostruzione.push({ ingrediente: '', percentuale: 0 });
+                }
                 renderRecipeRows();
                 recipeModal.style.display = 'block';
             });
 
+            // Listener per AGGIUNGI RIGA INGREDIENTE
             btnAddIngredientRow.addEventListener('click', () => {
                 ricettaInCostruzione.push({ ingrediente: '', percentuale: 0 });
                 renderRecipeRows();
             });
-            
+
+            // Listener per input e rimozione righe (delegation)
             recipeListContainer.addEventListener('input', (e) => {
-                const index = parseInt(e.target.dataset.index, 10);
+                const index = parseInt(e.target.dataset.index);
                 if (e.target.classList.contains('ingredient-name')) {
                     ricettaInCostruzione[index].ingrediente = e.target.value;
                 }
                 if (e.target.classList.contains('ingredient-percentage')) {
                     ricettaInCostruzione[index].percentuale = parseFloat(e.target.value) || 0;
                 }
-                renderRecipeRows(); // Ricalcola il totale ad ogni input
+                renderRecipeRows();
             });
-
             recipeListContainer.addEventListener('click', (e) => {
                 if (e.target.classList.contains('remove-ingredient-btn')) {
                     const index = parseInt(e.target.dataset.index, 10);
@@ -364,21 +688,22 @@
                 }
             });
 
+            // Listener per SALVA RICETTA
             btnSaveRecipe.addEventListener('click', () => {
                 btnEditRecipe.classList.add('has-recipe');
                 btnCalculateFromRecipe.style.display = 'inline-block';
                 recipeModal.style.display = 'none';
             });
 
+            // Listener per CALCOLA DA RICETTA
             btnCalculateFromRecipe.addEventListener('click', () => {
                 try {
                     const nutrientiCalcolati = calcolaNutrientiDaRicetta(ricettaInCostruzione);
                     Object.keys(nutrientiCalcolati).forEach(key => {
                         if (inputFields[key]) {
-                            // Arrotonda i valori in modo appropriato
                             const value = nutrientiCalcolati[key];
                             let formattedValue;
-                            if (['kcal', 'k', 'p', 'leu', 'iso', 'val', 'lys', 'met', 'phe', 'thr', 'trp', 'his'].includes(key)) {
+                             if (['kcal', 'k', 'p', 'leu', 'iso', 'val', 'lys', 'met', 'phe', 'thr', 'trp', 'his'].includes(key)) {
                                 formattedValue = value.toFixed(0);
                             } else if (['cu', 'b2', 'b6'].includes(key)) {
                                 formattedValue = value.toFixed(2);
@@ -395,51 +720,43 @@
                     alert(error.message);
                 }
             });
-            
-            btnSuggestRecipeAi.addEventListener('click', async (e) => {
-                const foodName = builderDesc.value.trim();
-                const button = e.target;
-                button.disabled = true; button.textContent = 'Penso...';
-                try {
-                    const promptText = `Fornisci una ricetta tipica in percentuali per "${foodName}". Rispondi ESATTAMENTE e SOLO con un array di oggetti JSON nel formato [{"ingrediente": "nome", "percentuale": valore}]. La somma delle percentuali deve fare 100. Non aggiungere altro testo.`;
-                    const res = await fetch(GEMINI_ENDPOINT, { /* ...chiamata API... */ });
-                    if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
-                    const data = await res.json();
-                    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    const recipeArray = JSON.parse(raw.replace(/```json|```/g, '').trim());
-                    ricettaInCostruzione = recipeArray;
-                    renderRecipeRows();
-                } catch(err) {
-                    alert("Errore suggerimento ricetta: " + err);
-                } finally {
-                    button.disabled = false; button.textContent = '💡 Suggerisci Ricetta (AI)';
-                }
-            });
 
-            // Modifica al listener dell'input 'builder-desc'
+             // Listener per l'input del nome alimento
             builderDesc.addEventListener('input', (e) => {
-                resetInputAlimento(); // Resetta tutto quando si inizia a scrivere
                 const sanitizedKey = sanitizeFirebaseKey(e.target.value.trim().toLowerCase());
-                const foodData = foodDatabase[sanitizedKey]; 
+                const foodData = foodDatabase[sanitizedKey];
+                
+                resetInputAlimento(); // Resetta prima di ricaricare i dati
+                builderDesc.value = e.target.value; // Ripristina il nome che l'utente stava scrivendo
+                
                 if (foodData) {
                     builderQta.value = foodData.lastQta ?? '';
-                    // Se l'alimento ha una ricetta, la carichiamo e mostriamo il pulsante
                     if (foodData.ricetta && foodData.ricetta.length > 0) {
-                        ricettaInCostruzione = foodData.ricetta;
+                        ricettaInCostruzione = JSON.parse(JSON.stringify(foodData.ricetta)); // Deep copy
                         btnEditRecipe.classList.add('has-recipe');
                         btnCalculateFromRecipe.style.display = 'inline-block';
                     } else {
-                        // Altrimenti, carichiamo i valori manuali
-                         for(const key in inputFields) {
-                            if (inputFields[key]) inputFields[key].value = foodData[key] ?? '';
+                        for (const key in inputFields) {
+                            if (foodData[key] !== undefined) inputFields[key].value = foodData[key];
                         }
                     }
                 }
-                aggiornaColoreNutrienti();
             });
 
+            // Listener per il pulsante CANCELLA CAMPI
+            document.getElementById('btn-clear-nutrients').addEventListener('click', resetInputAlimento);
+
+            // Listener per le MODALI
+            document.querySelectorAll('.modal-close').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const modalId = e.target.dataset.modal;
+                    document.getElementById(modalId).style.display = 'none';
+                });
+            });
+
+            // Aggiungere qui il resto degli event listener (aggiungi singolo, aggiungi a pasto, etc.)
+            // e le funzioni di aggiornamento UI che mancano. Questo è il nucleo della nuova logica.
         });
-        // --- FINE SCRIPT MODIFICATO ---
     </script>
 </body>
 </html>
