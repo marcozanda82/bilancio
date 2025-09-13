@@ -585,10 +585,10 @@
                 </table>
                 </div>
                 <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
-                    <h3 style="margin:0 0 10px 0; font-size:1em;">Visualizza o Salva un Altro Giorno</h3>
+                    <h3 style="margin:0 0 10px 0; font-size:1em;">Visualizza un Altro Giorno</h3>
                     <div>
                         <input type="date" id="data-caricamento">
-                        <button id="btn-salva-giorno-selezionato" style="background-color: #2e7d32;">Salva Dati Correnti Qui</button>
+                        <button id="btn-vai-a-oggi">Oggi</button>
                     </div>
                 </div>
             </div>
@@ -932,8 +932,7 @@
         const workoutDescInput = document.getElementById('workout-desc');
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
-        const btnSalvaGiornoSelezionato = document.getElementById('btn-salva-giorno-selezionato');
-
+        
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
 
         function sanitizeFirebaseKey(str) {
@@ -1677,7 +1676,11 @@
                 salvaGiorno(giornoVisualizzato, datiGiornalieri);
             });
 
-            // GESTIONE NUOVI PULSANTI E CARICAMENTO AUTOMATICO DATA
+            const btnVaiAOggi = document.getElementById('btn-vai-a-oggi');
+            btnVaiAOggi.addEventListener('click', () => {
+                caricaGiorno(getTodayString());
+            });
+
             dataCaricamentoInput.addEventListener('change', (e) => {
                 const dataSelezionata = e.target.value;
                 if (dataSelezionata) {
@@ -1686,19 +1689,6 @@
                 }
             });
 
-            btnSalvaGiornoSelezionato.addEventListener('click', () => {
-                const dataSelezionata = dataCaricamentoInput.value;
-                if (!dataSelezionata || dataSelezionata === giornoVisualizzato) { 
-                    alert("Seleziona una data diversa da quella visualizzata in cui salvare i dati."); 
-                    return; 
-                }
-                
-                if (confirm(`Stai per sovrascrivere i dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} con i dati che vedi ora sullo schermo. Sei sicuro?`)) {
-                    salvaGiorno(dataSelezionata, datiGiornalieri); 
-                    alert(`Dati salvati con successo per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}.`);
-                }
-            });
-            
             ['progress-proteine', 'progress-calorie', 'progress-carboidrati', 'progress-zuccheri', 
              'progress-fibre-totali', 'progress-fibre-solubili', 'progress-fibre-insolubili',
              'progress-fats-total', 'progress-fat-sat', 
@@ -2134,5 +2124,3 @@
     </script>
 </body>
 </html>
-index.html
-Visualizzazione di index.html.
