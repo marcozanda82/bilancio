@@ -803,7 +803,7 @@
         let datiGiornalieri = {};
         let foodDatabase = {};
         let pastoInCostruzione = [];
-        let currentEditingFoodKey = null; // NUOVA VARIABILE GLOBALE
+        let currentEditingFoodKey = null;
         
         let db; 
         let auth; 
@@ -863,8 +863,7 @@
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
         const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"fibreTotali":g,"fibreSolubili":g,"fibreInsolubili":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
-
-        // ... (tutti gli altri selector DOM rimangono invariati)
+        
         const btnEditIngredients = document.getElementById('btn-edit-ingredients');
         const ingredientsModal = document.getElementById('ingredients-modal');
         const ingredientsModalTitle = document.getElementById('ingredients-modal-title');
@@ -874,7 +873,6 @@
         const btnAddIngredientManual = document.getElementById('btn-add-ingredient-manual');
         const btnPopulateIngredientsAI = document.getElementById('btn-populate-ingredients-ai');
         const btnSaveIngredients = document.getElementById('btn-save-ingredients');
-        
         const authSection = document.getElementById('auth-section');
         const userEmailInput = document.getElementById('user-email');
         const userPasswordInput = document.getElementById('user-password');
@@ -1287,7 +1285,7 @@
                 }
             });
         }
-
+        
         async function handleAlimentoAddition(isForMealBuilder) {
             const desc = builderDesc.value.trim();
             const qta = evaluateQuantity(builderQta.value);
@@ -1333,8 +1331,6 @@
             }
         }
         
-        // ... (tutte le altre funzioni rimangono uguali, inserisco solo quelle nuove o modificate)
-
         function renderIngredientsList(foodKey) {
             const foodData = foodDatabase[foodKey];
             const ingredients = (foodData && foodData.ingredients) ? foodData.ingredients : [];
@@ -1358,20 +1354,66 @@
                 btn.addEventListener('click', (e) => {
                     const indexToDelete = parseInt(e.target.closest('button').dataset.index, 10);
                     foodDatabase[foodKey].ingredients.splice(indexToDelete, 1);
-                    renderIngredientsList(foodKey); // Rirender la lista
+                    renderIngredientsList(foodKey);
                 });
             });
         }
         
+        function eseguiMigrazioneStorico() {
+            const vecchioStoricoRaw = localStorage.getItem('trackerStorico');
+            if (!vecchioStoricoRaw) return;
+            try {
+                const vecchioStorico = JSON.parse(vecchioStoricoRaw);
+                if (Array.isArray(vecchioStorico)) {
+                    vecchioStorico.forEach(giorno => { if (giorno.data && giorno.log) localStorage.setItem(`trackerStorico_${giorno.data}`, JSON.stringify(giorno)); });
+                    localStorage.removeItem('trackerStorico'); 
+                    alert("Storico aggiornato al nuovo formato! Ricarica la pagina.");
+                }
+            } catch (e) { console.error("Errore migrazione storico.", e); }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
-            // ... (TUTTI GLI ALTRI EVENT LISTENER ESISTENTI)
+            dailyNotesTextarea.addEventListener('input', () => {
+                datiGiornalieri.note = dailyNotesTextarea.value;
+                salvaGiorno(giornoVisualizzato, datiGiornalieri);
+            });
+
+            const btnVaiAOggi = document.getElementById('btn-vai-a-oggi');
+            btnVaiAOggi.addEventListener('click', () => {
+                caricaGiorno(getTodayString());
+            });
+
+            dataCaricamentoInput.addEventListener('change', (e) => {
+                const dataSelezionata = e.target.value;
+                if (dataSelezionata) {
+                    console.log(`Data selezionata, carico il giorno: ${dataSelezionata}`);
+                    caricaGiorno(dataSelezionata);
+                }
+            });
+
+            // ... (altri event listener esistenti)
 
             // NUOVA LOGICA PER LA GESTIONE DEGLI INGREDIENTI
             builderDesc.addEventListener('input', () => {
-                btnEditIngredients.disabled = builderDesc.value.trim() === '';
+                const desc = builderDesc.value.trim();
+                btnEditIngredients.disabled = desc === '';
+                
+                if (desc !== '') {
+                    const sanitizedKey = sanitizeFirebaseKey(desc.toLowerCase());
+                    const foodData = foodDatabase[sanitizedKey]; 
+                    if (foodData) {
+                        builderQta.value = foodData.lastQta ?? '';
+                        for(const key in inputFields) {
+                            if (inputFields[key]) {
+                                inputFields[key].value = foodData[key] ?? '';
+                            }
+                        }
+                    }
+                }
+                aggiornaColoreNutrienti();
             });
 
             btnEditIngredients.addEventListener('click', () => {
@@ -1380,10 +1422,10 @@
                 
                 currentEditingFoodKey = sanitizeFirebaseKey(desc.toLowerCase());
                 if (!foodDatabase[currentEditingFoodKey]) {
-                    foodDatabase[currentEditingFoodKey] = { desc: desc }; // Crea l'oggetto se non esiste
+                    foodDatabase[currentEditingFoodKey] = { desc: desc };
                 }
                 if (!foodDatabase[currentEditingFoodKey].ingredients) {
-                    foodDatabase[currentEditingFoodKey].ingredients = []; // Assicura che l'array esista
+                    foodDatabase[currentEditingFoodKey].ingredients = [];
                 }
 
                 ingredientsModalTitle.textContent = `Ingredienti per "${desc}"`;
@@ -1444,11 +1486,12 @@
                 currentEditingFoodKey = null;
             });
             
-            // Chiude il modal cliccando sulla X
             ingredientsModal.querySelector('.modal-close').addEventListener('click', () => {
                 ingredientsModal.style.display = 'none';
                 currentEditingFoodKey = null;
             });
+            
+            // ... (tutto il resto del codice da qui in poi rimane invariato)
         });
     </script>
 </body>
