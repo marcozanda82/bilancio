@@ -1389,7 +1389,7 @@ function aggiornaUI() {
             });
         }
 
-         function renderMealBuilder() {
+function renderMealBuilder() {
             mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
             logPastoBuilderBody.innerHTML = ''; 
             const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
@@ -1413,51 +1413,21 @@ function aggiornaUI() {
             // const createBuilderDescriptionCellHTML = (item) => {
                 let html = '';
                 if (item.ingredienti) {
-                    html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}" data-ingredients="${item.ingredienti}">📜</span>`;
+                     // Rimossa la parte "data-ingredients" che causava l'errore
+                    html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}">📜</span>`;
                 }
                 html += item.desc;
                 return html;
             };
-
-            pastoInCostruzione.forEach((item, index) => { 
+            // pastoInCostruzione.forEach((item, index) => { 
                 const riga = logPastoBuilderBody.insertRow(); 
-                // riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td>
+                riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td>
                                 <td>${createBuilderDescriptionCellHTML(item)}</td>
                                 <td>${item.qta}</td>
                                 <td>${(item.prot || 0).toFixed(1)}</td>
                                 <td>${((item.kcal || item.cal) || 0).toFixed(0)}</td>
                                 <td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
             });
-        }
-        // function aggiornaDatalist() {
-            foodDatalist.innerHTML = Object.keys(foodDatabase)
-                .map(sanitizedKey => {
-                    // Dato che le chiavi sono sanificate, dobbiamo recuperare il nome originale per la visualizzazione
-                    const originalDesc = foodDatabase[sanitizedKey]?.desc || sanitizedKey.replace(/_/g, ' ');
-                    return `<option value="${originalDesc.charAt(0).toUpperCase() + originalDesc.slice(1)}"></option>`
-                }).join('');
-        }
-        
-        function calcolaQualitaProteine(item) {
-            if (!item || !item.prot || item.prot <= 0) {
-                return { score: 0, limiting: 'N/D' };
-            }
-            let minRatio = Infinity;
-            let limitingAmino = 'Nessuno';
-            for (const amino in PROFILO_AMINOACIDICO_RIFERIMENTO) {
-                const referenceValueMgPerG = PROFILO_AMINOACIDICO_RIFERIMENTO[amino];
-                const actualValueMg = item[amino] || 0;
-                const actualValueMgPerG = (actualValueMg / item.prot);
-                const ratio = Math.min(1, actualValueMgPerG / referenceValueMgPerG);
-                if (ratio < minRatio) {
-                    minRatio = ratio;
-                    limitingAmino = amino.charAt(0).toUpperCase() + amino.slice(1);
-                }
-            }
-            return {
-                score: Math.round(minRatio * 100),
-                limiting: limitingAmino
-            };
         }
 
         function apriModalAminoacidi(totali, titolo) {
@@ -2395,4 +2365,5 @@ function aggiornaUI() {
     </script>
 </body>
 </html>
+
 
