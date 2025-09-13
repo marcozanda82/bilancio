@@ -1953,15 +1953,31 @@
 
         Object.values(inputFields).forEach(input => { if (input) input.addEventListener('input', aggiornaColoreNutrienti) });
 
+// Selettore per il nuovo pulsante di salvataggio
+        const btnSalvaGiorno = document.getElementById('btn-salva-giorno');
+
+        // 1. Logica per il pulsante "Carica"
         btnCaricaGiorno.addEventListener('click', () => {
             const dataSelezionata = dataCaricamentoInput.value;
-            if (!dataSelezionata) { alert("Seleziona una data."); return; }
-            if (confirm(`Vuoi SALVARE i dati attuali per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}?`)) {
+            if (!dataSelezionata) { 
+                alert("Seleziona una data da caricare."); 
+                return; 
+            }
+            caricaGiorno(dataSelezionata); 
+            alert(`Dati caricati per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}.`);
+        });
+
+        // 2. Logica per il pulsante "Salva Giorno"
+        btnSalvaGiorno.addEventListener('click', () => {
+            const dataSelezionata = dataCaricamentoInput.value;
+            if (!dataSelezionata) { 
+                alert("Seleziona la data in cui vuoi salvare i dati attuali."); 
+                return; 
+            }
+            // Aggiungo una conferma perché sovrascrivere dati è un'azione importante
+            if (confirm(`Sei sicuro di voler SOVRASCRIVERE i dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} con quelli attualmente visualizzati?`)) {
                 salvaGiorno(dataSelezionata, datiGiornalieri); 
-                alert(`Dati salvati per ${new Date(dataSelezionata).toLocaleDateString('it-IT')}.`);
-            } else {
-                caricaGiorno(dataSelezionata); 
-                alert(`Dati caricati per ${new Date(dataSelezionata).toLocaleDateString('it-IT')}.`);
+                alert(`Dati salvati con successo per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}.`);
             }
         });
 
@@ -2154,4 +2170,5 @@
     </script>
 </body>
 </html>
+
 
