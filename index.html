@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Nutrizionale</title>
-
+    <title>Tracker Nutrizionale Definitivo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; color: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 800px; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -26,6 +23,8 @@
         #form-allenamento button { background-color: #2e7d32; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
         .nav-links a { flex-grow: 1; text-align: center; padding: 10px; background-color: #607d8b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        .sync-button-container { text-align: center; margin-top: 20px; }
+        .sync-button { display: inline-block; background-color: #ff8f00; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9em; }
         #riepilogo p { font-size: 1.1em; margin: 8px 0; }
         progress { width: 100%; height: 15px; border-radius: 6px; margin-top: 2px; cursor: pointer; }
         progress.macro-progress { height: 25px; }
@@ -95,9 +94,24 @@
         #auth-section.logged-in #btn-sign-out { width: auto; padding: 5px 10px; font-size: 0.8em; margin: 0; flex-shrink: 0; }
         .summary-header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 25px; }
         .summary-header-row h2 { margin: 0; border-bottom: none; }
+        #manual-fill-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
+        #manual-fill-section textarea { width: 100%; height: 100px; margin-top: 10px; resize: vertical; }
+        #manual-fill-section .button-group { justify-content: space-between; }
+        .fats-bar-container { margin-top: 15px; }
+        .fats-group { padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px; }
+        .fats-sub-bars-container { display: flex; gap: 20px; margin-top: 10px; }
+        .fats-sub-bars-container > div { flex-grow: 1; flex-basis: 0; }
+        .progress-fat-sat.green::-webkit-progress-value { background-color: #4CAF50; }
+        .progress-fat-sat.green::-moz-progress-bar { background-color: #4CAF50; }
+        .progress-fat-sat.orange::-webkit-progress-value { background-color: #ff9800; }
+        .progress-fat-sat.orange::-moz-progress-bar { background-color: #ff9800; }
+        .progress-fat-sat.red::-webkit-progress-value { background-color: #f44336; }
+        .progress-fat-sat.red::-moz-progress-bar { background-color: #f44336; }
         .food-adder-header { display: flex; justify-content: space-between; align-items: center; }
         #btn-clear-nutrients { background-color: transparent; color: #d32f2f; border: none; padding: 5px 10px; font-size: 1em; cursor: pointer; transition: color 0.3s; }
         #btn-clear-nutrients:hover { color: #ff1744; }
+        .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
+        #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .diary-table-container { 
             overflow-x: auto; 
             -webkit-box-shadow: inset -8px 0px 8px -8px rgba(0,0,0,0.1);
@@ -116,13 +130,20 @@
             position: sticky;
             left: 0;
             z-index: 2;
-            background-color: #f8f9fa; 
             border-right: 2px solid #e0e0e0;
         }
-        #log-pasti td:nth-child(1) {
-             background-color: #ffffff;
+        #log-pasti th:nth-child(2), #log-pasti td:nth-child(2) {
+            min-width: 50px;
+            text-align: left;
         }
+        #log-pasti th:last-child, #log-pasti td:last-child {
+            min-width: 80px;
+            text-align: center;
+        }
+        #log-pasti th:first-child { background-color: #f8f9fa; }
+        #log-pasti td:first-child { background-color: #ffffff; }
         #log-pasti .meal-group-row td:first-child { background-color: #f0f4f8; }
+        #log-pasti .sub-item-row td:first-child { background-color: #ffffff; }
         .modal {
             display: none; 
             position: fixed; 
@@ -133,6 +154,10 @@
             height: 100%;
             overflow: auto; 
             background-color: rgba(0,0,0,0.6); 
+            -webkit-animation-name: fadeIn;
+            -webkit-animation-duration: 0.4s;
+            animation-name: fadeIn;
+            animation-duration: 0.4s;
         }
         .modal-content {
             background-color: #fefefe;
@@ -143,6 +168,10 @@
             max-width: 700px;
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            -webkit-animation-name: slideIn;
+            -webkit-animation-duration: 0.4s;
+            animation-name: slideIn;
+            animation-duration: 0.4s;
         }
         .modal-close {
             color: #aaa;
@@ -157,6 +186,53 @@
             text-decoration: none;
             cursor: pointer;
         }
+        .vitamin-weekly-summary {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .vitamin-weekly-summary:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .vitamin-weekly-summary h4 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: #1565c0;
+            border: none;
+        }
+        .vitamin-weekly-summary p {
+            margin: 4px 0;
+            font-size: 0.95em;
+        }
+        .vitamin-weekly-summary i {
+            color: #555;
+            font-size: 0.9em;
+        }
+        .vitamin-weekly-summary progress {
+            width: 100%;
+            height: 20px;
+        }
+        .diff-value { font-weight: bold; }
+        .diff-surplus { color: #2e7d32; }
+        .diff-deficit { color: #d32f2f; }
+        @-webkit-keyframes slideIn { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
+        @keyframes slideIn { from {margin-top: 5%; opacity: 0} to {margin-top: 10%; opacity: 1} }
+        @-webkit-keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
+        @keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
+        #nutrient-detail-modal-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #nutrient-detail-modal-list li:last-child {
+            border-bottom: none;
+        }
+        #nutrient-detail-modal-list li span {
+            font-weight: 600;
+        }
         .protein-score {
             font-weight: bold;
             padding: 2px 6px;
@@ -170,10 +246,9 @@
         .protein-score.high { background-color: #2e7d32; }
     </style>
 </head>
-
 <body>
     <div class="container">
-        <h1>Tracker Nutrizionale</h1>
+        <h1>Tracker Nutrizionale Marco</h1>
         
         <div id="auth-section" class="sezione">
             <h2 id="auth-header">Accedi / Registrati</h2>
@@ -236,7 +311,7 @@
                 <div class="collapsible-content" id="fibre-content">
                     <p>Fibre Totali: <span id="totale-fibre-totali">0</span> / <span id="obiettivo-fibre-totali"></span> g</p>
                     <progress id="progress-fibre-totali" class="macro-progress" value="0"></progress>
-                    <div style="padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px;">
+                    <div class="fats-group" style="padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px;">
                         <p>Solubili: <span id="totale-fibre-solubili">0</span> / <span id="obiettivo-fibre-solubili"></span> g</p>
                         <progress id="progress-fibre-solubili" value="0"></progress>
                         <p>Insolubili: <span id="totale-fibre-insolubili">0</span> / <span id="obiettivo-fibre-insolubili"></span> g</p>
@@ -257,12 +332,12 @@
                     <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
                     
                     <div class="fats-group">
-                         <div style="display: flex; gap: 20px; margin-top: 10px;">
-                            <div style="flex-grow: 1; flex-basis: 0;">
+                         <div class="fats-sub-bars-container">
+                            <div>
                                 <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat"></span> g</p>
                                 <progress id="progress-fat-sat" class="progress-fat-sat" value="0"></progress>
                             </div>
-                            <div style="flex-grow: 1; flex-basis: 0;">
+                            <div>
                                 <p>Trans: <span id="totale-fat-trans">0</span> / <span id="obiettivo-fat-trans"></span> g</p>
                                 <progress id="progress-fat-trans" value="0"></progress>
                             </div>
@@ -277,13 +352,13 @@
                             <progress id="progress-fat-mono" value="0"></progress>
                             <p>Polinsaturi: <span id="totale-fat-poly">0</span> / <span id="obiettivo-fat-poly"></span> g</p>
                             <progress id="progress-fat-poly" value="0"></progress>
-                            <div style="border: none; padding-left: 10px; margin-top: 10px;">
-                                 <div style="display: flex; gap: 20px; margin-top: 10px;">
-                                    <div style="flex-grow: 1; flex-basis: 0;">
+                            <div class="fats-group" style="border: none; padding-left: 10px; margin-top: 10px;">
+                                 <div class="fats-sub-bars-container">
+                                    <div>
                                         <p>Omega 3: <span id="totale-omega3">0</span> / <span id="obiettivo-omega3"></span> g</p>
                                         <progress id="progress-omega3" value="0"></progress>
                                     </div>
-                                    <div style="flex-grow: 1; flex-basis: 0;">
+                                    <div>
                                         <p>Omega 6: <span id="totale-omega6">0</span> / <span id="obiettivo-omega6"></span> g</p>
                                         <progress id="progress-omega6" value="0"></progress>
                                     </div>
@@ -348,7 +423,7 @@
                     <label for="daily-notes">Note del Giorno</label>
                     <textarea id="daily-notes" rows="3" placeholder="Aggiungi note per la giornata..."></textarea>
                 </div>
-            </div>
+                </div>
 
             <div id="form-allenamento" class="sezione">
                 <h2 class="collapsible-header" id="workout-header">Registra Allenamento <span class="arrow">▶</span></h2>
@@ -414,12 +489,12 @@
                         <div><label>Triptofano (mg)/100g</label><input type="number" id="builder-trp" min="0"></div>
                         <div><label>Istidina (mg)/100g</label><input type="number" id="builder-his" min="0"></div>
                     </div>
-                    <div id="manual-fill-section" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc;">
-                        <div class="button-group" style="justify-content: space-between;">
+                    <div id="manual-fill-section">
+                        <div class="button-group">
                             <button id="btn-copy-prompt">Copia Richiesta AI</button>
                             <button id="btn-confirm-json" style="background-color: #2e7d32;">Conferma Dati da JSON</button>
                         </div>
-                        <textarea id="manual-json-input" placeholder="Incolla qui l'oggetto JSON con i valori nutrizionali, come da richiesta." style="width: 100%; height: 100px; margin-top: 10px; resize: vertical;"></textarea>
+                        <textarea id="manual-json-input" placeholder="Incolla qui l'oggetto JSON con i valori nutrizionali, come da richiesta."></textarea>
                     </div>
                 </div>
                 <datalist id="food-database-list"></datalist>
@@ -503,7 +578,6 @@
                             <th>B9</th>
                             <th>B2</th>
                             <th>B6</th>
-                            <th>P</th>
                             <th>Azione</th>
                         </tr>
                     </thead>
@@ -511,10 +585,10 @@
                 </table>
                 </div>
                 <div id="caricamento-manuale" class="sezione" style="padding:15px; margin-top:20px; border-width:1px;">
-                    <h3 style="margin:0 0 10px 0; font-size:1em;">Navigazione Diario</h3>
+                    <h3 style="margin:0 0 10px 0; font-size:1em;">Visualizza o Salva un Altro Giorno</h3>
                     <div>
                         <input type="date" id="data-caricamento">
-                        <button id="btn-vai-a-oggi">Oggi</button>
+                        <button id="btn-salva-giorno-selezionato" style="background-color: #2e7d32;">Salva Dati Correnti Qui</button>
                     </div>
                 </div>
             </div>
@@ -532,6 +606,143 @@
         </div>
     </div>
     
+    <div id="weekly-vitamin-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="weekly-vitamin-modal">&times;</span>
+            <h2>Riepilogo Settimanale Vitamine Accumulabili</h2>
+            <p style="font-size: 0.9em; color: #555;">Dati calcolati sugli ultimi 7 giorni, incluso oggi.</p>
+            
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina A</h4>
+                <p>Totale: <span id="weekly-vit-a-total">0</span> / <span id="weekly-vit-a-goal">6300</span> µg</p>
+                <progress id="weekly-progress-vit-a" value="0" max="6300"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-a-avg">0.0</span> µg (Obiettivo: 900 µg | <span id="weekly-vit-a-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina D</h4>
+                <p>Totale: <span id="weekly-vit-d-total">0</span> / <span id="weekly-vit-d-goal">105</span> µg</p>
+                <progress id="weekly-progress-vit-d" value="0" max="105"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-d-avg">0.0</span> µg (Obiettivo: 15 µg | <span id="weekly-vit-d-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina E</h4>
+                <p>Totale: <span id="weekly-vit-e-total">0</span> / <span id="weekly-vit-e-goal">105</span> mg</p>
+                <progress id="weekly-progress-vit-e" value="0" max="105"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-e-avg">0.0</span> mg (Obiettivo: 15 mg | <span id="weekly-vit-e-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina K</h4>
+                <p>Totale: <span id="weekly-vit-k-total">0</span> / <span id="weekly-vit-k-goal">840</span> µg</p>
+                <progress id="weekly-progress-vit-k" value="0" max="840"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-k-avg">0.0</span> µg (Obiettivo: 120 µg | <span id="weekly-vit-k-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Vitamina B12</h4>
+                <p>Totale: <span id="weekly-vit-b12-total">0</span> / <span id="weekly-vit-b12-goal">16.8</span> µg</p>
+                <progress id="weekly-progress-vit-b12" value="0" max="16.8"></progress>
+                <p><i>Media giornaliera: <span id="weekly-vit-b12-avg">0.0</span> µg (Obiettivo: 2.4 µg | <span id="weekly-vit-b12-diff" class="diff-value"></span>)</i></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="weekly-fats-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="weekly-fats-modal">&times;</span>
+            <h2>Riepilogo Settimanale Grassi</h2>
+            <p style="font-size: 0.9em; color: #555;">Dati calcolati sugli ultimi 7 giorni, incluso oggi.</p>
+            
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Totali</h4>
+                <p>Totale: <span id="weekly-fat-total-total">0</span> / <span id="weekly-fat-total-goal"></span> g</p>
+                <progress id="weekly-progress-fat-total" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-total-avg">0.0</span> g (Obiettivo: <span id="daily-fat-total-goal"></span> g | <span id="weekly-fat-total-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Saturi</h4>
+                <p>Totale: <span id="weekly-fat-sat-total">0</span> / <span id="weekly-fat-sat-goal"></span> g</p>
+                <progress id="weekly-progress-fat-sat" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-sat-avg">0.0</span> g (Obiettivo: <span id="daily-fat-sat-goal"></span> g | <span id="weekly-fat-sat-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Trans</h4>
+                <p>Totale: <span id="weekly-fat-trans-total">0</span> / <span id="weekly-fat-trans-goal"></span> g</p>
+                <progress id="weekly-progress-fat-trans" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-trans-avg">0.0</span> g (Obiettivo: <span id="daily-fat-trans-goal"></span> g | <span id="weekly-fat-trans-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Monoinsaturi</h4>
+                <p>Totale: <span id="weekly-fat-mono-total">0</span> / <span id="weekly-fat-mono-goal"></span> g</p>
+                <progress id="weekly-progress-fat-mono" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-mono-avg">0.0</span> g (Obiettivo: <span id="daily-fat-mono-goal"></span> g | <span id="weekly-fat-mono-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <div class="vitamin-weekly-summary">
+                <h4>Grassi Polinsaturi</h4>
+                <p>Totale: <span id="weekly-fat-poly-total">0</span> / <span id="weekly-fat-poly-goal"></span> g</p>
+                <progress id="weekly-progress-fat-poly" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-poly-avg">0.0</span> g (Obiettivo: <span id="daily-fat-poly-goal"></span> g | <span id="weekly-fat-poly-diff" class="diff-value"></span>)</i></p>
+            </div>
+             <div class="vitamin-weekly-summary">
+                <h4>Omega 3</h4>
+                <p>Totale: <span id="weekly-fat-omega3-total">0</span> / <span id="weekly-fat-omega3-goal"></span> g</p>
+                <progress id="weekly-progress-fat-omega3" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-omega3-avg">0.0</span> g (Obiettivo: <span id="daily-fat-omega3-goal"></span> g | <span id="weekly-fat-omega3-diff" class="diff-value"></span>)</i></p>
+            </div>
+             <div class="vitamin-weekly-summary">
+                <h4>Omega 6</h4>
+                <p>Totale: <span id="weekly-fat-omega6-total">0</span> / <span id="weekly-fat-omega6-goal"></span> g</p>
+                <progress id="weekly-progress-fat-omega6" value="0"></progress>
+                <p><i>Media giornaliera: <span id="weekly-fat-omega6-avg">0.0</span> g (Obiettivo: <span id="daily-fat-omega6-goal"></span> g | <span id="weekly-fat-omega6-diff" class="diff-value"></span>)</i></p>
+            </div>
+            <p style="text-align: center; font-weight: bold; margin-top: 15px; font-size: 1.2em; border-top: 1px solid #eee; padding-top: 15px;">
+                Rapporto O6:O3 Settimanale: <span id="weekly-omega-ratio-value">N/D</span>
+            </p>
+        </div>
+    </div>
+
+    <div id="nutrient-detail-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="nutrient-detail-modal">&times;</span>
+            <h2 id="nutrient-detail-modal-title"></h2>
+            <ul id="nutrient-detail-modal-list"></ul>
+        </div>
+    </div>
+
+    <div id="amino-acid-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="amino-acid-modal">&times;</span>
+            <h2 id="modal-amino-title">Dettaglio Amminoacidi</h2>
+            
+            <div id="modal-amino-summary" style="text-align: center; margin-bottom: 20px;"></div>
+
+            <div id="modal-amino-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <p>Leucina: <span id="modal-amino-leu-total">0</span> / <span id="modal-amino-leu-goal"></span> mg</p>
+                    <progress id="modal-amino-leu-progress" value="0" style="width:100%"></progress>
+                    <p>Isoleucina: <span id="modal-amino-iso-total">0</span> / <span id="modal-amino-iso-goal"></span> mg</p>
+                    <progress id="modal-amino-iso-progress" value="0" style="width:100%"></progress>
+                    <p>Valina: <span id="modal-amino-val-total">0</span> / <span id="modal-amino-val-goal"></span> mg</p>
+                    <progress id="modal-amino-val-progress" value="0" style="width:100%"></progress>
+                    <p>Lisina: <span id="modal-amino-lys-total">0</span> / <span id="modal-amino-lys-goal"></span> mg</p>
+                    <progress id="modal-amino-lys-progress" value="0" style="width:100%"></progress>
+                </div>
+                <div>
+                    <p>Metionina: <span id="modal-amino-met-total">0</span> / <span id="modal-amino-met-goal"></span> mg</p>
+                    <progress id="modal-amino-met-progress" value="0" style="width:100%"></progress>
+                    <p>Fenilalanina: <span id="modal-amino-phe-total">0</span> / <span id="modal-amino-phe-goal"></span> mg</p>
+                    <progress id="modal-amino-phe-progress" value="0" style="width:100%"></progress>
+                    <p>Treonina: <span id="modal-amino-thr-total">0</span> / <span id="modal-amino-thr-goal"></span> mg</p>
+                    <progress id="modal-amino-thr-progress" value="0" style="width:100%"></progress>
+                    <p>Triptofano: <span id="modal-amino-trp-total">0</span> / <span id="modal-amino-trp-goal"></span> mg</p>
+                    <progress id="modal-amino-trp-progress" value="0" style="width:100%"></progress>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                 <p>Istidina: <span id="modal-amino-his-total">0</span> / <span id="modal-amino-his-goal"></span> mg</p>
+                 <progress id="modal-amino-his-progress" value="0" style="width:100%"></progress>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
@@ -640,10 +851,18 @@
         const btnCaloriePlus = document.getElementById('btn-calorie-plus');
         const btnDownloadManual = document.getElementById('btn-download-manual');
         const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
+        const cloudSyncSection = document.querySelector('.cloud-sync-section');
         const btnCopyPrompt = document.getElementById('btn-copy-prompt');
         const manualJsonInput = document.getElementById('manual-json-input');
         const btnConfirmJson = document.getElementById('btn-confirm-json');
         const btnClearNutrients = document.getElementById('btn-clear-nutrients');
+        const weeklyVitaminModal = document.getElementById('weekly-vitamin-modal');
+        const infoVitSettimanaliBtn = document.getElementById('info-vit-settimanali');
+        const weeklyFatsModal = document.getElementById('weekly-fats-modal');
+        const infoFatsSettimanaliBtn = document.getElementById('info-fats-settimanali');
+        const nutrientDetailModal = document.getElementById('nutrient-detail-modal');
+        const nutrientDetailTitle = document.getElementById('nutrient-detail-modal-title');
+        const nutrientDetailList = document.getElementById('nutrient-detail-modal-list');
         const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderCarb = document.getElementById('builder-carb'), builderZuccheri = document.getElementById('builder-zuccheri');
@@ -713,9 +932,8 @@
         const workoutDescInput = document.getElementById('workout-desc');
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
-        const btnVaiAOggi = document.getElementById('btn-vai-a-oggi');
-    
-        // Tutte le funzioni JavaScript da qui in poi...
+        const btnSalvaGiornoSelezionato = document.getElementById('btn-salva-giorno-selezionato');
+
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
 
         function sanitizeFirebaseKey(str) {
@@ -1019,7 +1237,900 @@
             });
         }
 
-        // Tutte le altre funzioni (renderMealBuilder, creaAlimentoDaInput, etc.) rimangono qui...
+        // ...
+        // Le funzioni da 'renderMealBuilder' in poi rimangono quasi invariate
+        // tranne per le modifiche già discusse
+        // ...
+        function renderMealBuilder() {
+            mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
+            logPastoBuilderBody.innerHTML = ''; 
+            const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
+            const selectedMealTypeText = mealTypeSelector?.options[mealTypeSelector.selectedIndex]?.text ?? '';
+            const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
+            const totaliPastoCorrenteSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
+                acc.prot += item.prot || 0; acc.kcal += (item.kcal || item.cal) || 0; return acc;
+            }, { prot: 0, kcal: 0 });
+            currentMealTypeDisplay.textContent = selectedMealTypeText;
+            mealProtCurrent.textContent = totaliPastoCorrenteSelezionati.prot.toFixed(1);
+            mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
+            mealProtRemaining.textContent = `${(obiettiviPasto.targetProt - totaliPastoCorrenteSelezionati.prot).toFixed(1)} g`;
+            mealProgressProt.max = obiettiviPasto.targetProt;
+            mealProgressProt.value = totaliPastoCorrenteSelezionati.prot;
+            mealCalCurrent.textContent = totaliPastoCorrenteSelezionati.kcal.toFixed(0);
+            mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
+            mealCalRemaining.textContent = `${(obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.kcal).toFixed(0)} kcal`;
+            mealProgressCal.max = obiettiviPasto.targetCal;
+            mealProgressCal.value = totaliPastoCorrenteSelezionati.kcal;
+            pastoInCostruzione.forEach((item, index) => { 
+                const riga = logPastoBuilderBody.insertRow(); 
+                riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}</td><td>${(item.prot || 0).toFixed(1)}</td><td>${((item.kcal || item.cal) || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
+            });
+        }
+
+        function aggiornaDatalist() {
+            foodDatalist.innerHTML = Object.keys(foodDatabase)
+                .map(sanitizedKey => {
+                    // Dato che le chiavi sono sanificate, dobbiamo recuperare il nome originale per la visualizzazione
+                    const originalDesc = foodDatabase[sanitizedKey]?.desc || sanitizedKey.replace(/_/g, ' ');
+                    return `<option value="${originalDesc.charAt(0).toUpperCase() + originalDesc.slice(1)}"></option>`
+                }).join('');
+        }
+        
+        function calcolaQualitaProteine(item) {
+            if (!item || !item.prot || item.prot <= 0) {
+                return { score: 0, limiting: 'N/D' };
+            }
+            let minRatio = Infinity;
+            let limitingAmino = 'Nessuno';
+            for (const amino in PROFILO_AMINOACIDICO_RIFERIMENTO) {
+                const referenceValueMgPerG = PROFILO_AMINOACIDICO_RIFERIMENTO[amino];
+                const actualValueMg = item[amino] || 0;
+                const actualValueMgPerG = (actualValueMg / item.prot);
+                const ratio = Math.min(1, actualValueMgPerG / referenceValueMgPerG);
+                if (ratio < minRatio) {
+                    minRatio = ratio;
+                    limitingAmino = amino.charAt(0).toUpperCase() + amino.slice(1);
+                }
+            }
+            return {
+                score: Math.round(minRatio * 100),
+                limiting: limitingAmino
+            };
+        }
+
+        function apriModalAminoacidi(totali, titolo) {
+            const modal = document.getElementById('amino-acid-modal');
+            if (!modal) return;
+            document.getElementById('modal-amino-title').textContent = titolo;
+            const qualita = calcolaQualitaProteine(totali);
+            const scoreClass = qualita.score < 70 ? 'low' : qualita.score < 90 ? 'medium' : 'high';
+            const summaryDiv = document.getElementById('modal-amino-summary');
+            summaryDiv.innerHTML = `
+                <div class="protein-score ${scoreClass}" style="display: inline-block; padding: 5px 15px; font-size: 1.1em;" title="Limitante: ${qualita.limiting}">
+                    Qualità Proteica: ${qualita.score}%
+                </div>
+            `;
+            for (const amino in OBIETTIVI_AMINO) {
+                const obiettivo = OBIETTIVI_AMINO[amino];
+                const valore = totali[amino] || 0;
+                document.getElementById(`modal-amino-${amino}-total`).textContent = valore.toFixed(0);
+                document.getElementById(`modal-amino-${amino}-goal`).textContent = obiettivo;
+                const progress = document.getElementById(`modal-amino-${amino}-progress`);
+                progress.max = obiettivo;
+                progress.value = valore;
+            }
+            modal.style.display = 'block';
+        }
+
+        function evaluateQuantity(input) {
+            try {
+                let value = input.trim().replace(',', '.');
+                if (/^[0-9+\-*/.\s()]+$/.test(value)) {
+                    const result = new Function(`return ${value}`)();
+                    if (typeof result === 'number' && !isNaN(result)) {
+                        return result;
+                    }
+                }
+            } catch (e) { console.error("Errore valutazione quantità:", e); }
+            return parseFloat(input.replace(',', '.'));
+        }
+
+        function creaAlimentoDaInput(isSingle = false) {
+            const desc = builderDesc.value.trim();
+            const qta = evaluateQuantity(builderQta.value);
+            if (!desc || isNaN(qta) || qta <= 0) {
+                alert('Inserisci nome e quantità valide.');
+                return null;
+            }
+
+            const foodData = { lastQta: qta, desc: desc }; // Salva anche la descrizione originale
+            const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta };
+            
+            for (const key in inputFields) {
+                inputFields[key].value = inputFields[key].value.replace(',', '.');
+                foodData[key] = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
+            }
+            
+            if (foodData.fibreSolubili !== null && foodData.fibreInsolubili !== null && foodData.fibreTotali === null) {
+                const totalFibre = (foodData.fibreSolubili || 0) + (foodData.fibreInsolubili || 0);
+                foodData.fibreTotali = totalFibre;
+                builderFibreTotali.value = totalFibre.toFixed(1);
+            }
+
+            const protValue100g = foodData.prot || 0;
+            const isAnyAminoFilled = Object.keys(OBIETTIVI_AMINO).some(key => foodData[key] !== null && foodData[key] > 0);
+
+            if (protValue100g > 0 && !isAnyAminoFilled) {
+                for (const amino in PROFILO_AMINOACIDICO_RIFERIMENTO) {
+                    const referenceMgPerG = PROFILO_AMINOACIDICO_RIFERIMENTO[amino];
+                    const calculatedAminoMg = protValue100g * referenceMgPerG;
+                    foodData[amino] = calculatedAminoMg;
+                    if(inputFields[amino]) {
+                        inputFields[amino].value = calculatedAminoMg.toFixed(0);
+                    }
+                }
+            } 
+            
+            for (const key in foodData) {
+                if (key !== 'lastQta' && key !== 'desc') {
+                    foodItem[key] = ((foodData[key] ?? 0) / 100) * qta;
+                }
+            }
+            
+            if (foodData.fatTotal === null && (foodData.fatSat !== null || foodData.fatTrans !== null || foodData.fatMono !== null || foodData.fatPoly !== null)) {
+                const total = (foodData.fatSat || 0) + (foodData.fatTrans || 0) + (foodData.fatMono || 0) + (foodData.fatPoly || 0);
+                foodData.fatTotal = total;
+                foodItem.fatTotal = (total / 100) * qta;
+                builderFatTotal.value = total.toFixed(1); 
+            }
+            
+            const sanitizedKey = sanitizeFirebaseKey(desc.toLowerCase());
+            foodDatabase[sanitizedKey] = foodData;
+            salvaFoodDatabase();
+            aggiornaDatalist();
+            
+            if (isSingle) {
+                foodItem.type = 'single';
+            } else {
+                foodItem.selezionato = true;
+            }
+            return foodItem;
+        }
+        
+        async function handleAlimentoAddition(isForMealBuilder) {
+            const desc = builderDesc.value.trim(), qta = evaluateQuantity(builderQta.value);
+            if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return; }
+
+            const emptyFields = Object.keys(inputFields)
+                .filter(key => key !== 'fatTotal' && !Object.keys(OBIETTIVI_AMINO).includes(key) && key !== 'fatTotal')
+                .filter(key => inputFields[key].value === '');
+                
+            if (emptyFields.length > 5) {
+                const confirmMsg = `Ci sono molti campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
+                if (confirm(confirmMsg)) {
+                    await document.getElementById('btn-compila-ai').click();
+                    // Aspettiamo che i campi si popolino
+                    setTimeout(() => handleAlimentoAddition(isForMealBuilder), 500);
+                    return; 
+                }
+            }
+            
+            const item = creaAlimentoDaInput(!isForMealBuilder);
+            if (item) {
+                if (isForMealBuilder) {
+                    pastoInCostruzione.push(item);
+                    salvaPastoInCostruzione();
+                    renderMealBuilder();
+                    mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    if (!datiGiornalieri.log) datiGiornalieri.log = [];
+                    datiGiornalieri.log.push(item);
+                    salvaGiorno(giornoVisualizzato, datiGiornalieri);
+                }
+                aggiornaUI();
+                resetInputAlimento();
+                aggiornaColoreNutrienti();
+            }
+        }
+
+        function resetInputAlimento() { 
+            [builderDesc, builderQta, ...Object.values(inputFields)].forEach(el => el.value = ''); 
+            builderDesc.focus(); 
+        }
+
+        function aggiornaColoreNutrienti() {
+            const hasEmptyFields = Object.keys(inputFields)
+                .filter(key => !Object.keys(OBIETTIVI_AMINO).includes(key))
+                .some(key => inputFields[key].value === '');
+            document.getElementById('nutrients-header').classList.toggle('nutrients-warning', hasEmptyFields);
+        }
+        
+        function calculateWeeklyVitaminStats() {
+            const vitaminsToTrack = {
+                'vitA': { total: 0, goal: OBIETTIVI_VIT.vitA * 7, id: 'a' },
+                'vitD': { total: 0, goal: OBIETTIVI_VIT.vitD * 7, id: 'd' },
+                'vitE': { total: 0, goal: OBIETTIVI_VIT.vitE * 7, id: 'e' },
+                'vitK': { total: 0, goal: OBIETTIVI_VIT.vitK * 7, id: 'k' },
+                'vitB12': { total: 0, goal: OBIETTIVI_VIT.vitB12 * 7, id: 'b12' }
+            };
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+                const dateToCheck = new Date(today);
+                dateToCheck.setDate(today.getDate() - i);
+                const dateString = dateToCheck.toISOString().split('T')[0];
+                const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
+                if (dailyDataRaw) {
+                    try {
+                        const dailyData = JSON.parse(dailyDataRaw);
+                        if (dailyData && dailyData.log) {
+                            dailyData.log.forEach(entry => {
+                                const items = entry.type === 'meal' ? entry.items : [entry];
+                                items.forEach(item => {
+                                    for (const key in vitaminsToTrack) {
+                                        if (item[key]) vitaminsToTrack[key].total += item[key];
+                                    }
+                                });
+                            });
+                        }
+                    } catch (e) { console.error(`Errore parsing dati per ${dateString}:`, e); }
+                }
+            }
+            return vitaminsToTrack;
+        }
+        
+        function calculateWeeklyFatStats() {
+            const fatsToTrack = {
+                'fatTotal': { total: 0, goal: OBIETTIVI_FAT.fatTotal * 7, id: 'total' }, 'fatSat':   { total: 0, goal: OBIETTIVI_FAT.fatSat * 7,   id: 'sat' },
+                'fatTrans': { total: 0, goal: OBIETTIVI_FAT.fatTrans * 7, id: 'trans' }, 'fatMono':  { total: 0, goal: OBIETTIVI_FAT.fatMono * 7,  id: 'mono' },
+                'fatPoly':  { total: 0, goal: OBIETTIVI_FAT.fatPoly * 7,  id: 'poly' }, 'omega3':   { total: 0, goal: OBIETTIVI_FAT.omega3 * 7,   id: 'omega3' },
+                'omega6':   { total: 0, goal: OBIETTIVI_FAT.omega6 * 7,   id: 'omega6' }
+            };
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+                const dateToCheck = new Date(today);
+                dateToCheck.setDate(today.getDate() - i);
+                const dateString = dateToCheck.toISOString().split('T')[0];
+                const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
+                if (dailyDataRaw) {
+                    try {
+                        const dailyData = JSON.parse(dailyDataRaw);
+                        if (dailyData && dailyData.log) {
+                            dailyData.log.forEach(entry => {
+                                const items = entry.type === 'meal' ? entry.items : [entry];
+                                items.forEach(item => {
+                                    for (const key in fatsToTrack) {
+                                        let value = item[key] || 0;
+                                        if (key === 'fatTotal' && !item.fatTotal) {
+                                            value = (item.fatSat || 0) + (item.fatTrans || 0) + (item.fatMono || 0) + (item.fatPoly || 0);
+                                        }
+                                        fatsToTrack[key].total += value;
+                                    }
+                                });
+                            });
+                        }
+                    } catch (e) { console.error(`Errore nel parsing dei dati per il giorno ${dateString}:`, e); }
+                }
+            }
+            return fatsToTrack;
+        }
+
+        function openWeeklyVitaminsModal() {
+            const weeklyStats = calculateWeeklyVitaminStats();
+            for (const key in weeklyStats) {
+                const stat = weeklyStats[key];
+                const { id, total, goal } = stat;
+                const avg = total / 7;
+                const dailyGoal = OBIETTIVI_VIT[key]; 
+                const percentageDiff = (avg - dailyGoal) / dailyGoal * 100;
+                document.getElementById(`weekly-vit-${id}-total`).textContent = total.toFixed(1);
+                document.getElementById(`weekly-vit-${id}-goal`).textContent = goal.toFixed(1);
+                document.getElementById(`weekly-progress-vit-${id}`).value = total;
+                document.getElementById(`weekly-progress-vit-${id}`).max = goal;
+                document.getElementById(`weekly-vit-${id}-avg`).textContent = avg.toFixed(1);
+                const diffSpan = document.getElementById(`weekly-vit-${id}-diff`);
+                diffSpan.classList.remove('diff-surplus', 'diff-deficit');
+                if (percentageDiff >= 0) {
+                    diffSpan.classList.add('diff-surplus');
+                    diffSpan.textContent = `+${percentageDiff.toFixed(0)}%`;
+                } else {
+                    diffSpan.classList.add('diff-deficit');
+                    diffSpan.textContent = `${percentageDiff.toFixed(0)}%`;
+                }
+            }
+            weeklyVitaminModal.style.display = 'block';
+        }
+        
+        function openWeeklyFatsModal() {
+            const weeklyStats = calculateWeeklyFatStats();
+            for (const key in weeklyStats) {
+                const stat = weeklyStats[key];
+                const { id, total, goal } = stat;
+                const avg = total / 7;
+                const dailyGoal = OBIETTIVI_FAT[key];
+                const percentageDiff = dailyGoal > 0 ? (avg - dailyGoal) / dailyGoal * 100 : 0;
+                document.getElementById(`weekly-fat-${id}-total`).textContent = total.toFixed(1);
+                document.getElementById(`weekly-fat-${id}-goal`).textContent = goal.toFixed(1);
+                document.getElementById(`daily-fat-${id}-goal`).textContent = dailyGoal.toFixed(1);
+                document.getElementById(`weekly-progress-fat-${id}`).value = total;
+                document.getElementById(`weekly-progress-fat-${id}`).max = goal;
+                document.getElementById(`weekly-fat-${id}-avg`).textContent = avg.toFixed(1);
+                const diffSpan = document.getElementById(`weekly-fat-${id}-diff`);
+                diffSpan.classList.remove('diff-surplus', 'diff-deficit');
+                if (avg > dailyGoal) {
+                    diffSpan.classList.add('diff-deficit');
+                    diffSpan.textContent = `+${percentageDiff.toFixed(0)}%`;
+                } else {
+                    diffSpan.classList.add('diff-surplus');
+                    diffSpan.textContent = `${percentageDiff.toFixed(0)}%`;
+                }
+            }
+            const totalWeeklyOmega3 = weeklyStats['omega3'].total;
+            const totalWeeklyOmega6 = weeklyStats['omega6'].total;
+            const weeklyOmegaRatioEl = document.getElementById('weekly-omega-ratio-value');
+            let weeklyRatioText = 'N/D';
+            weeklyOmegaRatioEl.style.color = '#333';
+            if (totalWeeklyOmega3 > 0 && totalWeeklyOmega6 > 0) {
+                const ratio = totalWeeklyOmega6 / totalWeeklyOmega3;
+                weeklyRatioText = `${ratio.toFixed(1)}:1`;
+                if (ratio >= 3 && ratio <= 6) { weeklyOmegaRatioEl.style.color = '#2e7d32';
+                } else { weeklyOmegaRatioEl.style.color = '#d32f2f'; }
+            }
+            weeklyOmegaRatioEl.textContent = weeklyRatioText;
+            weeklyFatsModal.style.display = 'block';
+        }
+
+        function toggleCollapsible(headerId, contentId) {
+            const header = document.getElementById(headerId);
+            const content = document.getElementById(contentId);
+            header.classList.toggle('expanded');
+            content.classList.toggle('expanded');
+            header.querySelector('.arrow').textContent = header.classList.contains('expanded') ? '▼' : '▶';
+        }
+
+        function getNutrientData() {
+            const allItems = [];
+            (datiGiornalieri.log || []).forEach(entry => {
+                if (entry.type === 'meal') {
+                    entry.items.forEach(item => allItems.push(item));
+                } else if (entry.type === 'single') {
+                    allItems.push(entry);
+                }
+            });
+            return allItems;
+        }
+
+        function showNutrientDetailsModal(nutrientKey, title, unit) {
+            const allItems = getNutrientData();
+            let totalNutrient = 0;
+            const itemContributions = [];
+            allItems.forEach(item => {
+                const value = item[nutrientKey] || 0;
+                totalNutrient += value;
+                if (value > 0) { itemContributions.push({ name: item.desc, value: value, unit: unit }); }
+            });
+            itemContributions.sort((a, b) => b.value - a.value);
+            nutrientDetailTitle.textContent = `Dettaglio Fonti ${title}`;
+            nutrientDetailList.innerHTML = '';
+            if (itemContributions.length === 0) {
+                nutrientDetailList.innerHTML = '<li>Nessun dato disponibile.</li>';
+            } else {
+                itemContributions.forEach(item => {
+                    const percentage = totalNutrient > 0 ? (item.value / totalNutrient) * 100 : 0;
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<span>${item.name}</span><span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>`;
+                    nutrientDetailList.appendChild(listItem);
+                });
+            }
+            nutrientDetailModal.style.display = 'block';
+        }
+
+        function showWeeklyNutrientDetailsModal(nutrientKey, title, unit) {
+            const contributions = {};
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+                const dateToCheck = new Date(today);
+                dateToCheck.setDate(today.getDate() - i);
+                const dateString = dateToCheck.toISOString().split('T')[0];
+                const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
+                if (!dailyDataRaw) continue;
+                try {
+                    const dailyData = JSON.parse(dailyDataRaw);
+                    if (dailyData && dailyData.log) {
+                        dailyData.log.forEach(entry => {
+                            const items = entry.type === 'meal' ? entry.items : [entry];
+                            items.forEach(item => {
+                                const value = item[nutrientKey] || 0;
+                                if (value > 0) {
+                                    const name = item.desc;
+                                    contributions[name] = (contributions[name] || 0) + value;
+                                }
+                            });
+                        });
+                    }
+                } catch (e) { console.error(`Errore nel parsing dei dati settimanali per ${dateString}:`, e); }
+            }
+            const itemContributions = Object.entries(contributions)
+                                          .map(([name, value]) => ({ name, value, unit }))
+                                          .sort((a, b) => b.value - a.value);
+            const totalNutrient = itemContributions.reduce((sum, item) => sum + item.value, 0);
+            nutrientDetailTitle.textContent = `Dettaglio Fonti ${title}`;
+            nutrientDetailList.innerHTML = '';
+            if (itemContributions.length === 0) {
+                nutrientDetailList.innerHTML = '<li>Nessun dato disponibile per questa settimana.</li>';
+            } else {
+                itemContributions.forEach(item => {
+                    const percentage = totalNutrient > 0 ? (item.value / totalNutrient) * 100 : 0;
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<span>${item.name}</span><span>${item.value.toFixed(1)} ${item.unit} (${percentage.toFixed(0)}%)</span>`;
+                    nutrientDetailList.appendChild(listItem);
+                });
+            }
+            nutrientDetailModal.style.display = 'block';
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            eseguiMigrazioneStorico(); 
+            initAppUI(); 
+            
+            dailyNotesTextarea.addEventListener('input', () => {
+                datiGiornalieri.note = dailyNotesTextarea.value;
+                salvaGiorno(giornoVisualizzato, datiGiornalieri);
+            });
+
+            // GESTIONE NUOVI PULSANTI E CARICAMENTO AUTOMATICO DATA
+            dataCaricamentoInput.addEventListener('change', (e) => {
+                const dataSelezionata = e.target.value;
+                if (dataSelezionata) {
+                    console.log(`Data selezionata, carico il giorno: ${dataSelezionata}`);
+                    caricaGiorno(dataSelezionata);
+                }
+            });
+
+            btnSalvaGiornoSelezionato.addEventListener('click', () => {
+                const dataSelezionata = dataCaricamentoInput.value;
+                if (!dataSelezionata || dataSelezionata === giornoVisualizzato) { 
+                    alert("Seleziona una data diversa da quella visualizzata in cui salvare i dati."); 
+                    return; 
+                }
+                
+                if (confirm(`Stai per sovrascrivere i dati del giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')} con i dati che vedi ora sullo schermo. Sei sicuro?`)) {
+                    salvaGiorno(dataSelezionata, datiGiornalieri); 
+                    alert(`Dati salvati con successo per il giorno ${new Date(dataSelezionata).toLocaleDateString('it-IT')}.`);
+                }
+            });
+            
+            ['progress-proteine', 'progress-calorie', 'progress-carboidrati', 'progress-zuccheri', 
+             'progress-fibre-totali', 'progress-fibre-solubili', 'progress-fibre-insolubili',
+             'progress-fats-total', 'progress-fat-sat', 
+             'progress-fat-trans', 'progress-fat-unsat', 'progress-fat-mono', 'progress-fat-poly', 'progress-omega3', 'progress-omega6', 
+             'progress-mg', 'progress-k', 'progress-fe', 'progress-zn', 'progress-ca', 'progress-cu', 'progress-p', 'progress-vitc', 
+             'progress-vit-a', 'progress-vit-d', 'progress-vit-e', 'progress-vit-k', 'progress-vit-b12', 'progress-b2', 'progress-b6', 'progress-b9']
+            .forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const nutrientMap = {
+                        'progress-proteine': { key: 'prot', title: 'Proteine', unit: 'g' },
+                        'progress-calorie': { key: 'kcal', title: 'Calorie', unit: 'kcal' },
+                        'progress-carboidrati': { key: 'carb', title: 'Carboidrati', unit: 'g' },
+                        'progress-zuccheri': { key: 'zuccheri', title: 'Zuccheri', unit: 'g' },
+                        'progress-fibre-totali': { key: 'fibreTotali', title: 'Fibre Totali', unit: 'g' },
+                        'progress-fibre-solubili': { key: 'fibreSolubili', title: 'Fibre Solubili', unit: 'g' },
+                        'progress-fibre-insolubili': { key: 'fibreInsolubili', title: 'Fibre Insolubili', unit: 'g' },
+                        'progress-fats-total': { key: 'fatTotal', title: 'Grassi Totali', unit: 'g'},
+                        'progress-fat-sat': { key: 'fatSat', title: 'Grassi Saturi', unit: 'g' },
+                        'progress-fat-trans': { key: 'fatTrans', title: 'Grassi Trans', unit: 'g' },
+                        'progress-fat-mono': { key: 'fatMono', title: 'Grassi Monoinsaturi', unit: 'g' },
+                        'progress-fat-poly': { key: 'fatPoly', title: 'Grassi Polinsaturi', unit: 'g' },
+                        'progress-omega3': { key: 'omega3', title: 'Omega 3', unit: 'g' },
+                        'progress-omega6': { key: 'omega6', title: 'Omega 6', unit: 'g' },
+                        'progress-mg': { key: 'mg', title: 'Magnesio', unit: 'mg' },
+                        'progress-k': { key: 'k', title: 'Potassio', unit: 'mg' },
+                        'progress-fe': { key: 'fe', title: 'Ferro', unit: 'mg' },
+                        'progress-zn': { key: 'zn', title: 'Zinco', unit: 'mg' },
+                        'progress-ca': { key: 'ca', title: 'Calcio', unit: 'mg' },
+                        'progress-cu': { key: 'cu', title: 'Rame', unit: 'mg' },
+                        'progress-p': { key: 'p', title: 'Fosforo', unit: 'mg' },
+                        'progress-vitc': { key: 'vitc', title: 'Vitamina C', unit: 'mg' },
+                        'progress-vit-a': { key: 'vitA', title: 'Vitamina A', unit: 'µg' },
+                        'progress-vit-d': { key: 'vitD', title: 'Vitamina D', unit: 'µg' },
+                        'progress-vit-e': { key: 'vitE', title: 'Vitamina E', unit: 'mg' },
+                        'progress-vit-k': { key: 'vitK', title: 'Vitamina K', unit: 'µg' },
+                        'progress-vit-b12': { key: 'vitB12', title: 'Vitamina B12', unit: 'µg' },
+                        'progress-b2': { key: 'b2', title: 'Vitamina B2', unit: 'mg' },
+                        'progress-b6': { key: 'b6', title: 'Vitamina B6', unit: 'mg' },
+                        'progress-b9': { key: 'b9', title: 'Folati (B9)', unit: 'µg' }
+                    };
+                    const info = nutrientMap[id];
+                    if (info) el.addEventListener('click', () => showNutrientDetailsModal(info.key, info.title, info.unit));
+                }
+            });
+
+            ['weekly-progress-vit-a', 'weekly-progress-vit-d', 'weekly-progress-vit-e', 'weekly-progress-vit-k', 'weekly-progress-vit-b12',
+             'weekly-progress-fat-total', 'weekly-progress-fat-sat', 'weekly-progress-fat-trans', 'weekly-progress-fat-mono', 'weekly-progress-fat-poly',
+             'weekly-progress-fat-omega3', 'weekly-progress-fat-omega6'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                     const nutrientMap = {
+                        'weekly-progress-vit-a': { key: 'vitA', title: 'Vitamina A (Sett.)', unit: 'µg' },
+                        'weekly-progress-vit-d': { key: 'vitD', title: 'Vitamina D (Sett.)', unit: 'µg' },
+                        'weekly-progress-vit-e': { key: 'vitE', title: 'Vitamina E (Sett.)', unit: 'mg' },
+                        'weekly-progress-vit-k': { key: 'vitK', title: 'Vitamina K (Sett.)', unit: 'µg' },
+                        'weekly-progress-vit-b12': { key: 'vitB12', title: 'Vitamina B12 (Sett.)', unit: 'µg' },
+                        'weekly-progress-fat-total': { key: 'fatTotal', title: 'Grassi Totali (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-sat': { key: 'fatSat', title: 'Grassi Saturi (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-trans': { key: 'fatTrans', title: 'Grassi Trans (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-mono': { key: 'fatMono', 'title': 'Grassi Monoinsaturi (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-poly': { key: 'fatPoly', title: 'Grassi Polinsaturi (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-omega3': { key: 'omega3', title: 'Omega 3 (Sett.)', unit: 'g' },
+                        'weekly-progress-fat-omega6': { key: 'omega6', title: 'Omega 6 (Sett.)', unit: 'g' }
+                     };
+                     const info = nutrientMap[id];
+                     if(info) el.addEventListener('click', () => showWeeklyNutrientDetailsModal(info.key, info.title, info.unit));
+                }
+            });
+
+            infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
+            infoFatsSettimanaliBtn.addEventListener('click', openWeeklyFatsModal);
+
+            document.querySelectorAll('.modal-close').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.closest('.modal').style.display = 'none';
+                });
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target.classList.contains('modal')) {
+                    event.target.style.display = 'none';
+                }
+            });
+
+            document.getElementById('info-proteine-giornata').addEventListener('click', () => {
+                const log = datiGiornalieri.log || [];
+                const totaliGiornata = log.reduce((acc, entry) => {
+                    const items = entry.type === 'meal' ? entry.items : (entry.type === 'workout' ? [] : [entry]);
+                    items.forEach(item => {
+                        for (const key in item) {
+                            if (typeof item[key] === 'number') acc[key] = (acc[key] || 0) + item[key];
+                        }
+                    });
+                    return acc;
+                }, {});
+                apriModalAminoacidi(totaliGiornata, "Dettaglio Proteine del Giorno");
+            });
+
+            document.getElementById('info-proteine-pasto').addEventListener('click', () => {
+                const totaliPasto = pastoInCostruzione.reduce((acc, item) => {
+                    for (const key in item) {
+                        if (typeof item[key] === 'number') acc[key] = (acc[key] || 0) + item[key];
+                    }
+                    return acc;
+                }, {});
+                apriModalAminoacidi(totaliPasto, "Dettaglio Proteine del Pasto");
+            });
+
+            const aminoModal = document.getElementById('amino-acid-modal');
+            if(aminoModal) {
+              aminoModal.querySelector('.modal-close').addEventListener('click', () => {
+                  aminoModal.style.display = 'none';
+              });
+            }
+        
+            ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header', 'fibre-header'].forEach(id => {
+                document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
+            });
+            
+            btnClearNutrients.addEventListener('click', () => { 
+                resetInputAlimento(); 
+                Object.keys(OBIETTIVI_AMINO).forEach(key => {
+                    if(inputFields[key]) {
+                        inputFields[key].disabled = false;
+                        inputFields[key].style.backgroundColor = '#ffffff';
+                    }
+                });
+                aggiornaColoreNutrienti(); 
+            });
+
+            builderProt.addEventListener('input', () => {
+                const protValue = parseFloat(builderProt.value.replace(',', '.'));
+                const aminoInputs = Object.keys(OBIETTIVI_AMINO).map(key => inputFields[key]);
+
+                if (!isNaN(protValue) && protValue > 0) {
+                    aminoInputs.forEach(input => {
+                        if(!input) return;
+                        const aminoKey = Object.keys(inputFields).find(key => inputFields[key] === input);
+                        const referenceValue = PROFILO_AMINOACIDICO_RIFERIMENTO[aminoKey];
+                        input.value = (protValue * referenceValue).toFixed(0);
+                        input.disabled = true;
+                        input.style.backgroundColor = '#f2f2f2';
+                    });
+                } else {
+                    aminoInputs.forEach(input => {
+                        if(!input) return;
+                        input.disabled = false;
+                        input.style.backgroundColor = '#ffffff';
+                    });
+                }
+            });
+
+            btnAddWorkout.addEventListener('click', () => {
+                const desc = workoutDescInput.value.trim(), calories = parseFloat(workoutCaloriesInput.value);
+                if (!desc || isNaN(calories) || calories <= 0) { alert('Dati allenamento non validi.'); return; }
+                if (!datiGiornalieri.log) datiGiornalieri.log = [];
+                datiGiornalieri.log.push({ type: 'workout', desc: desc, kcal: calories });
+                datiGiornalieri.workoutCalorie = (datiGiornalieri.workoutCalorie || 0) + calories;
+                aggiornaUI();
+                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+                workoutDescInput.value = ''; workoutCaloriesInput.value = '';
+                renderMealBuilder(); 
+            });
+
+           btnAggiungiSingolo.addEventListener('click', () => handleAlimentoAddition(false));
+           btnCostruisciPasto.addEventListener('click', () => handleAlimentoAddition(true));
+
+            mealBuilderSezione.addEventListener('change', (e) => {
+                if (e.target.classList.contains('meal-item-checkbox')) { 
+                    const index = parseInt(e.target.dataset.index, 10);
+                    if (pastoInCostruzione[index]) {
+                        pastoInCostruzione[index].selezionato = e.target.checked;
+                        salvaPastoInCostruzione(); 
+                        renderMealBuilder(); 
+                    }
+                } else if (e.target.id === 'meal-type-selector') {
+                    const value = e.target.value;
+                    localStorage.setItem('lastMealTypeSelected_' + getTodayString(), value);
+                    saveSingleItemToCloud('lastMealTypeSelected_' + getTodayString(), value);
+                    renderMealBuilder();
+                }
+            });
+
+            btnSalvaPasto.addEventListener('click', () => {
+                const alimentiSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false);
+                if (alimentiSelezionati.length === 0) { alert("Nessun alimento selezionato."); return; }
+                
+                const mealName = mealTypeSelector.options[mealTypeSelector.selectedIndex].text, mealId = mealTypeSelector.value;
+                const newMeal = { type: 'meal', desc: mealName, mealId: mealId, isExpanded: false, items: alimentiSelezionati };
+                if (!datiGiornalieri.log) datiGiornalieri.log = [];
+                datiGiornalieri.log.push(newMeal);
+                
+                pastoInCostruzione = []; 
+                salvaPastoInCostruzione(); 
+                aggiornaUI(); 
+                salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+                renderMealBuilder(); 
+
+                const currentIndex = MEAL_TYPE_SEQUENCE.indexOf(mealId);
+                const nextMeal = (currentIndex !== -1 && currentIndex < MEAL_TYPE_SEQUENCE.length - 1) ? MEAL_TYPE_SEQUENCE[currentIndex + 1] : MEAL_TYPE_SEQUENCE[0];
+                mealTypeSelector.value = nextMeal;
+                localStorage.setItem('lastMealTypeSelected_' + getTodayString(), nextMeal);
+                saveSingleItemToCloud('lastMealTypeSelected_' + getTodayString(), nextMeal);
+            });
+
+            document.body.addEventListener('click', (e) => {
+                const target = e.target.closest('button, .expand-arrow');
+                if (!target) return;
+
+                const button = target.closest('.edit-btn, .delete-btn');
+                const index = parseInt(target.dataset.index, 10);
+                
+                if (button && button.classList.contains('edit-btn')) {
+                    const itemToEdit = datiGiornalieri.log[index];
+                    if (!itemToEdit || !confirm("Vuoi modificare questa voce? Verrà spostata nel 'Costruttore Pasto'.")) return;
+                    pastoInCostruzione = (itemToEdit.type === 'meal' ? itemToEdit.items : [itemToEdit]).map(item => ({...item, selezionato: true}));
+                    datiGiornalieri.log.splice(index, 1); 
+                    salvaPastoInCostruzione(); 
+                    aggiornaUI(); 
+                    salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+                    renderMealBuilder();
+                    mealBuilderSezione.scrollIntoView({ behavior: 'smooth' });
+                    if (itemToEdit.mealId) {
+                        mealTypeSelector.value = itemToEdit.mealId;
+                        localStorage.setItem('lastMealTypeSelected_' + getTodayString(), mealTypeSelector.value);
+                    }
+                } else if (button && button.classList.contains('delete-btn')) {
+                    if (!confirm('Cancellare la voce?')) return;
+                    if (button.dataset.type === 'builder') { 
+                        pastoInCostruzione.splice(index, 1);
+                        salvaPastoInCostruzione(); 
+                        renderMealBuilder();
+                    } else { 
+                        const itemToDelete = datiGiornalieri.log[index];
+                        if (itemToDelete.type === 'workout') {
+                            datiGiornalieri.workoutCalorie = Math.max(0, (datiGiornalieri.workoutCalorie || 0) - ((itemToDelete.kcal || itemToDelete.cal) || 0));
+                        }
+                        datiGiornalieri.log.splice(index, 1);
+                        aggiornaUI(); 
+                        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+                    }
+                } else if (target.classList.contains('expand-arrow')) {
+                    if (datiGiornalieri.log[index] && datiGiornalieri.log[index].type === 'meal') {
+                        datiGiornalieri.log[index].isExpanded = !datiGiornalieri.log[index].isExpanded;
+                        aggiornaUI(); 
+                        salvaGiorno(giornoVisualizzato, datiGiornalieri); 
+                    }
+                }
+            });
+            
+            builderDesc.addEventListener('input', (e) => {
+                const sanitizedKey = sanitizeFirebaseKey(e.target.value.trim().toLowerCase());
+                const foodData = foodDatabase[sanitizedKey]; 
+                if (foodData) {
+                    builderQta.value = foodData.lastQta ?? '';
+                    for(const key in inputFields) {
+                        if (inputFields[key]) {
+                            inputFields[key].value = foodData[key] ?? '';
+                        }
+                    }
+                }
+                aggiornaColoreNutrienti();
+            });
+
+            Object.values(inputFields).forEach(input => { if (input) input.addEventListener('input', aggiornaColoreNutrienti) });
+            
+            document.getElementById('btn-compila-ai').addEventListener('click', async (e) => {
+                const nome = builderDesc.value.trim();
+                if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
+                const button = e.target;
+                button.disabled = true; button.textContent = 'Caricamento…';
+
+                try {
+                    let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". Presta particolare attenzione: i valori per Omega 3 e Omega 6 devono essere in grammi (g), non in milligrammi (mg). ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
+                    
+                    const res = await fetch(GEMINI_ENDPOINT, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+                    });
+                    if (!res.ok) throw new Error(`Errore dal server AI: ${res.statusText}`);
+                    const data = await res.json();
+                    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+                    for (const key in inputFields) {
+                        if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
+                            inputFields[key].value = resObj[key] ?? '';
+                        }
+                    }
+                    aggiornaColoreNutrienti();
+
+                } catch (err) { alert('Errore compilazione AI: ' + err.message);
+                } finally { button.disabled = false; button.textContent = 'Compila AI'; }
+            });
+            
+            dataCaricamentoInput.value = getTodayString('ymd');
+
+            const handleCalorieAdjustment = (increment) => {
+                let value = (datiGiornalieri.calorieAdjustment || 0) + increment;
+                datiGiornalieri.calorieAdjustment = Math.max(-500, Math.min(500, value));
+                aggiornaUI();
+                salvaGiorno(giornoVisualizzato, datiGiornalieri);
+                renderMealBuilder(); 
+            };
+            calorieAdjustmentInput.addEventListener('input', () => {
+                 let value = parseFloat(calorieAdjustmentInput.value);
+                 if (isNaN(value)) {
+                     const dataCorrente = new Date(giornoVisualizzato);
+                     value = DEFICIT_PREIMPOSTATO_SETTIMANALE[dataCorrente.getDay()] || 0;
+                 }
+                 datiGiornalieri.calorieAdjustment = Math.max(-500, Math.min(500, value));
+                 aggiornaUI();
+                 salvaGiorno(giornoVisualizzato, datiGiornalieri);
+                 renderMealBuilder();
+            });
+            btnCalorieMinus.addEventListener('click', () => handleCalorieAdjustment(-10));
+            btnCaloriePlus.addEventListener('click', () => handleCalorieAdjustment(10));
+
+            try {
+                if (!getApps().some(app => app.name === "globalTrackerApp")) { firebaseApp = initializeApp(firebaseConfig, "globalTrackerApp"); } else { firebaseApp = getApp("globalTrackerApp"); }
+                db = getDatabase(firebaseApp);
+                auth = getAuth(firebaseApp);
+                console.log("Firebase inizializzato.");
+
+                onAuthStateChanged(auth, async (user) => {
+                    const isLoggedIn = !!user;
+                    currentUserUID = user?.uid;
+                    authFormFields.style.display = isLoggedIn ? 'none' : 'block';
+                    document.getElementById('auth-header').style.display = isLoggedIn ? 'none' : 'block';
+                    welcomeMessage.style.display = isLoggedIn ? 'block' : 'none';
+                    welcomeMessage.textContent = isLoggedIn ? `Benvenuto, ${user.email}!` : '';
+                    btnSignOut.style.display = isLoggedIn ? 'block' : 'none';
+                    authStatusP.textContent = isLoggedIn ? '' : "Non autenticato";
+                    authSection.classList.toggle('logged-in', isLoggedIn);
+                    mainTrackerContent.classList.toggle('authenticated', isLoggedIn);
+                    cloudSyncStatusSpan.textContent = `Connessione Cloud: ${isLoggedIn ? user.email : 'Disconnesso'}`;
+                    cloudSyncStatusSpan.className = `cloud-sync-status ${isLoggedIn ? 'connected' : 'disconnected'}`;
+                    cloudSyncSection.querySelectorAll('button').forEach(button => button.disabled = !isLoggedIn);
+                    
+                    if (isLoggedIn) {
+                        const lastLocalUpdate = parseInt(localStorage.getItem(LOCAL_LAST_UPDATE_KEY) || 0);
+                        const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
+                        const lastCloudUpdate = cloudTimestampSnapshot.exists() ? cloudTimestampSnapshot.val() : 0;
+                        
+                        setTimeout(async () => {
+                            if (lastCloudUpdate > lastLocalUpdate) {
+                               if (confirm("I dati sul cloud sono più recenti. Vuoi scaricarli ora e sovrascrivere i dati locali?")) {
+                                    await loadAllTrackerDataFromCloud(true);
+                               }
+                            }
+                        }, 500);
+                    }
+                });
+            } catch (error) { console.error("Errore Firebase:", error); authStatusP.textContent = `Errore Firebase: ${error.message}`; }
+
+            const authHandlers = {
+                register: () => createUserWithEmailAndPassword(auth, userEmailInput.value, userPasswordInput.value),
+                login: () => signInWithEmailAndPassword(auth, userEmailInput.value, userPasswordInput.value),
+                signOut: () => signOut(auth)
+            };
+            btnRegister.addEventListener('click', async () => { try { await authHandlers.register(); alert("Registrazione completata!"); } catch (e) { alert(e.message); } });
+            btnLogin.addEventListener('click', async () => { try { await authHandlers.login(); alert("Accesso effettuato!"); } catch (e) { alert(e.message); } });
+            btnSignOut.addEventListener('click', async () => { try { await authHandlers.signOut(); alert("Disconnessione avvenuta."); } catch (e) { alert(e.message); } });
+            
+            async function loadAllTrackerDataFromCloud(skipConfirm = false) {
+                const dataRef = (db && currentUserUID) ? ref(db, `users/${currentUserUID}/tracker_data/`) : null;
+                if (!dataRef) { alert("Devi essere autenticato."); return; }
+                if (!skipConfirm && !confirm("ATTENZIONE: i dati locali verranno SOVRASCRITTI. Continuare?")) return;
+
+                try {
+                    const snapshot = await get(dataRef);
+                    if (snapshot.exists()) {
+                        const cloudData = snapshot.val();
+                        const keysToRemove = [];
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const key = localStorage.key(i);
+                            if (key.startsWith('trackerStorico_') || LOCAL_STORAGE_SYNC_KEYS.includes(key) || key.startsWith('lastMealTypeSelected_')) {
+                                keysToRemove.push(key);
+                            }
+                        }
+                        keysToRemove.forEach(key => localStorage.removeItem(key));
+                        
+                        for (const key in cloudData) {
+                            localStorage.setItem(key, typeof cloudData[key] === 'object' ? JSON.stringify(cloudData[key]) : cloudData[key]);
+                        }
+                        
+                        const cloudTimestampSnapshot = await get(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`));
+                        localStorage.setItem(LOCAL_LAST_UPDATE_KEY, cloudTimestampSnapshot.exists() ? cloudTimestampSnapshot.val() : Date.now());
+                        
+                        alert("Dati scaricati con successo! La pagina verrà ricaricata.");
+                        location.reload();
+                    } else { if (!skipConfirm) alert("Nessun dato trovato sul cloud."); }
+                } catch (error) { alert(`Errore download: ${error.message}`); }
+            }
+            
+            btnDownloadManual.addEventListener('click', () => loadAllTrackerDataFromCloud(false));
+
+            function eseguiMigrazioneStorico() {
+                const vecchioStoricoRaw = localStorage.getItem('trackerStorico');
+                if (!vecchioStoricoRaw) return;
+                try {
+                    const vecchioStorico = JSON.parse(vecchioStoricoRaw);
+                    if (Array.isArray(vecchioStorico)) {
+                        vecchioStorico.forEach(giorno => { if (giorno.data && giorno.log) localStorage.setItem(`trackerStorico_${giorno.data}`, JSON.stringify(giorno)); });
+                        localStorage.removeItem('trackerStorico'); 
+                        alert("Storico aggiornato al nuovo formato! Ricarica la pagina.");
+                    }
+                } catch (e) { console.error("Errore migrazione storico.", e); }
+            }
+
+            btnCopyPrompt.addEventListener('click', async () => {
+                const nome = builderDesc.value.trim(); if (!nome) { alert('Scrivi prima il nome dell\'alimento.'); return; }
+                const promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
+                try { await navigator.clipboard.writeText(promptText); alert('Richiesta AI copiata!'); } catch (err) { alert('Impossibile copiare.'); }
+            });
+
+            btnConfirmJson.addEventListener('click', () => {
+                const jsonText = manualJsonInput.value.trim(); 
+                if (!jsonText) { alert('Incolla prima il testo JSON.'); return; }
+                try {
+                    const resObj = JSON.parse(jsonText);
+                    for (const key in inputFields) {
+                        if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
+                            inputFields[key].value = resObj[key];
+                        }
+                    }
+                    manualJsonInput.value = '';
+                    aggiornaColoreNutrienti();
+                } catch (err) { alert('Errore nel formato JSON.'); }
+            });
+        });
     </script>
 </body>
 </html>
