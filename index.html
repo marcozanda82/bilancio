@@ -1973,7 +1973,7 @@
                 button.disabled = true; button.textContent = 'Caricamento…';
 
                 try {
-                    let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
+                    let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". Presta particolare attenzione: i valori per Omega 3 e Omega 6 devono essere in grammi (g), non in milligrammi (mg). ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
                     
                     const res = await fetch(GEMINI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2134,3 +2134,4 @@
     </script>
 </body>
 </html>
+
