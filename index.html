@@ -1171,7 +1171,7 @@
             console.log("Interfaccia app avviata con successo con dati locali.");
         }
 
-        function aggiornaUI() {
+function aggiornaUI() {
             const dataVisualizzata = new Date(giornoVisualizzato);
             const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
             
@@ -1276,11 +1276,65 @@
             // const createDescriptionCellHTML = (item) => {
                 let html = '';
                 if (item.ingredienti) {
-                    html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}" data-ingredients="${item.ingredienti}">📜</span>`;
+                    // Rimossa la parte "data-ingredients" che causava l'errore
+                    html += `<span class="ingredient-icon" title="Visualizza ingredienti" data-food-name="${item.desc}">📜</span>`;
                 }
                 html += (item.desc || '');
                 return html;
             };
+            // (datiGiornalieri.log || []).forEach((entry, index) => {
+                if (entry.type === 'meal') {
+                    const rigaPasto = logBody.insertRow();
+                    rigaPasto.classList.add('meal-group-row');
+                    const totaliPasto = entry.items.reduce((acc, item) => {
+                        for (const key in item) if(typeof item[key] === 'number' && key !== 'qta') acc[key] = (acc[key] || 0) + item[key];
+                        return acc;
+                    }, {});
+                    
+                    const qualitaPasto = calcolaQualitaProteine(totaliPasto);
+                    const scoreClass = qualitaPasto.score < 70 ? 'low' : qualitaPasto.score < 90 ? 'medium' : 'high';
+                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaPasto.limiting}">${qualitaPasto.score}%</div>`;
+                    
+                    rigaPasto.innerHTML = `
+                        <td><span class="expand-arrow" data-index="${index}">${entry.isExpanded ? '▼' : '▶'}</span> ${entry.desc}</td>
+                        <td>${entry.items.reduce((sum, item) => sum + item.qta, 0).toFixed(0)}</td>
+                        <td>${(totaliPasto.prot || 0).toFixed(1)}</td>
+                        <td>${qualitaCellHtml}</td>
+                        ${nutrientKeys.map(k => `<td>${formatNumber(k, totaliPasto[k])}</td>`).join('')}
+                        <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+
+                    if (entry.isExpanded) {
+                        entry.items.forEach(subItem => {
+                            const rigaSubItem = logBody.insertRow();
+                            rigaSubItem.classList.add('sub-item-row');
+                             const qualitaSubItem = calcolaQualitaProteine(subItem);
+                             const subScoreClass = qualitaSubItem.score < 70 ? 'low' : qualitaSubItem.score < 90 ? 'medium' : 'high';
+                             const subQualitaCellHtml = `<div class="protein-score ${subScoreClass}" title="Limitante: ${qualitaSubItem.limiting}">${qualitaSubItem.score}%</div>`;
+                            rigaSubItem.innerHTML = `
+                                <td>${createDescriptionCellHTML(subItem)}</td><td>${(subItem.qta || 0).toFixed(0)}</td>
+                                <td>${(subItem.prot || 0).toFixed(1)}</td>
+                                <td>${subQualitaCellHtml}</td>
+                                ${nutrientKeys.map(k => `<td>${formatNumber(k, subItem[k])}</td>`).join('')}
+                                <td></td>`;
+                        });
+                    }
+                } else if (entry.type === 'workout') {
+                    const riga = logBody.insertRow();
+                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td></td><td>${(entry.kcal || 0).toFixed(0)}</td><td colspan="${nutrientKeys.length -1}"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                } else { 
+                    const riga = logBody.insertRow();
+                    const qualitaSingola = calcolaQualitaProteine(entry);
+                    const scoreClass = qualitaSingola.score < 70 ? 'low' : qualitaSingola.score < 90 ? 'medium' : 'high';
+                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaSingola.limiting}">${qualitaSingola.score}%</div>`;
+                    riga.innerHTML = `
+                        <td>${createDescriptionCellHTML(entry)}</td><td>${(entry.qta || 0).toFixed(0)}</td>
+                        <td>${(entry.prot || 0).toFixed(1)}</td>
+                        <td>${qualitaCellHtml}</td>
+                        ${nutrientKeys.map(k => `<td>${formatNumber(k, entry[k])}</td>`).join('')}
+                        <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                }
+            });
+        }
             // (datiGiornalieri.log || []).forEach((entry, index) => {
                 if (entry.type === 'meal') {
                     const rigaPasto = logBody.insertRow();
@@ -1335,7 +1389,7 @@
             });
         }
 
-        // function renderMealBuilder() {
+         function renderMealBuilder() {
             mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
             logPastoBuilderBody.innerHTML = ''; 
             const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
@@ -2341,3 +2395,4 @@
     </script>
 </body>
 </html>
+
