@@ -244,7 +244,6 @@
         .protein-score.medium { background-color: #ff8f00; }
         .protein-score.high { background-color: #2e7d32; }
 
-        /* NUOVO STILE MODIFICATO */
         .food-label-container {
             display: flex;
             align-items: center;
@@ -252,12 +251,12 @@
             margin-bottom: 8px;
         }
         .food-label-container label {
-            margin-bottom: 0; /* Rimuove il margine inferiore dalla label */
+            margin-bottom: 0;
         }
         #btn-edit-ingredients {
             background: none;
             border: none;
-            font-size: 1.1em; /* Dimensione ridotta */
+            font-size: 1.1em;
             color: #607d8b;
             cursor: pointer;
             padding: 0;
@@ -286,16 +285,25 @@
             font-size: 1.5em;
             color: #0d47a1;
         }
+        #ingredient-modal-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
         #ingredient-modal-actions button {
             background: none;
             border: none;
-            font-size: 1.8em;
+            font-size: 1.6em;
             cursor: pointer;
             padding: 5px;
             color: #555;
         }
         #ingredient-modal-actions button:hover {
             color: #0d47a1;
+        }
+        /* NUOVO STILE per la gomma */
+        #btn-clear-ingredients:hover {
+            color: #d32f2f;
         }
         #ingredient-modal-textarea {
             width: 100%;
@@ -304,7 +312,6 @@
             font-family: monospace;
             font-size: 1em;
         }
-        /* FINE NUOVO STILE */
     </style>
 </head>
 <body>
@@ -816,6 +823,7 @@
             <div id="ingredient-modal-header">
                 <h2 id="ingredient-modal-title"></h2>
                 <div id="ingredient-modal-actions">
+                    <button id="btn-clear-ingredients" title="Cancella tutto"><i class="fas fa-eraser"></i></button>
                     <button id="btn-generate-ingredients-ai" title="Genera ingredienti con AI">🪄</button>
                     <button id="btn-copy-ingredients-prompt" title="Copia prompt per AI">📋</button>
                 </div>
@@ -970,6 +978,7 @@
         const btnGenerateIngredientsAi = document.getElementById('btn-generate-ingredients-ai');
         const btnCopyIngredientsPrompt = document.getElementById('btn-copy-ingredients-prompt');
         const btnSaveIngredients = document.getElementById('btn-save-ingredients');
+        const btnClearIngredients = document.getElementById('btn-clear-ingredients');
 
         const inputFields = {
             prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
@@ -1458,7 +1467,6 @@
             foodData.lastQta = qta;
             foodData.desc = desc; 
             
-            // CORREZIONE BUG: Assicura che la proprietà ingredienti sia nel foodItem
             const foodItem = { 
                 desc: desc.charAt(0).toUpperCase() + desc.slice(1), 
                 qta, 
@@ -2039,8 +2047,9 @@
             });
 
             document.body.addEventListener('click', (e) => {
-                if (e.target.classList.contains('ingredient-icon')) {
-                    const foodName = e.target.dataset.foodName;
+                const icon = e.target.closest('.ingredient-icon');
+                if (icon) {
+                    const foodName = icon.dataset.foodName;
                     openIngredientModal(foodName, true);
                     return;
                 }
@@ -2307,13 +2316,12 @@
             btnGenerateIngredientsAi.addEventListener('click', async (e) => {
                 const foodName = ingredientModalTitle.textContent;
                 if (!foodName) return;
-                const button = e.target;
+                const button = e.target.closest('button');
                 button.disabled = true;
-                ingredientModalTextarea.value = "Generazione in corso...";
+                ingredientModalTextarea.value = "Ricerca e formulazione in corso...";
 
                 try {
-                    // PROMPT MIGLIORATO
-                    const prompt = `Cerca la lista ingredienti ufficiale dell'etichetta del prodotto commerciale "${foodName}". Elenca gli ingredienti in ordine decrescente di quantità, con percentuali stimate ove possibile. Evita di includere ingredienti tipici di una ricetta casalinga (es. acqua aggiunta in cottura, sale q.b.) a meno che non siano esplicitamente parte del prodotto confezionato. Se non trovi una lista ufficiale, creane una verosimile per un prodotto analogo venduto in un supermercato.`;
+                    const prompt = `Agisci come un esperto di etichette alimentari. Genera una lista di ingredienti per il prodotto commerciale "${foodName}". Rispondi ESCLUSIVAMENTE con la lista, senza frasi introduttive o conclusive. Il formato deve essere un elenco puntato, un ingrediente per riga. È FONDAMENTALE che la lista rifletta il contenuto di un PRODOTTO CONFEZIONATO (es. un sacchetto di minestrone surgelato), NON una ricetta per prepararlo. Pertanto, NON includere ingredienti come acqua aggiunta in cottura, olio, sale o pasta, a meno che non siano specificati come pre-inseriti nel prodotto. Se non conosci l'etichetta esatta, basati su prodotti concorrenti simili dei supermercati.`;
                     const res = await fetch(GEMINI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -2321,10 +2329,10 @@
                     if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
                     const data = await res.json();
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nessuna risposta dall\'AI.';
-                    ingredientModalTextarea.value = text.replace(/[\*]/g, '-');
+                    ingredientModalTextarea.value = text.replace(/[\*]/g, '-').trim();
                 } catch (err) {
                     alert('Errore generazione ingredienti: ' + err.message);
-                    ingredientModalTextarea.value = "Errore.";
+                    ingredientModalTextarea.value = "Errore durante la generazione.";
                 } finally {
                     button.disabled = false;
                 }
@@ -2332,14 +2340,17 @@
 
             btnCopyIngredientsPrompt.addEventListener('click', async () => {
                 const foodName = ingredientModalTitle.textContent;
-                // PROMPT MIGLIORATO
-                const prompt = `Per favore, cerca la lista ingredienti ufficiale che si trova sull'etichetta del prodotto commerciale "${foodName}". Elenca gli ingredienti in ordine decrescente di quantità, includendo percentuali se disponibili. Se non trovi l'etichetta ufficiale, crea una lista di ingredienti realistica per un prodotto confezionato simile, evitando ingredienti da ricetta casalinga.`;
+                const prompt = `Agisci come un esperto di etichette alimentari. Genera una lista di ingredienti per il prodotto commerciale "${foodName}". Rispondi ESCLUSIVAMENTE con la lista, senza frasi introduttive o conclusive. Il formato deve essere un elenco puntato, un ingrediente per riga. È FONDAMENTALE che la lista rifletta il contenuto di un PRODOTTO CONFEZIONATO (es. un sacchetto di minestrone surgelato), NON una ricetta per prepararlo. Pertanto, NON includere ingredienti come acqua aggiunta in cottura, olio, sale o pasta, a meno che non siano specificati come pre-inseriti nel prodotto. Se non conosci l'etichetta esatta, basati su prodotti concorrenti simili dei supermercati.`;
                 try {
                     await navigator.clipboard.writeText(prompt);
                     alert('Prompt per ingredienti copiato!');
                 } catch (err) {
                     alert('Impossibile copiare il prompt.');
                 }
+            });
+
+            btnClearIngredients.addEventListener('click', () => {
+                ingredientModalTextarea.value = '';
             });
         });
     </script>
