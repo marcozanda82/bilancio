@@ -1397,8 +1397,18 @@
         }
         
         async function handleAlimentoAddition(isForMealBuilder) {
-            const desc = builderDesc.value.trim(), qta = evaluateQuantity(builderQta.value);
-            if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return; }
+            const desc = builderDesc.value.trim();
+            const qta = evaluateQuantity(builderQta.value);
+            if (!desc || isNaN(qta) || qta <= 0) {
+                alert('Inserisci nome e quantità valide.');
+                return;
+            }
+
+            const invalidCharsRegex = /[.#$\[\]]/;
+            if (invalidCharsRegex.test(desc)) {
+                alert("Il nome dell'alimento non può contenere i caratteri ., #, $, [, ]");
+                return;
+            }
 
             const emptyFields = Object.keys(inputFields)
                 .filter(key => key !== 'fatTotal' && !Object.keys(OBIETTIVI_AMINO).includes(key) && key !== 'fatTotal')
@@ -1408,7 +1418,6 @@
                 const confirmMsg = `Ci sono molti campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
                 if (confirm(confirmMsg)) {
                     await document.getElementById('btn-compila-ai').click();
-                    // Aspettiamo che i campi si popolino
                     setTimeout(() => handleAlimentoAddition(isForMealBuilder), 500);
                     return; 
                 }
