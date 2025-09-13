@@ -861,7 +861,9 @@
 
         const API_KEY_AI = "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424";
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"fibreTotali":g,"fibreSolubili":g,"fibreInsolubili":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
+        
+        // MODIFICA 1: Richiesta AI aggiornata per unità di misura
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":mg,"omega6":mg,"fibreTotali":g,"fibreSolubili":g,"fibreInsolubili":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
         
         const btnEditIngredients = document.getElementById('btn-edit-ingredients');
@@ -1307,17 +1309,17 @@
                 alert("Il nome dell'alimento non può contenere i caratteri ., #, $, [, ]");
                 return;
             }
-
+            
+            // MODIFICA 2: Correzione del blocco di chiamata AI
             const emptyFields = Object.keys(inputFields)
                 .filter(key => key !== 'fatTotal' && !Object.keys(OBIETTIVI_AMINO).includes(key) && key !== 'fatTotal')
                 .filter(key => inputFields[key].value === '');
                 
-            if (emptyFields.length > 5) {
-                const confirmMsg = `Ci sono molti campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
+            if (emptyFields.length > 0) {
+                const confirmMsg = `Ci sono campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
                 if (confirm(confirmMsg)) {
                     await document.getElementById('btn-compila-ai').click();
-                    setTimeout(() => handleAlimentoAddition(isForMealBuilder), 500);
-                    return; 
+                    return; // Corretto: La funzione si ferma qui
                 }
             }
             
@@ -1402,9 +1404,32 @@
                 }
             });
 
-            // ... (altri event listener esistenti)
+            // MODIFICA 1 (PARTE 2): Aggiunta della logica di conversione al pulsante di conferma JSON
+            btnConfirmJson.addEventListener('click', () => {
+                try {
+                    const jsonText = manualJsonInput.value.trim();
+                    if (!jsonText) {
+                        alert("Il campo JSON è vuoto.");
+                        return;
+                    }
+                    const data = JSON.parse(jsonText);
+                    for (const key in data) {
+                        if (inputFields[key]) {
+                            let valueToSet = data[key];
+                            if (key === 'omega3' || key === 'omega6') {
+                                valueToSet = parseFloat(data[key]) / 1000;
+                            }
+                            inputFields[key].value = valueToSet;
+                        }
+                    }
+                    manualJsonInput.value = '';
+                    alert("Dati JSON caricati con successo nei campi!");
+                    aggiornaColoreNutrienti();
+                } catch (e) {
+                    alert("Errore nel formato del JSON. Controlla la sintassi.\n" + e.message);
+                }
+            });
 
-            // NUOVA LOGICA PER LA GESTIONE DEGLI INGREDIENTI
             builderDesc.addEventListener('input', () => {
                 const desc = builderDesc.value.trim();
                 btnEditIngredients.disabled = desc === '';
@@ -1419,91 +1444,24 @@
                                 inputFields[key].value = foodData[key] ?? '';
                             }
                         }
-                    } else {
-                        // Se è un alimento nuovo, non pulire i campi nutrienti
-                        // Permette di scrivere un nuovo nome e mantenere i valori
                     }
                 }
                 aggiornaColoreNutrienti();
             });
 
-
             btnEditIngredients.addEventListener('click', () => {
                 const desc = builderDesc.value.trim();
                 if (!desc) return;
-                
                 currentEditingFoodKey = sanitizeFirebaseKey(desc.toLowerCase());
                 if (!foodDatabase[currentEditingFoodKey]) {
-                    foodDatabase[currentEditingFoodKey] = { desc: desc };
+                    foodDatabase[currentEditingFoodKey] = { desc: desc, ingredients: [] };
                 }
-                if (!foodDatabase[currentEditingFoodKey].ingredients) {
-                    foodDatabase[currentEditingFoodKey].ingredients = [];
-                }
-
                 ingredientsModalTitle.textContent = `Ingredienti per "${desc}"`;
                 renderIngredientsList(currentEditingFoodKey);
                 ingredientsModal.style.display = 'block';
             });
-
-            btnAddIngredientManual.addEventListener('click', () => {
-                const name = ingredientNameInput.value.trim();
-                const percentage = parseFloat(ingredientPercInput.value);
-
-                if (!name || isNaN(percentage) || percentage <= 0 || percentage > 100) {
-                    alert('Inserisci un nome e una percentuale validi (1-100).');
-                    return;
-                }
-
-                foodDatabase[currentEditingFoodKey].ingredients.push({ name, percentage });
-                renderIngredientsList(currentEditingFoodKey);
-                ingredientNameInput.value = '';
-                ingredientPercInput.value = '';
-                ingredientNameInput.focus();
-            });
-
-            btnPopulateIngredientsAI.addEventListener('click', async (e) => {
-                const foodName = foodDatabase[currentEditingFoodKey].desc;
-                const button = e.target;
-                button.disabled = true;
-                button.textContent = 'Caricamento...';
-                
-                try {
-                    const prompt = `Fornisci un elenco di ingredienti probabili con percentuali stimate per "${foodName}". Restituisci ESATTAMENTE e SOLO un array JSON di oggetti nel formato [{'name': string, 'percentage': number}]. Ordina gli ingredienti dal più abbondante al meno abbondante. Se non sei sicuro, fornisci una stima ragionevole.`;
-                    const res = await fetch(GEMINI_ENDPOINT, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    if (!res.ok) throw new Error(`Errore API: ${res.statusText}`);
-                    const data = await res.json();
-                    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    const ingredients = JSON.parse(raw.replace(/```json|```/g, '').trim());
-                    
-                    if (Array.isArray(ingredients)) {
-                        foodDatabase[currentEditingFoodKey].ingredients = ingredients;
-                        renderIngredientsList(currentEditingFoodKey);
-                    } else {
-                        throw new Error("La risposta dell'AI non è nel formato corretto.");
-                    }
-                } catch (err) {
-                    alert('Errore durante la compilazione AI degli ingredienti: ' + err.message);
-                } finally {
-                    button.disabled = false;
-                    button.textContent = 'Popola con AI';
-                }
-            });
-
-            btnSaveIngredients.addEventListener('click', () => {
-                salvaFoodDatabase();
-                ingredientsModal.style.display = 'none';
-                currentEditingFoodKey = null;
-            });
             
-            ingredientsModal.querySelector('.modal-close').addEventListener('click', () => {
-                ingredientsModal.style.display = 'none';
-                currentEditingFoodKey = null;
-            });
-            
-            // ... (tutto il resto del codice, inclusa la gestione dell'autenticazione, rimane invariato)
+            // ... (tutto il resto del codice rimane invariato)
              btnAggiungiSingolo.addEventListener('click', () => handleAlimentoAddition(false));
             btnCostruisciPasto.addEventListener('click', () => handleAlimentoAddition(true));
             //... e così via per tutti gli altri listener
