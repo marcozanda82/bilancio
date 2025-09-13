@@ -983,8 +983,6 @@
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
 
-        // ... (tutte le funzioni esistenti fino a initAppUI)
-
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
 
         function sanitizeFirebaseKey(str) {
@@ -1296,6 +1294,38 @@
             });
         }
         
+        // FUNZIONE INSERITA PER CORREGGERE L'ERRORE
+        function renderMealBuilder() {
+            mealBuilderSezione.dataset.visible = pastoInCostruzione.length > 0;
+            logPastoBuilderBody.innerHTML = ''; 
+            const selectedMealType = mealTypeSelector ? mealTypeSelector.value : MEAL_TYPE_SEQUENCE[0]; 
+            const selectedMealTypeText = mealTypeSelector?.options[mealTypeSelector.selectedIndex]?.text ?? '';
+            const obiettiviPasto = calcolaObiettiviPasto(selectedMealType, giornoVisualizzato);
+            const totaliPastoCorrenteSelezionati = pastoInCostruzione.filter(item => item.selezionato !== false).reduce((acc, item) => {
+                acc.prot += item.prot || 0; 
+                acc.kcal += (item.kcal || item.cal) || 0; 
+                return acc;
+            }, { prot: 0, kcal: 0 });
+
+            currentMealTypeDisplay.textContent = selectedMealTypeText;
+            mealProtCurrent.textContent = totaliPastoCorrenteSelezionati.prot.toFixed(1);
+            mealProtTarget.textContent = obiettiviPasto.targetProt.toFixed(0);
+            mealProtRemaining.textContent = (obiettiviPasto.targetProt - totaliPastoCorrenteSelezionati.prot).toFixed(1);
+            mealProgressProt.max = obiettiviPasto.targetProt > 0 ? obiettiviPasto.targetProt : 1;
+            mealProgressProt.value = totaliPastoCorrenteSelezionati.prot;
+            
+            mealCalCurrent.textContent = totaliPastoCorrenteSelezionati.kcal.toFixed(0);
+            mealCalTarget.textContent = obiettiviPasto.targetCal.toFixed(0);
+            mealCalRemaining.textContent = (obiettiviPasto.targetCal - totaliPastoCorrenteSelezionati.kcal).toFixed(0);
+            mealProgressCal.max = obiettiviPasto.targetCal > 0 ? obiettiviPasto.targetCal : 1;
+            mealProgressCal.value = totaliPastoCorrenteSelezionati.kcal;
+
+            pastoInCostruzione.forEach((item, index) => { 
+                const riga = logPastoBuilderBody.insertRow(); 
+                riga.innerHTML = `<td><input type="checkbox" class="meal-item-checkbox" data-index="${index}" ${item.selezionato !== false ? 'checked' : ''}></td><td>${item.desc}</td><td>${item.qta}</td><td>${(item.prot || 0).toFixed(1)}</td><td>${((item.kcal || item.cal) || 0).toFixed(0)}</td><td class="action-buttons"><button class="delete-btn" data-type="builder" data-index="${index}">&times;</button></td>`; 
+            });
+        }
+
         async function handleAlimentoAddition(isForMealBuilder) {
             const desc = builderDesc.value.trim();
             const qta = evaluateQuantity(builderQta.value);
@@ -1310,7 +1340,6 @@
                 return;
             }
             
-            // MODIFICA 2: Correzione del blocco di chiamata AI
             const emptyFields = Object.keys(inputFields)
                 .filter(key => key !== 'fatTotal' && !Object.keys(OBIETTIVI_AMINO).includes(key) && key !== 'fatTotal')
                 .filter(key => inputFields[key].value === '');
@@ -1319,7 +1348,7 @@
                 const confirmMsg = `Ci sono campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
                 if (confirm(confirmMsg)) {
                     await document.getElementById('btn-compila-ai').click();
-                    return; // Corretto: La funzione si ferma qui
+                    return; 
                 }
             }
             
@@ -1404,7 +1433,6 @@
                 }
             });
 
-            // MODIFICA 1 (PARTE 2): Aggiunta della logica di conversione al pulsante di conferma JSON
             btnConfirmJson.addEventListener('click', () => {
                 try {
                     const jsonText = manualJsonInput.value.trim();
@@ -1461,10 +1489,10 @@
                 ingredientsModal.style.display = 'block';
             });
             
-            // ... (tutto il resto del codice rimane invariato)
-             btnAggiungiSingolo.addEventListener('click', () => handleAlimentoAddition(false));
+            btnAggiungiSingolo.addEventListener('click', () => handleAlimentoAddition(false));
             btnCostruisciPasto.addEventListener('click', () => handleAlimentoAddition(true));
-            //... e così via per tutti gli altri listener
+
+            // ... (il resto degli event listener rimane invariato)
         });
     </script>
 </body>
