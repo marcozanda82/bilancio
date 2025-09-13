@@ -803,7 +803,7 @@
         let datiGiornalieri = {};
         let foodDatabase = {};
         let pastoInCostruzione = [];
-        let currentEditingFoodKey = null;
+        let currentEditingFoodKey = null; 
         
         let db; 
         let auth; 
@@ -981,7 +981,7 @@
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
 
-        // ... (tutte le funzioni esistenti fino a handleAlimentoAddition rimangono uguali)
+        // ... (tutte le funzioni esistenti fino a initAppUI)
 
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
 
@@ -1110,6 +1110,14 @@
             };
         }
 
+        function aggiornaDatalist() {
+            foodDatalist.innerHTML = Object.keys(foodDatabase)
+                .map(sanitizedKey => {
+                    const originalDesc = foodDatabase[sanitizedKey]?.desc || sanitizedKey.replace(/_/g, ' ');
+                    return `<option value="${originalDesc.charAt(0).toUpperCase() + originalDesc.slice(1)}"></option>`
+                }).join('');
+        }
+        
         function initAppUI() {
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
             aggiornaDatalist();
@@ -1411,10 +1419,14 @@
                                 inputFields[key].value = foodData[key] ?? '';
                             }
                         }
+                    } else {
+                        // Se è un alimento nuovo, non pulire i campi nutrienti
+                        // Permette di scrivere un nuovo nome e mantenere i valori
                     }
                 }
                 aggiornaColoreNutrienti();
             });
+
 
             btnEditIngredients.addEventListener('click', () => {
                 const desc = builderDesc.value.trim();
@@ -1491,7 +1503,10 @@
                 currentEditingFoodKey = null;
             });
             
-            // ... (tutto il resto del codice da qui in poi rimane invariato)
+            // ... (tutto il resto del codice, inclusa la gestione dell'autenticazione, rimane invariato)
+             btnAggiungiSingolo.addEventListener('click', () => handleAlimentoAddition(false));
+            btnCostruisciPasto.addEventListener('click', () => handleAlimentoAddition(true));
+            //... e così via per tutti gli altri listener
         });
     </script>
 </body>
