@@ -21,17 +21,18 @@
         button { background-color: #1976d2; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s; }
         button:hover { background-color: #1565c0; }
         
-        /* Stile per rendere la textarea del nome alimento espandibile e simile a un input */
+        /* **** INIZIO MODIFICA CSS **** */
         #builder-desc {
             min-height: 48px; 
             height: auto;
-            resize: vertical;
-            overflow-y: hidden;
+            resize: both; /* Cambiato da 'vertical' a 'both' */
+            overflow: auto; /* Cambiato da 'hidden' a 'auto' per mostrare le scrollbar se necessario */
             line-height: 1.5;
             padding-top: 12px;
             padding-bottom: 12px;
             font-family: inherit;
         }
+        /* **** FINE MODIFICA CSS **** */
 
         #form-allenamento button { background-color: #2e7d32; }
         .nav-links { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -514,6 +515,7 @@
                 <div class="button-group">
                     <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
                     <button id="btn-aggiungi-singolo">Aggiungi al Diario</button>
+                    <button id="btn-arricchisci-ingredienti" style="background-color: #d35400;">Arricchisci con Ingredienti</button>
                     <button id="btn-compila-ai" style="background-color: #0d47a1;">Compila AI</button>
                 </div>
             </div>
@@ -1450,7 +1452,6 @@
         function resetInputAlimento() { 
             [builderDesc, builderQta, ...Object.values(inputFields)].forEach(el => el.value = ''); 
             builderDesc.focus();
-            // Resetta anche l'altezza della textarea
             builderDesc.style.height = 'auto';
         }
 
@@ -1683,17 +1684,78 @@
             }
             nutrientDetailModal.style.display = 'block';
         }
+
+        // **** INIZIO NUOVA FUNZIONE JAVASCRIPT ****
+        // Ri-aggiunta della funzione per arricchire il nome con gli ingredienti
+        async function arricchisciNomeConIngredientiAI() {
+            const nomeProdotto = builderDesc.value.trim();
+            if (!nomeProdotto) {
+                alert("Scrivi prima il nome del prodotto da analizzare.");
+                return;
+            }
+
+            const button = document.getElementById('btn-arricchisci-ingredienti');
+            button.disabled = true;
+            button.textContent = 'Analisi in corso...';
+
+            try {
+                // La prima fase (e unica) è ottenere la lista ingredienti
+                console.log("Richiesta lista ingredienti...");
+                const promptIngredienti = `Per il prodotto "${nomeProdotto}", forniscimi la lista quantificata degli ingredienti (QIL).
+                Regole:
+                1. Rispondi ESATTAMENTE con un oggetto JSON, senza testo aggiuntivo.
+                2. Il formato deve essere un array di oggetti: [{"ingrediente": "nome", "percentuale": XX}, ...].
+                3. Se le percentuali esatte non sono note, crea una stima realistica basata sull'ordine degli ingredienti e sulla tipologia del prodotto.
+                4. La somma delle percentuali deve approssimare 100.
+                5. Includi solo ingredienti significativi (percentuale > 0.5%).`;
+
+                const responseIngredienti = await fetch(GEMINI_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptIngredienti }] }] })
+                });
+
+                if (!responseIngredienti.ok) throw new Error('Errore API durante l\'analisi degli ingredienti');
+                
+                const dataIngredienti = await responseIngredienti.json();
+                const ingredientiRaw = dataIngredienti.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const listaIngredienti = JSON.parse(ingredientiRaw.replace(/```json|```/g, '').trim());
+
+                if (!listaIngredienti || listaIngredienti.length === 0) {
+                    throw new Error("L'AI non è riuscita a determinare gli ingredienti.");
+                }
+                
+                const stringaIngredienti = listaIngredienti.map(item => `${item.ingrediente} ${item.percentuale}%`).join(', ');
+
+                builderDesc.value = `${nomeProdotto} (${stringaIngredienti})`;
+                
+                // Attiva l'evento 'input' per forzare l'aggiornamento dell'altezza della textarea
+                builderDesc.dispatchEvent(new Event('input'));
+                
+                alert("Il nome dell'alimento è stato arricchito con gli ingredienti!\n\nOra puoi premere 'Compila AI' per un calcolo più accurato.");
+
+            } catch (err) {
+                alert('Errore durante l\'analisi AI: ' + err.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Arricchisci con Ingredienti';
+            }
+        }
+        // **** FINE NUOVA FUNZIONE JAVASCRIPT ****
         
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
-            // **** INIZIO MODIFICA JAVASCRIPT (logica espansione textarea) ****
             const textarea = document.getElementById('builder-desc');
             textarea.addEventListener('input', () => {
-                textarea.style.height = 'auto'; // Resetta l'altezza
-                textarea.style.height = (textarea.scrollHeight) + 'px'; // Imposta l'altezza in base al contenuto
+                textarea.style.height = 'auto'; 
+                textarea.style.height = (textarea.scrollHeight) + 'px';
             });
+
+            // **** INIZIO MODIFICA JAVASCRIPT ****
+            // Ri-aggiunto il collegamento per il pulsante
+            document.getElementById('btn-arricchisci-ingredienti').addEventListener('click', arricchisciNomeConIngredientiAI);
             // **** FINE MODIFICA JAVASCRIPT ****
 
             dailyNotesTextarea.addEventListener('input', () => {
