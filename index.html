@@ -501,6 +501,7 @@
                 <div class="button-group">
                     <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
                     <button id="btn-aggiungi-singolo">Aggiungi al Diario</button>
+                    <button id="btn-analizza-ingredienti" style="background-color: #d35400;">Analizza Ingredienti</button>
                     <button id="btn-compila-ai" style="background-color: #0d47a1;">Compila AI</button>
                 </div>
             </div>
@@ -1396,17 +1397,14 @@
             return foodItem;
         }
         
-async function handleAlimentoAddition(isForMealBuilder) {
+        async function handleAlimentoAddition(isForMealBuilder) {
             const desc = builderDesc.value.trim();
             
-            // --- INIZIO MODIFICA ---
-            // Aggiungo un controllo per i caratteri non validi in Firebase
-            const invalidFirebaseChars = /[.#$[\]/]/; // Regex che cerca i caratteri proibiti
+            const invalidFirebaseChars = /[.#$[\]/]/;
             if (invalidFirebaseChars.test(desc)) {
                 alert("Il nome dell'alimento contiene caratteri non validi per il salvataggio (es. . # $ [ ] / ).\n\nPer favore, rimuovili e riprova.");
-                return; // Interrompo l'esecuzione della funzione
+                return;
             }
-            // --- FINE MODIFICA ---
 
             const qta = evaluateQuantity(builderQta.value);
             if (!desc || isNaN(qta) || qta <= 0) { alert('Inserisci nome e quantità valide.'); return; }
@@ -1419,7 +1417,6 @@ async function handleAlimentoAddition(isForMealBuilder) {
                 const confirmMsg = `Ci sono molti campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
                 if (confirm(confirmMsg)) {
                     await document.getElementById('btn-compila-ai').click();
-                    // Aspettiamo che i campi si popolino
                     setTimeout(() => handleAlimentoAddition(isForMealBuilder), 500);
                     return; 
                 }
@@ -1677,7 +1674,82 @@ async function handleAlimentoAddition(isForMealBuilder) {
             }
             nutrientDetailModal.style.display = 'block';
         }
-        
+
+        // **** INIZIO NUOVA FUNZIONE JAVASCRIPT ****
+        async function analizzaECompilaIngredienti() {
+            const nomeProdotto = builderDesc.value.trim();
+            if (!nomeProdotto) {
+                alert("Scrivi prima il nome del prodotto da analizzare.");
+                return;
+            }
+
+            const button = document.getElementById('btn-analizza-ingredienti');
+            button.disabled = true;
+            button.textContent = 'Analisi in corso...';
+
+            try {
+                // --- FASE 1: Ottenere la lista ingredienti con percentuali ---
+                console.log("Fase 1: Richiesta lista ingredienti...");
+                const promptIngredienti = `Per il prodotto "${nomeProdotto}", forniscimi la lista quantificata degli ingredienti (QIL).
+                Regole:
+                1. Rispondi ESATTAMENTE con un oggetto JSON, senza testo aggiuntivo.
+                2. Il formato deve essere un array di oggetti: [{"ingrediente": "nome", "percentuale": XX}, ...].
+                3. Se le percentuali esatte non sono note, crea una stima realistica basata sull'ordine degli ingredienti e sulla tipologia del prodotto.
+                4. La somma delle percentuali deve approssimare 100.
+                5. Includi solo ingredienti significativi (percentuale > 0.5%).`;
+
+                const responseIngredienti = await fetch(GEMINI_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptIngredienti }] }] })
+                });
+
+                if (!responseIngredienti.ok) throw new Error('Errore API nella Fase 1');
+                const dataIngredienti = await responseIngredienti.json();
+                const ingredientiRaw = dataIngredienti.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const listaIngredienti = JSON.parse(ingredientiRaw.replace(/```json|```/g, '').trim());
+
+                console.log("Ingredienti ricevuti:", listaIngredienti);
+
+                if (!listaIngredienti || listaIngredienti.length === 0) {
+                    throw new Error("L'AI non è riuscita a determinare gli ingredienti.");
+                }
+                
+                const descrizioneComposizione = listaIngredienti.map(item => `${item.ingrediente} (${item.percentuale}%)`).join(', ');
+                console.log("Composizione per Fase 2:", descrizioneComposizione);
+
+                // --- FASE 2: Calcolare i nutrienti basati sulla composizione ---
+                console.log("Fase 2: Richiesta calcolo nutrizionale...");
+                const promptNutrienti = `Fornisci i valori nutrizionali medi per 100g di un alimento composto da: ${descrizioneComposizione}. ${AI_INSTRUCTION}. Rispondi ESATTAMENTE con questo oggetto JSON (senza altro testo): ${GEMINI_PROMPT_FORMAT}`;
+
+                const responseNutrienti = await fetch(GEMINI_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptNutrienti }] }] })
+                });
+                
+                if (!responseNutrienti.ok) throw new Error('Errore API nella Fase 2');
+                const dataNutrienti = await responseNutrienti.json();
+                const nutrientiRaw = dataNutrienti.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const resObj = JSON.parse(nutrientiRaw.replace(/```json|```/g, '').trim());
+                
+                for (const key in inputFields) {
+                    if (typeof resObj[key] !== 'undefined') {
+                        inputFields[key].value = resObj[key] ?? '';
+                    }
+                }
+                aggiornaColoreNutrienti();
+                alert("Analisi completata! I campi sono stati compilati con i valori calcolati dalla lista ingredienti.");
+
+            } catch (err) {
+                alert('Errore durante l\'analisi AI: ' + err.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Analizza Ingredienti';
+            }
+        }
+        // **** FINE NUOVA FUNZIONE JAVASCRIPT ****
+
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
@@ -1995,7 +2067,11 @@ async function handleAlimentoAddition(isForMealBuilder) {
                 } catch (err) { alert('Errore compilazione AI: ' + err.message);
                 } finally { button.disabled = false; button.textContent = 'Compila AI'; }
             });
-            
+
+            // **** INIZIO COLLEGAMENTO NUOVO PULSANTE JAVASCRIPT ****
+            document.getElementById('btn-analizza-ingredienti').addEventListener('click', analizzaECompilaIngredienti);
+            // **** FINE COLLEGAMENTO NUOVO PULSANTE JAVASCRIPT ****
+
             dataCaricamentoInput.value = getTodayString('ymd');
 
             const handleCalorieAdjustment = (increment) => {
@@ -2135,5 +2211,3 @@ async function handleAlimentoAddition(isForMealBuilder) {
     </script>
 </body>
 </html>
-
-
