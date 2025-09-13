@@ -244,6 +244,48 @@
         .protein-score.low { background-color: #d32f2f; }
         .protein-score.medium { background-color: #ff8f00; }
         .protein-score.high { background-color: #2e7d32; }
+
+        /* --- INIZIO STILI MODIFICATI --- */
+        .food-input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .food-input-container input {
+            padding-right: 40px; /* Spazio per l'icona */
+        }
+        #btn-edit-ingredients {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-60%); /* Centra verticalmente */
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #607d8b;
+            padding: 5px;
+            line-height: 1;
+        }
+        #btn-edit-ingredients:hover {
+            color: #1976d2;
+        }
+        #btn-edit-ingredients.has-ingredients {
+            color: #2e7d32; /* Colore verde se ci sono ingredienti */
+        }
+        .ingredients-icon {
+            cursor: pointer;
+            color: #1976d2;
+            margin-left: 8px;
+        }
+        #ingredients-modal-textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+            resize: vertical;
+        }
+        /* --- FINE STILI MODIFICATI --- */
+
     </style>
 </head>
 <body>
@@ -441,7 +483,15 @@
                     <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
                 </div>
                 <div class="builder-grid">
-                    <div><label>Alimento</label><input type="text" id="builder-desc" list="food-database-list"></div>
+                    <div>
+                        <label>Alimento</label>
+                        <div class="food-input-container">
+                            <input type="text" id="builder-desc" list="food-database-list">
+                            <button id="btn-edit-ingredients" title="Gestisci ingredienti (per alimenti complessi)">
+                                <i class="fas fa-list-alt"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div><label>Quantità (g)</label><input type="text" id="builder-qta"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
                     <div><label>Kcal/100g</label><input type="number" id="builder-kcal" min="0"></div>
@@ -605,7 +655,21 @@
             </div>
         </div>
     </div>
-    
+
+    <div id="ingredients-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="ingredients-modal">&times;</span>
+            <h2>Gestisci Ingredienti per <span id="ingredients-modal-food-name" style="color: #1976d2;"></span></h2>
+            <p style="font-size: 0.9em; color: #555;">
+                Inserisci un ingrediente per riga. Puoi anche usare l'AI per generare una lista di partenza.
+            </p>
+            <textarea id="ingredients-modal-textarea" placeholder="es. Carote&#10;Cipolle&#10;Sedano..."></textarea>
+            <div class="button-group" style="justify-content: space-between; margin-top: 15px;">
+                <button id="btn-generate-ingredients-ai" style="background-color: #0d47a1;">💡 Genera con AI</button>
+                <button id="btn-save-ingredients" style="background-color: #2e7d32;">✅ Salva Ingredienti</button>
+            </div>
+        </div>
+    </div>
     <div id="weekly-vitamin-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" data-modal="weekly-vitamin-modal">&times;</span>
@@ -765,6 +829,9 @@
         let datiGiornalieri = {};
         let foodDatabase = {};
         let pastoInCostruzione = [];
+        // --- INIZIO VARIABILI MODIFICATE ---
+        let ingredientiInCostruzione = []; // Memorizza gli ingredienti dell'alimento in fase di creazione
+        // --- FINE VARIABILI MODIFICATE ---
         
         let db; 
         let auth; 
@@ -880,6 +947,16 @@
         const builderLys = document.getElementById('builder-lys'), builderMet = document.getElementById('builder-met'), builderPhe = document.getElementById('builder-phe');
         const builderThr = document.getElementById('builder-thr'), builderTrp = document.getElementById('builder-trp'), builderHis = document.getElementById('builder-his');
         const dailyNotesTextarea = document.getElementById('daily-notes');
+
+        // --- INIZIO COSTANTI MODIFICATE ---
+        const ingredientsModal = document.getElementById('ingredients-modal');
+        const btnEditIngredients = document.getElementById('btn-edit-ingredients');
+        const ingredientsModalFoodName = document.getElementById('ingredients-modal-food-name');
+        const ingredientsModalTextarea = document.getElementById('ingredients-modal-textarea');
+        const btnGenerateIngredientsAi = document.getElementById('btn-generate-ingredients-ai');
+        const btnSaveIngredients = document.getElementById('btn-save-ingredients');
+        // --- FINE COSTANTI MODIFICATE ---
+
         const inputFields = {
             prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
             fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
@@ -1181,8 +1258,33 @@
                 if (Object.keys(OBIETTIVI_AMINO).includes(key)) return val.toFixed(0);
                 return ['cu', 'b2', 'b6'].includes(key) ? val.toFixed(2) : (['kcal', 'k', 'p'].includes(key) ? val.toFixed(0) : val.toFixed(1));
             };
+            
+            // --- INIZIO FUNZIONE RENDER DIARIO MODIFICATA ---
+            const renderRow = (item, isSubItem = false) => {
+                const qualita = calcolaQualitaProteine(item);
+                const scoreClass = qualita.score < 70 ? 'low' : qualita.score < 90 ? 'medium' : 'high';
+                const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualita.limiting}">${qualita.score}%</div>`;
+                
+                let descHtml = item.desc;
+                if (item.ingredients && item.ingredients.length > 0) {
+                    const ingredientsList = item.ingredients.join(', ');
+                    descHtml += ` <i class="fas fa-receipt ingredients-icon" title="Ingredienti: ${ingredientsList}" data-ingredients='${JSON.stringify(item.ingredients)}'></i>`;
+                }
+
+                const row = logBody.insertRow();
+                if (isSubItem) row.classList.add('sub-item-row');
+                
+                row.innerHTML = `
+                    <td>${descHtml}</td><td>${(item.qta || 0).toFixed(0)}</td>
+                    <td>${(item.prot || 0).toFixed(1)}</td>
+                    <td>${qualitaCellHtml}</td>
+                    ${nutrientKeys.map(k => `<td>${formatNumber(k, item[k])}</td>`).join('')}
+                    ${isSubItem ? '<td></td>' : `<td class="action-buttons"><button class="edit-btn" data-index="${item.originalIndex}">✏️</button><button class="delete-btn" data-index="${item.originalIndex}">&times;</button></td>`}
+                `;
+            };
 
             (datiGiornalieri.log || []).forEach((entry, index) => {
+                entry.originalIndex = index; // Aggiungo l'indice per riferimento
                 if (entry.type === 'meal') {
                     const rigaPasto = logBody.insertRow();
                     rigaPasto.classList.add('meal-group-row');
@@ -1204,36 +1306,16 @@
                         <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
 
                     if (entry.isExpanded) {
-                        entry.items.forEach(subItem => {
-                            const rigaSubItem = logBody.insertRow();
-                            rigaSubItem.classList.add('sub-item-row');
-                             const qualitaSubItem = calcolaQualitaProteine(subItem);
-                             const subScoreClass = qualitaSubItem.score < 70 ? 'low' : qualitaSubItem.score < 90 ? 'medium' : 'high';
-                             const subQualitaCellHtml = `<div class="protein-score ${subScoreClass}" title="Limitante: ${qualitaSubItem.limiting}">${qualitaSubItem.score}%</div>`;
-                            rigaSubItem.innerHTML = `
-                                <td>${subItem.desc}</td><td>${(subItem.qta || 0).toFixed(0)}</td>
-                                <td>${(subItem.prot || 0).toFixed(1)}</td>
-                                <td>${subQualitaCellHtml}</td>
-                                ${nutrientKeys.map(k => `<td>${formatNumber(k, subItem[k])}</td>`).join('')}
-                                <td></td>`;
-                        });
+                        entry.items.forEach(subItem => renderRow(subItem, true));
                     }
                 } else if (entry.type === 'workout') {
                     const riga = logBody.insertRow();
                     riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td></td><td>${(entry.kcal || 0).toFixed(0)}</td><td colspan="${nutrientKeys.length -1}"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 } else { 
-                    const riga = logBody.insertRow();
-                    const qualitaSingola = calcolaQualitaProteine(entry);
-                    const scoreClass = qualitaSingola.score < 70 ? 'low' : qualitaSingola.score < 90 ? 'medium' : 'high';
-                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaSingola.limiting}">${qualitaSingola.score}%</div>`;
-                    riga.innerHTML = `
-                        <td>${entry.desc}</td><td>${(entry.qta || 0).toFixed(0)}</td>
-                        <td>${(entry.prot || 0).toFixed(1)}</td>
-                        <td>${qualitaCellHtml}</td>
-                        ${nutrientKeys.map(k => `<td>${formatNumber(k, entry[k])}</td>`).join('')}
-                        <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                    renderRow(entry, false);
                 }
             });
+            // --- FINE FUNZIONE RENDER DIARIO MODIFICATA ---
         }
 
         // ...
@@ -1334,6 +1416,7 @@
             return parseFloat(input.replace(',', '.'));
         }
 
+        // --- INIZIO FUNZIONE CREAZIONE ALIMENTO MODIFICATA ---
         function creaAlimentoDaInput(isSingle = false) {
             const desc = builderDesc.value.trim();
             const qta = evaluateQuantity(builderQta.value);
@@ -1342,9 +1425,15 @@
                 return null;
             }
 
-            const foodData = { lastQta: qta, desc: desc }; // Salva anche la descrizione originale
+            const foodData = { lastQta: qta, desc: desc };
             const foodItem = { desc: desc.charAt(0).toUpperCase() + desc.slice(1), qta };
             
+            // Aggiungo gli ingredienti se presenti
+            if (ingredientiInCostruzione.length > 0) {
+                foodData.ingredients = ingredientiInCostruzione;
+                foodItem.ingredients = ingredientiInCostruzione;
+            }
+
             for (const key in inputFields) {
                 inputFields[key].value = inputFields[key].value.replace(',', '.');
                 foodData[key] = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
@@ -1371,7 +1460,7 @@
             } 
             
             for (const key in foodData) {
-                if (key !== 'lastQta' && key !== 'desc') {
+                if (!['lastQta', 'desc', 'ingredients'].includes(key)) {
                     foodItem[key] = ((foodData[key] ?? 0) / 100) * qta;
                 }
             }
@@ -1395,6 +1484,7 @@
             }
             return foodItem;
         }
+        // --- FINE FUNZIONE CREAZIONE ALIMENTO MODIFICATA ---
         
         async function handleAlimentoAddition(isForMealBuilder) {
             const desc = builderDesc.value.trim();
@@ -1441,10 +1531,14 @@
             }
         }
 
+        // --- INIZIO FUNZIONE RESET MODIFICATA ---
         function resetInputAlimento() { 
             [builderDesc, builderQta, ...Object.values(inputFields)].forEach(el => el.value = ''); 
+            ingredientiInCostruzione = [];
+            btnEditIngredients.classList.remove('has-ingredients');
             builderDesc.focus(); 
         }
+        // --- FINE FUNZIONE RESET MODIFICATA ---
 
         function aggiornaColoreNutrienti() {
             const hasEmptyFields = Object.keys(inputFields)
@@ -1770,10 +1864,12 @@
 
             infoVitSettimanaliBtn.addEventListener('click', openWeeklyVitaminsModal);
             infoFatsSettimanaliBtn.addEventListener('click', openWeeklyFatsModal);
-
+            
+            // --- INIZIO GESTIONE MODALI MODIFICATA ---
             document.querySelectorAll('.modal-close').forEach(button => {
-                button.addEventListener('click', () => {
-                    button.closest('.modal').style.display = 'none';
+                button.addEventListener('click', (e) => {
+                    const modalId = e.target.dataset.modal;
+                    document.getElementById(modalId).style.display = 'none';
                 });
             });
 
@@ -1782,6 +1878,7 @@
                     event.target.style.display = 'none';
                 }
             });
+            // --- FINE GESTIONE MODALI MODIFICATA ---
 
             document.getElementById('info-proteine-giornata').addEventListener('click', () => {
                 const log = datiGiornalieri.log || [];
@@ -1905,8 +2002,16 @@
             });
 
             document.body.addEventListener('click', (e) => {
-                const target = e.target.closest('button, .expand-arrow');
+                const target = e.target.closest('button, .expand-arrow, .ingredients-icon');
                 if (!target) return;
+                
+                // --- INIZIO GESTIONE CLICK INGREDIENTI (NUOVO) ---
+                if (target.classList.contains('ingredients-icon')) {
+                    const ingredients = JSON.parse(target.dataset.ingredients);
+                    alert('Ingredienti:\n- ' + ingredients.join('\n- '));
+                    return;
+                }
+                // --- FINE GESTIONE CLICK INGREDIENTI (NUOVO) ---
 
                 const button = target.closest('.edit-btn, .delete-btn');
                 const index = parseInt(target.dataset.index, 10);
@@ -1949,9 +2054,15 @@
                 }
             });
             
+            // --- INIZIO LISTENER INPUT MODIFICATO ---
             builderDesc.addEventListener('input', (e) => {
                 const sanitizedKey = sanitizeFirebaseKey(e.target.value.trim().toLowerCase());
                 const foodData = foodDatabase[sanitizedKey]; 
+                
+                // Reset ingredienti temporanei
+                ingredientiInCostruzione = [];
+                btnEditIngredients.classList.remove('has-ingredients');
+
                 if (foodData) {
                     builderQta.value = foodData.lastQta ?? '';
                     for(const key in inputFields) {
@@ -1959,9 +2070,14 @@
                             inputFields[key].value = foodData[key] ?? '';
                         }
                     }
+                    if (foodData.ingredients && foodData.ingredients.length > 0) {
+                        ingredientiInCostruzione = [...foodData.ingredients];
+                        btnEditIngredients.classList.add('has-ingredients');
+                    }
                 }
                 aggiornaColoreNutrienti();
             });
+            // --- FINE LISTENER INPUT MODIFICATO ---
 
             Object.values(inputFields).forEach(input => { if (input) input.addEventListener('input', aggiornaColoreNutrienti) });
             
@@ -1993,6 +2109,63 @@
                 } catch (err) { alert('Errore compilazione AI: ' + err.message);
                 } finally { button.disabled = false; button.textContent = 'Compila AI'; }
             });
+
+            // --- INIZIO LOGICA MODALE INGREDIENTI (NUOVA) ---
+            btnEditIngredients.addEventListener('click', () => {
+                const foodName = builderDesc.value.trim();
+                if (!foodName) {
+                    alert("Inserisci prima il nome dell'alimento.");
+                    return;
+                }
+                ingredientsModalFoodName.textContent = foodName;
+                ingredientsModalTextarea.value = ingredientiInCostruzione.join('\n');
+                ingredientsModal.style.display = 'block';
+            });
+
+            btnSaveIngredients.addEventListener('click', () => {
+                ingredientiInCostruzione = ingredientsModalTextarea.value
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+                
+                if (ingredientiInCostruzione.length > 0) {
+                    btnEditIngredients.classList.add('has-ingredients');
+                } else {
+                    btnEditIngredients.classList.remove('has-ingredients');
+                }
+                
+                ingredientsModal.style.display = 'none';
+            });
+
+            btnGenerateIngredientsAi.addEventListener('click', async (e) => {
+                const foodName = builderDesc.value.trim();
+                if (!foodName) {
+                    alert("Il nome dell'alimento è vuoto.");
+                    return;
+                }
+                const button = e.target;
+                button.disabled = true;
+                button.textContent = 'Genero...';
+                
+                try {
+                    const promptText = `Elenca gli ingredienti tipici per "${foodName}". Scrivi solo la lista, un ingrediente per riga, senza titoli o altre frasi.`;
+                    const res = await fetch(GEMINI_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+                    });
+                    if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
+                    const data = await res.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    ingredientsModalTextarea.value = text.trim();
+                } catch (err) {
+                    alert("Errore durante la generazione degli ingredienti: " + err.message);
+                } finally {
+                    button.disabled = false;
+                    button.textContent = '💡 Genera con AI';
+                }
+            });
+            // --- FINE LOGICA MODALE INGREDIENTI (NUOVA) ---
             
             dataCaricamentoInput.value = getTodayString('ymd');
 
