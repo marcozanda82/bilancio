@@ -257,12 +257,12 @@
                     <progress id="progress-fats-total" class="macro-progress" value="0"></progress>
                     
                     <div class="fats-group">
-                         <div class="fats-sub-bars-container">
-                            <div>
+                         <div style="display: flex; gap: 20px; margin-top: 10px;">
+                            <div style="flex-grow: 1; flex-basis: 0;">
                                 <p>Saturi: <span id="totale-fat-sat">0</span> / <span id="obiettivo-fat-sat"></span> g</p>
                                 <progress id="progress-fat-sat" class="progress-fat-sat" value="0"></progress>
                             </div>
-                            <div>
+                            <div style="flex-grow: 1; flex-basis: 0;">
                                 <p>Trans: <span id="totale-fat-trans">0</span> / <span id="obiettivo-fat-trans"></span> g</p>
                                 <progress id="progress-fat-trans" value="0"></progress>
                             </div>
@@ -278,12 +278,12 @@
                             <p>Polinsaturi: <span id="totale-fat-poly">0</span> / <span id="obiettivo-fat-poly"></span> g</p>
                             <progress id="progress-fat-poly" value="0"></progress>
                             <div style="border: none; padding-left: 10px; margin-top: 10px;">
-                                 <div class="fats-sub-bars-container">
-                                    <div>
+                                 <div style="display: flex; gap: 20px; margin-top: 10px;">
+                                    <div style="flex-grow: 1; flex-basis: 0;">
                                         <p>Omega 3: <span id="totale-omega3">0</span> / <span id="obiettivo-omega3"></span> g</p>
                                         <progress id="progress-omega3" value="0"></progress>
                                     </div>
-                                    <div>
+                                    <div style="flex-grow: 1; flex-basis: 0;">
                                         <p>Omega 6: <span id="totale-omega6">0</span> / <span id="obiettivo-omega6"></span> g</p>
                                         <progress id="progress-omega6" value="0"></progress>
                                     </div>
@@ -536,11 +536,490 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
     <script type="module">
-        //
-        // Qui va inserito l'intero blocco di codice JavaScript che abbiamo sviluppato
-        //
-        // Assicurati di copiare l'ultima versione completa dello script che ti ho fornito in precedenza.
-        //
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
+          authDomain: "mio-tracker.firebaseapp.com",
+          databaseURL: "https://mio-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+          projectId: "mio-tracker",
+          storageBucket: "mio-tracker.firebasestorage.app",
+          messagingSenderId: "382993217593",
+          appId: "1:382993217593:web:f0780aa061c23f9503f5e8"
+        };
+
+        let giornoVisualizzato = getTodayString('ymd');
+        let datiGiornalieri = {};
+        let foodDatabase = {};
+        let pastoInCostruzione = [];
+        
+        let db; 
+        let auth; 
+        let firebaseApp; 
+        let currentUserUID = null; 
+
+        const PIANO_SETTIMANALE = {
+            0: { tipo: '💧 Riposo (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            1: { tipo: '🔥 Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            2: { tipo: '💪 Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            3: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            4: { tipo: '🏋️ Forza (Mantenimento)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            5: { tipo: '🏃 Cardio (Deficit)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 },
+            6: { tipo: '🥗 Mantenimento (Free)', cal_base: 2300, prot: 140, carb: 300, zuccheri: 25 }
+        };
+
+        const DEFICIT_PREIMPOSTATO_SETTIMANALE = { 0: -500, 1: -150, 2: -150, 3: -150, 4: -150, 5: -150, 6: -500 };
+
+        const OBIETTIVI_MICRO = { mg: 420, k: 3400, vitc: 90, ca: 1000, fe: 18, zn: 11, cu: 0.9, p: 700 };
+        const OBIETTIVI_FAT = { 
+            fatTotal: 85, fatSat: 20, fatTrans: 2, 
+            fatUnsat: 65, fatMono: 45, fatPoly: 20, 
+            omega3: 2, omega6: 10 
+        };
+        const OBIETTIVI_FIBRE = { fibreTotali: 30, fibreSolubili: 10, fibreInsolubili: 20 };
+        const OBIETTIVI_VIT = { vitA: 900, vitB12: 2.4, vitD: 15, vitE: 15, vitK: 120, b9: 400, b2: 1.3, b6: 1.3 };
+        
+        const OBIETTIVI_AMINO = {
+            leu: 2900, iso: 1500, val: 1900, 
+            lys: 2200, met: 1100, phe: 1800, 
+            thr: 1100, trp: 300,  his: 750 
+        };
+
+        const PROFILO_AMINOACIDICO_RIFERIMENTO = {
+            leu: 59, iso: 30, val: 39,
+            lys: 45, met: 22, phe: 38,
+            thr: 23, trp: 6.0, his: 15
+        };
+
+        const OBIETTIVI_MACRO_PASTO_BASE_FORZA = {
+            merenda1: { prot: 30, cal_perc: 0.20 },
+            pranzo: { prot: 40, cal_perc: 0.35 },
+            merenda2: { prot: 30, cal_perc: 0.15 },
+            cena: { prot: 40, cal_perc: 0.30 }
+        };
+        const totalProtForza = Object.values(OBIETTIVI_MACRO_PASTO_BASE_FORZA).reduce((sum, p) => sum + p.prot, 0);
+        for (const mealType in OBIETTIVI_MACRO_PASTO_BASE_FORZA) {
+            OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot_perc = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType].prot / totalProtForza;
+        }
+
+        const MEAL_TYPE_SEQUENCE = ['merenda1', 'pranzo', 'merenda2', 'cena'];
+        const LOCAL_STORAGE_SYNC_KEYS = ['trackerFoodDatabase', 'trackerPesate', 'trackerMealType', 'trackerPastoInCostruzione'];
+        const LOCAL_LAST_UPDATE_KEY = 'lastLocalUpdateTimestamp';
+        const CLOUD_LAST_UPDATE_PATH = 'lastCloudUpdateTimestamp';
+
+        const API_KEY_AI = "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424";
+        const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"fibreTotali":g,"fibreSolubili":g,"fibreInsolubili":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
+        const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
+
+        const authSection = document.getElementById('auth-section');
+        const userEmailInput = document.getElementById('user-email');
+        const userPasswordInput = document.getElementById('user-password');
+        const btnRegister = document.getElementById('btn-register');
+        const btnLogin = document.getElementById('btn-login');
+        const btnSignOut = document.getElementById('btn-sign-out');
+        const authStatusP = document.getElementById('auth-status');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const authFormFields = document.getElementById('auth-form-fields');
+        const mainTrackerContent = document.getElementById('main-tracker-content');
+        const titoloGiornataEl = document.getElementById('titolo-giornata');
+        const logBody = document.getElementById('log-body');
+        const foodDatalist = document.getElementById('food-database-list');
+        const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
+        const btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
+        const mealBuilderSezione = document.getElementById('meal-builder-sezione');
+        const logPastoBuilderBody = document.getElementById('log-pasto-builder-body');
+        const btnSalvaPasto = document.getElementById('btn-salva-pasto');
+        const mealTypeSelector = document.getElementById('meal-type-selector');
+        const dataCaricamentoInput = document.getElementById('data-caricamento');
+        const calorieBalanceText = document.getElementById('calorie-balance-text');
+        const calorieAdjustmentInput = document.getElementById('calorie-adjustment-input');
+        const btnCalorieMinus = document.getElementById('btn-calorie-minus');
+        const btnCaloriePlus = document.getElementById('btn-calorie-plus');
+        const btnDownloadManual = document.getElementById('btn-download-manual');
+        const cloudSyncStatusSpan = document.getElementById('cloud-sync-status');
+        const btnCopyPrompt = document.getElementById('btn-copy-prompt');
+        const manualJsonInput = document.getElementById('manual-json-input');
+        const btnConfirmJson = document.getElementById('btn-confirm-json');
+        const btnClearNutrients = document.getElementById('btn-clear-nutrients');
+        const builderDesc = document.getElementById('builder-desc'), builderQta = document.getElementById('builder-qta');
+        const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
+        const builderCarb = document.getElementById('builder-carb'), builderZuccheri = document.getElementById('builder-zuccheri');
+        const builderFatTotal = document.getElementById('builder-fat-total');
+        const builderFibreTotali = document.getElementById('builder-fibre-totali');
+        const builderFibreSolubili = document.getElementById('builder-fibre-solubili');
+        const builderFibreInsolubili = document.getElementById('builder-fibre-insolubili');
+        const builderFatSat = document.getElementById('builder-fat-sat'), builderFatTrans = document.getElementById('builder-fat-trans'), builderFatMono = document.getElementById('builder-fat-mono'), builderFatPoly = document.getElementById('builder-fat-poly'), builderOmega3 = document.getElementById('builder-omega3'), builderOmega6 = document.getElementById('builder-omega6');
+        const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
+        const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
+        const builderVitE = document.getElementById('builder-vit-e'), builderVitK = document.getElementById('builder-vit-k'), builderB9 = document.getElementById('builder-b9');
+        const builderB2 = document.getElementById('builder-b2'), builderB6 = document.getElementById('builder-b6');
+        const builderFe = document.getElementById('builder-fe'), builderZn = document.getElementById('builder-zn'), builderCu = document.getElementById('builder-cu'), builderP = document.getElementById('builder-p');
+        const builderLeu = document.getElementById('builder-leu'), builderIso = document.getElementById('builder-iso'), builderVal = document.getElementById('builder-val');
+        const builderLys = document.getElementById('builder-lys'), builderMet = document.getElementById('builder-met'), builderPhe = document.getElementById('builder-phe');
+        const builderThr = document.getElementById('builder-thr'), builderTrp = document.getElementById('builder-trp'), builderHis = document.getElementById('builder-his');
+        const dailyNotesTextarea = document.getElementById('daily-notes');
+        const inputFields = {
+            prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
+            fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
+            fibreTotali: builderFibreTotali, fibreSolubili: builderFibreSolubili, fibreInsolubili: builderFibreInsolubili,
+            mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
+            vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
+            vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, 
+            fe: builderFe, zn: builderZn, cu: builderCu, p: builderP,
+            leu: builderLeu, iso: builderIso, val: builderVal,
+            lys: builderLys, met: builderMet, phe: builderPhe,
+            thr: builderThr, trp: builderTrp, his: builderHis
+        };
+        const spanTotaleProteine = document.getElementById('totale-proteine'), spanObiettivoProteine = document.getElementById('obiettivo-proteine'), progressProteine = document.getElementById('progress-proteine');
+        const spanTotaleCalorie = document.getElementById('totale-calorie'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie'), progressCalorie = document.getElementById('progress-calorie');
+        const spanTotaleCarboidrati = document.getElementById('totale-carboidrati'), spanObiettivoCarboidrati = document.getElementById('obiettivo-carboidrati'), progressCarboidrati = document.getElementById('progress-carboidrati');
+        const spanTotaleZuccheri = document.getElementById('totale-zuccheri'), spanObiettivoZuccheri = document.getElementById('obiettivo-zuccheri'), progressZuccheri = document.getElementById('progress-zuccheri');
+        const spanWorkoutCalories = document.getElementById('workout-calories-totali');
+        const spanTotaleFibreTotali = document.getElementById('totale-fibre-totali'), spanObiettivoFibreTotali = document.getElementById('obiettivo-fibre-totali'), progressFibreTotali = document.getElementById('progress-fibre-totali');
+        const spanTotaleFibreSolubili = document.getElementById('totale-fibre-solubili'), spanObiettivoFibreSolubili = document.getElementById('obiettivo-fibre-solubili'), progressFibreSolubili = document.getElementById('progress-fibre-solubili');
+        const spanTotaleFibreInsolubili = document.getElementById('totale-fibre-insolubili'), spanObiettivoFibreInsolubili = document.getElementById('obiettivo-fibre-insolubili'), progressFibreInsolubili = document.getElementById('progress-fibre-insolubili');
+        const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total'), progressFatsTotal = document.getElementById('progress-fats-total');
+        const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanObiettivoFatSat = document.getElementById('obiettivo-fat-sat'), progressFatSat = document.getElementById('progress-fat-sat');
+        const spanTotaleFatTrans = document.getElementById('totale-fat-trans'), spanObiettivoFatTrans = document.getElementById('obiettivo-fat-trans'), progressFatTrans = document.getElementById('progress-fat-trans');
+        const spanTotaleFatUnsat = document.getElementById('totale-fat-unsat'), spanObiettivoFatUnsat = document.getElementById('obiettivo-fat-unsat'), progressFatUnsat = document.getElementById('progress-fat-unsat');
+        const spanTotaleFatMono = document.getElementById('totale-fat-mono'), spanObiettivoFatMono = document.getElementById('obiettivo-fat-mono'), progressFatMono = document.getElementById('progress-fat-mono');
+        const spanTotaleFatPoly = document.getElementById('totale-fat-poly'), spanObiettivoFatPoly = document.getElementById('obiettivo-fat-poly'), progressFatPoly = document.getElementById('progress-fat-poly');
+        const spanTotaleOmega3 = document.getElementById('totale-omega3'), spanObiettivoOmega3 = document.getElementById('obiettivo-omega3'), progressOmega3 = document.getElementById('progress-omega3');
+        const spanTotaleOmega6 = document.getElementById('totale-omega6'), spanObiettivoOmega6 = document.getElementById('obiettivo-omega6'), progressOmega6 = document.getElementById('progress-omega6');
+        const omegaRatioValueEl = document.getElementById('omega-ratio-value');
+        const spanTotaleMg = document.getElementById('totale-mg'), progressMg = document.getElementById('progress-mg');
+        const spanTotaleK = document.getElementById('totale-k'), progressK = document.getElementById('progress-k');
+        const spanTotaleCa = document.getElementById('totale-ca'), progressCa = document.getElementById('progress-ca');
+        const spanTotaleFe = document.getElementById('totale-fe'), progressFe = document.getElementById('progress-fe');
+        const spanTotaleZn = document.getElementById('totale-zn'), progressZn = document.getElementById('progress-zn');
+        const spanTotaleCu = document.getElementById('totale-cu'), progressCu = document.getElementById('progress-cu');
+        const spanTotaleP = document.getElementById('totale-p'), progressP = document.getElementById('progress-p');
+        const spanTotaleVitC = document.getElementById('totale-vitc'), progressVitC = document.getElementById('progress-vitc');
+        const spanTotaleVitA = document.getElementById('totale-vit-a'), progressVitA = document.getElementById('progress-vit-a');
+        const spanTotaleVitB12 = document.getElementById('totale-vit-b12'), progressVitB12 = document.getElementById('progress-vit-b12');
+        const spanTotaleVitD = document.getElementById('totale-vit-d'), progressVitD = document.getElementById('progress-vit-d');
+        const spanTotaleVitE = document.getElementById('totale-vit-e'), progressVitE = document.getElementById('progress-vit-e');
+        const spanTotaleVitK = document.getElementById('totale-vit-k'), progressVitK = document.getElementById('progress-vit-k');
+        const spanTotaleB9 = document.getElementById('totale-b9'), progressB9 = document.getElementById('progress-b9');
+        const spanTotaleB2 = document.getElementById('totale-b2'), progressB2 = document.getElementById('progress-b2');
+        const spanTotaleB6 = document.getElementById('totale-b6'), progressB6 = document.getElementById('progress-b6');
+        const currentMealTypeDisplay = document.getElementById('current-meal-type-display');
+        const mealProtCurrent = document.getElementById('meal-prot-current'), mealProtTarget = document.getElementById('meal-prot-target'), mealProtRemaining = document.getElementById('meal-prot-remaining');
+        const mealCalCurrent = document.getElementById('meal-cal-current'), mealCalTarget = document.getElementById('meal-cal-target'), mealCalRemaining = document.getElementById('meal-cal-remaining');
+        const mealProgressProt = document.getElementById('meal-progress-prot'), mealProgressCal = document.getElementById('meal-progress-cal');
+        const workoutDescInput = document.getElementById('workout-desc');
+        const workoutCaloriesInput = document.getElementById('workout-calories');
+        const btnAddWorkout = document.getElementById('btn-add-workout');
+        const btnVaiAOggi = document.getElementById('btn-vai-a-oggi');
+    
+        // Tutte le funzioni JavaScript da qui in poi...
+        function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
+
+        function sanitizeFirebaseKey(str) {
+            if (!str) return '';
+            return str.replace(/[.#$/\[\]]/g, '_');
+        }
+        
+        async function saveSingleItemToCloud(path, data) {
+            const dataRef = (db && currentUserUID) ? ref(db, `users/${currentUserUID}/tracker_data/${path}`) : null;
+            if (!dataRef) return;
+            try {
+                await set(dataRef, data);
+                await set(ref(db, `users/${currentUserUID}/${CLOUD_LAST_UPDATE_PATH}`), Date.now());
+                console.log(`Dato salvato su cloud in: ${path}`);
+            } catch (err) {
+                console.error(`Errore salvataggio su cloud per ${path}:`, err);
+            }
+        }
+        
+        function salvaFoodDatabase() { 
+            localStorage.setItem('trackerFoodDatabase', JSON.stringify(foodDatabase)); 
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
+            
+            const sanitizedDb = {};
+            for (const key in foodDatabase) {
+                sanitizedDb[sanitizeFirebaseKey(key)] = foodDatabase[key];
+            }
+            saveSingleItemToCloud('trackerFoodDatabase', sanitizedDb);
+        }
+        
+        function salvaPastoInCostruzione() { 
+            localStorage.setItem('trackerPastoInCostruzione', JSON.stringify(pastoInCostruzione)); 
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
+            saveSingleItemToCloud('trackerPastoInCostruzione', pastoInCostruzione);
+        }
+        
+        function salvaGiorno(dataDaSalvare, datiDaSalvare) {
+            if (!datiDaSalvare) datiDaSalvare = datiGiornalieri;
+            datiDaSalvare.note = dailyNotesTextarea.value;
+            datiDaSalvare.data = dataDaSalvare;
+            const key = `trackerStorico_${dataDaSalvare}`;
+            localStorage.setItem(key, JSON.stringify(datiDaSalvare));
+            localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now());
+            console.log(`Dati salvati LOCALMENTE per il giorno: ${dataDaSalvare}`);
+            saveSingleItemToCloud(key, datiDaSalvare);
+        }
+        
+        function caricaGiorno(data) {
+            giornoVisualizzato = data;
+            dataCaricamentoInput.value = data;
+
+            let datiTrovati = null;
+            let rawDataFromLocalStorage = localStorage.getItem(`trackerStorico_${data}`);
+            try {
+                datiTrovati = JSON.parse(rawDataFromLocalStorage);
+                 if (datiTrovati && datiTrovati.log) {
+                    datiTrovati.log.forEach(entry => {
+                        const items = entry.type === 'meal' ? entry.items : [entry];
+                        items.forEach(item => {
+                            if (item && item.cal && !item.kcal) {
+                                item.kcal = item.cal;
+                                delete item.cal;
+                            }
+                        });
+                    });
+                }
+            } catch (e) {
+                console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
+            }
+            
+            datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0, note: '' };
+            dailyNotesTextarea.value = datiGiornalieri.note || '';
+            if (!datiGiornalieri.log) datiGiornalieri.log = [];
+            if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
+
+            const dataCorrente = new Date(data);
+            const giornoSettimana = dataCorrente.getDay(); 
+            const valorePreimpostatoPerGiorno = DEFICIT_PREIMPOSTATO_SETTIMANALE[giornoSettimana] || 0;
+
+            if (typeof datiGiornalieri.calorieAdjustment === 'undefined' || datiGiornalieri.calorieAdjustment === 0) {
+                datiGiornalieri.calorieAdjustment = valorePreimpostatoPerGiorno;
+            }
+            
+            aggiornaUI();
+            console.log(`Caricato il giorno: ${giornoVisualizzato} da localStorage`); 
+        }
+
+        function calcolaObiettiviPasto(mealType, giornoCorrenteString) {
+            const dataVisualizzata = new Date(giornoCorrenteString);
+            const giornoSettimana = dataVisualizzata.getDay();
+            const pianoDelGiorno = PIANO_SETTIMANALE[giornoSettimana] || PIANO_SETTIMANALE[1];
+
+            const obiettivoCalTotaleGiornaliero = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
+            const obiettivoProtTotaleGiornaliero = pianoDelGiorno.prot;
+
+            let obiettivoPastoProt = 0, obiettivoPastoCal = 0;
+            const calRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType]?.cal_perc ?? 0;
+            const protRatio = OBIETTIVI_MACRO_PASTO_BASE_FORZA[mealType]?.prot_perc ?? 0;
+
+            if (mealType === 'cena') {
+                let consumatoProtAltriPasti = 0, consumatoCalAltriPasti = 0;
+                (datiGiornalieri.log || []).forEach(entry => {
+                    if (entry.mealId && entry.mealId !== 'cena') {
+                        const items = entry.type === 'meal' ? entry.items : [entry];
+                        items.forEach(item => {
+                           consumatoProtAltriPasti += item.prot || 0;
+                           consumatoCalAltriPasti += (item.kcal || item.cal) || 0;
+                        });
+                    }
+                });
+                obiettivoPastoProt = Math.max(0, Math.round(obiettivoProtTotaleGiornaliero - consumatoProtAltriPasti));
+                obiettivoPastoCal = Math.max(0, Math.round(obiettivoCalTotaleGiornaliero - consumatoCalAltriPasti));
+            } else {
+                obiettivoPastoProt = Math.round(obiettivoProtTotaleGiornaliero * protRatio);
+                obiettivoPastoCal = Math.round(obiettivoCalTotaleGiornaliero * calRatio);
+            }
+            
+            const totaliPastoInCostruzione = pastoInCostruzione.reduce((acc, item) => {
+                acc.prot += item.prot || 0; acc.kcal += (item.kcal || item.cal) || 0; return acc;
+            }, { prot: 0, kcal: 0 });
+
+            return {
+                currentProt: totaliPastoInCostruzione.prot, targetProt: obiettivoPastoProt, remainingProt: obiettivoPastoProt - totaliPastoInCostruzione.prot,
+                currentCal: totaliPastoInCostruzione.kcal, targetCal: obiettivoPastoCal, remainingCal: obiettivoPastoCal - totaliPastoInCostruzione.kcal
+            };
+        }
+
+        function initAppUI() {
+            foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
+            aggiornaDatalist();
+            pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
+            pastoInCostruzione.forEach(item => {
+                if (item.cal && !item.kcal) {
+                    item.kcal = item.cal;
+                    delete item.cal;
+                }
+            });
+            renderMealBuilder();
+            caricaGiorno(getTodayString());
+            
+            if (mealTypeSelector) { 
+                const lastMealTypeSelected = localStorage.getItem('lastMealTypeSelected_' + getTodayString());
+                mealTypeSelector.value = (lastMealTypeSelected && MEAL_TYPE_SEQUENCE.includes(lastMealTypeSelected)) ? lastMealTypeSelected : MEAL_TYPE_SEQUENCE[0];
+            }
+            console.log("Interfaccia app avviata con successo con dati locali.");
+        }
+
+        function aggiornaUI() {
+            const dataVisualizzata = new Date(giornoVisualizzato);
+            const pianoDelGiorno = PIANO_SETTIMANALE[dataVisualizzata.getDay()] || PIANO_SETTIMANALE[1];
+            
+            const obiettivoCalorieTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
+            const OBIETTIVI = { 
+                prot: pianoDelGiorno.prot, kcal: obiettivoCalorieTotale, carb: pianoDelGiorno.carb, zuccheri: pianoDelGiorno.zuccheri, 
+                ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT, ...OBIETTIVI_AMINO, ...OBIETTIVI_FIBRE
+            };
+            
+            titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+            
+            let totali = { 
+                prot: 0, kcal: 0, carb: 0, zuccheri: 0, fatTotal: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, 
+                mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, p: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0,
+                leu: 0, iso: 0, val: 0, lys: 0, met: 0, phe: 0, thr: 0, trp: 0, his: 0,
+                fibreTotali: 0, fibreSolubili: 0, fibreInsolubili: 0
+            };
+            
+            (datiGiornalieri.log || []).forEach(entry => {
+                if (entry.type !== 'workout') {
+                    const items = entry.type === 'meal' ? entry.items : [entry];
+                    items.forEach(item => {
+                        for(const key in totali){
+                            totali[key] += item[key] || 0;
+                        }
+                        if(item.cal && !item.kcal) totali.kcal += item.cal;
+                    });
+                }
+            });
+
+            totali.fatUnsat = totali.fatMono + totali.fatPoly;
+
+            spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.prot.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.prot;
+            spanObiettivoCalorie.textContent = OBIETTIVI.kcal; spanTotaleCalorie.textContent = totali.kcal.toFixed(0); progressCalorie.max = OBIETTIVI.kcal; progressCalorie.value = totali.kcal;
+            spanObiettivoCarboidrati.textContent = OBIETTIVI.carb; spanTotaleCarboidrati.textContent = totali.carb.toFixed(1); progressCarboidrati.max = OBIETTIVI.carb; progressCarboidrati.value = totali.carb;
+            spanObiettivoZuccheri.textContent = OBIETTIVI.zuccheri; spanTotaleZuccheri.textContent = totali.zuccheri.toFixed(1); progressZuccheri.max = OBIETTIVI.zuccheri; progressZuccheri.value = totali.zuccheri;
+            spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
+            spanObiettivoFibreTotali.textContent = OBIETTIVI_FIBRE.fibreTotali; spanTotaleFibreTotali.textContent = totali.fibreTotali.toFixed(1); progressFibreTotali.max = OBIETTIVI_FIBRE.fibreTotali; progressFibreTotali.value = totali.fibreTotali;
+            spanObiettivoFibreSolubili.textContent = OBIETTIVI_FIBRE.fibreSolubili; spanTotaleFibreSolubili.textContent = totali.fibreSolubili.toFixed(1); progressFibreSolubili.max = OBIETTIVI_FIBRE.fibreSolubili; progressFibreSolubili.value = totali.fibreSolubili;
+            spanObiettivoFibreInsolubili.textContent = OBIETTIVI_FIBRE.fibreInsolubili; spanTotaleFibreInsolubili.textContent = totali.fibreInsolubili.toFixed(1); progressFibreInsolubili.max = OBIETTIVI_FIBRE.fibreInsolubili; progressFibreInsolubili.value = totali.fibreInsolubili;
+            spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal; spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1); progressFatsTotal.max = OBIETTIVI_FAT.fatTotal; progressFatsTotal.value = totali.fatTotal;
+            spanObiettivoFatSat.textContent = OBIETTIVI_FAT.fatSat; spanTotaleFatSat.textContent = totali.fatSat.toFixed(1); progressFatSat.max = OBIETTIVI_FAT.fatSat; progressFatSat.value = totali.fatSat;
+            spanObiettivoFatTrans.textContent = OBIETTIVI_FAT.fatTrans; spanTotaleFatTrans.textContent = totali.fatTrans.toFixed(1); progressFatTrans.max = OBIETTIVI_FAT.fatTrans; progressFatTrans.value = totali.fatTrans;
+            spanObiettivoFatUnsat.textContent = OBIETTIVI_FAT.fatUnsat; spanTotaleFatUnsat.textContent = totali.fatUnsat.toFixed(1); progressFatUnsat.max = OBIETTIVI_FAT.fatUnsat; progressFatUnsat.value = totali.fatUnsat;
+            spanObiettivoFatMono.textContent = OBIETTIVI_FAT.fatMono; spanTotaleFatMono.textContent = totali.fatMono.toFixed(1); progressFatMono.max = OBIETTIVI_FAT.fatMono; progressFatMono.value = totali.fatMono;
+            spanObiettivoFatPoly.textContent = OBIETTIVI_FAT.fatPoly; spanTotaleFatPoly.textContent = totali.fatPoly.toFixed(1); progressFatPoly.max = OBIETTIVI_FAT.fatPoly; progressFatPoly.value = totali.fatPoly;
+            spanObiettivoOmega3.textContent = OBIETTIVI_FAT.omega3; spanTotaleOmega3.textContent = totali.omega3.toFixed(1); progressOmega3.max = OBIETTIVI_FAT.omega3; progressOmega3.value = totali.omega3;
+            spanObiettivoOmega6.textContent = OBIETTIVI_FAT.omega6; spanTotaleOmega6.textContent = totali.omega6.toFixed(1); progressOmega6.max = OBIETTIVI_FAT.omega6; progressOmega6.value = totali.omega6;
+            spanTotaleMg.textContent = totali.mg.toFixed(1); progressMg.max = OBIETTIVI.mg; progressMg.value = totali.mg;
+            spanTotaleK.textContent = totali.k.toFixed(0); progressK.max = OBIETTIVI.k; progressK.value = totali.k;
+            spanTotaleCa.textContent = totali.ca.toFixed(1); progressCa.max = OBIETTIVI.ca; progressCa.value = totali.ca;
+            spanTotaleFe.textContent = totali.fe.toFixed(1); progressFe.max = OBIETTIVI.fe; progressFe.value = totali.fe;
+            spanTotaleZn.textContent = totali.zn.toFixed(1); progressZn.max = OBIETTIVI.zn; progressZn.value = totali.zn;
+            spanTotaleCu.textContent = totali.cu.toFixed(2); progressCu.max = OBIETTIVI.cu; progressCu.value = totali.cu;
+            spanTotaleP.textContent = totali.p.toFixed(0); progressP.max = OBIETTIVI.p; progressP.value = totali.p;
+            spanTotaleVitC.textContent = totali.vitc.toFixed(1); progressVitC.max = OBIETTIVI.vitc; progressVitC.value = totali.vitc;
+            spanTotaleVitA.textContent = totali.vitA.toFixed(1); progressVitA.max = OBIETTIVI.vitA; progressVitA.value = totali.vitA;
+            spanTotaleVitB12.textContent = totali.vitB12.toFixed(1); progressVitB12.max = OBIETTIVI.vitB12; progressVitB12.value = totali.vitB12;
+            spanTotaleVitD.textContent = totali.vitD.toFixed(1); progressVitD.max = OBIETTIVI.vitD; progressVitD.value = totali.vitD;
+            spanTotaleVitE.textContent = totali.vitE.toFixed(1); progressVitE.max = OBIETTIVI.vitE; progressVitE.value = totali.vitE;
+            spanTotaleVitK.textContent = totali.vitK.toFixed(1); progressVitK.max = OBIETTIVI.vitK; progressVitK.value = totali.vitK;
+            spanTotaleB9.textContent = totali.b9.toFixed(1); progressB9.max = OBIETTIVI.b9; progressB9.value = totali.b9;
+            spanTotaleB2.textContent = totali.b2.toFixed(2); progressB2.max = OBIETTIVI.b2; progressB2.value = totali.b2;
+            spanTotaleB6.textContent = totali.b6.toFixed(2); progressB6.max = OBIETTIVI.b6; progressB6.value = totali.b6;
+            
+            let ratioText = 'N/D';
+            if (totali.omega3 > 0 && totali.omega6 > 0) {
+                const ratio = totali.omega6 / totali.omega3;
+                ratioText = `${ratio.toFixed(1)}:1`;
+                if (ratio >= 3 && ratio <= 6) {
+                    omegaRatioValueEl.style.color = '#2e7d32'; 
+                } else {
+                    omegaRatioValueEl.style.color = '#d32f2f';
+                }
+            } else {
+                omegaRatioValueEl.style.color = '#333';
+            }
+            omegaRatioValueEl.textContent = ratioText;
+
+            const targetCaloriesForBalanceText = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0);
+            const calorieDifference = totali.kcal - targetCaloriesForBalanceText;
+            calorieBalanceText.className = '';
+            const tolerance = 50;
+            if (calorieDifference < -tolerance) { calorieBalanceText.textContent = `Deficit: ${Math.abs(calorieDifference).toFixed(0)} kcal`; calorieBalanceText.classList.add('balance-deficit');
+            } else if (calorieDifference > tolerance) { calorieBalanceText.textContent = `Surplus: ${calorieDifference.toFixed(0)} kcal`; calorieBalanceText.classList.add('balance-surplus');
+            } else { calorieBalanceText.textContent = `In Pari`; calorieBalanceText.classList.add('balance-even'); }
+            calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment || 0;
+            
+            document.getElementById('fats-header').classList.toggle('nutrients-warning', totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTrans > OBIETTIVI_FAT.fatTrans || totali.fatTotal > OBIETTIVI_FAT.fatTotal);
+            document.getElementById('fibre-header').classList.toggle('nutrients-warning', totali.fibreTotali < OBIETTIVI_FIBRE.fibreTotali * 0.8);
+            document.getElementById('micro-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_MICRO).some(k => totali[k] < OBIETTIVI_MICRO[k] * 0.5));
+            document.getElementById('vit-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_VIT).some(k => totali[k] < OBIETTIVI_VIT[k] * 0.5));
+            
+            logBody.innerHTML = ''; 
+            const nutrientKeys = ['kcal', 'fibreTotali', 'fibreSolubili', 'fibreInsolubili', ...Object.keys(OBIETTIVI_AMINO), 'fatSat', 'fatTrans', 'fatMono', 'fatPoly', 'omega3', 'omega6', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6', 'p'];
+            const formatNumber = (key, value) => {
+                const val = value || 0;
+                if (Object.keys(OBIETTIVI_AMINO).includes(key)) return val.toFixed(0);
+                return ['cu', 'b2', 'b6'].includes(key) ? val.toFixed(2) : (['kcal', 'k', 'p'].includes(key) ? val.toFixed(0) : val.toFixed(1));
+            };
+
+            (datiGiornalieri.log || []).forEach((entry, index) => {
+                if (entry.type === 'meal') {
+                    const rigaPasto = logBody.insertRow();
+                    rigaPasto.classList.add('meal-group-row');
+                    const totaliPasto = entry.items.reduce((acc, item) => {
+                        for (const key in item) if(typeof item[key] === 'number' && key !== 'qta') acc[key] = (acc[key] || 0) + item[key];
+                        return acc;
+                    }, {});
+                    
+                    const qualitaPasto = calcolaQualitaProteine(totaliPasto);
+                    const scoreClass = qualitaPasto.score < 70 ? 'low' : qualitaPasto.score < 90 ? 'medium' : 'high';
+                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaPasto.limiting}">${qualitaPasto.score}%</div>`;
+
+                    rigaPasto.innerHTML = `
+                        <td><span class="expand-arrow" data-index="${index}">${entry.isExpanded ? '▼' : '▶'}</span> ${entry.desc}</td>
+                        <td>${entry.items.reduce((sum, item) => sum + item.qta, 0).toFixed(0)}</td>
+                        <td>${(totaliPasto.prot || 0).toFixed(1)}</td>
+                        <td>${qualitaCellHtml}</td>
+                        ${nutrientKeys.map(k => `<td>${formatNumber(k, totaliPasto[k])}</td>`).join('')}
+                        <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+
+                    if (entry.isExpanded) {
+                        entry.items.forEach(subItem => {
+                            const rigaSubItem = logBody.insertRow();
+                            rigaSubItem.classList.add('sub-item-row');
+                             const qualitaSubItem = calcolaQualitaProteine(subItem);
+                             const subScoreClass = qualitaSubItem.score < 70 ? 'low' : qualitaSubItem.score < 90 ? 'medium' : 'high';
+                             const subQualitaCellHtml = `<div class="protein-score ${subScoreClass}" title="Limitante: ${qualitaSubItem.limiting}">${qualitaSubItem.score}%</div>`;
+                            rigaSubItem.innerHTML = `
+                                <td>${subItem.desc}</td><td>${(subItem.qta || 0).toFixed(0)}</td>
+                                <td>${(subItem.prot || 0).toFixed(1)}</td>
+                                <td>${subQualitaCellHtml}</td>
+                                ${nutrientKeys.map(k => `<td>${formatNumber(k, subItem[k])}</td>`).join('')}
+                                <td></td>`;
+                        });
+                    }
+                } else if (entry.type === 'workout') {
+                    const riga = logBody.insertRow();
+                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td></td><td>${(entry.kcal || 0).toFixed(0)}</td><td colspan="${nutrientKeys.length -1}"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                } else { 
+                    const riga = logBody.insertRow();
+                    const qualitaSingola = calcolaQualitaProteine(entry);
+                    const scoreClass = qualitaSingola.score < 70 ? 'low' : qualitaSingola.score < 90 ? 'medium' : 'high';
+                    const qualitaCellHtml = `<div class="protein-score ${scoreClass}" title="Limitante: ${qualitaSingola.limiting}">${qualitaSingola.score}%</div>`;
+                    riga.innerHTML = `
+                        <td>${entry.desc}</td><td>${(entry.qta || 0).toFixed(0)}</td>
+                        <td>${(entry.prot || 0).toFixed(1)}</td>
+                        <td>${qualitaCellHtml}</td>
+                        ${nutrientKeys.map(k => `<td>${formatNumber(k, entry[k])}</td>`).join('')}
+                        <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                }
+            });
+        }
+
+        // Tutte le altre funzioni (renderMealBuilder, creaAlimentoDaInput, etc.) rimangono qui...
     </script>
 </body>
 </html>
