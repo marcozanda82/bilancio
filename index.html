@@ -304,7 +304,21 @@
                     <progress id="progress-zuccheri" class="macro-progress" value="0"></progress>
                 </div>
                 <hr>
-                
+
+                <h3 class="collapsible-header" id="fibre-header">
+                    Fibre <span class="arrow">▶</span>
+                </h3>
+                <div class="collapsible-content" id="fibre-content">
+                    <p>Fibre Totali: <span id="totale-fibre-totali">0</span> / <span id="obiettivo-fibre-totali"></span> g</p>
+                    <progress id="progress-fibre-totali" class="macro-progress" value="0"></progress>
+                    <div class="fats-group" style="padding-left: 15px; border-left: 3px solid #eee; margin-top: 15px;">
+                        <p>Solubili: <span id="totale-fibre-solubili">0</span> / <span id="obiettivo-fibre-solubili"></span> g</p>
+                        <progress id="progress-fibre-solubili" value="0"></progress>
+                        <p>Insolubili: <span id="totale-fibre-insolubili">0</span> / <span id="obiettivo-fibre-insolubili"></span> g</p>
+                        <progress id="progress-fibre-insolubili" value="0"></progress>
+                    </div>
+                </div>
+                <hr>
                 <h3 class="collapsible-header" id="fats-header">
                     <span style="display: flex; align-items: center; gap: 8px;">
                         Grassi
@@ -433,7 +447,10 @@
                     <div><label>Carboidrati/100g</label><input type="number" id="builder-carb" step="0.1"></div>
                     <div><label>Zuccheri/100g</label><input type="number" id="builder-zuccheri" step="0.1"></div>
                     <div><label>Grassi Totali/100g</label><input type="number" id="builder-fat-total" step="0.1"></div>
-                </div>
+                    <div><label>Fibre Totali/100g</label><input type="number" id="builder-fibre-totali" step="0.1"></div>
+                    <div><label>Fibre Solubili/100g</label><input type="number" id="builder-fibre-solubili" step="0.1"></div>
+                    <div><label>Fibre Insolubili/100g</label><input type="number" id="builder-fibre-insolubili" step="0.1"></div>
+                    </div>
                 <h2 class="collapsible-header" id="nutrients-header">
                     Dettagli Nutrizionali (Grassi, Micronutrienti, Amminoacidi) <span class="arrow">▶</span>
                 </h2>
@@ -527,6 +544,9 @@
                             <th>Prot</th>
                             <th>Qualità</th>
                             <th>Kcal</th>
+                            <th>Fibre Tot</th>
+                            <th>Fibre Sol</th>
+                            <th>Fibre Ins</th>
                             <th>Leu</th>
                             <th>Iso</th>
                             <th>Val</th>
@@ -774,6 +794,9 @@
             fatUnsat: 65, fatMono: 45, fatPoly: 20, 
             omega3: 2, omega6: 10 
         };
+        // INIZIO MODIFICA: Obiettivi Fibre
+        const OBIETTIVI_FIBRE = { fibreTotali: 30, fibreSolubili: 10, fibreInsolubili: 20 };
+        // FINE MODIFICA: Obiettivi Fibre
         const OBIETTIVI_VIT = { vitA: 900, vitB12: 2.4, vitD: 15, vitE: 15, vitK: 120, b9: 400, b2: 1.3, b6: 1.3 };
         
         const OBIETTIVI_AMINO = {
@@ -806,7 +829,9 @@
 
         const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
-        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
+        // INIZIO MODIFICA: Aggiunta fibre al prompt AI
+        const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"fibreTotali":g,"fibreSolubili":g,"fibreInsolubili":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
+        // FINE MODIFICA
         const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
 
         const authSection = document.getElementById('auth-section');
@@ -853,6 +878,11 @@
         const builderProt = document.getElementById('builder-prot'), builderKcal = document.getElementById('builder-kcal');
         const builderCarb = document.getElementById('builder-carb'), builderZuccheri = document.getElementById('builder-zuccheri');
         const builderFatTotal = document.getElementById('builder-fat-total');
+        // INIZIO MODIFICA: Selettori input fibre
+        const builderFibreTotali = document.getElementById('builder-fibre-totali');
+        const builderFibreSolubili = document.getElementById('builder-fibre-solubili');
+        const builderFibreInsolubili = document.getElementById('builder-fibre-insolubili');
+        // FINE MODIFICA
         const builderFatSat = document.getElementById('builder-fat-sat'), builderFatTrans = document.getElementById('builder-fat-trans'), builderFatMono = document.getElementById('builder-fat-mono'), builderFatPoly = document.getElementById('builder-fat-poly'), builderOmega3 = document.getElementById('builder-omega3'), builderOmega6 = document.getElementById('builder-omega6');
         const builderMg = document.getElementById('builder-mg'), builderK = document.getElementById('builder-k'), builderVitC = document.getElementById('builder-vitc'), builderCa = document.getElementById('builder-ca');
         const builderVitA = document.getElementById('builder-vit-a'), builderVitB12 = document.getElementById('builder-vit-b12'), builderVitD = document.getElementById('builder-vit-d');
@@ -862,13 +892,14 @@
         const builderLeu = document.getElementById('builder-leu'), builderIso = document.getElementById('builder-iso'), builderVal = document.getElementById('builder-val');
         const builderLys = document.getElementById('builder-lys'), builderMet = document.getElementById('builder-met'), builderPhe = document.getElementById('builder-phe');
         const builderThr = document.getElementById('builder-thr'), builderTrp = document.getElementById('builder-trp'), builderHis = document.getElementById('builder-his');
-        // INIZIO MODIFICA: Selettore per il campo note
         const dailyNotesTextarea = document.getElementById('daily-notes');
-        // FINE MODIFICA
 
         const inputFields = {
             prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
             fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
+            // INIZIO MODIFICA: Aggiunta fibre a inputFields
+            fibreTotali: builderFibreTotali, fibreSolubili: builderFibreSolubili, fibreInsolubili: builderFibreInsolubili,
+            // FINE MODIFICA
             mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
             vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
             vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, 
@@ -883,6 +914,11 @@
         const spanTotaleCarboidrati = document.getElementById('totale-carboidrati'), spanObiettivoCarboidrati = document.getElementById('obiettivo-carboidrati'), progressCarboidrati = document.getElementById('progress-carboidrati');
         const spanTotaleZuccheri = document.getElementById('totale-zuccheri'), spanObiettivoZuccheri = document.getElementById('obiettivo-zuccheri'), progressZuccheri = document.getElementById('progress-zuccheri');
         const spanWorkoutCalories = document.getElementById('workout-calories-totali');
+        // INIZIO MODIFICA: Selettori UI fibre
+        const spanTotaleFibreTotali = document.getElementById('totale-fibre-totali'), spanObiettivoFibreTotali = document.getElementById('obiettivo-fibre-totali'), progressFibreTotali = document.getElementById('progress-fibre-totali');
+        const spanTotaleFibreSolubili = document.getElementById('totale-fibre-solubili'), spanObiettivoFibreSolubili = document.getElementById('obiettivo-fibre-solubili'), progressFibreSolubili = document.getElementById('progress-fibre-solubili');
+        const spanTotaleFibreInsolubili = document.getElementById('totale-fibre-insolubili'), spanObiettivoFibreInsolubili = document.getElementById('obiettivo-fibre-insolubili'), progressFibreInsolubili = document.getElementById('progress-fibre-insolubili');
+        // FINE MODIFICA
         const spanTotaleFatsTotal = document.getElementById('totale-fats-total'), spanObiettivoFatsTotal = document.getElementById('obiettivo-fats-total'), progressFatsTotal = document.getElementById('progress-fats-total');
         const spanTotaleFatSat = document.getElementById('totale-fat-sat'), spanObiettivoFatSat = document.getElementById('obiettivo-fat-sat'), progressFatSat = document.getElementById('progress-fat-sat');
         const spanTotaleFatTrans = document.getElementById('totale-fat-trans'), spanObiettivoFatTrans = document.getElementById('obiettivo-fat-trans'), progressFatTrans = document.getElementById('progress-fat-trans');
@@ -932,9 +968,7 @@
         
         function salvaGiorno(dataDaSalvare, datiDaSalvare) {
             if (!datiDaSalvare) datiDaSalvare = datiGiornalieri;
-            // INIZIO MODIFICA: Aggiunta salvataggio note
             datiDaSalvare.note = dailyNotesTextarea.value;
-            // FINE MODIFICA
             datiDaSalvare.data = dataDaSalvare;
             localStorage.setItem(`trackerStorico_${dataDaSalvare}`, JSON.stringify(datiDaSalvare));
             localStorage.setItem(LOCAL_LAST_UPDATE_KEY, Date.now()); 
@@ -977,10 +1011,8 @@
                 console.error(`Errore nel parsing di trackerStorico_${data}:`, e, "Raw data:", rawDataFromLocalStorage);
             }
             
-            datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0, note: '' }; // INIZIO MODIFICA: Aggiunta valore di default per note
-            // INIZIO MODIFICA: Caricamento delle note nel textarea
+            datiGiornalieri = datiTrovati || { log: [], workoutCalorie: 0, note: '' };
             dailyNotesTextarea.value = datiGiornalieri.note || '';
-            // FINE MODIFICA
             if (!datiGiornalieri.log) datiGiornalieri.log = [];
             if (typeof datiGiornalieri.workoutCalorie === 'undefined') datiGiornalieri.workoutCalorie = 0;
 
@@ -1067,7 +1099,7 @@
             const obiettivoCalorieTotale = pianoDelGiorno.cal_base + (datiGiornalieri.workoutCalorie || 0) + (datiGiornalieri.calorieAdjustment || 0);
             const OBIETTIVI = { 
                 prot: pianoDelGiorno.prot, kcal: obiettivoCalorieTotale, carb: pianoDelGiorno.carb, zuccheri: pianoDelGiorno.zuccheri, 
-                ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT, ...OBIETTIVI_AMINO
+                ...OBIETTIVI_MICRO, ...OBIETTIVI_FAT, ...OBIETTIVI_VIT, ...OBIETTIVI_AMINO, ...OBIETTIVI_FIBRE
             };
             
             titoloGiornataEl.textContent = `${pianoDelGiorno.tipo} - ${dataVisualizzata.toLocaleDateString('it-IT', {day: 'numeric', month: 'long', year: 'numeric'})}`;
@@ -1075,7 +1107,10 @@
             let totali = { 
                 prot: 0, kcal: 0, carb: 0, zuccheri: 0, fatTotal: 0, fatSat: 0, fatTrans: 0, fatMono: 0, fatPoly: 0, omega3: 0, omega6: 0, 
                 mg: 0, k: 0, vitc: 0, ca: 0, fe: 0, zn: 0, cu: 0, p: 0, vitA: 0, vitB12: 0, vitD: 0, vitE: 0, vitK: 0, b9: 0, b2: 0, b6: 0,
-                leu: 0, iso: 0, val: 0, lys: 0, met: 0, phe: 0, thr: 0, trp: 0, his: 0
+                leu: 0, iso: 0, val: 0, lys: 0, met: 0, phe: 0, thr: 0, trp: 0, his: 0,
+                // INIZIO MODIFICA: Aggiunta fibre ai totali
+                fibreTotali: 0, fibreSolubili: 0, fibreInsolubili: 0
+                // FINE MODIFICA
             };
             
             (datiGiornalieri.log || []).forEach(entry => {
@@ -1097,6 +1132,11 @@
             spanObiettivoCarboidrati.textContent = OBIETTIVI.carb; spanTotaleCarboidrati.textContent = totali.carb.toFixed(1); progressCarboidrati.max = OBIETTIVI.carb; progressCarboidrati.value = totali.carb;
             spanObiettivoZuccheri.textContent = OBIETTIVI.zuccheri; spanTotaleZuccheri.textContent = totali.zuccheri.toFixed(1); progressZuccheri.max = OBIETTIVI.zuccheri; progressZuccheri.value = totali.zuccheri;
             spanWorkoutCalories.textContent = datiGiornalieri.workoutCalorie ? datiGiornalieri.workoutCalorie.toFixed(0) : 0; 
+            // INIZIO MODIFICA: Aggiornamento UI Fibre
+            spanObiettivoFibreTotali.textContent = OBIETTIVI_FIBRE.fibreTotali; spanTotaleFibreTotali.textContent = totali.fibreTotali.toFixed(1); progressFibreTotali.max = OBIETTIVI_FIBRE.fibreTotali; progressFibreTotali.value = totali.fibreTotali;
+            spanObiettivoFibreSolubili.textContent = OBIETTIVI_FIBRE.fibreSolubili; spanTotaleFibreSolubili.textContent = totali.fibreSolubili.toFixed(1); progressFibreSolubili.max = OBIETTIVI_FIBRE.fibreSolubili; progressFibreSolubili.value = totali.fibreSolubili;
+            spanObiettivoFibreInsolubili.textContent = OBIETTIVI_FIBRE.fibreInsolubili; spanTotaleFibreInsolubili.textContent = totali.fibreInsolubili.toFixed(1); progressFibreInsolubili.max = OBIETTIVI_FIBRE.fibreInsolubili; progressFibreInsolubili.value = totali.fibreInsolubili;
+            // FINE MODIFICA
             spanObiettivoFatsTotal.textContent = OBIETTIVI_FAT.fatTotal; spanTotaleFatsTotal.textContent = totali.fatTotal.toFixed(1); progressFatsTotal.max = OBIETTIVI_FAT.fatTotal; progressFatsTotal.value = totali.fatTotal;
             spanObiettivoFatSat.textContent = OBIETTIVI_FAT.fatSat; spanTotaleFatSat.textContent = totali.fatSat.toFixed(1); progressFatSat.max = OBIETTIVI_FAT.fatSat; progressFatSat.value = totali.fatSat;
             spanObiettivoFatTrans.textContent = OBIETTIVI_FAT.fatTrans; spanTotaleFatTrans.textContent = totali.fatTrans.toFixed(1); progressFatTrans.max = OBIETTIVI_FAT.fatTrans; progressFatTrans.value = totali.fatTrans;
@@ -1146,11 +1186,16 @@
             calorieAdjustmentInput.value = datiGiornalieri.calorieAdjustment || 0;
             
             document.getElementById('fats-header').classList.toggle('nutrients-warning', totali.fatSat > OBIETTIVI_FAT.fatSat || totali.fatTrans > OBIETTIVI_FAT.fatTrans || totali.fatTotal > OBIETTIVI_FAT.fatTotal);
+            // INIZIO MODIFICA: Warning per le fibre
+            document.getElementById('fibre-header').classList.toggle('nutrients-warning', totali.fibreTotali < OBIETTIVI_FIBRE.fibreTotali * 0.8);
+            // FINE MODIFICA
             document.getElementById('micro-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_MICRO).some(k => totali[k] < OBIETTIVI_MICRO[k] * 0.5));
             document.getElementById('vit-header').classList.toggle('nutrients-warning', Object.keys(OBIETTIVI_VIT).some(k => totali[k] < OBIETTIVI_VIT[k] * 0.5));
             
             logBody.innerHTML = ''; 
-            const nutrientKeys = ['kcal', ...Object.keys(OBIETTIVI_AMINO), 'fatSat', 'fatTrans', 'fatMono', 'fatPoly', 'omega3', 'omega6', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
+            // INIZIO MODIFICA: Aggiunta fibre a nutrientKeys
+            const nutrientKeys = ['kcal', 'fibreTotali', 'fibreSolubili', 'fibreInsolubili', ...Object.keys(OBIETTIVI_AMINO), 'fatSat', 'fatTrans', 'fatMono', 'fatPoly', 'omega3', 'omega6', 'mg', 'k', 'vitc', 'ca', 'fe', 'zn', 'cu', 'vitA', 'vitB12', 'vitD', 'vitE', 'vitK', 'b9', 'b2', 'b6'];
+            // FINE MODIFICA
             const formatNumber = (key, value) => {
                 const val = value || 0;
                 if (Object.keys(OBIETTIVI_AMINO).includes(key)) return val.toFixed(0);
@@ -1195,7 +1240,7 @@
                     }
                 } else if (entry.type === 'workout') {
                     const riga = logBody.insertRow();
-                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td></td><td></td><td>${(entry.kcal || 0).toFixed(0)}</td><td colspan="${nutrientKeys.length -1}"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+                    riga.innerHTML = `<td>${entry.desc}</td><td></td><td></td><td></td><td>${(entry.kcal || 0).toFixed(0)}</td><td colspan="${nutrientKeys.length -1}"></td><td class="action-buttons"><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 } else { 
                     const riga = logBody.insertRow();
                     const qualitaSingola = calcolaQualitaProteine(entry);
@@ -1315,6 +1360,14 @@
                 inputFields[key].value = inputFields[key].value.replace(',', '.');
                 foodData[key] = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
             }
+            
+            // INIZIO MODIFICA: Calcolo automatico fibre
+            if (foodData.fibreSolubili !== null && foodData.fibreInsolubili !== null && foodData.fibreTotali === null) {
+                const totalFibre = (foodData.fibreSolubili || 0) + (foodData.fibreInsolubili || 0);
+                foodData.fibreTotali = totalFibre;
+                builderFibreTotali.value = totalFibre.toFixed(1);
+            }
+            // FINE MODIFICA
 
             const protValue100g = foodData.prot || 0;
             const isAnyAminoFilled = Object.keys(OBIETTIVI_AMINO).some(key => foodData[key] !== null && foodData[key] > 0);
@@ -1630,14 +1683,14 @@
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
-            // INIZIO MODIFICA: Event listener per il salvataggio automatico delle note
             dailyNotesTextarea.addEventListener('input', () => {
                 datiGiornalieri.note = dailyNotesTextarea.value;
                 salvaGiorno(giornoVisualizzato, datiGiornalieri);
             });
-            // FINE MODIFICA
 
-            ['progress-proteine', 'progress-calorie', 'progress-carboidrati', 'progress-zuccheri', 'progress-fats-total', 'progress-fat-sat', 
+            ['progress-proteine', 'progress-calorie', 'progress-carboidrati', 'progress-zuccheri', 
+             'progress-fibre-totali', 'progress-fibre-solubili', 'progress-fibre-insolubili', // MODIFICA: Aggiunta fibre
+             'progress-fats-total', 'progress-fat-sat', 
              'progress-fat-trans', 'progress-fat-unsat', 'progress-fat-mono', 'progress-fat-poly', 'progress-omega3', 'progress-omega6', 
              'progress-mg', 'progress-k', 'progress-fe', 'progress-zn', 'progress-ca', 'progress-cu', 'progress-p', 'progress-vitc', 
              'progress-vit-a', 'progress-vit-d', 'progress-vit-e', 'progress-vit-k', 'progress-vit-b12', 'progress-b2', 'progress-b6', 'progress-b9']
@@ -1649,6 +1702,11 @@
                         'progress-calorie': { key: 'kcal', title: 'Calorie', unit: 'kcal' },
                         'progress-carboidrati': { key: 'carb', title: 'Carboidrati', unit: 'g' },
                         'progress-zuccheri': { key: 'zuccheri', title: 'Zuccheri', unit: 'g' },
+                        // INIZIO MODIFICA: Mappa per il modal delle fibre
+                        'progress-fibre-totali': { key: 'fibreTotali', title: 'Fibre Totali', unit: 'g' },
+                        'progress-fibre-solubili': { key: 'fibreSolubili', title: 'Fibre Solubili', unit: 'g' },
+                        'progress-fibre-insolubili': { key: 'fibreInsolubili', title: 'Fibre Insolubili', unit: 'g' },
+                        // FINE MODIFICA
                         'progress-fats-total': { key: 'fatTotal', title: 'Grassi Totali', unit: 'g'},
                         'progress-fat-sat': { key: 'fatSat', title: 'Grassi Saturi', unit: 'g' },
                         'progress-fat-trans': { key: 'fatTrans', title: 'Grassi Trans', unit: 'g' },
@@ -1749,7 +1807,7 @@
             }
         });
         
-        ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
+        ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header', 'fibre-header'].forEach(id => {
             document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
         });
         
