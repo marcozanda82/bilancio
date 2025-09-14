@@ -563,16 +563,17 @@
                     <div><label>Carboidrati/100g</label><input type="number" id="builder-carb" step="0.1"></div>
                     <div><label>Zuccheri/100g</label><input type="number" id="builder-zuccheri" step="0.1"></div>
                     <div><label>Grassi Totali/100g</label><input type="number" id="builder-fat-total" step="0.1"></div>
+                    <div><label>Gr. Saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
                     <div><label>Fibre Totali/100g</label><input type="number" id="builder-fibre-totali" step="0.1"></div>
-                    <div><label>Fibre Solubili/100g</label><input type="number" id="builder-fibre-solubili" step="0.1"></div>
-                    <div><label>Fibre Insolubili/100g</label><input type="number" id="builder-fibre-insolubili" step="0.1"></div>
                 </div>
                 <h2 class="collapsible-header" id="nutrients-header">
                     Dettagli Nutrizionali (Grassi, Micronutrienti, Amminoacidi) <span class="arrow">▶</span>
                 </h2>
                 <div class="collapsible-content" id="nutrients-content">
                     <div class="builder-grid">
-                        <div><label>Gr. Saturi/100g</label><input type="number" id="builder-fat-sat" min="0" step="0.1"></div>
+                        <div><label>Fibre Solubili/100g</label><input type="number" id="builder-fibre-solubili" step="0.1"></div>
+                        <div><label>Fibre Insolubili/100g</label><input type="number" id="builder-fibre-insolubili" step="0.1"></div>
+                        
                         <div><label>Gr. Trans/100g</label><input type="number" id="builder-fat-trans" min="0" step="0.1"></div>
                         <div><label>Gr. Monoinsaturi/100g</label><input type="number" id="builder-fat-mono" min="0" step="0.1"></div>
                         <div><label>Gr. Polinsaturi/100g</label><input type="number" id="builder-fat-poly" min="0" step="0.1"></div>
@@ -1923,7 +1924,7 @@
         }
 
         function normalizeNutrientKey(key) {
-            const k = key.toLowerCase().replace(/[\s\(\)]/g, ''); // Normalizza: minuscolo e senza spazi/parentesi
+            const k = key.toLowerCase().replace(/[\s\(\)]/g, '');
             if (k.includes('energi') || k.includes('kcal') || k.includes('calorie')) return 'kcal';
             if (k.includes('protein')) return 'prot';
             if (k.includes('carboidrat')) {
@@ -1939,7 +1940,7 @@
                 return 'fatTotal';
             }
             if (k.includes('fibr')) return 'fibreTotali';
-            if (k.includes('sale') || k.includes('sodio')) return null; // Ignora il sale per ora
+            if (k.includes('sale') || k.includes('sodio')) return null;
             return null;
         }
 
@@ -2526,7 +2527,6 @@
                 }
             });
 
-            // --- LOGICA OCR NUTRIENTI CORRETTA ---
             btnPhotoNutrients.addEventListener('click', () => {
                 nutrientPhotoInput.click();
             });
@@ -2540,12 +2540,10 @@
                 btnPhotoNutrients.style.display = 'none';
                 
                 try {
-                    // FASE 1: OCR
-                    photoOcrStatus.textContent = 'Lettura testo...';
+                    photoOcrStatus.textContent = 'Fase 1/2: Lettura testo...';
                     const { data: { text: ocrText } } = await Tesseract.recognize(file, 'ita');
                     
-                    // FASE 2: AI
-                    photoOcrStatus.textContent = 'Analisi AI...';
+                    photoOcrStatus.textContent = 'Fase 2/2: Analisi AI...';
                     const prompt = `Analizza il seguente testo estratto da una tabella nutrizionale: "${ocrText}". Estrai i valori per 100g (o 100ml), ignorando le colonne "per porzione". Restituisci ESCLUSIVAMENTE un oggetto JSON. Le chiavi devono essere i nomi dei nutrienti in italiano (es. "Energia", "Grassi", "di cui acidi grassi saturi"). Se un valore non è presente, omettilo.`;
                     
                     const res = await fetch(GEMINI_ENDPOINT, {
