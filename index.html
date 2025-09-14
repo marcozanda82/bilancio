@@ -188,6 +188,9 @@
             text-decoration: none;
             cursor: pointer;
         }
+        .modal-content video {
+            background-color: #000;
+        }
         .vitamin-weekly-summary {
             margin-bottom: 20px;
             padding-bottom: 15px;
@@ -546,6 +549,7 @@
                     <div id="photo-ocr-controls" style="display: flex; align-items: center; gap: 5px;">
                          <span id="photo-ocr-status" style="display:none; color: #555; font-style: italic; font-size: 0.9em;"></span>
                          <button id="btn-photo-nutrients" title="Acquisisci Nutrienti da Foto"><i class="fas fa-camera"></i></button>
+                         <button id="btn-scan-barcode" title="Scansiona Codice a Barre"><i class="fas fa-barcode"></i></button>
                          <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
                     </div>
                 </div>
@@ -893,6 +897,18 @@
     </div>
     <input type="file" id="nutrient-photo-input" accept="image/*" style="display: none;">
 
+    <div id="barcode-scanner-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="barcode-scanner-modal">&times;</span>
+            <h2>Scansiona Codice a Barre</h2>
+            <p style="text-align: center;">Inquadra il codice a barre del prodotto.</p>
+            <div id="scanner-container" style="position: relative; width: 100%; padding-top: 75%;">
+                <video id="barcode-scanner-video" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 1px solid #ccc; border-radius: 8px;"></video>
+                <div id="scanner-overlay" style="position: absolute; top: 50%; left: 50%; width: 80%; height: 2px; background-color: red; transform: translate(-50%, -50%); box-shadow: 0 0 10px red;"></div>
+            </div>
+            <p id="barcode-scanner-status" style="text-align: center; margin-top: 15px; font-weight: bold; min-height: 20px;"></p>
+        </div>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
@@ -1051,6 +1067,11 @@
         const btnCancelNutrients = document.getElementById('btn-cancel-nutrients');
         const ocrStatusNutrients = document.getElementById('ocr-status-nutrients');
         const photoOcrStatus = document.getElementById('photo-ocr-status');
+        const btnScanBarcode = document.getElementById('btn-scan-barcode');
+        const barcodeScannerModal = document.getElementById('barcode-scanner-modal');
+        const barcodeScannerVideo = document.getElementById('barcode-scanner-video');
+        const barcodeScannerStatus = document.getElementById('barcode-scanner-status');
+        let videoStream = null;
 
         const inputFields = {
             prot: { el: builderProt, label: 'Proteine (g)' },
@@ -1999,10 +2020,153 @@
             }
         }
 
+        let isScanning = false;
+
+        async function startBarcodeScanner() {
+            if (!('BarcodeDetector' in window)) {
+                alert('Il tuo browser non supporta la scansione dei codici a barre. Prova con Chrome su Android o un altro browser moderno.');
+                return;
+            }
+            
+            barcodeScannerStatus.textContent = 'Avvio fotocamera...';
+            barcodeScannerModal.style.display = 'block';
+
+            try {
+                const barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+                
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                
+                barcodeScannerVideo.srcObject = videoStream;
+                await barcodeScannerVideo.play();
+                isScanning = true;
+                barcodeScannerStatus.textContent = 'Pronto per la scansione.';
+                
+                const scanInterval = setInterval(async () => {
+                    if (!isScanning) {
+                        clearInterval(scanInterval);
+                        return;
+                    }
+                    try {
+                        const barcodes = await barcodeDetector.detect(barcodeScannerVideo);
+                        if (barcodes.length > 0) {
+                            const barcode = barcodes[0].rawValue;
+                            barcodeScannerStatus.textContent = `Codice trovato: ${barcode}`;
+                            isScanning = false;
+                            clearInterval(scanInterval);
+                            stopBarcodeScanner();
+                            await fetchProductData(barcode);
+                        }
+                    } catch (error) {
+                        console.error('Errore durante la scansione:', error);
+                    }
+                }, 200);
+
+            } catch (error) {
+                console.error('Errore accesso alla fotocamera:', error);
+                barcodeScannerStatus.textContent = 'Errore fotocamera. Assicurati di aver dato i permessi.';
+                isScanning = false;
+                stopBarcodeScanner();
+            }
+        }
+
+        function stopBarcodeScanner() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            isScanning = false;
+            barcodeScannerModal.style.display = 'none';
+        }
+
+        async function fetchProductData(barcode) {
+            barcodeScannerStatus.textContent = `Ricerca del prodotto con codice ${barcode}...`;
+            photoOcrStatus.textContent = 'Ricerca dati...';
+            photoOcrStatus.style.display = 'inline';
+
+            try {
+                const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,ingredients_text_it,ingredients_text,nutriments`);
+                if (!response.ok) {
+                    throw new Error(`Risposta non valida dal server: ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                if (data.status === 0 || !data.product) {
+                    alert(`Prodotto con codice a barre ${barcode} non trovato nel database di Open Food Facts.`);
+                    return;
+                }
+
+                populateFormWithData(data.product);
+
+            } catch (error) {
+                console.error('Errore nel recupero dati prodotto:', error);
+                alert(`Si è verificato un errore durante la ricerca del prodotto. Controlla la connessione e riprova.`);
+            } finally {
+                photoOcrStatus.style.display = 'none';
+            }
+        }
+
+        function populateFormWithData(product) {
+            resetInputAlimento();
+            
+            const nutrientMap = {
+                'energy-kcal_100g': inputFields.kcal.el, 'proteins_100g': inputFields.prot.el,
+                'carbohydrates_100g': inputFields.carb.el, 'sugars_100g': inputFields.zuccheri.el,
+                'fat_100g': inputFields.fatTotal.el, 'saturated-fat_100g': inputFields.fatSat.el,
+                'trans-fat_100g': inputFields.fatTrans.el, 'monounsaturated-fat_100g': inputFields.fatMono.el,
+                'polyunsaturated-fat_100g': inputFields.fatPoly.el, 'omega-3-fat_100g': inputFields.omega3.el,
+                'omega-6-fat_100g': inputFields.omega6.el, 'fiber_100g': inputFields.fibreTotali.el,
+                'calcium_100g': inputFields.ca.el, 'iron_100g': inputFields.fe.el,
+                'magnesium_100g': inputFields.mg.el, 'potassium_100g': inputFields.k.el,
+                'zinc_100g': inputFields.zn.el, 'phosphorus_100g': inputFields.p.el,
+                'vitamin-a_100g': inputFields.vitA.el, 'vitamin-d_100g': inputFields.vitD.el,
+                'vitamin-e_100g': inputFields.vitE.el, 'vitamin-k_100g': inputFields.vitK.el,
+                'vitamin-c_100g': inputFields.vitc.el, 'vitamin-b2_100g': inputFields.b2.el,
+                'vitamin-b6_100g': inputFields.b6.el, 'vitamin-b9_100g': inputFields.b9.el,
+                'vitamin-b12_100g': inputFields.vitB12.el
+            };
+
+            builderDesc.value = product.product_name || 'Prodotto Sconosciuto';
+
+            const nutriments = product.nutriments || {};
+            for (const key in nutrientMap) {
+                if (nutriments[key] !== undefined && nutriments[key] !== null) {
+                    let value = parseFloat(nutriments[key]);
+                    
+                    if (['calcium_100g', 'iron_100g', 'magnesium_100g', 'potassium_100g', 'zinc_100g', 'phosphorus_100g', 'vitamin-e_100g', 'vitamin-c_100g', 'vitamin-b2_100g', 'vitamin-b6_100g'].includes(key)) {
+                        value *= 1000;
+                    } else if (['vitamin-a_100g', 'vitamin-d_100g', 'vitamin-k_100g', 'vitamin-b9_100g', 'vitamin-b12_100g'].includes(key)) {
+                        value *= 1000000;
+                    }
+                    
+                    nutrientMap[key].value = value.toFixed(2).replace(/\.00$/, '');
+                }
+            }
+            
+            const ingredients = product.ingredients_text_it || product.ingredients_text || '';
+            if (ingredients) {
+                const sanitizedKey = sanitizeFirebaseKey(builderDesc.value.toLowerCase());
+                if (!foodDatabase[sanitizedKey]) {
+                    foodDatabase[sanitizedKey] = { desc: builderDesc.value };
+                }
+                foodDatabase[sanitizedKey].ingredienti = ingredients;
+                salvaFoodDatabase();
+            }
+
+            alert(`Dati per "${builderDesc.value}" compilati con successo!`);
+            aggiornaColoreNutrienti();
+            builderProt.dispatchEvent(new Event('input'));
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
             initAppUI(); 
             
+            btnScanBarcode.addEventListener('click', startBarcodeScanner);
+            const barcodeModalCloseBtn = barcodeScannerModal.querySelector('.modal-close');
+            barcodeModalCloseBtn.addEventListener('click', stopBarcodeScanner);
+
             dailyNotesTextarea.addEventListener('input', () => {
                 datiGiornalieri.note = dailyNotesTextarea.value;
                 salvaGiorno(giornoVisualizzato, datiGiornalieri);
