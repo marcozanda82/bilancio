@@ -108,10 +108,30 @@
         .progress-fat-sat.red::-webkit-progress-value { background-color: #f44336; }
         .progress-fat-sat.red::-moz-progress-bar { background-color: #f44336; }
         .food-adder-header { display: flex; justify-content: space-between; align-items: center; }
-        .food-adder-header button { background: none; border: none; font-size: 1.5em; cursor: pointer; color: #555; padding: 5px 10px; }
-        .food-adder-header button:hover { color: #0d47a1; }
-        #btn-clear-nutrients { color: #d32f2f; }
-        #btn-clear-nutrients:hover { color: #ff1744; }
+        
+        /* NUOVI STILI PER LE ICONE */
+        #photo-ocr-controls { display: flex; align-items: center; gap: 15px; }
+        #photo-ocr-controls > div { display: flex; gap: 8px; }
+        #photo-ocr-controls button {
+            font-size: 1.6em; /* Aumenta la dimensione delle icone */
+            padding: 5px 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #555;
+            line-height: 1;
+        }
+        #photo-ocr-controls button:hover { color: #0d47a1; }
+        #btn-clear-nutrients:hover { color: #d32f2f !important; }
+        
+        /* NUOVI STILI PER LA BARRA DELLE PROTEINE */
+        progress.protein-quality-high::-webkit-progress-value { background-color: #2e7d32; }
+        progress.protein-quality-high::-moz-progress-bar { background-color: #2e7d32; }
+        progress.protein-quality-medium::-webkit-progress-value { background-color: #ff8f00; }
+        progress.protein-quality-medium::-moz-progress-bar { background-color: #ff8f00; }
+        progress.protein-quality-low::-webkit-progress-value { background-color: #d32f2f; }
+        progress.protein-quality-low::-moz-progress-bar { background-color: #d32f2f; }
+
         .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
         #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .diary-table-container { 
@@ -546,11 +566,13 @@
             <div id="food-adder" class="sezione">
                 <div class="food-adder-header">
                     <h2>Aggiungi Alimento</h2>
-                    <div id="photo-ocr-controls" style="display: flex; align-items: center; gap: 5px;">
+                    <div id="photo-ocr-controls">
                          <span id="photo-ocr-status" style="display:none; color: #555; font-style: italic; font-size: 0.9em;"></span>
-                         <button id="btn-photo-nutrients" title="Acquisisci Nutrienti da Foto"><i class="fas fa-camera"></i></button>
-                         <button id="btn-scan-barcode" title="Scansiona Codice a Barre"><i class="fas fa-barcode"></i></button>
-                         <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
+                         <div>
+                             <button id="btn-photo-nutrients" title="Acquisisci Nutrienti da Foto"><i class="fas fa-camera"></i></button>
+                             <button id="btn-scan-barcode" title="Scansiona Codice a Barre"><i class="fas fa-barcode"></i></button>
+                         </div>
+                         <button id="btn-clear-nutrients" title="Cancella campi nutrienti"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
                 <div class="builder-grid">
@@ -1335,6 +1357,21 @@
             });
 
             totali.fatUnsat = totali.fatMono + totali.fatPoly;
+
+            // Logica per colorazione barra proteine
+            progressProteine.classList.remove('protein-quality-high', 'protein-quality-medium', 'protein-quality-low');
+            const qualitaGiornata = calcolaQualitaProteine(totali);
+            progressProteine.title = `Qualità proteica giornaliera: ${qualitaGiornata.score}% (Limitante: ${qualitaGiornata.limiting})`;
+            
+            if (totali.prot > 0) {
+                if (qualitaGiornata.score > 85) {
+                    progressProteine.classList.add('protein-quality-high');
+                } else if (qualitaGiornata.score > 50) {
+                    progressProteine.classList.add('protein-quality-medium');
+                } else {
+                    progressProteine.classList.add('protein-quality-low');
+                }
+            }
 
             spanObiettivoProteine.textContent = OBIETTIVI.prot; spanTotaleProteine.textContent = totali.prot.toFixed(1); progressProteine.max = OBIETTIVI.prot; progressProteine.value = totali.prot;
             spanObiettivoCalorie.textContent = OBIETTIVI.kcal; spanTotaleCalorie.textContent = totali.kcal.toFixed(0); progressCalorie.max = OBIETTIVI.kcal; progressCalorie.value = totali.kcal;
