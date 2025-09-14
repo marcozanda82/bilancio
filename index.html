@@ -825,13 +825,13 @@
                 <div id="ingredient-modal-actions">
                     <button id="btn-clear-ingredients" title="Cancella tutto"><i class="fas fa-eraser"></i></button>
                     <button id="btn-photo-ingredients" title="Acquisisci da foto"><i class="fas fa-camera"></i></button>
-                    <button id="btn-generate-ingredients-ai" title="Genera ingredienti con AI">🪄</button>
+                    <button id="btn-generate-ingredients-ai" title="Genera o Pulisci con AI">🪄</button>
                     <button id="btn-copy-ingredients-prompt" title="Copia prompt per AI">📋</button>
                 </div>
             </div>
             <input type="file" id="ingredient-photo-input" accept="image/*" style="display: none;">
             <p id="ocr-status" style="text-align: center; color: #888; display: none;"></p>
-            <textarea id="ingredient-modal-textarea" placeholder="Inserisci la lista ingredienti qui..."></textarea>
+            <textarea id="ingredient-modal-textarea" placeholder="Inserisci o fotografa la lista ingredienti qui..."></textarea>
             <button id="btn-save-ingredients" style="width: 100%; margin-top: 15px; background-color: #2e7d32;">Salva Ingredienti</button>
         </div>
     </div>
@@ -2319,15 +2319,33 @@
                 ingredientModal.style.display = 'none';
             });
 
+            // LOGICA MODIFICATA PER LA BACCHETTA MAGICA
             btnGenerateIngredientsAi.addEventListener('click', async (e) => {
                 const foodName = ingredientModalTitle.textContent;
-                if (!foodName) return;
+                const existingText = ingredientModalTextarea.value.trim();
+                
+                if (!foodName && !existingText) {
+                    alert("Inserisci un nome per l'alimento o del testo da riformattare.");
+                    return;
+                }
+                
                 const button = e.target.closest('button');
                 button.disabled = true;
-                ingredientModalTextarea.value = "Ricerca e formulazione in corso...";
+                const originalText = existingText || "Elaborazione AI in corso...";
+                ingredientModalTextarea.value = "Elaborazione AI in corso...";
+                ingredientModalTextarea.disabled = true;
 
                 try {
-                    const prompt = `Agisci come un esperto di etichette alimentari. Genera una lista di ingredienti per il prodotto commerciale "${foodName}". Rispondi ESCLUSIVAMENTE con la lista, senza frasi introduttive o conclusive. Il formato deve essere un elenco puntato, un ingrediente per riga. È FONDAMENTALE che la lista rifletta il contenuto di un PRODOTTO CONFEZIONATO (es. un sacchetto di minestrone surgelato), NON una ricetta per prepararlo. Pertanto, NON includere ingredienti come acqua aggiunta in cottura, olio, sale o pasta, a meno che non siano specificati come pre-inseriti nel prodotto. Se non conosci l'etichetta esatta, basati su prodotti concorrenti simili dei supermercati.`;
+                    let prompt;
+                    
+                    if (existingText) {
+                        // Caso 1: C'è già del testo, lo puliamo e formattiamo
+                        prompt = `Agisci come un esperto di etichette alimentari. Riformatta il seguente testo per creare una lista di ingredienti pulita e ben formattata, in ordine decrescente di quantità e con percentuali stimate ove possibile. Rimuovi qualsiasi informazione che non sia un ingrediente (come istruzioni, note o frasi superflue). Rispondi ESCLUSIVAMENTE con la lista pulita, senza frasi introduttive o conclusive. Testo da pulire: "${existingText}"`;
+                    } else {
+                        // Caso 2: Il campo è vuoto, creiamo la lista da zero
+                        prompt = `Agisci come un esperto di etichette alimentari. Genera una lista di ingredienti per il prodotto commerciale "${foodName}". Rispondi ESCLUSIVAMENTE con la lista, senza frasi introduttive o conclusive. Il formato deve essere un elenco puntato, un ingrediente per riga. È FONDAMENTALE che la lista rifletta il contenuto di un PRODOTTO CONFEZIONATO (es. un sacchetto di minestrone surgelato), NON una ricetta per prepararlo. Pertanto, NON includere ingredienti come acqua aggiunta in cottura, olio, sale o pasta, a meno che non siano specificati come pre-inseriti nel prodotto. Se non conosci l'etichetta esatta, basati su prodotti concorrenti simili dei supermercati.`;
+                    }
+
                     const res = await fetch(GEMINI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -2336,13 +2354,16 @@
                     const data = await res.json();
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nessuna risposta dall\'AI.';
                     ingredientModalTextarea.value = text.replace(/[\*]/g, '-').trim();
+
                 } catch (err) {
                     alert('Errore generazione ingredienti: ' + err.message);
-                    ingredientModalTextarea.value = "Errore durante la generazione.";
+                    ingredientModalTextarea.value = originalText.replace("Elaborazione AI in corso...", ""); // Ripristina il testo originale in caso di errore
                 } finally {
                     button.disabled = false;
+                    ingredientModalTextarea.disabled = false;
                 }
             });
+
 
             btnCopyIngredientsPrompt.addEventListener('click', async () => {
                 const foodName = ingredientModalTitle.textContent;
