@@ -108,7 +108,9 @@
         .progress-fat-sat.red::-webkit-progress-value { background-color: #f44336; }
         .progress-fat-sat.red::-moz-progress-bar { background-color: #f44336; }
         .food-adder-header { display: flex; justify-content: space-between; align-items: center; }
-        #btn-clear-nutrients { background-color: transparent; color: #d32f2f; border: none; padding: 5px 10px; font-size: 1em; cursor: pointer; transition: color 0.3s; }
+        .food-adder-header button { background: none; border: none; font-size: 1.5em; cursor: pointer; color: #555; padding: 5px 10px; }
+        .food-adder-header button:hover { color: #0d47a1; }
+        #btn-clear-nutrients { color: #d32f2f; }
         #btn-clear-nutrients:hover { color: #ff1744; }
         .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
         #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -312,6 +314,40 @@
             font-family: monospace;
             font-size: 1em;
         }
+
+        /* NUOVI STILI per il modal di conferma nutrienti */
+        #nutrient-confirm-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            max-height: 40vh;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .nutrient-confirm-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nutrient-confirm-item label {
+            flex-basis: 60%;
+            margin-bottom: 0;
+            font-size: 0.9em;
+        }
+        .nutrient-confirm-item input {
+            flex-grow: 1;
+            margin-bottom: 0;
+            padding: 8px;
+            font-size: 0.9em;
+        }
+        .nutrient-confirm-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
     </style>
 </head>
 <body>
@@ -506,7 +542,10 @@
             <div id="food-adder" class="sezione">
                 <div class="food-adder-header">
                     <h2>Aggiungi Alimento</h2>
-                    <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
+                    <div>
+                        <button id="btn-photo-nutrients" title="Acquisisci Nutrienti da Foto"><i class="fas fa-camera"></i></button>
+                        <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
+                    </div>
                 </div>
                 <div class="builder-grid">
                     <div>
@@ -830,11 +869,28 @@
                 </div>
             </div>
             <input type="file" id="ingredient-photo-input" accept="image/*" style="display: none;">
-            <p id="ocr-status" style="text-align: center; color: #888; display: none;"></p>
+            <p id="ocr-status-ingredients" style="text-align: center; color: #888; display: none;"></p>
             <textarea id="ingredient-modal-textarea" placeholder="Inserisci o fotografa la lista ingredienti qui..."></textarea>
             <button id="btn-save-ingredients" style="width: 100%; margin-top: 15px; background-color: #2e7d32;">Salva Ingredienti</button>
         </div>
     </div>
+
+    <div id="nutrient-confirm-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="nutrient-confirm-modal">&times;</span>
+            <h2>Conferma Dati Nutrizionali</h2>
+            <p>Controlla e correggi i valori estratti dalla foto prima di confermare.</p>
+            <div id="nutrient-confirm-list">
+                <p id="ocr-status-nutrients" style="text-align: center; color: #888; display: none;"></p>
+            </div>
+            <div class="nutrient-confirm-buttons">
+                <button id="btn-cancel-nutrients" style="background-color: #607d8b;">Annulla</button>
+                <button id="btn-confirm-nutrients" style="background-color: #2e7d32;">Conferma e Compila</button>
+            </div>
+        </div>
+    </div>
+    <input type="file" id="nutrient-photo-input" accept="image/*" style="display: none;">
+
 
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
@@ -984,20 +1040,60 @@
         const btnClearIngredients = document.getElementById('btn-clear-ingredients');
         const btnPhotoIngredients = document.getElementById('btn-photo-ingredients');
         const ingredientPhotoInput = document.getElementById('ingredient-photo-input');
-        const ocrStatus = document.getElementById('ocr-status');
+        const ocrStatusIngredients = document.getElementById('ocr-status-ingredients');
+        
+        // NUOVI RIFERIMENTI DOM
+        const btnPhotoNutrients = document.getElementById('btn-photo-nutrients');
+        const nutrientPhotoInput = document.getElementById('nutrient-photo-input');
+        const nutrientConfirmModal = document.getElementById('nutrient-confirm-modal');
+        const nutrientConfirmList = document.getElementById('nutrient-confirm-list');
+        const btnConfirmNutrients = document.getElementById('btn-confirm-nutrients');
+        const btnCancelNutrients = document.getElementById('btn-cancel-nutrients');
+        const ocrStatusNutrients = document.getElementById('ocr-status-nutrients');
+
 
         const inputFields = {
-            prot: builderProt, kcal: builderKcal, carb: builderCarb, zuccheri: builderZuccheri,
-            fatTotal: builderFatTotal, fatSat: builderFatSat, fatTrans: builderFatTrans, fatMono: builderFatMono, fatPoly: builderFatPoly, omega3: builderOmega3, omega6: builderOmega6,
-            fibreTotali: builderFibreTotali, fibreSolubili: builderFibreSolubili, fibreInsolubili: builderFibreInsolubili,
-            mg: builderMg, k: builderK, vitc: builderVitC, ca: builderCa,
-            vitA: builderVitA, vitB12: builderVitB12, vitD: builderVitD,
-            vitE: builderVitE, vitK: builderVitK, b9: builderB9, b2: builderB2, b6: builderB6, 
-            fe: builderFe, zn: builderZn, cu: builderCu, p: builderP,
-            leu: builderLeu, iso: builderIso, val: builderVal,
-            lys: builderLys, met: builderMet, phe: builderPhe,
-            thr: builderThr, trp: builderTrp, his: builderHis
+            prot: { el: builderProt, label: 'Proteine (g)' },
+            kcal: { el: builderKcal, label: 'Calorie (kcal)' },
+            carb: { el: builderCarb, label: 'Carboidrati (g)' },
+            zuccheri: { el: builderZuccheri, label: 'di cui Zuccheri (g)' },
+            fatTotal: { el: builderFatTotal, label: 'Grassi Totali (g)' },
+            fatSat: { el: builderFatSat, label: 'di cui Saturi (g)' },
+            fatTrans: { el: builderFatTrans, label: 'di cui Trans (g)' },
+            fatMono: { el: builderFatMono, label: 'di cui Monoinsaturi (g)' },
+            fatPoly: { el: builderFatPoly, label: 'di cui Polinsaturi (g)' },
+            omega3: { el: builderOmega3, label: 'Omega 3 (g)' },
+            omega6: { el: builderOmega6, label: 'Omega 6 (g)' },
+            fibreTotali: { el: builderFibreTotali, label: 'Fibre (g)' },
+            fibreSolubili: { el: builderFibreSolubili, label: 'Fibre Solubili (g)' },
+            fibreInsolubili: { el: builderFibreInsolubili, label: 'Fibre Insolubili (g)' },
+            mg: { el: builderMg, label: 'Magnesio (mg)' },
+            k: { el: builderK, label: 'Potassio (mg)' },
+            vitc: { el: builderVitC, label: 'Vitamina C (mg)' },
+            ca: { el: builderCa, label: 'Calcio (mg)' },
+            fe: { el: builderFe, label: 'Ferro (mg)' },
+            zn: { el: builderZn, label: 'Zinco (mg)' },
+            cu: { el: builderCu, label: 'Rame (mg)' },
+            p: { el: builderP, label: 'Fosforo (mg)' },
+            vitA: { el: builderVitA, label: 'Vitamina A (µg)' },
+            vitB12: { el: builderVitB12, label: 'Vitamina B12 (µg)' },
+            vitD: { el: builderVitD, label: 'Vitamina D (µg)' },
+            vitE: { el: builderVitE, label: 'Vitamina E (mg)' },
+            vitK: { el: builderVitK, label: 'Vitamina K (µg)' },
+            b9: { el: builderB9, label: 'Folati (B9) (µg)' },
+            b2: { el: builderB2, label: 'Vitamina B2 (mg)' },
+            b6: { el: builderB6, label: 'Vitamina B6 (mg)' },
+            leu: { el: builderLeu, label: 'Leucina (mg)' },
+            iso: { el: builderIso, label: 'Isoleucina (mg)' },
+            val: { el: builderVal, label: 'Valina (mg)' },
+            lys: { el: builderLys, label: 'Lisina (mg)' },
+            met: { el: builderMet, label: 'Metionina (mg)' },
+            phe: { el: builderPhe, label: 'Fenilalanina (mg)' },
+            thr: { el: builderThr, label: 'Treonina (mg)' },
+            trp: { el: builderTrp, label: 'Triptofano (mg)' },
+            his: { el: builderHis, label: 'Istidina (mg)' }
         };
+
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanObiettivoProteine = document.getElementById('obiettivo-proteine'), progressProteine = document.getElementById('progress-proteine');
         const spanTotaleCalorie = document.getElementById('totale-calorie'), spanObiettivoCalorie = document.getElementById('obiettivo-calorie'), progressCalorie = document.getElementById('progress-calorie');
         const spanTotaleCarboidrati = document.getElementById('totale-carboidrati'), spanObiettivoCarboidrati = document.getElementById('obiettivo-carboidrati'), progressCarboidrati = document.getElementById('progress-carboidrati');
@@ -1480,8 +1576,8 @@
             };
             
             for (const key in inputFields) {
-                inputFields[key].value = inputFields[key].value.replace(',', '.');
-                foodData[key] = inputFields[key].value === '' ? null : parseFloat(inputFields[key].value);
+                inputFields[key].el.value = inputFields[key].el.value.replace(',', '.');
+                foodData[key] = inputFields[key].el.value === '' ? null : parseFloat(inputFields[key].el.value);
             }
             
             if (foodData.fibreSolubili !== null && foodData.fibreInsolubili !== null && foodData.fibreTotali === null) {
@@ -1499,7 +1595,7 @@
                     const calculatedAminoMg = protValue100g * referenceMgPerG;
                     foodData[amino] = calculatedAminoMg;
                     if(inputFields[amino]) {
-                        inputFields[amino].value = calculatedAminoMg.toFixed(0);
+                        inputFields[amino].el.value = calculatedAminoMg.toFixed(0);
                     }
                 }
             } 
@@ -1542,7 +1638,7 @@
 
             const emptyFields = Object.keys(inputFields)
                 .filter(key => key !== 'fatTotal' && !Object.keys(OBIETTIVI_AMINO).includes(key) && key !== 'fatTotal')
-                .filter(key => inputFields[key].value === '');
+                .filter(key => inputFields[key].el.value === '');
                 
             if (emptyFields.length > 5) {
                 const confirmMsg = `Ci sono molti campi nutrienti vuoti. Vuoi usare l'AI per compilare i dati mancanti prima di aggiungere?`;
@@ -1572,14 +1668,16 @@
         }
 
         function resetInputAlimento() { 
-            [builderDesc, builderQta, ...Object.values(inputFields)].forEach(el => el.value = ''); 
+            builderDesc.value = '';
+            builderQta.value = '';
+            Object.values(inputFields).forEach(field => field.el.value = ''); 
             builderDesc.focus(); 
         }
 
         function aggiornaColoreNutrienti() {
             const hasEmptyFields = Object.keys(inputFields)
                 .filter(key => !Object.keys(OBIETTIVI_AMINO).includes(key))
-                .some(key => inputFields[key].value === '');
+                .some(key => inputFields[key].el.value === '');
             document.getElementById('nutrients-header').classList.toggle('nutrients-warning', hasEmptyFields);
         }
         
@@ -1970,8 +2068,8 @@
                 resetInputAlimento(); 
                 Object.keys(OBIETTIVI_AMINO).forEach(key => {
                     if(inputFields[key]) {
-                        inputFields[key].disabled = false;
-                        inputFields[key].style.backgroundColor = '#ffffff';
+                        inputFields[key].el.disabled = false;
+                        inputFields[key].el.style.backgroundColor = '#ffffff';
                     }
                 });
                 aggiornaColoreNutrienti(); 
@@ -1979,12 +2077,12 @@
 
             builderProt.addEventListener('input', () => {
                 const protValue = parseFloat(builderProt.value.replace(',', '.'));
-                const aminoInputs = Object.keys(OBIETTIVI_AMINO).map(key => inputFields[key]);
+                const aminoInputs = Object.keys(OBIETTIVI_AMINO).map(key => inputFields[key].el);
 
                 if (!isNaN(protValue) && protValue > 0) {
                     aminoInputs.forEach(input => {
                         if(!input) return;
-                        const aminoKey = Object.keys(inputFields).find(key => inputFields[key] === input);
+                        const aminoKey = Object.keys(inputFields).find(key => inputFields[key].el === input);
                         const referenceValue = PROFILO_AMINOACIDICO_RIFERIMENTO[aminoKey];
                         input.value = (protValue * referenceValue).toFixed(0);
                         input.disabled = true;
@@ -2111,14 +2209,14 @@
                     builderQta.value = foodData.lastQta ?? '';
                     for(const key in inputFields) {
                         if (inputFields[key]) {
-                            inputFields[key].value = foodData[key] ?? '';
+                            inputFields[key].el.value = foodData[key] ?? '';
                         }
                     }
                 }
                 aggiornaColoreNutrienti();
             });
 
-            Object.values(inputFields).forEach(input => { if (input) input.addEventListener('input', aggiornaColoreNutrienti) });
+            Object.values(inputFields).forEach(field => { if (field.el) field.el.addEventListener('input', aggiornaColoreNutrienti) });
             
             document.getElementById('btn-compila-ai').addEventListener('click', async (e) => {
                 const nome = builderDesc.value.trim();
@@ -2146,8 +2244,8 @@
                     const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
                     for (const key in inputFields) {
-                        if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
-                            inputFields[key].value = resObj[key] ?? '';
+                        if (inputFields[key].el.value === '' && typeof resObj[key] !== 'undefined') {
+                            inputFields[key].el.value = resObj[key] ?? '';
                         }
                     }
                     aggiornaColoreNutrienti();
@@ -2291,8 +2389,8 @@
                 try {
                     const resObj = JSON.parse(jsonText);
                     for (const key in inputFields) {
-                        if (inputFields[key].value === '' && typeof resObj[key] !== 'undefined') {
-                            inputFields[key].value = resObj[key];
+                        if (inputFields[key].el.value === '' && typeof resObj[key] !== 'undefined') {
+                            inputFields[key].el.value = resObj[key];
                         }
                     }
                     manualJsonInput.value = '';
@@ -2319,7 +2417,6 @@
                 ingredientModal.style.display = 'none';
             });
 
-            // LOGICA MODIFICATA PER LA BACCHETTA MAGICA
             btnGenerateIngredientsAi.addEventListener('click', async (e) => {
                 const foodName = ingredientModalTitle.textContent;
                 const existingText = ingredientModalTextarea.value.trim();
@@ -2331,7 +2428,7 @@
                 
                 const button = e.target.closest('button');
                 button.disabled = true;
-                const originalText = existingText || "Elaborazione AI in corso...";
+                const originalText = ingredientModalTextarea.value; // Salva testo originale
                 ingredientModalTextarea.value = "Elaborazione AI in corso...";
                 ingredientModalTextarea.disabled = true;
 
@@ -2339,10 +2436,8 @@
                     let prompt;
                     
                     if (existingText) {
-                        // Caso 1: C'è già del testo, lo puliamo e formattiamo
                         prompt = `Agisci come un esperto di etichette alimentari. Riformatta il seguente testo per creare una lista di ingredienti pulita e ben formattata, in ordine decrescente di quantità e con percentuali stimate ove possibile. Rimuovi qualsiasi informazione che non sia un ingrediente (come istruzioni, note o frasi superflue). Rispondi ESCLUSIVAMENTE con la lista pulita, senza frasi introduttive o conclusive. Testo da pulire: "${existingText}"`;
                     } else {
-                        // Caso 2: Il campo è vuoto, creiamo la lista da zero
                         prompt = `Agisci come un esperto di etichette alimentari. Genera una lista di ingredienti per il prodotto commerciale "${foodName}". Rispondi ESCLUSIVAMENTE con la lista, senza frasi introduttive o conclusive. Il formato deve essere un elenco puntato, un ingrediente per riga. È FONDAMENTALE che la lista rifletta il contenuto di un PRODOTTO CONFEZIONATO (es. un sacchetto di minestrone surgelato), NON una ricetta per prepararlo. Pertanto, NON includere ingredienti come acqua aggiunta in cottura, olio, sale o pasta, a meno che non siano specificati come pre-inseriti nel prodotto. Se non conosci l'etichetta esatta, basati su prodotti concorrenti simili dei supermercati.`;
                     }
 
@@ -2357,13 +2452,12 @@
 
                 } catch (err) {
                     alert('Errore generazione ingredienti: ' + err.message);
-                    ingredientModalTextarea.value = originalText.replace("Elaborazione AI in corso...", ""); // Ripristina il testo originale in caso di errore
+                    ingredientModalTextarea.value = originalText;
                 } finally {
                     button.disabled = false;
                     ingredientModalTextarea.disabled = false;
                 }
             });
-
 
             btnCopyIngredientsPrompt.addEventListener('click', async () => {
                 const foodName = ingredientModalTitle.textContent;
@@ -2389,8 +2483,8 @@
                 const file = event.target.files[0];
                 if (!file) return;
 
-                ocrStatus.textContent = 'Elaborazione immagine in corso...';
-                ocrStatus.style.display = 'block';
+                ocrStatusIngredients.textContent = 'Elaborazione immagine in corso...';
+                ocrStatusIngredients.style.display = 'block';
                 ingredientModalTextarea.disabled = true;
 
                 try {
@@ -2400,16 +2494,93 @@
                     ingredientModalTextarea.value += (ingredientModalTextarea.value ? '\n' : '') + text;
                 } catch (error) {
                     console.error(error);
-                    ocrStatus.textContent = "Errore durante il riconoscimento del testo.";
-                    setTimeout(() => { ocrStatus.style.display = 'none'; }, 3000);
+                    ocrStatusIngredients.textContent = "Errore durante il riconoscimento del testo.";
+                    setTimeout(() => { ocrStatusIngredients.style.display = 'none'; }, 3000);
                 } finally {
-                    if(ocrStatus.textContent.includes('Elaborazione')) {
-                        ocrStatus.style.display = 'none';
+                    if(ocrStatusIngredients.textContent.includes('Elaborazione')) {
+                        ocrStatusIngredients.style.display = 'none';
                     }
                     ingredientModalTextarea.disabled = false;
                     ingredientPhotoInput.value = '';
                 }
             });
+
+            // --- NUOVA LOGICA OCR PER NUTRIENTI ---
+            btnPhotoNutrients.addEventListener('click', () => {
+                nutrientPhotoInput.click();
+            });
+
+            nutrientPhotoInput.addEventListener('change', async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                nutrientConfirmModal.style.display = 'block';
+                nutrientConfirmList.innerHTML = '';
+                ocrStatusNutrients.textContent = 'Fase 1/2: Lettura testo dall\'immagine in corso...';
+                ocrStatusNutrients.style.display = 'block';
+
+                try {
+                    // FASE 1: OCR
+                    const { data: { text: ocrText } } = await Tesseract.recognize(
+                        file, 'ita', { logger: m => {
+                            ocrStatusNutrients.textContent = `Fase 1/2: ${m.status} (${(m.progress * 100).toFixed(0)}%)`;
+                        } }
+                    );
+                    
+                    ocrStatusNutrients.textContent = 'Fase 2/2: Analisi del testo con AI...';
+                    
+                    // FASE 2: AI
+                    const jsonKeyList = Object.keys(inputFields).join(', ');
+                    const prompt = `Sei un esperto estrattore di dati da etichette nutrizionali. Analizza il seguente testo grezzo, risultato di un OCR, che rappresenta una tabella nutrizionale. Il tuo compito è identificare ogni nutriente e il suo valore ESCLUSIVAMENTE per 100g (o 100ml) di prodotto, ignorando le colonne "per porzione". Presta la massima attenzione alle unità (g, mg, µg). Restituisci i dati ESCLUSIVAMENTE come un oggetto JSON valido. Non aggiungere markdown, spiegazioni o testo aggiuntivo. Le chiavi del JSON devono corrispondere ESATTAMENTE a queste: ${jsonKeyList}. Se un valore non è presente, omettilo dal JSON. Testo grezzo da analizzare: "${ocrText}"`;
+
+                    const res = await fetch(GEMINI_ENDPOINT, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
+                    
+                    const data = await res.json();
+                    const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+                    const nutrientData = JSON.parse(rawJson.replace(/```json|```/g, '').trim());
+                    
+                    // Popola il modal di conferma
+                    ocrStatusNutrients.style.display = 'none';
+                    for(const key in nutrientData) {
+                        if (inputFields[key] && nutrientData[key] !== null) {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'nutrient-confirm-item';
+                            itemDiv.innerHTML = `<label for="confirm-${key}">${inputFields[key].label}</label>
+                                                 <input type="text" id="confirm-${key}" data-nutrient-key="${key}" value="${nutrientData[key]}">`;
+                            nutrientConfirmList.appendChild(itemDiv);
+                        }
+                    }
+
+                } catch(error) {
+                    console.error("Errore nel processo OCR-AI: ", error);
+                    nutrientConfirmList.innerHTML = `<p style="color:red">Si è verificato un errore. Assicurati che l'immagine sia chiara e riprova.</p>`;
+                } finally {
+                    nutrientPhotoInput.value = '';
+                }
+            });
+            
+            btnConfirmNutrients.addEventListener('click', () => {
+                const inputs = nutrientConfirmList.querySelectorAll('input');
+                inputs.forEach(input => {
+                    const key = input.dataset.nutrientKey;
+                    const value = input.value;
+                    if(inputFields[key]) {
+                        inputFields[key].el.value = value;
+                    }
+                });
+                nutrientConfirmModal.style.display = 'none';
+                aggiornaColoreNutrienti();
+            });
+
+            btnCancelNutrients.addEventListener('click', () => {
+                nutrientConfirmModal.style.display = 'none';
+            });
+            // --- FINE NUOVA LOGICA ---
+
         });
     </script>
 </body>
