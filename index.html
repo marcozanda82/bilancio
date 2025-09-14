@@ -567,7 +567,7 @@
                     <div><label>Fibre Totali/100g</label><input type="number" id="builder-fibre-totali" step="0.1"></div>
                 </div>
                 <h2 class="collapsible-header" id="nutrients-header">
-                    Dettagli Nutrizionali (Grassi, Micronutrienti, Amminoacidi) <span class="arrow">▶</span>
+                    Dettagli Nutrizionali <span class="arrow">▶</span>
                 </h2>
                 <div class="collapsible-content" id="nutrients-content">
                     <div class="builder-grid">
@@ -1942,66 +1942,60 @@
             if (k.includes('sale') || k.includes('sodio')) return null;
             return null;
         }
-
-        async function processOCRImage(imageData, type) {
-            const statusEl = (type === 'ingredients') ? ocrStatusIngredients : photoOcrStatus;
-            const buttonEl = (type === 'ingredients') ? btnPhotoIngredients : btnPhotoNutrients;
-            const modalEl = (type === 'ingredients') ? ingredientModal : nutrientConfirmModal;
-            const contentEl = (type === 'ingredients') ? ingredientModalTextarea : nutrientConfirmList;
-            
-            statusEl.textContent = 'Elaborazione...';
-            statusEl.style.display = 'inline';
-            if (buttonEl) buttonEl.style.display = 'none';
+        
+        async function processOCRImage(file) {
+            photoOcrStatus.textContent = 'Elaborazione...';
+            photoOcrStatus.style.display = 'inline';
+            btnPhotoNutrients.disabled = true;
 
             try {
-                statusEl.textContent = 'Fase 1/2: Lettura testo...';
-                const { data: { text: ocrText } } = await Tesseract.recognize(imageData, 'ita', {
+                photoOcrStatus.textContent = 'Fase 1/2: Lettura testo...';
+                const { data: { text: ocrText } } = await Tesseract.recognize(file, 'ita', {
                     logger: m => {
                         if (m.status === 'recognizing text') {
-                           statusEl.textContent = `Fase 1/2: Riconoscimento (${(m.progress * 100).toFixed(0)}%)`;
+                           photoOcrStatus.textContent = `Fase 1/2: Riconoscimento (${(m.progress * 100).toFixed(0)}%)`;
                         }
                     }
                 });
                 
-                statusEl.textContent = 'Fase 2/2: Analisi AI...';
+                photoOcrStatus.textContent = 'Fase 2/2: Analisi AI...';
+                const prompt = `Analizza il seguente testo estratto da una tabella nutrizionale: "${ocrText}". Estrai i valori per 100g (o 100ml), ignorando le colonne "per porzione". Restituisci ESCLUSIVAMENTE un oggetto JSON. Le chiavi devono essere i nomi dei nutrienti in italiano (es. "Energia", "Grassi", "di cui acidi grassi saturi"). Se un valore non è presente, omettilo.`;
                 
-                if (type === 'nutrients') {
-                    const prompt = `Analizza il seguente testo estratto da una tabella nutrizionale: "${ocrText}". Estrai i valori per 100g (o 100ml), ignorando le colonne "per porzione". Restituisci ESCLUSIVAMENTE un oggetto JSON. Le chiavi devono essere i nomi dei nutrienti in italiano (es. "Energia", "Grassi", "di cui acidi grassi saturi"). Se un valore non è presente, omettilo.`;
-                    
-                    const res = await fetch(GEMINI_ENDPOINT, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
-                    
-                    const data = await res.json();
-                    const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-                    const nutrientDataFromAI = JSON.parse(rawJson.replace(/```json|```/g, '').trim());
-                    
-                    contentEl.innerHTML = '';
-                    if (Object.keys(nutrientDataFromAI).length === 0) {
-                         contentEl.innerHTML = `<p style="color:red; text-align:center; grid-column: 1 / -1;">L'AI non ha estratto alcun dato. L'immagine potrebbe non essere chiara. Riprova.</p>`;
-                    } else {
-                         for (const aiKey in nutrientDataFromAI) {
-                            const internalKey = normalizeNutrientKey(aiKey);
-                            if (internalKey && inputFields[internalKey]) {
-                                const itemDiv = document.createElement('div');
-                                itemDiv.className = 'nutrient-confirm-item';
-                                const value = String(nutrientDataFromAI[aiKey]).replace(/[^0-9.,]/g, '').replace(',', '.') || '0';
-                                itemDiv.innerHTML = `<label for="confirm-${internalKey}">${inputFields[internalKey].label}</label>
-                                                     <input type="text" id="confirm-${internalKey}" data-nutrient-key="${internalKey}" value="${value}">`;
-                                contentEl.appendChild(itemDiv);
-                            }
+                const res = await fetch(GEMINI_ENDPOINT, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
+                
+                const data = await res.json();
+                const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+                const nutrientDataFromAI = JSON.parse(rawJson.replace(/```json|```/g, '').trim());
+                
+                nutrientConfirmList.innerHTML = '';
+                if(Object.keys(nutrientDataFromAI).length === 0) {
+                     nutrientConfirmList.innerHTML = `<p style="color:red; text-align:center; grid-column: 1 / -1;">L'AI non ha estratto alcun dato. L'immagine potrebbe non essere chiara. Riprova.</p>`;
+                } else {
+                     for (const aiKey in nutrientDataFromAI) {
+                        const internalKey = normalizeNutrientKey(aiKey);
+                        if (internalKey && inputFields[internalKey]) {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'nutrient-confirm-item';
+                            const value = String(nutrientDataFromAI[aiKey]).replace(/[^0-9.,]/g, '').replace(',', '.') || '0';
+                            itemDiv.innerHTML = `<label for="confirm-${internalKey}">${inputFields[internalKey].label}</label>
+                                                 <input type="text" id="confirm-${internalKey}" data-nutrient-key="${internalKey}" value="${value}">`;
+                            nutrientConfirmList.appendChild(itemDiv);
                         }
                     }
-                    modalEl.style.display = 'block';
                 }
+                nutrientConfirmModal.style.display = 'block';
+
             } catch(error) {
                 console.error("Errore nel processo OCR-AI: ", error);
                 alert("Si è verificato un errore durante l'elaborazione dell'immagine. Assicurati che sia chiara e che la connessione sia stabile, poi riprova.");
             } finally {
-                statusEl.style.display = 'none';
-                if(buttonEl) buttonEl.style.display = 'inline-block';
+                photoOcrStatus.style.display = 'none';
+                btnPhotoNutrients.disabled = false;
+                nutrientPhotoInput.value = '';
             }
         }
 
@@ -2027,7 +2021,6 @@
                 }
             });
 
-            // ... (altri event listener da 'progress-proteine' a 'amino-acid-modal' rimangono invariati) ...
             ['progress-proteine', 'progress-calorie', 'progress-carboidrati', 'progress-zuccheri', 
              'progress-fibre-totali', 'progress-fibre-solubili', 'progress-fibre-insolubili',
              'progress-fats-total', 'progress-fat-sat', 
@@ -2394,19 +2387,6 @@
                                }
                             }
                         }, 500);
-
-                        // GESTIONE DELLA RICARICA POST-FOTO
-                        const ocrAction = localStorage.getItem('pendingOCRNutrientAction');
-                        if (ocrAction === 'true') {
-                            localStorage.removeItem('pendingOCRNutrientAction');
-                            const imageData = localStorage.getItem('pendingOCRImage');
-                            if (imageData) {
-                                setTimeout(() => {
-                                    processOCRImage(imageData, 'nutrients');
-                                    localStorage.removeItem('pendingOCRImage');
-                                }, 500);
-                            }
-                        }
                     }
                 });
             } catch (error) { console.error("Errore Firebase:", error); authStatusP.textContent = `Errore Firebase: ${error.message}`; }
@@ -2576,35 +2556,37 @@
                 ingredientPhotoInput.click();
             });
 
-            ingredientPhotoInput.addEventListener('change', (event) => {
+            ingredientPhotoInput.addEventListener('change', async (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
 
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    localStorage.setItem('pendingOCRImage', e.target.result);
-                    localStorage.setItem('pendingOCRIngredientsAction', 'true');
-                    location.reload();
-                };
-                reader.readAsDataURL(file);
-            });
+                ocrStatusIngredients.textContent = 'Elaborazione immagine...';
+                ocrStatusIngredients.style.display = 'block';
+                ingredientModalTextarea.disabled = true;
 
-            // --- LOGICA OCR NUTRIENTI CORRETTA E ROBUSTA ---
+                try {
+                    const { data: { text } } = await Tesseract.recognize(file, 'ita');
+                    ingredientModalTextarea.value += (ingredientModalTextarea.value ? '\n' : '') + text;
+                } catch (error) {
+                    console.error(error);
+                    ocrStatusIngredients.textContent = "Errore nel riconoscimento.";
+                    setTimeout(() => { ocrStatusIngredients.style.display = 'none'; }, 3000);
+                } finally {
+                    ocrStatusIngredients.style.display = 'none';
+                    ingredientModalTextarea.disabled = false;
+                    ingredientPhotoInput.value = '';
+                }
+            });
+            
             btnPhotoNutrients.addEventListener('click', () => {
                 nutrientPhotoInput.click();
             });
 
             nutrientPhotoInput.addEventListener('change', async (event) => {
                 const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = () => {
-                    localStorage.setItem('pendingOCRImage', reader.result);
-                    localStorage.setItem('pendingOCRNutrientAction', 'true');
-                    location.reload();
-                };
-                reader.readAsDataURL(file);
+                if (file) {
+                    processOCRImage(file);
+                }
             });
             
             btnConfirmNutrients.addEventListener('click', () => {
