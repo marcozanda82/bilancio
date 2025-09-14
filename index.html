@@ -326,6 +326,7 @@
             background-color: #f9f9f9;
             border-radius: 8px;
             border: 1px solid #eee;
+            min-height: 50px;
         }
         .nutrient-confirm-item {
             display: flex;
@@ -542,9 +543,10 @@
             <div id="food-adder" class="sezione">
                 <div class="food-adder-header">
                     <h2>Aggiungi Alimento</h2>
-                    <div>
-                        <button id="btn-photo-nutrients" title="Acquisisci Nutrienti da Foto"><i class="fas fa-camera"></i></button>
-                        <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
+                    <div id="photo-ocr-controls" style="display: flex; align-items: center; gap: 5px;">
+                         <span id="photo-ocr-status" style="display:none; color: #555; font-style: italic; font-size: 0.9em;"></span>
+                         <button id="btn-photo-nutrients" title="Acquisisci Nutrienti da Foto"><i class="fas fa-camera"></i></button>
+                         <button id="btn-clear-nutrients" title="Cancella campi nutrienti">🗑️</button>
                     </div>
                 </div>
                 <div class="builder-grid">
@@ -881,7 +883,7 @@
             <h2>Conferma Dati Nutrizionali</h2>
             <p>Controlla e correggi i valori estratti dalla foto prima di confermare.</p>
             <div id="nutrient-confirm-list">
-                 <p id="ocr-status-nutrients" style="text-align: center; color: #888; display: none;"></p>
+                 <p id="ocr-status-nutrients" style="text-align: center; color: #888; display: block;">In attesa di una foto...</p>
             </div>
             <div class="nutrient-confirm-buttons">
                 <button id="btn-cancel-nutrients" style="background-color: #607d8b;">Annulla</button>
@@ -1048,7 +1050,7 @@
         const btnConfirmNutrients = document.getElementById('btn-confirm-nutrients');
         const btnCancelNutrients = document.getElementById('btn-cancel-nutrients');
         const ocrStatusNutrients = document.getElementById('ocr-status-nutrients');
-
+        const photoOcrStatus = document.getElementById('photo-ocr-status');
 
         const inputFields = {
             prot: { el: builderProt, label: 'Proteine (g)' },
@@ -1920,23 +1922,25 @@
             ingredientModal.style.display = 'block';
         }
 
-        // NUOVA FUNZIONE per "tradurre" le chiavi AI
         function normalizeNutrientKey(key) {
-            const k = key.toLowerCase().replace(/\s/g, ''); // Normalizza: minuscolo e senza spazi
+            const k = key.toLowerCase().replace(/[\s\(\)]/g, ''); // Normalizza: minuscolo e senza spazi/parentesi
             if (k.includes('energi') || k.includes('kcal') || k.includes('calorie')) return 'kcal';
             if (k.includes('protein')) return 'prot';
-            if (k.includes('carboidrat')) return 'carb';
+            if (k.includes('carboidrat')) {
+                if(k.includes('cui') && k.includes('zuccheri')) return 'zuccheri';
+                return 'carb';
+            }
             if (k.includes('zuccher')) return 'zuccheri';
-            if (k.includes('grassi')) {
-                if(k.includes('saturi')) return 'fatSat';
+            if (k.includes('grassi') || k.includes('fat')) {
+                if(k.includes('satur')) return 'fatSat';
                 if(k.includes('trans')) return 'fatTrans';
-                if(k.includes('monoinsaturi')) return 'fatMono';
-                if(k.includes('polinsaturi')) return 'fatPoly';
+                if(k.includes('monoinsatur')) return 'fatMono';
+                if(k.includes('polinsatur')) return 'fatPoly';
                 return 'fatTotal';
             }
             if (k.includes('fibr')) return 'fibreTotali';
-            // Aggiungi qui altre mappature se necessario (es. minerali e vitamine)
-            return null; // Ritorna null se non riconosciuto
+            if (k.includes('sale') || k.includes('sodio')) return null; // Ignora il sale per ora
+            return null;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -2500,7 +2504,7 @@
                 const file = event.target.files[0];
                 if (!file) return;
 
-                ocrStatusIngredients.textContent = 'Elaborazione immagine in corso...';
+                ocrStatusIngredients.textContent = 'Elaborazione immagine...';
                 ocrStatusIngredients.style.display = 'block';
                 ingredientModalTextarea.disabled = true;
 
@@ -2511,7 +2515,7 @@
                     ingredientModalTextarea.value += (ingredientModalTextarea.value ? '\n' : '') + text;
                 } catch (error) {
                     console.error(error);
-                    ocrStatusIngredients.textContent = "Errore durante il riconoscimento del testo.";
+                    ocrStatusIngredients.textContent = "Errore nel riconoscimento.";
                     setTimeout(() => { ocrStatusIngredients.style.display = 'none'; }, 3000);
                 } finally {
                     if(ocrStatusIngredients.textContent.includes('Elaborazione')) {
@@ -2530,27 +2534,20 @@
             nutrientPhotoInput.addEventListener('change', async (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
+
+                photoOcrStatus.textContent = 'Elaborazione...';
+                photoOcrStatus.style.display = 'inline';
+                btnPhotoNutrients.style.display = 'none';
                 
-                nutrientConfirmModal.style.display = 'block';
-                nutrientConfirmList.innerHTML = ''; // Pulisce la lista precedente
-                ocrStatusNutrients.style.display = 'block';
-                ocrStatusNutrients.textContent = 'Fase 1/2: Lettura testo dall\'immagine...';
-
                 try {
-                    // FASE 1: OCR con Tesseract
-                    const { data: { text: ocrText } } = await Tesseract.recognize(
-                        file, 'ita', { logger: m => {
-                            if (m.status === 'recognizing text') {
-                                ocrStatusNutrients.textContent = `Fase 1/2: Riconoscimento testo (${(m.progress * 100).toFixed(0)}%)...`;
-                            }
-                        }}
-                    );
+                    // FASE 1: OCR
+                    photoOcrStatus.textContent = 'Lettura testo...';
+                    const { data: { text: ocrText } } = await Tesseract.recognize(file, 'ita');
                     
-                    ocrStatusNutrients.textContent = 'Fase 2/2: Analisi del testo con AI...';
+                    // FASE 2: AI
+                    photoOcrStatus.textContent = 'Analisi AI...';
+                    const prompt = `Analizza il seguente testo estratto da una tabella nutrizionale: "${ocrText}". Estrai i valori per 100g (o 100ml), ignorando le colonne "per porzione". Restituisci ESCLUSIVAMENTE un oggetto JSON. Le chiavi devono essere i nomi dei nutrienti in italiano (es. "Energia", "Grassi", "di cui acidi grassi saturi"). Se un valore non è presente, omettilo.`;
                     
-                    // FASE 2: Pulizia e strutturazione con AI
-                    const prompt = `Analizza il seguente testo estratto da una tabella nutrizionale. Estrai i valori per 100g (o 100ml), ignorando le colonne "per porzione". Restituisci ESCLUSIVAMENTE un oggetto JSON. Le chiavi devono essere i nomi dei nutrienti in italiano (es. "proteine", "grassi saturi"). Se un valore non è presente, omettilo. Testo: "${ocrText}"`;
-
                     const res = await fetch(GEMINI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -2561,29 +2558,30 @@
                     const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
                     const nutrientDataFromAI = JSON.parse(rawJson.replace(/```json|```/g, '').trim());
                     
-                    ocrStatusNutrients.style.display = 'none';
+                    nutrientConfirmList.innerHTML = '';
                     if(Object.keys(nutrientDataFromAI).length === 0) {
-                        nutrientConfirmList.innerHTML = `<p style="color:red">L'AI non ha estratto alcun dato. Assicurati che l'immagine sia chiara e riprova.</p>`;
-                        return;
-                    }
-                    
-                    // Popola il modal di conferma in modo intelligente
-                    for (const aiKey in nutrientDataFromAI) {
-                        const internalKey = normalizeNutrientKey(aiKey);
-                        if (internalKey && inputFields[internalKey]) {
-                            const itemDiv = document.createElement('div');
-                            itemDiv.className = 'nutrient-confirm-item';
-                            itemDiv.innerHTML = `<label for="confirm-${internalKey}">${inputFields[internalKey].label}</label>
-                                                 <input type="text" id="confirm-${internalKey}" data-nutrient-key="${internalKey}" value="${String(nutrientDataFromAI[aiKey]).replace(/[^0-9.,]/g, '').replace(',', '.') || 0}">`;
-                            nutrientConfirmList.appendChild(itemDiv);
+                        nutrientConfirmList.innerHTML = `<p style="color:red; text-align:center;">L'AI non ha estratto alcun dato. L'immagine potrebbe non essere chiara. Riprova.</p>`;
+                    } else {
+                         for (const aiKey in nutrientDataFromAI) {
+                            const internalKey = normalizeNutrientKey(aiKey);
+                            if (internalKey && inputFields[internalKey]) {
+                                const itemDiv = document.createElement('div');
+                                itemDiv.className = 'nutrient-confirm-item';
+                                const value = String(nutrientDataFromAI[aiKey]).replace(/[^0-9.,]/g, '').replace(',', '.') || '0';
+                                itemDiv.innerHTML = `<label for="confirm-${internalKey}">${inputFields[internalKey].label}</label>
+                                                     <input type="text" id="confirm-${internalKey}" data-nutrient-key="${internalKey}" value="${value}">`;
+                                nutrientConfirmList.appendChild(itemDiv);
+                            }
                         }
                     }
+                    nutrientConfirmModal.style.display = 'block';
 
                 } catch(error) {
                     console.error("Errore nel processo OCR-AI: ", error);
-                    ocrStatusNutrients.textContent = '';
-                    nutrientConfirmList.innerHTML = `<p style="color:red">Si è verificato un errore. Assicurati che l'immagine sia chiara e riprova.</p>`;
+                    alert("Si è verificato un errore durante l'elaborazione dell'immagine. Assicurati che sia chiara e che la connessione sia stabile, poi riprova.");
                 } finally {
+                    photoOcrStatus.style.display = 'none';
+                    btnPhotoNutrients.style.display = 'inline-block';
                     nutrientPhotoInput.value = '';
                 }
             });
