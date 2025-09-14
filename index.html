@@ -1955,7 +1955,13 @@
 
             try {
                 statusEl.textContent = 'Fase 1/2: Lettura testo...';
-                const { data: { text: ocrText } } = await Tesseract.recognize(imageData, 'ita');
+                const { data: { text: ocrText } } = await Tesseract.recognize(imageData, 'ita', {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                           statusEl.textContent = `Fase 1/2: Riconoscimento (${(m.progress * 100).toFixed(0)}%)`;
+                        }
+                    }
+                });
                 
                 statusEl.textContent = 'Fase 2/2: Analisi AI...';
                 
@@ -2394,9 +2400,11 @@
                         if (ocrAction === 'true') {
                             localStorage.removeItem('pendingOCRNutrientAction');
                             const imageData = localStorage.getItem('pendingOCRImage');
-                            localStorage.removeItem('pendingOCRImage');
                             if (imageData) {
-                                setTimeout(() => processOCRImage(imageData, 'nutrients'), 500);
+                                setTimeout(() => {
+                                    processOCRImage(imageData, 'nutrients');
+                                    localStorage.removeItem('pendingOCRImage');
+                                }, 500);
                             }
                         }
                     }
@@ -2581,19 +2589,18 @@
                 reader.readAsDataURL(file);
             });
 
-            // --- NUOVA LOGICA OCR A PROVA DI RICARICA ---
-
+            // --- LOGICA OCR NUTRIENTI CORRETTA E ROBUSTA ---
             btnPhotoNutrients.addEventListener('click', () => {
                 nutrientPhotoInput.click();
             });
 
-            nutrientPhotoInput.addEventListener('change', (event) => {
+            nutrientPhotoInput.addEventListener('change', async (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
 
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    localStorage.setItem('pendingOCRImage', e.target.result);
+                reader.onload = () => {
+                    localStorage.setItem('pendingOCRImage', reader.result);
                     localStorage.setItem('pendingOCRNutrientAction', 'true');
                     location.reload();
                 };
