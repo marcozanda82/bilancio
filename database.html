@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTable() {
         dbTableBody.innerHTML = '';
-        const sortedKeys = Object.keys(foodDatabase).sort((a, b) => foodDatabase[a].desc.localeCompare(foodDatabase[b].desc));
+        const sortedKeys = Object.keys(foodDatabase).sort((a, b) => (foodDatabase[a].desc || '').localeCompare(foodDatabase[b].desc || ''));
         
         sortedKeys.forEach(key => {
             const food = foodDatabase[key];
@@ -287,3 +287,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
