@@ -108,30 +108,10 @@
         .progress-fat-sat.red::-webkit-progress-value { background-color: #f44336; }
         .progress-fat-sat.red::-moz-progress-bar { background-color: #f44336; }
         .food-adder-header { display: flex; justify-content: space-between; align-items: center; }
-        
-        /* NUOVI STILI PER LE ICONE */
-        #photo-ocr-controls { display: flex; align-items: center; gap: 15px; }
-        #photo-ocr-controls > div { display: flex; gap: 8px; }
-        #photo-ocr-controls button {
-            font-size: 1.6em; /* Aumenta la dimensione delle icone */
-            padding: 5px 10px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #555;
-            line-height: 1;
-        }
-        #photo-ocr-controls button:hover { color: #0d47a1; }
-        #btn-clear-nutrients:hover { color: #d32f2f !important; }
-        
-        /* NUOVI STILI PER LA BARRA DELLE PROTEINE */
-        progress.protein-quality-high::-webkit-progress-value { background-color: #2e7d32; }
-        progress.protein-quality-high::-moz-progress-bar { background-color: #2e7d32; }
-        progress.protein-quality-medium::-webkit-progress-value { background-color: #ff8f00; }
-        progress.protein-quality-medium::-moz-progress-bar { background-color: #ff8f00; }
-        progress.protein-quality-low::-webkit-progress-value { background-color: #d32f2f; }
-        progress.protein-quality-low::-moz-progress-bar { background-color: #d32f2f; }
-
+        .food-adder-header button { background: none; border: none; font-size: 1.5em; cursor: pointer; color: #555; padding: 5px 10px; }
+        .food-adder-header button:hover { color: #0d47a1; }
+        #btn-clear-nutrients { color: #d32f2f; }
+        #btn-clear-nutrients:hover { color: #ff1744; }
         .vitamin-group { padding: 10px; margin-top: 10px; background-color: #f9f9f9; border: 1px solid #eee; border-radius: 6px; }
         #vit-content { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .diary-table-container { 
@@ -372,6 +352,51 @@
             gap: 10px;
             justify-content: flex-end;
         }
+
+        /* --- NUOVI STILI PER I SUGGERIMENTI --- */
+        #custom-suggestions {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 0 0 6px 6px;
+            width: 100%;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .suggestion-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95em;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-item:hover {
+            background-color: #e3f2fd;
+        }
+        .suggestion-delete-btn {
+            color: #d32f2f;
+            background: none;
+            border: none;
+            font-size: 1.3em;
+            cursor: pointer;
+            padding: 2px 8px;
+            line-height: 1;
+        }
+        .suggestion-delete-btn:hover {
+            background-color: #ffebee;
+            border-radius: 50%;
+        }
+        /* --- FINE NUOVI STILI --- */
+
     </style>
 </head>
 <body>
@@ -394,10 +419,10 @@
         </div>
         <div id="main-tracker-content">
             <h2 id="titolo-giornata"></h2>
-<div class="nav-links">
-    <a href="storico.html">📊 Storico</a>
-    <a href="database.html">📚 Database Alimenti</a>
-</div>
+            <div class="nav-links">
+                <a href="storico.html">📊 Storico</a>
+                <a href="stima_grassi.html">🫙 Stima Grassi</a>
+            </div>
             <div id="riepilogo" class="sezione">
                 <div class="summary-header-row">
                     <h2>Riepilogo di Oggi</h2>
@@ -566,22 +591,21 @@
             <div id="food-adder" class="sezione">
                 <div class="food-adder-header">
                     <h2>Aggiungi Alimento</h2>
-                    <div id="photo-ocr-controls">
+                    <div id="photo-ocr-controls" style="display: flex; align-items: center; gap: 5px;">
                          <span id="photo-ocr-status" style="display:none; color: #555; font-style: italic; font-size: 0.9em;"></span>
-                         <div>
-                             <button id="btn-photo-nutrients" title="Acquisisci Nutrienti da Foto"><i class="fas fa-camera"></i></button>
-                             <button id="btn-scan-barcode" title="Scansiona Codice a Barre"><i class="fas fa-barcode"></i></button>
-                         </div>
+                         <button id="btn-photo-nutrients" title="Acquisisci Nutrienti da Foto"><i class="fas fa-camera"></i></button>
+                         <button id="btn-scan-barcode" title="Scansiona Codice a Barre"><i class="fas fa-barcode"></i></button>
                          <button id="btn-clear-nutrients" title="Cancella campi nutrienti"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </div>
                 <div class="builder-grid">
-                    <div>
+                    <div style="position: relative;">
                         <div class="food-label-container">
                             <label for="builder-desc">Alimento</label>
                             <button id="btn-edit-ingredients" title="Modifica Lista Ingredienti">📜</button>
                         </div>
-                        <input type="text" id="builder-desc" list="food-database-list">
+                        <input type="text" id="builder-desc" autocomplete="off">
+                        <div id="custom-suggestions"></div>
                     </div>
                     <div><label>Quantità (g)</label><input type="text" id="builder-qta"></div>
                     <div><label>Proteine/100g</label><input type="number" id="builder-prot" step="0.1"></div>
@@ -638,7 +662,6 @@
                         <textarea id="manual-json-input" placeholder="Incolla qui l'oggetto JSON con i valori nutrizionali, come da richiesta."></textarea>
                     </div>
                 </div>
-                <datalist id="food-database-list"></datalist>
                 <div class="button-group">
                     <button id="btn-costruisci-pasto">Aggiungi a Pasto</button>
                     <button id="btn-aggiungi-singolo">Aggiungi al Diario</button>
@@ -935,12 +958,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
-<script type="module">
+    <script type="module">
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-        // ... (tutta la parte iniziale di configurazione e costanti rimane invariata)
         const firebaseConfig = {
           apiKey: "AIzaSyA5pSzpfq1aGZ1wjNV5-eXnIqWL6brl424",
           authDomain: "mio-tracker.firebaseapp.com",
@@ -1027,7 +1049,7 @@
         const mainTrackerContent = document.getElementById('main-tracker-content');
         const titoloGiornataEl = document.getElementById('titolo-giornata');
         const logBody = document.getElementById('log-body');
-        const foodDatalist = document.getElementById('food-database-list');
+        const suggestionsContainer = document.getElementById('custom-suggestions');
         const btnAggiungiSingolo = document.getElementById('btn-aggiungi-singolo');
         const btnCostruisciPasto = document.getElementById('btn-costruisci-pasto');
         const mealBuilderSezione = document.getElementById('meal-builder-sezione');
@@ -1179,8 +1201,6 @@
         const workoutCaloriesInput = document.getElementById('workout-calories');
         const btnAddWorkout = document.getElementById('btn-add-workout');
         
-        // ... (tutte le funzioni da getTodayString a creaAlimentoDaInput rimangono invariate)
-
         function getTodayString(format = 'ymd') { return new Date().toISOString().split('T')[0]; }
 
         function sanitizeFirebaseKey(str) {
@@ -1310,7 +1330,6 @@
 
         function initAppUI() {
             foodDatabase = JSON.parse(localStorage.getItem('trackerFoodDatabase')) || {};
-            aggiornaDatalist();
             pastoInCostruzione = JSON.parse(localStorage.getItem('trackerPastoInCostruzione')) || [];
             pastoInCostruzione.forEach(item => {
                 if (item.cal && !item.kcal) {
@@ -1534,12 +1553,33 @@
             });
         }
 
-        function aggiornaDatalist() {
-            foodDatalist.innerHTML = Object.keys(foodDatabase)
-                .map(sanitizedKey => {
-                    const originalDesc = foodDatabase[sanitizedKey]?.desc || sanitizedKey.replace(/_/g, ' ');
-                    return `<option value="${originalDesc.charAt(0).toUpperCase() + originalDesc.slice(1)}"></option>`
-                }).join('');
+        function renderSuggestions() {
+            const value = builderDesc.value.toLowerCase();
+            suggestionsContainer.innerHTML = '';
+            if (value.length < 1) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            const matches = Object.keys(foodDatabase)
+                .filter(key => foodDatabase[key].desc.toLowerCase().includes(value))
+                .sort((a,b) => foodDatabase[a].desc.localeCompare(foodDatabase[b].desc));
+            
+            if(matches.length > 0) {
+                matches.forEach(sanitizedKey => {
+                    const originalDesc = foodDatabase[sanitizedKey].desc;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'suggestion-item';
+                    itemDiv.innerHTML = `
+                        <span>${originalDesc}</span>
+                        <button class="suggestion-delete-btn" data-food-key="${sanitizedKey}" title="Cancella ${originalDesc} dal database">&times;</button>
+                    `;
+                    suggestionsContainer.appendChild(itemDiv);
+                });
+                suggestionsContainer.style.display = 'block';
+            } else {
+                suggestionsContainer.style.display = 'none';
+            }
         }
         
         function calcolaQualitaProteine(item) {
@@ -1661,7 +1701,6 @@
             
             foodDatabase[sanitizedKey] = foodData;
             salvaFoodDatabase();
-            aggiornaDatalist();
             
             if (isSingle) {
                 foodItem.type = 'single';
@@ -2081,7 +2120,7 @@
                             isScanning = false;
                             clearInterval(scanInterval);
                             stopBarcodeScanner();
-                            await fetchProductData(barcode); // *** CHIAMATA ALLA NUOVA LOGICA ***
+                            await fetchProductData(barcode);
                         }
                     } catch (error) {
                         console.error('Errore durante la scansione:', error);
@@ -2105,57 +2144,7 @@
             barcodeScannerModal.style.display = 'none';
         }
 
-        // ===================================================================
-        // =========== INIZIO CODICE MODIFICATO PER LA TUA RICHIESTA ===========
-        // ===================================================================
-
-        /**
-         * Cerca un alimento nel database locale usando il suo codice a barre.
-         * @param {string} barcode - Il codice a barre da cercare.
-         * @returns {object|null} - L'oggetto dell'alimento se trovato, altrimenti null.
-         */
-        function findFoodByBarcode(barcode) {
-            for (const key in foodDatabase) {
-                if (foodDatabase[key].barcode === barcode) {
-                    return foodDatabase[key];
-                }
-            }
-            return null;
-        }
-
-        /**
-         * Popola i campi del modulo di inserimento con i dati di un alimento.
-         * @param {object} foodData - L'oggetto alimento dal database locale.
-         */
-        function populateFormWithDbData(foodData) {
-            resetInputAlimento();
-            builderDesc.value = foodData.desc || 'Prodotto Sconosciuto';
-            for (const key in inputFields) {
-                if (foodData.hasOwnProperty(key) && foodData[key] !== null && inputFields[key]) {
-                     inputFields[key].el.value = foodData[key];
-                }
-            }
-            if (foodData.prot) {
-                builderProt.dispatchEvent(new Event('input')); // Attiva il calcolo degli amminoacidi
-            }
-            aggiornaColoreNutrienti();
-        }
-
-        /**
-         * Gestisce la logica completa di recupero dati da codice a barre.
-         * Prima controlla il database locale, poi interroga l'API di Open Food Facts.
-         * @param {string} barcode - Il codice a barre scansionato.
-         */
         async function fetchProductData(barcode) {
-            // 1. Controlla prima il DB locale
-            const existingFood = findFoodByBarcode(barcode);
-            if (existingFood) {
-                alert(`Codice a barre già presente in database. Carico i dati locali per "${existingFood.desc}".`);
-                populateFormWithDbData(existingFood);
-                return; // Interrompe l'esecuzione se l'alimento è già presente
-            }
-
-            // 2. Se non trovato, procede con la richiesta all'API
             barcodeScannerStatus.textContent = `Ricerca del prodotto con codice ${barcode}...`;
             photoOcrStatus.textContent = 'Ricerca dati...';
             photoOcrStatus.style.display = 'inline';
@@ -2172,59 +2161,7 @@
                     return;
                 }
 
-                // 3. Elabora e salva i nuovi dati dall'API
-                const product = data.product;
-                const productName = product.product_name || 'Prodotto Sconosciuto';
-                const sanitizedKey = sanitizeFirebaseKey(productName.toLowerCase());
-
-                const newFoodData = {
-                    desc: productName,
-                    barcode: barcode, // <-- SALVA IL CODICE A BARRE
-                    ingredienti: product.ingredients_text_it || product.ingredients_text || ''
-                };
-
-                const nutriments = product.nutriments || {};
-                const nutrientMap = { // Mapping da chiave API a chiave interna e moltiplicatore
-                    'energy-kcal_100g': { key: 'kcal', mult: 1 }, 'proteins_100g': { key: 'prot', mult: 1 },
-                    'carbohydrates_100g': { key: 'carb', mult: 1 }, 'sugars_100g': { key: 'zuccheri', mult: 1 },
-                    'fat_100g': { key: 'fatTotal', mult: 1 }, 'saturated-fat_100g': { key: 'fatSat', mult: 1 },
-                    'trans-fat_100g': { key: 'fatTrans', mult: 1 }, 'monounsaturated-fat_100g': { key: 'fatMono', mult: 1 },
-                    'polyunsaturated-fat_100g': { key: 'fatPoly', mult: 1 }, 'omega-3-fat_100g': { key: 'omega3', mult: 1 },
-                    'omega-6-fat_100g': { key: 'omega6', mult: 1 }, 'fiber_100g': { key: 'fibreTotali', mult: 1 },
-                    'calcium_100g': { key: 'ca', mult: 1000 }, 'iron_100g': { key: 'fe', mult: 1000 },
-                    'magnesium_100g': { key: 'mg', mult: 1000 }, 'potassium_100g': { key: 'k', mult: 1000 },
-                    'zinc_100g': { key: 'zn', mult: 1000 }, 'phosphorus_100g': { key: 'p', mult: 1000 },
-                    'vitamin-a_100g': { key: 'vitA', mult: 1000000 }, 'vitamin-d_100g': { key: 'vitD', mult: 1000000 },
-                    'vitamin-e_100g': { key: 'vitE', mult: 1000 }, 'vitamin-k_100g': { key: 'vitK', mult: 1000000 },
-                    'vitamin-c_100g': { key: 'vitc', mult: 1000 }, 'vitamin-b2_100g': { key: 'b2', mult: 1000 },
-                    'vitamin-b6_100g': { key: 'b6', mult: 1000 }, 'vitamin-b9_100g': { key: 'b9', mult: 1000000 },
-                    'vitamin-b12_100g': { key: 'vitB12', mult: 1000000 }
-                };
-                
-                for (const apiKey in nutrientMap) {
-                    if (nutriments[apiKey] !== undefined && nutriments[apiKey] !== null) {
-                        const { key, mult } = nutrientMap[apiKey];
-                        newFoodData[key] = parseFloat(nutriments[apiKey]) * mult;
-                    }
-                }
-
-                const protValue100g = newFoodData.prot || 0;
-                if (protValue100g > 0) {
-                    for (const amino in PROFILO_AMINOACIDICO_RIFERIMENTO) {
-                        if (!newFoodData.hasOwnProperty(amino)) {
-                            newFoodData[amino] = protValue100g * PROFILO_AMINOACIDICO_RIFERIMENTO[amino];
-                        }
-                    }
-                }
-                
-                // 4. Salva nel DB e aggiorna UI
-                foodDatabase[sanitizedKey] = newFoodData;
-                salvaFoodDatabase();
-                aggiornaDatalist();
-
-                populateFormWithDbData(newFoodData);
-
-                alert(`Dati per "${productName}" scaricati e salvati in database con successo!`);
+                populateFormWithData(data.product);
 
             } catch (error) {
                 console.error('Errore nel recupero dati prodotto:', error);
@@ -2233,11 +2170,58 @@
                 photoOcrStatus.style.display = 'none';
             }
         }
-        
-        // =================================================================
-        // =========== FINE CODICE MODIFICATO PER LA TUA RICHIESTA ===========
-        // =================================================================
 
+        function populateFormWithData(product) {
+            resetInputAlimento();
+            
+            const nutrientMap = {
+                'energy-kcal_100g': inputFields.kcal.el, 'proteins_100g': inputFields.prot.el,
+                'carbohydrates_100g': inputFields.carb.el, 'sugars_100g': inputFields.zuccheri.el,
+                'fat_100g': inputFields.fatTotal.el, 'saturated-fat_100g': inputFields.fatSat.el,
+                'trans-fat_100g': inputFields.fatTrans.el, 'monounsaturated-fat_100g': inputFields.fatMono.el,
+                'polyunsaturated-fat_100g': inputFields.fatPoly.el, 'omega-3-fat_100g': inputFields.omega3.el,
+                'omega-6-fat_100g': inputFields.omega6.el, 'fiber_100g': inputFields.fibreTotali.el,
+                'calcium_100g': inputFields.ca.el, 'iron_100g': inputFields.fe.el,
+                'magnesium_100g': inputFields.mg.el, 'potassium_100g': inputFields.k.el,
+                'zinc_100g': inputFields.zn.el, 'phosphorus_100g': inputFields.p.el,
+                'vitamin-a_100g': inputFields.vitA.el, 'vitamin-d_100g': inputFields.vitD.el,
+                'vitamin-e_100g': inputFields.vitE.el, 'vitamin-k_100g': inputFields.vitK.el,
+                'vitamin-c_100g': inputFields.vitc.el, 'vitamin-b2_100g': inputFields.b2.el,
+                'vitamin-b6_100g': inputFields.b6.el, 'vitamin-b9_100g': inputFields.b9.el,
+                'vitamin-b12_100g': inputFields.vitB12.el
+            };
+
+            builderDesc.value = product.product_name || 'Prodotto Sconosciuto';
+
+            const nutriments = product.nutriments || {};
+            for (const key in nutrientMap) {
+                if (nutriments[key] !== undefined && nutriments[key] !== null) {
+                    let value = parseFloat(nutriments[key]);
+                    
+                    if (['calcium_100g', 'iron_100g', 'magnesium_100g', 'potassium_100g', 'zinc_100g', 'phosphorus_100g', 'vitamin-e_100g', 'vitamin-c_100g', 'vitamin-b2_100g', 'vitamin-b6_100g'].includes(key)) {
+                        value *= 1000;
+                    } else if (['vitamin-a_100g', 'vitamin-d_100g', 'vitamin-k_100g', 'vitamin-b9_100g', 'vitamin-b12_100g'].includes(key)) {
+                        value *= 1000000;
+                    }
+                    
+                    nutrientMap[key].value = value.toFixed(2).replace(/\.00$/, '');
+                }
+            }
+            
+            const ingredients = product.ingredients_text_it || product.ingredients_text || '';
+            if (ingredients) {
+                const sanitizedKey = sanitizeFirebaseKey(builderDesc.value.toLowerCase());
+                if (!foodDatabase[sanitizedKey]) {
+                    foodDatabase[sanitizedKey] = { desc: builderDesc.value };
+                }
+                foodDatabase[sanitizedKey].ingredienti = ingredients;
+                salvaFoodDatabase();
+            }
+
+            alert(`Dati per "${builderDesc.value}" compilati con successo!`);
+            aggiornaColoreNutrienti();
+            builderProt.dispatchEvent(new Event('input'));
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             eseguiMigrazioneStorico(); 
@@ -2247,8 +2231,7 @@
             const barcodeModalCloseBtn = barcodeScannerModal.querySelector('.modal-close');
             barcodeModalCloseBtn.addEventListener('click', stopBarcodeScanner);
 
-            // ... (tutto il resto del codice degli event listener rimane invariato)
-             dailyNotesTextarea.addEventListener('input', () => {
+            dailyNotesTextarea.addEventListener('input', () => {
                 datiGiornalieri.note = dailyNotesTextarea.value;
                 salvaGiorno(giornoVisualizzato, datiGiornalieri);
             });
@@ -2523,8 +2506,9 @@
                     }
                 }
             });
-            
+
             builderDesc.addEventListener('input', (e) => {
+                renderSuggestions();
                 const sanitizedKey = sanitizeFirebaseKey(e.target.value.trim().toLowerCase());
                 const foodData = foodDatabase[sanitizedKey]; 
                 if (foodData) {
@@ -2538,6 +2522,36 @@
                 aggiornaColoreNutrienti();
             });
 
+            builderDesc.addEventListener('blur', () => {
+                setTimeout(() => {
+                    suggestionsContainer.style.display = 'none';
+                }, 200);
+            });
+
+            suggestionsContainer.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.suggestion-delete-btn');
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    const foodKey = deleteBtn.dataset.foodKey;
+                    if (foodKey && foodDatabase[foodKey]) {
+                        if (confirm(`Sei sicuro di voler cancellare "${foodDatabase[foodKey].desc}" dal database?`)) {
+                            delete foodDatabase[foodKey];
+                            salvaFoodDatabase();
+                            renderSuggestions(); // Refresh the list
+                        }
+                    }
+                    return;
+                }
+
+                const suggestionItem = e.target.closest('.suggestion-item');
+                if (suggestionItem) {
+                    const foodName = suggestionItem.querySelector('span').textContent;
+                    builderDesc.value = foodName;
+                    builderDesc.dispatchEvent(new Event('input', { bubbles:true }));
+                    suggestionsContainer.style.display = 'none';
+                }
+            });
+            
             Object.values(inputFields).forEach(field => { if (field.el) field.el.addEventListener('input', aggiornaColoreNutrienti) });
             
             document.getElementById('btn-compila-ai').addEventListener('click', async (e) => {
@@ -2854,6 +2868,3 @@
     </script>
 </body>
 </html>
-
-
-
