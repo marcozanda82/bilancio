@@ -2664,44 +2664,22 @@
                     const newData = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
                     const oldData = {};
-                    let isPopulated = false;
+                    let isAnyFieldPopulated = false;
                     for (const key in inputFields) {
                         const val = inputFields[key].el.value;
-                        if(val) isPopulated = true;
+                        if(val) isAnyFieldPopulated = true;
                         oldData[key] = val || null;
                     }
                     
-                    if (!isPopulated) {
+                    if (!isAnyFieldPopulated) {
                         for (const key in newData) {
-                            if (inputFields[key]) inputFields[key].el.value = newData[key];
+                            if (inputFields[key] && inputFields[key].el.value === '') {
+                                inputFields[key].el.value = newData[key];
+                            }
                         }
                         alert("Campi vuoti compilati con successo dall'AI.");
                     } else {
-                        const differences = [];
-                        const isSignificant = (oldVal, newVal) => {
-                            const oldNum = parseFloat(oldVal); const newNum = parseFloat(newVal);
-                            if (isNaN(newNum)) return false; 
-                            if (isNaN(oldNum)) return true; 
-                            if (oldNum === 0 && newNum !== 0) return true;
-                            if (oldNum !== 0 && newNum === 0) return true;
-                            if (oldNum === 0 && newNum === 0) return false;
-                            return Math.abs((newNum - oldNum) / oldNum) > 0.10; // 10% soglia
-                        };
-                        for (const key in newData) {
-                            if (inputFields[key] && isSignificant(oldData[key], newData[key])) {
-                                differences.push({ 
-                                    key, 
-                                    label: inputFields[key].label, 
-                                    oldVal: oldData[key] ?? 0, 
-                                    newVal: newData[key] ?? 0
-                                });
-                            }
-                        }
-                        if(differences.length > 0) {
-                            populateAndShowDiffModal(nome, differences);
-                        } else {
-                            alert("L'AI non ha trovato differenze significative rispetto ai dati attuali.");
-                        }
+                        handleNutrientUpdate(nome, oldData, newData);
                     }
                     aggiornaColoreNutrienti();
 
@@ -2853,8 +2831,9 @@
                     const newData = JSON.parse(jsonText);
                     const sanitizedKey = sanitizeFirebaseKey(foodName.toLowerCase());
                     const oldData = foodDatabase[sanitizedKey];
+                    const isAnyFieldPopulated = oldData && Object.keys(oldData).length > 3;
 
-                    if (!oldData || Object.keys(oldData).length <= 3) { 
+                    if (!isAnyFieldPopulated) { 
                         for (const key in newData) {
                             if (inputFields[key]) inputFields[key].el.value = newData[key];
                         }
@@ -2864,46 +2843,77 @@
                         return;
                     }
                     
-                    const differences = [];
-                    const isSignificant = (oldVal, newVal) => {
-                        const oldNum = parseFloat(oldVal); const newNum = parseFloat(newVal);
-                        if (isNaN(newNum)) return false; 
-                        if (isNaN(oldNum)) return true; 
-                        if (oldNum === 0 && newNum !== 0) return true;
-                        if (oldNum !== 0 && newNum === 0) return true;
-                        if (oldNum === 0 && newNum === 0) return false;
-                        return Math.abs((newNum - oldNum) / oldNum) > 0.10; // 10% soglia
-                    };
-
-                    for (const key in newData) {
-                        if (inputFields[key] && isSignificant(oldData[key], newData[key])) {
-                            differences.push({ 
-                                key, 
-                                label: inputFields[key].label, 
-                                oldVal: oldData[key] ?? 0, 
-                                newVal: newData[key] ?? 0
-                            });
-                        }
-                    }
-
-                    if(differences.length > 0) {
-                       populateAndShowDiffModal(foodName, differences);
-                    } else {
-                        for (const key in newData) {
-                            if (inputFields[key]) inputFields[key].el.value = newData[key];
-                        }
-                        manualJsonInput.value = '';
-                        aggiornaColoreNutrienti();
-                        alert("Nessuna differenza significativa trovata. I dati sono stati comunque aggiornati.");
-                    }
+                    handleNutrientUpdate(foodName, oldData, newData);
 
                 } catch (err) { alert('Errore nel formato JSON: ' + err.message); }
             });
 
-            function populateAndShowDiffModal(foodName, differences) {
+            function handleNutrientUpdate(foodName, oldData, newData) {
+                const SIGNIFICANT_DIFF_THRESHOLD = 0.10; // 10%
+                const MINOR_DIFF_THRESHOLD = 0.02;     // 2%
+
+                const differencesForModal = [];
+                const autoAveragedValues = {};
+                let averagedCount = 0;
+
+                for (const key in newData) {
+                    if (!inputFields[key]) continue;
+
+                    const oldVal = parseFloat(oldData[key]);
+                    const newVal = parseFloat(newData[key]);
+                    
+                    if (isNaN(newVal)) continue;
+                    if (isNaN(oldVal)) {
+                        autoAveragedValues[key] = newVal;
+                        continue;
+                    }
+
+                    if (oldVal === 0 && newVal === 0) continue;
+                    
+                    const diffPercent = (oldVal === 0) ? Infinity : Math.abs((newVal - oldVal) / oldVal);
+
+                    if (diffPercent > SIGNIFICANT_DIFF_THRESHOLD) {
+                        differencesForModal.push({ 
+                            key, 
+                            label: inputFields[key].label, 
+                            oldVal: oldData[key] ?? 0, 
+                            newVal: newData[key] ?? 0
+                        });
+                    } else if (diffPercent > MINOR_DIFF_THRESHOLD) {
+                        autoAveragedValues[key] = (oldVal + newVal) / 2;
+                        averagedCount++;
+                    }
+                }
+                
+                const finalData = { ...oldData, ...autoAveragedValues };
+
+                if (differencesForModal.length > 0) {
+                    populateAndShowDiffModal(foodName, differencesForModal, finalData);
+                } else {
+                    const sanitizedKey = sanitizeFirebaseKey(foodName.toLowerCase());
+                    foodDatabase[sanitizedKey] = finalData;
+                    salvaFoodDatabase();
+                    
+                    for (const key in finalData) {
+                        if (inputFields[key]) {
+                            inputFields[key].el.value = finalData[key] ?? '';
+                        }
+                    }
+                    manualJsonInput.value = '';
+                    let alertMessage = "Nessuna differenza rilevante trovata. ";
+                    if(averagedCount > 0) {
+                        alertMessage += `${averagedCount} valori simili sono stati aggiornati automaticamente con la loro media.`
+                    }
+                    alert(alertMessage);
+                }
+            }
+
+            function populateAndShowDiffModal(foodName, differences, initialData) {
                 const diffList = document.getElementById('diff-modal-list');
                 document.getElementById('diff-modal-title').textContent = `Confronta Valori per "${foodName}"`;
                 diffList.innerHTML = '';
+                diffList.dataset.initialData = JSON.stringify(initialData);
+
                 differences.forEach(({key, label, oldVal, newVal}) => {
                     const item = document.createElement('div');
                     item.className = 'diff-item';
@@ -2925,7 +2935,8 @@
             document.getElementById('btn-apply-diff').addEventListener('click', () => {
                 const foodName = builderDesc.value.trim();
                 const sanitizedKey = sanitizeFirebaseKey(foodName.toLowerCase());
-                const updatedData = { ...foodDatabase[sanitizedKey] };
+                const diffList = document.getElementById('diff-modal-list');
+                const updatedData = JSON.parse(diffList.dataset.initialData);
 
                 document.querySelectorAll('#diff-modal-list .diff-item').forEach(item => {
                     const key = item.dataset.key;
