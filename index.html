@@ -353,7 +353,6 @@
             justify-content: flex-end;
         }
 
-        /* --- NUOVI STILI PER I SUGGERIMENTI --- */
         #custom-suggestions {
             display: none;
             position: absolute;
@@ -395,8 +394,18 @@
             background-color: #ffebee;
             border-radius: 50%;
         }
-        /* --- FINE NUOVI STILI --- */
-
+        #btn-clear-dettagli {
+            background: none;
+            border: none;
+            color: #d32f2f;
+            font-size: 1em;
+            cursor: pointer;
+            padding: 0 10px;
+            opacity: 0.7;
+        }
+        #btn-clear-dettagli:hover {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -617,7 +626,11 @@
                     <div><label>Fibre Totali/100g</label><input type="number" id="builder-fibre-totali" step="0.1"></div>
                 </div>
                 <h2 class="collapsible-header" id="nutrients-header">
-                    Dettagli Nutrizionali <span class="arrow">▶</span>
+                    <span>Dettagli Nutrizionali</span>
+                    <div>
+                        <button id="btn-clear-dettagli" title="Pulisci Dettagli Nutrizionali"><i class="fas fa-eraser"></i></button>
+                        <span class="arrow">▶</span>
+                    </div>
                 </h2>
                 <div class="collapsible-content" id="nutrients-content">
                     <div class="builder-grid">
@@ -1553,18 +1566,19 @@
             });
         }
 
-function renderSuggestions() {
+        function renderSuggestions() {
             const value = builderDesc.value.toLowerCase();
             suggestionsContainer.innerHTML = '';
-            if (value.length < 1) {
-                suggestionsContainer.style.display = 'none';
-                return;
+            
+            let keysToShow = Object.keys(foodDatabase);
+
+            if (value.length > 0) {
+                keysToShow = keysToShow.filter(key => 
+                    foodDatabase[key] && foodDatabase[key].desc && foodDatabase[key].desc.toLowerCase().includes(value)
+                );
             }
 
-            const matches = Object.keys(foodDatabase)
-                // MODIFICA QUI: Aggiunto un controllo per assicurarsi che l'alimento e il suo nome esistano
-                .filter(key => foodDatabase[key] && foodDatabase[key].desc && foodDatabase[key].desc.toLowerCase().includes(value))
-                .sort((a, b) => foodDatabase[a].desc.localeCompare(foodDatabase[b].desc));
+            const matches = keysToShow.sort((a, b) => foodDatabase[a].desc.localeCompare(foodDatabase[b].desc));
 
             if (matches.length > 0) {
                 matches.forEach(sanitizedKey => {
@@ -1758,6 +1772,23 @@ function renderSuggestions() {
             builderQta.value = '';
             Object.values(inputFields).forEach(field => field.el.value = ''); 
             builderDesc.focus(); 
+        }
+
+        function clearDettagliNutrizionali() {
+            const mainFields = new Set(['prot', 'kcal', 'carb', 'zuccheri', 'fatTotal', 'fatSat', 'fibreTotali']);
+            for (const key in inputFields) {
+                if (!mainFields.has(key)) {
+                    inputFields[key].el.value = '';
+                }
+            }
+            Object.keys(OBIETTIVI_AMINO).forEach(key => {
+                if (inputFields[key]) {
+                    inputFields[key].el.disabled = false;
+                    inputFields[key].el.style.backgroundColor = '#ffffff';
+                }
+            });
+            aggiornaColoreNutrienti();
+            alert("I campi dei dettagli nutrizionali sono stati puliti.");
         }
 
         function aggiornaColoreNutrienti() {
@@ -2366,11 +2397,18 @@ function renderSuggestions() {
               });
             }
         
-            ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header', 'fibre-header'].forEach(id => {
-                document.getElementById(id).addEventListener('click', () => toggleCollapsible(id, id.replace('header', 'content')));
+            ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
+                const header = document.getElementById(id);
+                if(header) {
+                    header.addEventListener('click', (e) => {
+                        if(e.target.closest('button')) return;
+                        toggleCollapsible(id, id.replace('header', 'content'));
+                    });
+                }
             });
             
             btnClearNutrients.addEventListener('click', () => { 
+                if(!confirm("Sei sicuro di voler cancellare tutti i campi (nome, quantità e nutrienti)?")) return;
                 resetInputAlimento(); 
                 Object.keys(OBIETTIVI_AMINO).forEach(key => {
                     if(inputFields[key]) {
@@ -2379,6 +2417,13 @@ function renderSuggestions() {
                     }
                 });
                 aggiornaColoreNutrienti(); 
+            });
+
+            document.getElementById('btn-clear-dettagli').addEventListener('click', (e) => {
+                e.stopPropagation();
+                if(confirm("Sei sicuro di voler cancellare solo i valori nei Dettagli Nutrizionali?")) {
+                    clearDettagliNutrizionali();
+                }
             });
 
             builderProt.addEventListener('input', () => {
@@ -2507,7 +2552,7 @@ function renderSuggestions() {
                     }
                 }
             });
-
+            
             builderDesc.addEventListener('input', (e) => {
                 renderSuggestions();
                 const sanitizedKey = sanitizeFirebaseKey(e.target.value.trim().toLowerCase());
@@ -2522,6 +2567,8 @@ function renderSuggestions() {
                 }
                 aggiornaColoreNutrienti();
             });
+
+            builderDesc.addEventListener('focus', renderSuggestions);
 
             builderDesc.addEventListener('blur', () => {
                 setTimeout(() => {
@@ -2869,4 +2916,3 @@ function renderSuggestions() {
     </script>
 </body>
 </html>
-
