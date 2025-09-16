@@ -1553,7 +1553,7 @@
             });
         }
 
-        function renderSuggestions() {
+function renderSuggestions() {
             const value = builderDesc.value.toLowerCase();
             suggestionsContainer.innerHTML = '';
             if (value.length < 1) {
@@ -1562,10 +1562,11 @@
             }
 
             const matches = Object.keys(foodDatabase)
-                .filter(key => foodDatabase[key].desc.toLowerCase().includes(value))
-                .sort((a,b) => foodDatabase[a].desc.localeCompare(foodDatabase[b].desc));
-            
-            if(matches.length > 0) {
+                // MODIFICA QUI: Aggiunto un controllo per assicurarsi che l'alimento e il suo nome esistano
+                .filter(key => foodDatabase[key] && foodDatabase[key].desc && foodDatabase[key].desc.toLowerCase().includes(value))
+                .sort((a, b) => foodDatabase[a].desc.localeCompare(foodDatabase[b].desc));
+
+            if (matches.length > 0) {
                 matches.forEach(sanitizedKey => {
                     const originalDesc = foodDatabase[sanitizedKey].desc;
                     const itemDiv = document.createElement('div');
@@ -2868,3 +2869,4 @@
     </script>
 </body>
 </html>
+
