@@ -2651,7 +2651,6 @@
                     if (foodData && foodData.ingredienti) {
                         ingredientiInfo = `Considerando questa lista ingredienti: "${foodData.ingredienti}".`;
                     }
-
                     let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${ingredientiInfo} ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
                     
                     const res = await fetch(GEMINI_ENDPOINT, {
@@ -2659,19 +2658,59 @@
                         body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                     });
                     if (!res.ok) throw new Error(`Errore dal server AI: ${res.statusText}`);
+                    
                     const data = await res.json();
                     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    const resObj = JSON.parse(raw.replace(/```json|```/g, '').trim());
+                    const newData = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
+                    const oldData = {};
+                    let isPopulated = false;
                     for (const key in inputFields) {
-                        if (inputFields[key].el.value === '' && typeof resObj[key] !== 'undefined') {
-                            inputFields[key].el.value = resObj[key] ?? '';
+                        const val = inputFields[key].el.value;
+                        if(val) isPopulated = true;
+                        oldData[key] = val || null;
+                    }
+                    
+                    if (!isPopulated) {
+                        for (const key in newData) {
+                            if (inputFields[key]) inputFields[key].el.value = newData[key];
+                        }
+                        alert("Campi vuoti compilati con successo dall'AI.");
+                    } else {
+                        const differences = [];
+                        const isSignificant = (oldVal, newVal) => {
+                            const oldNum = parseFloat(oldVal); const newNum = parseFloat(newVal);
+                            if (isNaN(newNum)) return false; 
+                            if (isNaN(oldNum)) return true; 
+                            if (oldNum === 0 && newNum !== 0) return true;
+                            if (oldNum !== 0 && newNum === 0) return true;
+                            if (oldNum === 0 && newNum === 0) return false;
+                            return Math.abs((newNum - oldNum) / oldNum) > 0.10; // 10% soglia
+                        };
+                        for (const key in newData) {
+                            if (inputFields[key] && isSignificant(oldData[key], newData[key])) {
+                                differences.push({ 
+                                    key, 
+                                    label: inputFields[key].label, 
+                                    oldVal: oldData[key] ?? 0, 
+                                    newVal: newData[key] ?? 0
+                                });
+                            }
+                        }
+                        if(differences.length > 0) {
+                            populateAndShowDiffModal(nome, differences);
+                        } else {
+                            alert("L'AI non ha trovato differenze significative rispetto ai dati attuali.");
                         }
                     }
                     aggiornaColoreNutrienti();
 
-                } catch (err) { alert('Errore compilazione AI: ' + err.message);
-                } finally { button.disabled = false; button.textContent = 'Compila AI'; }
+                } catch (err) { 
+                    alert('Errore compilazione AI: ' + err.message);
+                } finally { 
+                    button.disabled = false; 
+                    button.textContent = 'Compila AI'; 
+                }
             });
             
             dataCaricamentoInput.value = getTodayString('ymd');
@@ -2828,7 +2867,8 @@
                     const differences = [];
                     const isSignificant = (oldVal, newVal) => {
                         const oldNum = parseFloat(oldVal); const newNum = parseFloat(newVal);
-                        if (isNaN(oldNum) || isNaN(newNum)) return false;
+                        if (isNaN(newNum)) return false; 
+                        if (isNaN(oldNum)) return true; 
                         if (oldNum === 0 && newNum !== 0) return true;
                         if (oldNum !== 0 && newNum === 0) return true;
                         if (oldNum === 0 && newNum === 0) return false;
@@ -2847,25 +2887,7 @@
                     }
 
                     if(differences.length > 0) {
-                        const diffList = document.getElementById('diff-modal-list');
-                        document.getElementById('diff-modal-title').textContent = `Confronta Valori per "${foodName}"`;
-                        diffList.innerHTML = '';
-                        differences.forEach(({key, label, oldVal, newVal}) => {
-                            const item = document.createElement('div');
-                            item.className = 'diff-item';
-                            item.dataset.key = key;
-                            item.dataset.oldVal = oldVal;
-                            item.dataset.newVal = newVal;
-                            item.innerHTML = `
-                                <span class="diff-item-label">${label.replace('/100g', '')}</span>
-                                <div class="diff-item-choices">
-                                    <label><input type="radio" name="diff-${key}" value="current" checked> <span class="current-value">Corrente: ${oldVal}</span></label>
-                                    <label><input type="radio" name="diff-${key}" value="new"> <span class="new-value">Nuovo: ${newVal}</span></label>
-                                </div>
-                            `;
-                            diffList.appendChild(item);
-                        });
-                        diffModal.style.display = 'block';
+                       populateAndShowDiffModal(foodName, differences);
                     } else {
                         for (const key in newData) {
                             if (inputFields[key]) inputFields[key].el.value = newData[key];
@@ -2877,6 +2899,28 @@
 
                 } catch (err) { alert('Errore nel formato JSON: ' + err.message); }
             });
+
+            function populateAndShowDiffModal(foodName, differences) {
+                const diffList = document.getElementById('diff-modal-list');
+                document.getElementById('diff-modal-title').textContent = `Confronta Valori per "${foodName}"`;
+                diffList.innerHTML = '';
+                differences.forEach(({key, label, oldVal, newVal}) => {
+                    const item = document.createElement('div');
+                    item.className = 'diff-item';
+                    item.dataset.key = key;
+                    item.dataset.oldVal = oldVal;
+                    item.dataset.newVal = newVal;
+                    item.innerHTML = `
+                        <span class="diff-item-label">${label.replace('/100g', '')}</span>
+                        <div class="diff-item-choices">
+                            <label><input type="radio" name="diff-${key}" value="current" checked> <span class="current-value">Corrente: ${oldVal}</span></label>
+                            <label><input type="radio" name="diff-${key}" value="new"> <span class="new-value">Nuovo: ${newVal}</span></label>
+                        </div>
+                    `;
+                    diffList.appendChild(item);
+                });
+                diffModal.style.display = 'block';
+            }
             
             document.getElementById('btn-apply-diff').addEventListener('click', () => {
                 const foodName = builderDesc.value.trim();
@@ -2907,7 +2951,7 @@
             document.getElementById('btn-cancel-diff').addEventListener('click', () => {
                 diffModal.style.display = 'none';
             });
-
+            
             btnEditIngredients.addEventListener('click', () => {
                 const foodName = builderDesc.value.trim();
                 openIngredientModal(foodName, false);
