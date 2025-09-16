@@ -406,6 +406,22 @@
         #btn-clear-dettagli:hover {
             opacity: 1;
         }
+        .diff-item { 
+            padding: 12px 8px; 
+            border-bottom: 1px solid #f0f0f0; 
+            display: grid; 
+            grid-template-columns: 150px 1fr; 
+            gap: 15px; 
+            align-items: center; 
+            font-size: 0.9em;
+        }
+        .diff-item:last-child { border-bottom: none; }
+        .diff-item-label { font-weight: bold; }
+        .diff-item-choices { display: flex; flex-direction: column; gap: 8px; }
+        .diff-item-choices label { font-weight: normal; display: flex; align-items: center; gap: 8px; margin: 0; cursor: pointer;}
+        .diff-item-choices input[type="radio"] { margin: 0; }
+        .diff-item-choices .current-value { color: #1976d2; }
+        .diff-item-choices .new-value { color: #2e7d32; }
     </style>
 </head>
 <body>
@@ -627,7 +643,7 @@
                 </div>
                 <h2 class="collapsible-header" id="nutrients-header">
                     <span>Dettagli Nutrizionali</span>
-                    <div>
+                    <div style="display: flex; align-items: center;">
                         <button id="btn-clear-dettagli" title="Pulisci Dettagli Nutrizionali"><i class="fas fa-eraser"></i></button>
                         <span class="arrow">▶</span>
                     </div>
@@ -968,6 +984,20 @@
         </div>
     </div>
 
+    <div id="diff-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" data-modal="diff-modal">&times;</span>
+            <h2 id="diff-modal-title">Confronta Valori Nutrizionali</h2>
+            <p>Sono state trovate differenze significative. Scegli quali valori mantenere per ogni nutriente.</p>
+            <div id="diff-modal-list" style="max-height: 50vh; overflow-y: auto; padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-top: 15px;">
+                </div>
+            <div class="nutrient-confirm-buttons" style="margin-top: 20px;">
+                <button id="btn-cancel-diff" style="background-color: #607d8b;">Annulla</button>
+                <button id="btn-apply-diff" style="background-color: #2e7d32;">Applica Modifiche</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" type="module"></script> 
@@ -1048,7 +1078,7 @@
         const API_KEY_AI = "AIzaSyCZUoiawXYzrqDLh1m0O0Wnt5ZhR3wP9Ac";
         const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY_AI}`;
         const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"fibreTotali":g,"fibreSolubili":g,"fibreInsolubili":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
-        const AI_INSTRUCTION = "Se un valore non è disponibile fai una stima e usa il valore medio";
+        const AI_INSTRUCTION = "Agisci come un esperto nutrizionista. Basa le tue risposte su database nutrizionali affidabili (come IEO, USDA, CREA). Se un valore non è disponibile, fornisci una stima scientificamente plausibile basata sulla composizione dell'alimento. Per gli amminoacidi, fornisci un profilo specifico per la fonte proteica dell'alimento, non un profilo generico. Assicurati che le unità di misura siano corrette come specificato nel formato JSON richiesto.";
 
         const authSection = document.getElementById('auth-section');
         const userEmailInput = document.getElementById('user-email');
@@ -1129,48 +1159,49 @@
         const barcodeScannerModal = document.getElementById('barcode-scanner-modal');
         const barcodeScannerVideo = document.getElementById('barcode-scanner-video');
         const barcodeScannerStatus = document.getElementById('barcode-scanner-status');
+        const diffModal = document.getElementById('diff-modal');
         let videoStream = null;
 
         const inputFields = {
-            prot: { el: builderProt, label: 'Proteine (g)' },
-            kcal: { el: builderKcal, label: 'Calorie (kcal)' },
-            carb: { el: builderCarb, label: 'Carboidrati (g)' },
-            zuccheri: { el: builderZuccheri, label: 'di cui Zuccheri (g)' },
-            fatTotal: { el: builderFatTotal, label: 'Grassi Totali (g)' },
-            fatSat: { el: builderFatSat, label: 'di cui Saturi (g)' },
-            fatTrans: { el: builderFatTrans, label: 'di cui Trans (g)' },
-            fatMono: { el: builderFatMono, label: 'di cui Monoinsaturi (g)' },
-            fatPoly: { el: builderFatPoly, label: 'di cui Polinsaturi (g)' },
-            omega3: { el: builderOmega3, label: 'Omega 3 (g)' },
-            omega6: { el: builderOmega6, label: 'Omega 6 (g)' },
-            fibreTotali: { el: builderFibreTotali, label: 'Fibre (g)' },
-            fibreSolubili: { el: builderFibreSolubili, label: 'Fibre Solubili (g)' },
-            fibreInsolubili: { el: builderFibreInsolubili, label: 'Fibre Insolubili (g)' },
-            mg: { el: builderMg, label: 'Magnesio (mg)' },
-            k: { el: builderK, label: 'Potassio (mg)' },
-            vitc: { el: builderVitC, label: 'Vitamina C (mg)' },
-            ca: { el: builderCa, label: 'Calcio (mg)' },
-            fe: { el: builderFe, label: 'Ferro (mg)' },
-            zn: { el: builderZn, label: 'Zinco (mg)' },
-            cu: { el: builderCu, label: 'Rame (mg)' },
-            p: { el: builderP, label: 'Fosforo (mg)' },
-            vitA: { el: builderVitA, label: 'Vitamina A (µg)' },
-            vitB12: { el: builderVitB12, label: 'Vitamina B12 (µg)' },
-            vitD: { el: builderVitD, label: 'Vitamina D (µg)' },
-            vitE: { el: builderVitE, label: 'Vitamina E (mg)' },
-            vitK: { el: builderVitK, label: 'Vitamina K (µg)' },
-            b9: { el: builderB9, label: 'Folati (B9) (µg)' },
-            b2: { el: builderB2, label: 'Vitamina B2 (mg)' },
-            b6: { el: builderB6, label: 'Vitamina B6 (mg)' },
-            leu: { el: builderLeu, label: 'Leucina (mg)' },
-            iso: { el: builderIso, label: 'Isoleucina (mg)' },
-            val: { el: builderVal, label: 'Valina (mg)' },
-            lys: { el: builderLys, label: 'Lisina (mg)' },
-            met: { el: builderMet, label: 'Metionina (mg)' },
-            phe: { el: builderPhe, label: 'Fenilalanina (mg)' },
-            thr: { el: builderThr, label: 'Treonina (mg)' },
-            trp: { el: builderTrp, label: 'Triptofano (mg)' },
-            his: { el: builderHis, label: 'Istidina (mg)' }
+            prot: { el: builderProt, label: 'Proteine/100g' },
+            kcal: { el: builderKcal, label: 'Kcal/100g' },
+            carb: { el: builderCarb, label: 'Carboidrati/100g' },
+            zuccheri: { el: builderZuccheri, label: 'Zuccheri/100g' },
+            fatTotal: { el: builderFatTotal, label: 'Grassi Totali/100g' },
+            fatSat: { el: builderFatSat, label: 'Gr. Saturi/100g' },
+            fatTrans: { el: builderFatTrans, label: 'Gr. Trans/100g' },
+            fatMono: { el: builderFatMono, label: 'Gr. Monoinsaturi/100g' },
+            fatPoly: { el: builderFatPoly, label: 'Gr. Polinsaturi/100g' },
+            omega3: { el: builderOmega3, label: 'Omega 3/100g' },
+            omega6: { el: builderOmega6, label: 'Omega 6/100g' },
+            fibreTotali: { el: builderFibreTotali, label: 'Fibre Totali/100g' },
+            fibreSolubili: { el: builderFibreSolubili, label: 'Fibre Solubili/100g' },
+            fibreInsolubili: { el: builderFibreInsolubili, label: 'Fibre Insolubili/100g' },
+            mg: { el: builderMg, label: 'Magnesio (mg)/100g' },
+            k: { el: builderK, label: 'Potassio (mg)/100g' },
+            vitc: { el: builderVitC, label: 'Vitamina C (mg)/100g' },
+            ca: { el: builderCa, label: 'Calcio (mg)/100g' },
+            fe: { el: builderFe, label: 'Ferro (mg)/100g' },
+            zn: { el: builderZn, label: 'Zinco (mg)/100g' },
+            cu: { el: builderCu, label: 'Rame (mg)/100g' },
+            p: { el: builderP, label: 'Fosforo (mg)/100g' },
+            vitA: { el: builderVitA, label: 'Vit. A (μg)/100g' },
+            vitB12: { el: builderVitB12, label: 'Vit. B12 (μg)/100g' },
+            vitD: { el: builderVitD, label: 'Vit. D (μg)/100g' },
+            vitE: { el: builderVitE, label: 'Vit. E (mg)/100g' },
+            vitK: { el: builderVitK, label: 'Vit. K (μg)/100g' },
+            b9: { el: builderB9, label: 'Folati B9 (μg)/100g' },
+            b2: { el: builderB2, label: 'Vit. B2 (mg)/100g' },
+            b6: { el: builderB6, label: 'Vit. B6 (mg)/100g' },
+            leu: { el: builderLeu, label: 'Leucina (mg)/100g' },
+            iso: { el: builderIso, label: 'Isoleucina (mg)/100g' },
+            val: { el: builderVal, label: 'Valina (mg)/100g' },
+            lys: { el: builderLys, label: 'Lisina (mg)/100g' },
+            met: { el: builderMet, label: 'Metionina (mg)/100g' },
+            phe: { el: builderPhe, label: 'Fenilalanina (mg)/100g' },
+            thr: { el: builderThr, label: 'Treonina (mg)/100g' },
+            trp: { el: builderTrp, label: 'Triptofano (mg)/100g' },
+            his: { el: builderHis, label: 'Istidina (mg)/100g' }
         };
 
         const spanTotaleProteine = document.getElementById('totale-proteine'), spanObiettivoProteine = document.getElementById('obiettivo-proteine'), progressProteine = document.getElementById('progress-proteine');
@@ -1578,7 +1609,12 @@
                 );
             }
 
-            const matches = keysToShow.sort((a, b) => foodDatabase[a].desc.localeCompare(foodDatabase[b].desc));
+            const matches = keysToShow.sort((a, b) => {
+                const descA = foodDatabase[a]?.desc || '';
+                const descB = foodDatabase[b]?.desc || '';
+                return descA.localeCompare(descB);
+            });
+
 
             if (matches.length > 0) {
                 matches.forEach(sanitizedKey => {
@@ -2397,7 +2433,7 @@
               });
             }
         
-            ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header'].forEach(id => {
+            ['carbs-header', 'fats-header', 'micro-header', 'vit-header', 'workout-header', 'nutrients-header', 'fibre-header'].forEach(id => {
                 const header = document.getElementById(id);
                 if(header) {
                     header.addEventListener('click', (e) => {
@@ -2616,7 +2652,7 @@
                         ingredientiInfo = `Considerando questa lista ingredienti: "${foodData.ingredienti}".`;
                     }
 
-                    let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${ingredientiInfo} Presta particolare attenzione: i valori per Omega 3 e Omega 6 devono essere in grammi (g), non in milligrammi (mg). ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
+                    let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${ingredientiInfo} ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
                     
                     const res = await fetch(GEMINI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2768,18 +2804,108 @@
             });
 
             btnConfirmJson.addEventListener('click', () => {
-                const jsonText = manualJsonInput.value.trim(); 
+                const jsonText = manualJsonInput.value.trim();
+                const foodName = builderDesc.value.trim();
+
                 if (!jsonText) { alert('Incolla prima il testo JSON.'); return; }
+                if (!foodName) { alert("Inserisci il nome dell'alimento prima di confermare i dati JSON."); return; }
+                
                 try {
-                    const resObj = JSON.parse(jsonText);
-                    for (const key in inputFields) {
-                        if (inputFields[key].el.value === '' && typeof resObj[key] !== 'undefined') {
-                            inputFields[key].el.value = resObj[key];
+                    const newData = JSON.parse(jsonText);
+                    const sanitizedKey = sanitizeFirebaseKey(foodName.toLowerCase());
+                    const oldData = foodDatabase[sanitizedKey];
+
+                    if (!oldData || Object.keys(oldData).length <= 3) { 
+                        for (const key in newData) {
+                            if (inputFields[key]) inputFields[key].el.value = newData[key];
+                        }
+                        manualJsonInput.value = '';
+                        aggiornaColoreNutrienti();
+                        alert("Dati JSON compilati con successo.");
+                        return;
+                    }
+                    
+                    const differences = [];
+                    const isSignificant = (oldVal, newVal) => {
+                        const oldNum = parseFloat(oldVal); const newNum = parseFloat(newVal);
+                        if (isNaN(oldNum) || isNaN(newNum)) return false;
+                        if (oldNum === 0 && newNum !== 0) return true;
+                        if (oldNum !== 0 && newNum === 0) return true;
+                        if (oldNum === 0 && newNum === 0) return false;
+                        return Math.abs((newNum - oldNum) / oldNum) > 0.10; // 10% soglia
+                    };
+
+                    for (const key in newData) {
+                        if (inputFields[key] && isSignificant(oldData[key], newData[key])) {
+                            differences.push({ 
+                                key, 
+                                label: inputFields[key].label, 
+                                oldVal: oldData[key] ?? 0, 
+                                newVal: newData[key] ?? 0
+                            });
                         }
                     }
-                    manualJsonInput.value = '';
-                    aggiornaColoreNutrienti();
-                } catch (err) { alert('Errore nel formato JSON.'); }
+
+                    if(differences.length > 0) {
+                        const diffList = document.getElementById('diff-modal-list');
+                        document.getElementById('diff-modal-title').textContent = `Confronta Valori per "${foodName}"`;
+                        diffList.innerHTML = '';
+                        differences.forEach(({key, label, oldVal, newVal}) => {
+                            const item = document.createElement('div');
+                            item.className = 'diff-item';
+                            item.dataset.key = key;
+                            item.dataset.oldVal = oldVal;
+                            item.dataset.newVal = newVal;
+                            item.innerHTML = `
+                                <span class="diff-item-label">${label.replace('/100g', '')}</span>
+                                <div class="diff-item-choices">
+                                    <label><input type="radio" name="diff-${key}" value="current" checked> <span class="current-value">Corrente: ${oldVal}</span></label>
+                                    <label><input type="radio" name="diff-${key}" value="new"> <span class="new-value">Nuovo: ${newVal}</span></label>
+                                </div>
+                            `;
+                            diffList.appendChild(item);
+                        });
+                        diffModal.style.display = 'block';
+                    } else {
+                        for (const key in newData) {
+                            if (inputFields[key]) inputFields[key].el.value = newData[key];
+                        }
+                        manualJsonInput.value = '';
+                        aggiornaColoreNutrienti();
+                        alert("Nessuna differenza significativa trovata. I dati sono stati comunque aggiornati.");
+                    }
+
+                } catch (err) { alert('Errore nel formato JSON: ' + err.message); }
+            });
+            
+            document.getElementById('btn-apply-diff').addEventListener('click', () => {
+                const foodName = builderDesc.value.trim();
+                const sanitizedKey = sanitizeFirebaseKey(foodName.toLowerCase());
+                const updatedData = { ...foodDatabase[sanitizedKey] };
+
+                document.querySelectorAll('#diff-modal-list .diff-item').forEach(item => {
+                    const key = item.dataset.key;
+                    const choice = item.querySelector('input[type="radio"]:checked').value;
+                    const valueToKeep = (choice === 'new') ? item.dataset.newVal : item.dataset.oldVal;
+                    updatedData[key] = parseFloat(valueToKeep);
+                });
+                
+                foodDatabase[sanitizedKey] = updatedData;
+                salvaFoodDatabase();
+
+                for (const key in updatedData) {
+                    if (inputFields[key]) {
+                        inputFields[key].el.value = updatedData[key] ?? '';
+                    }
+                }
+                
+                diffModal.style.display = 'none';
+                manualJsonInput.value = '';
+                alert(`Valori per "${foodName}" aggiornati con successo.`);
+            });
+
+            document.getElementById('btn-cancel-diff').addEventListener('click', () => {
+                diffModal.style.display = 'none';
             });
 
             btnEditIngredients.addEventListener('click', () => {
