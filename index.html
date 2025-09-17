@@ -1562,14 +1562,15 @@
         }
 
         /**
-         * FUNZIONE CORRETTA - Calcola il bilancio calorico settimanale basandosi sulla logica del file storico.html
+         * FUNZIONE DI DEBUG - Stampa i calcoli nella console (F12)
          */
         function calculateWeeklyCalorieBalance() {
+            console.clear(); // Pulisce la console per una lettura chiara
+            console.log("--- INIZIO CALCOLO BILANCIO SETTIMANALE ---");
             let weeklyDifference = 0;
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Normalizza a mezzanotte
+            today.setHours(0, 0, 0, 0);
 
-            // Cicla per i 7 giorni precedenti, da ieri (i=1) a 7 giorni prima di ieri (i=7)
             for (let i = 1; i <= 7; i++) {
                 const dateToCheck = new Date(today);
                 dateToCheck.setDate(today.getDate() - i);
@@ -1577,13 +1578,15 @@
                 const dayOfWeek = dateToCheck.getDay();
 
                 const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
-                if (!dailyDataRaw) continue;
+                if (!dailyDataRaw) {
+                    console.log(`Giorno ${dateString}: NESSUN DATO TROVATO`);
+                    continue;
+                }
 
                 try {
                     const dailyData = JSON.parse(dailyDataRaw);
                     if (!dailyData || !dailyData.log) continue;
 
-                    // 1. Calcola le calorie consumate dal log
                     let consumedKcal = 0;
                     dailyData.log.forEach(entry => {
                         if (entry.type !== 'workout') {
@@ -1594,25 +1597,28 @@
                         }
                     });
 
-                    // Se non hai mangiato nulla quel giorno, non considerarlo nel bilancio
-                    if (consumedKcal === 0) continue;
+                    if (consumedKcal === 0) {
+                        console.log(`Giorno ${dateString}: Nessuna caloria consumata, giorno saltato.`);
+                        continue;
+                    }
 
-                    // 2. Calcola l'obiettivo DIETETICO del giorno (SENZA workout)
                     const pianoDelGiorno = PIANO_SETTIMANALE[dayOfWeek] || PIANO_SETTIMANALE[1];
                     const adjustment = dailyData.calorieAdjustment !== undefined 
                         ? dailyData.calorieAdjustment 
                         : (DEFICIT_PREIMPOSTATO_SETTIMANALE[dayOfWeek] || 0);
                     
-                    // La logica corretta da storico.html: l'obiettivo non include il workout
                     const targetKcal = pianoDelGiorno.cal_base + adjustment;
+                    const dailyDifference = consumedKcal - targetKcal;
+                    weeklyDifference += dailyDifference;
 
-                    // 3. Aggiungi la differenza (consumo vs obiettivo DIETETICO) al totale settimanale
-                    weeklyDifference += (consumedKcal - targetKcal);
+                    console.log(`Giorno ${dateString}: Consumo=${consumedKcal.toFixed(0)}, Correzione=${adjustment}, Obiettivo=${targetKcal.toFixed(0)} -> Bilancio Giorno: ${dailyDifference.toFixed(0)}`);
 
                 } catch (e) {
-                    console.error(`Errore nel calcolo del bilancio per il giorno ${dateString}:`, e);
+                    console.error(`ERRORE nel calcolo per il giorno ${dateString}:`, e);
                 }
             }
+            console.log(`--- FINE CALCOLO ---`);
+            console.log(`BILANCIO SETTIMANALE FINALE: ${weeklyDifference.toFixed(0)} kcal`);
             return weeklyDifference;
         }
 
