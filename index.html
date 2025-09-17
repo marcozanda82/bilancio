@@ -428,6 +428,9 @@
     <div class="container">
         <h1>Tracker Nutrizionale Marco</h1>
         
+        <div id="weekly-calorie-summary" class="sezione" style="text-align: center; font-size: 1.1em; padding: 15px; margin-bottom: 20px;">
+            </div>
+
         <div id="auth-section" class="sezione">
             <h2 id="auth-header">Accedi / Registrati</h2>
             <p id="welcome-message"></p>
@@ -1554,6 +1557,87 @@
                         <td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
                 }
             });
+
+            // RIGA MODIFICATA/AGGIUNTA
+            updateWeeklyCalorieSummaryUI();
+        }
+
+        // FUNZIONI AGGIUNTE
+        function calculateWeeklyCalorieBalance() {
+            let weeklyDifference = 0;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalizza a mezzanotte per evitare problemi di fuso orario
+
+            // Cicla per i 7 giorni precedenti, da ieri (i=1) a 7 giorni prima di ieri (i=7)
+            for (let i = 1; i <= 7; i++) {
+                const dateToCheck = new Date(today);
+                dateToCheck.setDate(today.getDate() - i);
+                const dateString = dateToCheck.toISOString().split('T')[0];
+
+                const dailyDataRaw = localStorage.getItem(`trackerStorico_${dateString}`);
+                if (!dailyDataRaw) {
+                    continue; // Salta il giorno se non ci sono dati
+                }
+
+                try {
+                    const dailyData = JSON.parse(dailyDataRaw);
+                    if (!dailyData) continue;
+
+                    // 1. Calcola le calorie consumate in quel giorno
+                    let consumedKcal = 0;
+                    if (dailyData.log) {
+                        dailyData.log.forEach(entry => {
+                            if (entry.type !== 'workout') {
+                                const items = entry.type === 'meal' ? entry.items : [entry];
+                                items.forEach(item => {
+                                    consumedKcal += (item.kcal || item.cal) || 0;
+                                });
+                            }
+                        });
+                    }
+
+                    // 2. Calcola l'obiettivo calorico di quel giorno
+                    const dayOfWeek = dateToCheck.getDay();
+                    const pianoDelGiorno = PIANO_SETTIMANALE[dayOfWeek] || PIANO_SETTIMANALE[1]; // Usa un default
+                    const workoutCalories = dailyData.workoutCalorie || 0;
+                    const adjustment = dailyData.calorieAdjustment || DEFICIT_PREIMPOSTATO_SETTIMANALE[dayOfWeek] || 0;
+                    const targetKcal = pianoDelGiorno.cal_base + workoutCalories + adjustment;
+                    
+                    // 3. Aggiungi la differenza al totale settimanale
+                    weeklyDifference += (consumedKcal - targetKcal);
+
+                } catch (e) {
+                    console.error(`Errore nel calcolo del bilancio per il giorno ${dateString}:`, e);
+                }
+            }
+            return weeklyDifference;
+        }
+
+        function updateWeeklyCalorieSummaryUI() {
+            const summaryEl = document.getElementById('weekly-calorie-summary');
+            if (!summaryEl) return;
+
+            const weeklyBalance = calculateWeeklyCalorieBalance();
+            const tolerance = 250; // Tolleranza di +/- 250 kcal per considerare "mantenimento"
+            
+            let message = '';
+            let balanceClass = '';
+
+            if (weeklyBalance < -tolerance) {
+                message = `Bilancio Settimanale (ultimi 7gg): <strong style="color: #d32f2f;">Deficit di ${Math.abs(weeklyBalance).toFixed(0)} kcal</strong>`;
+                balanceClass = 'balance-deficit';
+            } else if (weeklyBalance > tolerance) {
+                message = `Bilancio Settimanale (ultimi 7gg): <strong style="color: #2e7d32;">Surplus di ${weeklyBalance.toFixed(0)} kcal</strong>`;
+                balanceClass = 'balance-surplus';
+            } else {
+                message = `Bilancio Settimanale (ultimi 7gg): <strong>Mantenimento (${weeklyBalance > 0 ? '+' : ''}${weeklyBalance.toFixed(0)} kcal)</strong>`;
+                balanceClass = 'balance-even';
+            }
+
+            summaryEl.innerHTML = message;
+            // Rimuovi le classi vecchie prima di aggiungere la nuova, mantenendo 'sezione'
+            summaryEl.className = 'sezione';
+            summaryEl.classList.add(balanceClass);
         }
 
         function renderMealBuilder() {
@@ -3097,4 +3181,3 @@
     </script>
 </body>
 </html>
-
