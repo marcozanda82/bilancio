@@ -1563,10 +1563,10 @@
         }
 
         // FUNZIONI AGGIUNTE
-        function calculateWeeklyCalorieBalance() {
+function calculateWeeklyCalorieBalance() {
             let weeklyDifference = 0;
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Normalizza a mezzanotte per evitare problemi di fuso orario
+            today.setHours(0, 0, 0, 0); // Normalizza a mezzanotte
 
             // Cicla per i 7 giorni precedenti, da ieri (i=1) a 7 giorni prima di ieri (i=7)
             for (let i = 1; i <= 7; i++) {
@@ -1581,30 +1581,28 @@
 
                 try {
                     const dailyData = JSON.parse(dailyDataRaw);
-                    if (!dailyData) continue;
+                    if (!dailyData || !dailyData.log) continue;
 
-                    // 1. Calcola le calorie consumate in quel giorno
-                    let consumedKcal = 0;
-                    if (dailyData.log) {
-                        dailyData.log.forEach(entry => {
-                            if (entry.type !== 'workout') {
-                                const items = entry.type === 'meal' ? entry.items : [entry];
-                                items.forEach(item => {
-                                    consumedKcal += (item.kcal || item.cal) || 0;
-                                });
-                            }
-                        });
-                    }
+                    // 1. Calcola le calorie totali consumate in quel giorno
+                    const consumedKcal = dailyData.log.reduce((total, entry) => {
+                         if (entry.type !== 'workout') {
+                            const items = entry.type === 'meal' ? entry.items : [entry];
+                            return total + items.reduce((subtotal, item) => subtotal + (item.kcal || item.cal || 0), 0);
+                        }
+                        return total;
+                    }, 0);
 
-                    // 2. Calcola l'obiettivo calorico di quel giorno
+                    // 2. Recupera l'obiettivo calorico totale già calcolato per quel giorno
                     const dayOfWeek = dateToCheck.getDay();
-                    const pianoDelGiorno = PIANO_SETTIMANALE[dayOfWeek] || PIANO_SETTIMANALE[1]; // Usa un default
+                    const pianoDelGiorno = PIANO_SETTIMANALE[dayOfWeek] || PIANO_SETTIMANALE[1];
                     const workoutCalories = dailyData.workoutCalorie || 0;
                     const adjustment = dailyData.calorieAdjustment || DEFICIT_PREIMPOSTATO_SETTIMANALE[dayOfWeek] || 0;
                     const targetKcal = pianoDelGiorno.cal_base + workoutCalories + adjustment;
                     
                     // 3. Aggiungi la differenza al totale settimanale
-                    weeklyDifference += (consumedKcal - targetKcal);
+                    if (consumedKcal > 0) { // Considera solo i giorni con calorie consumate
+                        weeklyDifference += (consumedKcal - targetKcal);
+                    }
 
                 } catch (e) {
                     console.error(`Errore nel calcolo del bilancio per il giorno ${dateString}:`, e);
@@ -3181,3 +3179,4 @@
     </script>
 </body>
 </html>
+
