@@ -253,13 +253,14 @@
         .food-label-container {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 8px;
         }
         .food-label-container label {
             margin-bottom: 0;
+            flex-shrink: 0;
         }
-        #btn-edit-ingredients {
+        #btn-edit-ingredients, #btn-edit-name {
             background: none;
             border: none;
             font-size: 1.1em;
@@ -268,7 +269,7 @@
             padding: 0;
             line-height: 1;
         }
-        #btn-edit-ingredients:hover {
+        #btn-edit-ingredients:hover, #btn-edit-name:hover {
             color: #1976d2;
         }
         .ingredient-icon {
@@ -627,6 +628,7 @@
                     <div style="position: relative;">
                         <div class="food-label-container">
                             <label for="builder-desc">Alimento</label>
+                            <button id="btn-edit-name" title="Modifica solo il nome senza ricaricare i dati" style="display: none;">✏️</button>
                             <button id="btn-edit-ingredients" title="Modifica Lista Ingredienti">📜</button>
                         </div>
                         <input type="text" id="builder-desc" autocomplete="off">
@@ -1136,6 +1138,7 @@
         const builderThr = document.getElementById('builder-thr'), builderTrp = document.getElementById('builder-trp'), builderHis = document.getElementById('builder-his');
         const dailyNotesTextarea = document.getElementById('daily-notes');
         const btnEditIngredients = document.getElementById('btn-edit-ingredients');
+        const btnEditName = document.getElementById('btn-edit-name');
         const ingredientModal = document.getElementById('ingredient-modal');
         const ingredientModalTitle = document.getElementById('ingredient-modal-title');
         const ingredientModalTextarea = document.getElementById('ingredient-modal-textarea');
@@ -1807,6 +1810,10 @@
             builderDesc.value = '';
             builderQta.value = '';
             Object.values(inputFields).forEach(field => field.el.value = ''); 
+            
+            builderDesc.readOnly = false; // Rende il campo sempre editabile al reset
+            btnEditName.style.display = 'none'; // Nasconde la matita
+            
             builderDesc.focus(); 
         }
 
@@ -2289,6 +2296,9 @@
             alert(`Dati per "${builderDesc.value}" compilati con successo!`);
             aggiornaColoreNutrienti();
             builderProt.dispatchEvent(new Event('input'));
+
+            builderDesc.readOnly = true; // Blocca il campo nome
+            btnEditName.style.display = 'inline-block'; // Mostra la matita
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -2302,6 +2312,12 @@
             dailyNotesTextarea.addEventListener('input', () => {
                 datiGiornalieri.note = dailyNotesTextarea.value;
                 salvaGiorno(giornoVisualizzato, datiGiornalieri);
+            });
+            
+            btnEditName.addEventListener('click', () => {
+                builderDesc.readOnly = false; // Sblocca il campo
+                builderDesc.focus(); // Mette il focus per la modifica immediata
+                btnEditName.style.display = 'none'; // Nasconde la matita, non serve più
             });
 
             const btnVaiAOggi = document.getElementById('btn-vai-a-oggi');
@@ -2633,6 +2649,12 @@
                     builderDesc.value = foodName;
                     builderDesc.dispatchEvent(new Event('input', { bubbles:true }));
                     suggestionsContainer.style.display = 'none';
+                    
+                    const foodData = foodDatabase[sanitizeFirebaseKey(foodName.toLowerCase())];
+                    if (foodData) {
+                        builderDesc.readOnly = true;
+                        btnEditName.style.display = 'inline-block';
+                    }
                 }
             });
             
