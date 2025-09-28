@@ -2691,10 +2691,18 @@ const res = await fetch(OPENAI_ENDPOINT, {
                     }
                     let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${ingredientiInfo} ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
                     
-                    const res = await fetch(OPENAI_ENDPOINT, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-                    });
+// Il suo codice attuale chiama direttamente OpenAI
+const res = await fetch(OPENAI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_KEY_OPENAI}` // <-- METODO NON SICURO
+    },
+    body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [...]
+    })
+});
                     if (!res.ok) throw new Error(`Errore dal server AI: ${res.statusText}`);
                     
                     const data = await res.json();
@@ -3135,6 +3143,7 @@ const res = await fetch(OPENAI_ENDPOINT, {
     </script>
 </body>
 </html>
+
 
 
 
