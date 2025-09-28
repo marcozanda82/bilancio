@@ -2133,7 +2133,7 @@ const res = await fetch(OPENAI_ENDPOINT, {
     },
     // IL BODY È COMPLETAMENTE DIVERSO PER OPENAI
     body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
             { role: "system", content: systemInstruction },
             { role: "user", content: userPrompt }
@@ -3135,6 +3135,7 @@ const res = await fetch(OPENAI_ENDPOINT, {
     </script>
 </body>
 </html>
+
 
 
 
