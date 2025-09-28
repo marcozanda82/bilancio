@@ -1077,8 +1077,11 @@
         const LOCAL_LAST_UPDATE_KEY = 'lastLocalUpdateTimestamp';
         const CLOUD_LAST_UPDATE_PATH = 'lastCloudUpdateTimestamp';
 
-        const API_KEY_AI = "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";
-       const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY_AI}`;
+        //const API_KEY_OPENAI = "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";
+       //const OPENAI_ENDPOINT = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY_OPENAI}`;
+       const API_KEY_OPENAI = "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"; // <-- INCOLLI QUI LA SUA CHIAVE OPENAI
+const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+        
         const GEMINI_PROMPT_FORMAT = `{"prot":g,"kcal":kcal,"carb":g,"zuccheri":g,"fatSat":g,"fatTrans":g,"fatMono":g,"fatPoly":g,"omega3":g,"omega6":g,"fibreTotali":g,"fibreSolubili":g,"fibreInsolubili":g,"mg":mg,"k":mg,"vitc":mg,"ca":mg,"vitA":µg,"vitB12":µg,"vitD":µg,"vitE":mg,"vitK":µg,"b9":µg,"b2":mg,"b6":mg,"fe":mg,"zn":mg,"cu":mg,"p":mg,"leu":mg,"iso":mg,"val":mg,"lys":mg,"met":mg,"phe":mg,"thr":mg,"trp":mg,"his":mg}`;
         const AI_INSTRUCTION = "Agisci come un esperto nutrizionista. Basa le tue risposte su database nutrizionali affidabili (come IEO, USDA, CREA). Se un valore non è disponibile, fornisci una stima scientificamente plausibile basata sulla composizione dell'alimento. Per gli amminoacidi, fornisci un profilo specifico per la fonte proteica dell'alimento, non un profilo generico. Assicurati che le unità di misura siano corrette come specificato nel formato JSON richiesto.";
 
@@ -2121,10 +2124,23 @@
                 photoOcrStatus.textContent = 'Fase 2/2: Analisi AI...';
                 const prompt = `Analizza il seguente testo estratto da una tabella nutrizionale: "${ocrText}". Estrai i valori per 100g (o 100ml), ignorando le colonne "per porzione". Restituisci ESCLUSIVAMENTE un oggetto JSON. Le chiavi devono essere i nomi dei nutrienti in italiano (es. "Energia", "Grassi", "di cui acidi grassi saturi"). Se un valore non è presente, omettilo.`;
                 
-                const res = await fetch(GEMINI_ENDPOINT, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
+const res = await fetch(OPENAI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        // MANCAVA QUESTA PARTE FONDAMENTALE: L'AUTENTICAZIONE
+        'Authorization': `Bearer ${API_KEY_OPENAI}` 
+    },
+    // IL BODY È COMPLETAMENTE DIVERSO PER OPENAI
+    body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: userPrompt }
+        ],
+        response_format: { type: "json_object" }
+    })
+});
                 if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
                 
                 const data = await res.json();
@@ -2675,14 +2691,14 @@
                     }
                     let promptText = `Fornisci ESATTAMENTE questo oggetto JSON (senza altro testo) con i valori nutrizionali medi per 100 g di "${nome}". ${ingredientiInfo} ${AI_INSTRUCTION}. ${GEMINI_PROMPT_FORMAT}`;
                     
-                    const res = await fetch(GEMINI_ENDPOINT, {
+                    const res = await fetch(OPENAI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                     });
                     if (!res.ok) throw new Error(`Errore dal server AI: ${res.statusText}`);
                     
                     const data = await res.json();
-                    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    const raw = data.choices?.[0]?.message?.content || '{}';
                     const newData = JSON.parse(raw.replace(/```json|```/g, '').trim());
 
                     const oldData = {};
@@ -3028,7 +3044,7 @@
                         prompt = `Agisci come un esperto di etichette alimentari. Genera una lista di ingredienti per il prodotto commerciale "${foodName}". Rispondi ESCLUSIVAMENTE con la lista, senza frasi introduttive o conclusive. Il formato deve essere un elenco puntato, un ingrediente per riga. È FONDAMENTALE che la lista rifletta il contenuto di un PRODOTTO CONFEZIONATO (es. un sacchetto di minestrone surgelato), NON una ricetta per prepararlo. Pertanto, NON includere ingredienti come acqua aggiunta in cottura, olio, sale o pasta, a meno che non siano specificati come pre-inseriti nel prodotto. Se non conosci l'etichetta esatta, basati su prodotti concorrenti simili dei supermercati.`;
                     }
 
-                    const res = await fetch(GEMINI_ENDPOINT, {
+                    const res = await fetch(OPENAI_ENDPOINT, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                     });
@@ -3119,6 +3135,7 @@
     </script>
 </body>
 </html>
+
 
 
 
