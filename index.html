@@ -2124,22 +2124,17 @@ const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
                 photoOcrStatus.textContent = 'Fase 2/2: Analisi AI...';
                 const prompt = `Analizza il seguente testo estratto da una tabella nutrizionale: "${ocrText}". Estrai i valori per 100g (o 100ml), ignorando le colonne "per porzione". Restituisci ESCLUSIVAMENTE un oggetto JSON. Le chiavi devono essere i nomi dei nutrienti in italiano (es. "Energia", "Grassi", "di cui acidi grassi saturi"). Se un valore non è presente, omettilo.`;
                 
-const res = await fetch(OPENAI_ENDPOINT, {
+// Questo è l'indirizzo della nostra funzione "proxy" su Netlify
+const PROXY_ENDPOINT = "/.netlify/functions/fetch-ai-data"; 
+
+// ...
+
+// La nuova chiamata sicura al nostro proxy
+const res = await fetch(PROXY_ENDPOINT, {
     method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        // MANCAVA QUESTA PARTE FONDAMENTALE: L'AUTENTICAZIONE
-        'Authorization': `Bearer ${API_KEY_OPENAI}` 
-    },
-    // IL BODY È COMPLETAMENTE DIVERSO PER OPENAI
-    body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-            { role: "system", content: systemInstruction },
-            { role: "user", content: userPrompt }
-        ],
-        response_format: { type: "json_object" }
-    })
+    headers: { 'Content-Type': 'application/json' },
+    // Inviamo solo il testo, non la chiave o il modello
+    body: JSON.stringify({ prompt: userPrompt, system: systemInstruction }) 
 });
                 if (!res.ok) throw new Error(`Errore AI: ${res.statusText}`);
                 
@@ -3143,6 +3138,7 @@ const res = await fetch(OPENAI_ENDPOINT, {
     </script>
 </body>
 </html>
+
 
 
 
