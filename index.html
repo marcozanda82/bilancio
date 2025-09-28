@@ -1508,14 +1508,17 @@ const OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";
                 return html;
             };
 
-            (datiGiornalieri.log || []).forEach((entry, index) => {
-                if (entry.type === 'meal') {
-                    const rigaPasto = logBody.insertRow();
-                    rigaPasto.classList.add('meal-group-row');
-                    const totaliPasto = entry.items.reduce((acc, item) => {
-                        for (const key in item) if(typeof item[key] === 'number' && key !== 'qta') acc[key] = (acc[key] || 0) + item[key];
-                        return acc;
-                    }, {});
+    (datiGiornalieri.log || []).forEach((entry, index) => {
+        if (entry.type === 'meal') {
+            // ... (codice per i pasti) ...
+        } else if (entry.type === 'workout') {
+            // ... (codice per gli allenamenti) ...
+        } else {
+            const riga = logBody.insertRow();
+            // QUI LA CORREZIONE: Aggiunto </button>
+            riga.innerHTML = `<td>${entry.desc}</td><td>${entry.qta}g</td><td>${(entry.prot||0).toFixed(1)}</td><td>${(entry.cal||0).toFixed(0)}</td><td>${(entry.mg||0).toFixed(1)}</td><td>${(entry.k||0).toFixed(0)}</td><td>${(entry.vitc||0).toFixed(1)}</td><td>${(entry.ca||0).toFixed(1)}</td><td class="action-buttons"><button class="edit-btn" data-index="${index}">✏️</button><button class="delete-btn" data-index="${index}">&times;</button></td>`;
+        }
+    });
                     
                     const qualitaPasto = calcolaQualitaProteine(totaliPasto);
                     const scoreClass = qualitaPasto.score < 70 ? 'low' : qualitaPasto.score < 90 ? 'medium' : 'high';
@@ -3138,6 +3141,7 @@ const res = await fetch(OPENAI_ENDPOINT, {
     </script>
 </body>
 </html>
+
 
 
 
