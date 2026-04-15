@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orientamento, Azimut e Fusi Orari</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* =========================================
+           1. THE SETUP & CORE RESET
+           ========================================= */
+        * { box-sizing: border-box; }
+        
+        body {
+            background-color: #f1f5f9;
+            display: grid;
+            gap: 40px;
+            grid-template-columns: 1fr;
+            margin: 0;
+            min-height: 100vh;
+            padding: 40px 0;
+            place-items: center;
+        }
+
+        .slide-container {
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+            display: flex;
+            flex-direction: column;
+            font-family: 'Lato', sans-serif;
+            height: 720px;
+            justify-content: center;
+            overflow: hidden;
+            padding: 60px;
+            position: relative;
+            width: 1280px;
+        }
+
+        /* Subtle background styling - Curved lines */
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: -20%; right: -10%;
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(2, 132, 199, 0.04) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .slide-container::after {
+            content: '';
+            position: absolute;
+            bottom: -30%; left: -10%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(2, 132, 199, 0.03) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .slide-container > * { position: relative; z-index: 1; }
+
+        /* =========================================
+           2. CONSISTENT TYPOGRAPHY
+           ========================================= */
+        h1, h2, h3 {
+            color: #0f172a;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        p, li, .subtitle {
+            color: #334155;
+            font-family: 'Lato', sans-serif;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        h1 { font-size: 70px; line-height: 1.2; text-align: center;}
+        
+        .slide-title {
+            font-size: 40px;
+            font-weight: 600;
+            margin-bottom: 40px;
+            text-align: left;
+            width: 100%;
+            color: #0284c7; /* Brand Sky Blue */
+        }
+
+        .subtitle { font-size: 24px; margin-top: 20px; font-weight: 400; color: #475569; text-align: center; }
+
+        .content-area {
+            align-items: flex-start;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* =========================================
+           3. LAYOUT DEFINITIONS
+           ========================================= */
+        .title-layout { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .image-wrapper {
+            border-radius: 16px;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            border: 4px solid #f8fafc;
+        }
+        .image-wrapper img { width: 100%; height: 100%; object-fit: contain; background: #ffffff; }
+
+        .bullet-list ul { list-style: none; margin: 0; padding: 0; }
+        .bullet-list li { margin-bottom: 25px; padding-left: 45px; position: relative; }
+        .bullet-list i { color: #0284c7; font-size: 24px; position: absolute; left: 0; top: 2px; }
+        .bullet-list li strong { color: #0f172a; }
+
+        /* Tiled Icons Layout */
+        .tiled-content {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+            justify-content: center;
+            align-items: stretch;
+        }
+        .tile {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .tile .icon {
+            color: #0284c7;
+            font-size: 40px;
+            margin-bottom: 25px;
+            background: #e0f2fe;
+            width: 90px; height: 90px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+        }
+
+        /* =========================================
+           4. CUSTOM INTERACTIVE LAYOUTS
+           ========================================= */
+        
+        .interactive-panel {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 35px 30px;
+            box-shadow: 0 15px 30px rgba(2, 132, 199, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        .interactive-panel h3 { font-size: 24px; color: #0284c7; margin-bottom: 15px; }
+        .btn-primary {
+            background: #0284c7; color: white; border: none;
+            padding: 14px 24px; border-radius: 8px; font-size: 16px; font-weight: 700;
+            cursor: pointer; font-family: 'Poppins', sans-serif; transition: background 0.2s; white-space: nowrap;
+        }
+        .btn-primary:hover { background: #0369a1; }
+        .btn-secondary {
+            background: #e2e8f0; color: #334155; border: none;
+            padding: 12px 20px; border-radius: 8px; font-size: 16px; font-weight: 700;
+            cursor: pointer; font-family: 'Poppins', sans-serif; transition: background 0.2s; white-space: nowrap;
+        }
+        .btn-secondary:hover { background: #cbd5e1; }
+
+        /* Compass Visuals (Slide 5) */
+        .compass {
+            position: relative;
+            width: 380px; height: 380px;
+            border-radius: 50%;
+            border: 6px solid #1e293b;
+            background: #ffffff;
+            margin: 0 auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .compass-center {
+            position: absolute; top: 50%; left: 50%;
+            width: 14px; height: 14px; background: #1e293b;
+            border-radius: 50%; transform: translate(-50%, -50%); z-index: 10;
+        }
+        .compass-label { position: absolute; font-size: 26px; font-weight: 700; color: #1e293b; }
+        .label-n { top: 15px; left: 50%; transform: translateX(-50%); }
+        .label-s { bottom: 15px; left: 50%; transform: translateX(-50%); }
+        .label-e { top: 50%; right: 20px; transform: translateY(-50%); }
+        .label-w { top: 50%; left: 20px; transform: translateY(-50%); }
+        
+        .compass-arm-wrapper {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .compass-arm {
+            position: absolute; bottom: 50%; left: 50%;
+            width: 4px; height: 140px; background: #ef4444;
+            transform: translateX(-50%); transform-origin: bottom center;
+        }
+        .compass-target {
+            position: absolute; top: 40px; left: 50%;
+            width: 20px; height: 20px; background: #ef4444;
+            border-radius: 50%; transform: translateX(-50%);
+            border: 3px solid #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* =========================================
+           5. FULLSCREEN MAP VISUALS (SLIDE 7)
+           ========================================= */
+        .map-marker {
+            position: absolute; width: 24px; height: 24px;
+            border-radius: 50%; transform: translate(-50%, -50%);
+            border: 4px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.6); z-index: 50;
+            pointer-events: none; /* Let clicks pass through if double clicking */
+        }
+        .marker-start { background-color: #ef4444; }
+        .marker-end { background-color: #3b82f6; }
+        .marker-label {
+            position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; color: #ffffff; padding: 6px 10px; border-radius: 6px;
+            font-size: 14px; font-family: 'Poppins', sans-serif; font-weight: 700; white-space: nowrap;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .marker-label::after {
+            content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+            border-width: 6px 6px 0; border-style: solid; border-color: #1e293b transparent transparent transparent;
+        }
+
+        /* Custom Panel Overlay layout for Fullscreen Map */
+        .overlay-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1100px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            padding: 25px 40px;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Slide 1: Title_Slide -->
+    <div class="slide-container" id="slide1">
+        <div class="title-layout">
+            <h1>Orientamento e Fusi Orari</h1>
+            <p class="subtitle">Guida interattiva al calcolo dell'azimut, delle scale e del tempo</p>
+        </div>
+    </div>
+
+    <!-- Slide 2: Il Percorso del Sole -->
+    <div class="slide-container" id="slide2">
+        <h2 class="slide-title">1. Il Percorso del Sole</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div class="bullet-list">
+                    <p style="margin-bottom: 20px;">L'orientamento relativo si basa sul piano dell'orizzonte in cui si trova l'osservatore e sui punti cardinali:</p>
+                    <ul>
+                        <li><i class="fa-solid fa-sun" style="color: #f59e0b;"></i> <strong>Est:</strong> La direzione in cui sorge il sole (alba).</li>
+                        <li><i class="fa-solid fa-arrow-up" style="color: #ef4444;"></i> <strong>Sud:</strong> Il punto in cui il sole raggiunge la sua massima altezza (mezzogiorno/culminazione).</li>
+                        <li><i class="fa-solid fa-moon" style="color: #64748b;"></i> <strong>Ovest:</strong> La direzione in cui tramonta il sole.</li>
+                        <li><i class="fa-solid fa-arrow-down" style="color: #0284c7;"></i> <strong>Nord:</strong> La direzione diametralmente opposta al Sud.</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper">
+                        <!-- SVG Integrato: Diagramma del Percorso del Sole -->
+                        <svg viewBox="0 0 500 300" style="width:100%; height:100%; background:#f8fafc;" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#bae6fd" />
+                                    <stop offset="100%" stop-color="#f8fafc" />
+                                </linearGradient>
+                            </defs>
+                            <!-- Cielo e Terra -->
+                            <rect width="500" height="230" fill="url(#skyGradient)" />
+                            <rect y="230" width="500" height="70" fill="#dcfce7" />
+                            
+                            <!-- Orizzonte (Piano prospettico) -->
+                            <ellipse cx="250" cy="230" rx="200" ry="50" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+                            
+                            <!-- Punti Cardinali -->
+                            <text x="35" y="235" font-family="Poppins, sans-serif" font-weight="bold" font-size="16" fill="#0f172a">OVEST</text>
+                            <text x="415" y="235" font-family="Poppins, sans-serif" font-weight="bold" font-size="16" fill="#0f172a">EST</text>
+                            <text x="235" y="275" font-family="Poppins, sans-serif" font-weight="bold" font-size="16" fill="#ef4444">SUD</text>
+                            <text x="230" y="195" font-family="Poppins, sans-serif" font-weight="bold" font-size="14" fill="#64748b">NORD</text>
+                            
+                            <!-- Osservatore -->
+                            <circle cx="250" cy="230" r="6" fill="#0f172a" />
+                            <line x1="250" y1="230" x2="250" y2="190" stroke="#0f172a" stroke-width="3" />
+                            
+                            <!-- Percorso del Sole (Arco) -->
+                            <path d="M 400 230 C 400 30, 100 30, 100 230" fill="none" stroke="#fcd34d" stroke-width="4" stroke-dasharray="10,6" />
+                            
+                            <!-- Posizioni del Sole -->
+                            <circle cx="400" cy="230" r="12" fill="#fbbf24" /> <!-- Alba -->
+                            <circle cx="250" cy="80" r="22" fill="#f59e0b" />  <!-- Mezzogiorno/Zenit -->
+                            <circle cx="100" cy="230" r="12" fill="#fb923c" /> <!-- Tramonto -->
+                            
+                            <!-- Linee di proiezione solare -->
+                            <line x1="250" y1="230" x2="250" y2="80" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: L'Azimut -->
+    <div class="slide-container" id="slide3">
+        <h2 class="slide-title">2. L'Orientamento e l'Azimut</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div class="bullet-list">
+                    <p style="margin-bottom: 20px;">Come individuare matematicamente un obiettivo?</p>
+                    <ul>
+                        <li><i class="fa-solid fa-compass"></i> L'<strong>Azimut</strong> è la distanza angolare misurata in <strong>senso orario</strong> partendo dalla congiungente Nord-Sud.</li>
+                        <li><i class="fa-solid fa-1"></i> Poni il centro del goniometro sul tuo punto di osservazione.</li>
+                        <li><i class="fa-solid fa-2"></i> Allinea l'asse verticale (lo 0°) in direzione Nord.</li>
+                        <li><i class="fa-solid fa-3"></i> Congiungi il centro con l'obiettivo e leggi l'angolo indicato.</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="image-wrapper">
+                        <!-- SVG Integrato: Goniometro e calcolo dell'Azimut -->
+                        <svg viewBox="0 0 400 400" style="width:100%; height:100%; background:#f8fafc;" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <marker id="arrowN" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444" />
+                                </marker>
+                                <marker id="arrowT" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#0284c7" />
+                                </marker>
+                            </defs>
+
+                            <!-- Sfondo Goniometro -->
+                            <circle cx="200" cy="200" r="160" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+                            <circle cx="200" cy="200" r="150" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+                            <circle cx="200" cy="200" r="100" fill="none" stroke="#f1f5f9" stroke-width="1"/>
+                            
+                            <!-- Tacche Cardinali Base -->
+                            <line x1="200" y1="40" x2="200" y2="360" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+                            <line x1="40" y1="200" x2="360" y2="200" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,4"/>
+
+                            <!-- Angolo Ripieno (Background) -->
+                            <!-- Un arco che parte da (200, 200) va su a (200, 100), gira fino a (286, 150) e torna al centro -->
+                            <path d="M 200 200 L 200 100 A 100 100 0 0 1 286 150 Z" fill="rgba(22, 163, 74, 0.15)" />
+
+                            <!-- Direzione NORD -->
+                            <line x1="200" y1="200" x2="200" y2="50" stroke="#ef4444" stroke-width="4" marker-end="url(#arrowN)"/>
+                            <text x="185" y="35" font-family="Poppins, sans-serif" font-weight="bold" font-size="22" fill="#ef4444">N (0°)</text>
+
+                            <!-- Direzione OBIETTIVO (Es. 60 gradi) -->
+                            <line x1="200" y1="200" x2="315" y2="133" stroke="#0284c7" stroke-width="4" marker-end="url(#arrowT)"/>
+                            <text x="325" y="125" font-family="Poppins, sans-serif" font-weight="bold" font-size="18" fill="#0284c7">Obiettivo</text>
+                            <circle cx="315" cy="133" r="6" fill="#0284c7" /> <!-- Punto obiettivo -->
+
+                            <!-- Arco e Misura dell'Azimut -->
+                            <path d="M 200 120 A 80 80 0 0 1 269 160" fill="none" stroke="#16a34a" stroke-width="5" />
+                            <text x="235" y="140" font-family="Poppins, sans-serif" font-weight="bold" font-size="18" fill="#16a34a">Azimut (60°)</text>
+
+                            <!-- Osservatore -->
+                            <circle cx="200" cy="200" r="6" fill="#0f172a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Le Distanze e la Scala -->
+    <div class="slide-container" id="slide4">
+        <h2 class="slide-title">3. Calcolo delle Distanze</h2>
+        <div class="content-area" style="align-items: center; text-align: center;">
+            <p style="max-width: 800px; margin-bottom: 30px;">
+                Per posizionare un punto nello spazio serve l'azimut, ma anche la <strong>distanza</strong>. 
+                La scala della carta (es. 1:1.000) indica di quante volte la realtà è stata rimpicciolita. 
+                Se misuri 2,8 cm sulla carta, devi moltiplicarli per la scala.
+            </p>
+            
+            <div id="formula-container" style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <math xmlns="http://www.w3.org/1998/Math/MathML" style="display: math; font-size: 28px; margin-bottom: 20px;">
+                    <mrow>
+                        <mn>1</mn>
+                        <mo>&#x200A;</mo>
+                        <mi>cm</mi>
+                        <mo>:</mo>
+                        <mn>1000</mn>
+                        <mo>&#x200A;</mo>
+                        <mi>cm</mi>
+                        <mo>=</mo>
+                        <mn>2.8</mn>
+                        <mo>&#x200A;</mo>
+                        <mi>cm</mi>
+                        <mo>:</mo>
+                        <mi>X</mi>
+                    </mrow>
+                </math>
+                <br/><br/>
+                <math xmlns="http://www.w3.org/1998/Math/MathML" style="display: math; font-size: 32px; color: #0284c7; font-weight: bold;">
+                    <mrow>
+                        <mi>X</mi>
+                        <mo>=</mo>
+                        <mn>2.8</mn>
+                        <mo>&#xD7;</mo>
+                        <mn>1000</mn>
+                        <mo>=</mo>
+                        <mn>2800</mn>
+                        <mo>&#x200A;</mo>
+                        <mi>cm</mi>
+                        <mo>=</mo>
+                        <mn>28</mn>
+                        <mo>&#x200A;</mo>
+                        <mi>m</mi>
+                    </mrow>
+                </math>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Quiz Interattivo sull'Azimut -->
+    <div class="slide-container" id="slide5">
+        <h2 class="slide-title">4. Esercizio: Calcola l'Azimut</h2>
+        <div class="content-area">
+            <div class="two-column">
+                
+                <div class="interactive-panel" id="azPanel"></div>
+                
+                <div style="display:flex; justify-content:center;">
+                    <div class="compass">
+                        <svg id="compassSvg" viewBox="0 0 380 380" style="position:absolute; top:0; left:0; width:100%; height:100%;"></svg>
+                        <span class="compass-label label-n">N</span>
+                        <span class="compass-label label-e">E</span>
+                        <span class="compass-label label-s">S</span>
+                        <span class="compass-label label-w">O</span>
+                        <div class="compass-center"></div>
+                        <div class="compass-arm-wrapper" id="compassArmWrapper">
+                            <div class="compass-arm"></div>
+                            <div class="compass-target"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Recap Fusi Orari -->
+    <div class="slide-container" id="slide6">
+        <h2 class="slide-title">5. I Fusi Orari e la Terra</h2>
+        <div class="content-area">
+            <div class="tiled-content">
+                <div class="tile">
+                    <div class="icon"><i class="fa-solid fa-location-dot"></i></div>
+                    <h3>Meridiano Zero</h3>
+                    <p>Fissato a Greenwich. È il punto di riferimento (<strong>UTC 0</strong>) per calcolare tutti gli orari globali.</p>
+                </div>
+                <div class="tile">
+                    <div class="icon"><i class="fa-solid fa-arrow-right" style="color: #16a34a;"></i></div>
+                    <h3>Verso Est (+)</h3>
+                    <p>Spostandoti a Est, andiamo incontro al sole. A ogni fuso devi <strong>aggiungere un'ora</strong> all'orologio.</p>
+                </div>
+                <div class="tile">
+                    <div class="icon"><i class="fa-solid fa-arrow-left" style="color: #dc2626;"></i></div>
+                    <h3>Verso Ovest (-)</h3>
+                    <p>Spostandoti a Ovest, il sole sorge dopo. A ogni fuso devi <strong>sottrarre un'ora</strong> all'orologio.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Mappa a Tutto Schermo & Quiz Overlay -->
+    <div class="slide-container" id="slide7" style="padding: 0; background: #0f172a; border-radius: 16px;">
+        
+        <!-- Il wrapper riempie l'intera slide. È lui che ascolta i click -->
+        <div id="mapWrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair;">
+            
+            <!-- Immagine di sfondo. object-fit: fill costringe l'immagine a coprire esattamente l'area -->
+            <img src="image_eedfa3.jpg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/e/e8/Standard_World_Time_Zones.png'" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none;" alt="Planisfero dei Fusi Orari">
+            
+            <!-- Griglia Vettoriale calcolata esattamente (24x12 celle) -->
+            <svg viewBox="0 0 240 120" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
+                <pattern id="mapGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+                    <!-- Spessore aumentato e colore scuro per effetto "grassetto" ben visibile -->
+                    <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#0f172a" stroke-width="0.6" stroke-opacity="0.6"/>
+                </pattern>
+                <rect width="240" height="120" fill="url(#mapGrid)" />
+                
+                <!-- Linea Equatore -->
+                <line x1="0" y1="60" x2="240" y2="60" stroke="#0f172a" stroke-width="1.5" stroke-opacity="0.9" />
+                
+                <!-- Linea Meridiano Zero (Linea centrale esatta, incrocio 12 su 24) -->
+                <line x1="120" y1="0" x2="120" y2="120" stroke="#0f172a" stroke-width="1.5" stroke-opacity="0.9" />
+            </svg>
+            
+            <!-- I Marker generati da Javascript verranno posizionati qui dentro, sopra SVG e Immagine -->
+        </div>
+
+        <!-- Titolo Sovrapposto -->
+        <h2 style="position: absolute; top: 40px; left: 40px; color: #ffffff; text-shadow: 0 4px 15px rgba(0,0,0,0.9); z-index: 20; font-size: 45px;">
+            6. Esercizio: Differenza Oraria
+        </h2>
+
+        <!-- Quiz Panel Sovrapposto in Basso -->
+        <div class="overlay-panel" id="mapPanel">
+            <!-- Dinamico via JS -->
+        </div>
+    </div>
+
+    <!-- SCRIPT PER LA LOGICA INTERATTIVA -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Esercizio Azimut ---
+            const svgCompass = document.getElementById('compassSvg');
+            const azPanel = document.getElementById('azPanel');
+            let currentAzimuth = 0;
+
+            for(let i=0; i<360; i+=10) {
+                const isMajor = i % 90 === 0;
+                const isMedium = i % 30 === 0;
+                const length = isMajor ? 20 : (isMedium ? 14 : 8);
+                const strokeWidth = isMajor ? 3 : (isMedium ? 2 : 1);
+                const rad = (i - 90) * Math.PI / 180;
+                const rOuter = 180;
+                const rInner = 180 - length;
+                const cx = 190, cy = 190;
+                
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", cx + rOuter * Math.cos(rad)); line.setAttribute("y1", cy + rOuter * Math.sin(rad));
+                line.setAttribute("x2", cx + rInner * Math.cos(rad)); line.setAttribute("y2", cy + rInner * Math.sin(rad));
+                line.setAttribute("stroke", "#94a3b8"); line.setAttribute("stroke-width", strokeWidth);
+                svgCompass.appendChild(line);
+
+                if (isMedium && !isMajor) {
+                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", cx + 145 * Math.cos(rad)); text.setAttribute("y", cy + 145 * Math.sin(rad) + 5);
+                    text.setAttribute("text-anchor", "middle"); text.setAttribute("font-size", "14");
+                    text.setAttribute("font-weight", "600"); text.setAttribute("fill", "#64748b");
+                    text.textContent = i + "°";
+                    svgCompass.appendChild(text);
+                }
+            }
+
+            function newAzimuthTask() {
+                currentAzimuth = Math.floor(Math.random() * 36) * 10;
+                document.getElementById('compassArmWrapper').style.transform = `rotate(${currentAzimuth}deg)`;
+                
+                azPanel.innerHTML = `
+                    <h3>Calcola l'Angolo</h3>
+                    <p style="margin-bottom:20px;">Osserva il goniometro a destra. Qual è l'Azimut indicato dal puntatore rosso?</p>
+                    <div style="display:flex; gap:15px; margin-bottom:20px;">
+                        <input type="number" id="azInput" placeholder="Gradi (0-359°)" style="flex:1; padding:12px 15px; border:2px solid #cbd5e1; border-radius:8px; font-size:16px; outline:none;">
+                        <button id="azVerifyBtn" class="btn-primary">Verifica</button>
+                    </div>
+                    <div id="azFeedback" style="min-height:70px; display:flex; flex-direction:column; justify-content:center;"></div>
+                `;
+                document.getElementById('azVerifyBtn').addEventListener('click', () => {
+                    const val = parseInt(document.getElementById('azInput').value, 10);
+                    const fb = document.getElementById('azFeedback');
+                    if (isNaN(val)) return;
+                    if (val === currentAzimuth) {
+                        fb.innerHTML = `<span style="color:#16a34a; font-weight:700; font-size:18px; background:#dcfce7; padding:12px; border-radius:8px;"><i class="fa-solid fa-circle-check"></i> Esatto! L'Azimut è ${currentAzimuth}°</span><button id="azNextBtn" class="btn-secondary" style="margin-top:15px; align-self:flex-start;">Prova un nuovo angolo</button>`;
+                        document.getElementById('azNextBtn').addEventListener('click', newAzimuthTask);
+                    } else {
+                        fb.innerHTML = `<span style="color:#dc2626; font-weight:700; font-size:18px; background:#fee2e2; padding:12px; border-radius:8px;"><i class="fa-solid fa-circle-xmark"></i> Errato. Controlla bene le tacche!</span>`;
+                    }
+                });
+            }
+            newAzimuthTask();
+
+
+            // --- Esercizio Mappa Magnetica Fullscreen ---
+            const mapWrapper = document.getElementById('mapWrapper');
+            const mapPanel = document.getElementById('mapPanel');
+            let mapState = 0, startZone = 0, endZone = 0;
+            let mStart = null, mEnd = null;
+
+            function fmtUTC(z) { return z > 0 ? '+' + z : z; }
+
+            function renderMapPanel() {
+                if(mapState === 0) {
+                    mapPanel.innerHTML = `
+                        <div style="flex: 2;">
+                            <h3 style="margin: 0 0 5px 0; color: #0284c7;">Fase 1: Punto di Partenza</h3>
+                            <p style="margin: 0; font-size: 16px; color: #334155;">Fai clic in una cella della griglia per impostare il tuo punto di partenza.</p>
+                        </div>
+                        <div style="flex: 1; text-align: right;">
+                            <i class="fa-solid fa-location-crosshairs" style="font-size: 40px; color: #cbd5e1;"></i>
+                        </div>
+                    `;
+                } else if (mapState === 1) {
+                    mapPanel.innerHTML = `
+                        <div style="flex: 2;">
+                            <h3 style="margin: 0 0 5px 0; color: #0284c7;">Fase 2: Punto di Arrivo</h3>
+                            <p style="margin: 0; font-size: 16px; color: #334155;">Partenza impostata a <b>UTC ${fmtUTC(startZone)}</b>. Ora fai clic per selezionare la destinazione.</p>
+                        </div>
+                        <div style="flex: 1; display: flex; justify-content: flex-end;">
+                            <button id="mapCancelBtn" class="btn-secondary">Annulla e Riparti</button>
+                        </div>
+                    `;
+                    document.getElementById('mapCancelBtn').addEventListener('click', resetMapQuiz);
+                } else if (mapState === 2) {
+                    mapPanel.innerHTML = `
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 5px 0; color: #0284c7;">Calcola la Differenza</h3>
+                            <p style="margin: 0; font-size: 16px; color: #334155;">Da <b>UTC ${fmtUTC(startZone)}</b> a <b>UTC ${fmtUTC(endZone)}</b>. Quante ore applico?</p>
+                        </div>
+                        <div style="flex: 1; display:flex; gap:10px; align-items: center;">
+                            <input type="number" id="mapInput" placeholder="es. 6 o -4" style="flex:1; padding:12px 15px; border:2px solid #cbd5e1; border-radius:8px; font-size:16px; outline:none;">
+                            <button id="mapVerifyBtn" class="btn-primary">Verifica</button>
+                            <button id="mapResetBtn" class="btn-secondary"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
+                        <div id="mapFeedback" style="flex: 1; margin-left: 15px; min-height: 50px; display: flex; align-items: center;"></div>
+                    `;
+                    
+                    document.getElementById('mapVerifyBtn').addEventListener('click', () => {
+                        const val = parseInt(document.getElementById('mapInput').value, 10);
+                        const fb = document.getElementById('mapFeedback');
+                        if (isNaN(val)) return;
+                        const correctDiff = endZone - startZone; 
+                        
+                        if(val === correctDiff) {
+                            fb.innerHTML = `<span style="color:#16a34a; font-weight:700; font-size:16px; background:#dcfce7; padding:10px 15px; border-radius:8px; width:100%;"><i class="fa-solid fa-circle-check"></i> Esatto! Diff: ${fmtUTC(correctDiff)} ore.</span>`;
+                        } else {
+                            fb.innerHTML = `<span style="color:#dc2626; font-weight:700; font-size:16px; background:#fee2e2; padding:10px 15px; border-radius:8px; width:100%;"><i class="fa-solid fa-circle-xmark"></i> Errato. Risposta: <b>${fmtUTC(correctDiff)}</b>.</span>`;
+                        }
+                    });
+                    document.getElementById('mapResetBtn').addEventListener('click', resetMapQuiz);
+                }
+            }
+
+            function resetMapQuiz() {
+                mapState = 0; startZone = 0; endZone = 0;
+                if(mStart) mStart.remove();
+                if(mEnd) mEnd.remove();
+                mStart = null; mEnd = null;
+                renderMapPanel();
+            }
+
+            // Click evento direttamente sul contenitore che copre tutta la slide
+            mapWrapper.addEventListener('click', (e) => {
+                if(mapState >= 2) return;
+
+                const rect = mapWrapper.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                // Calcolo dimensioni griglia: 24 colonne e 12 righe
+                const colWidth = rect.width / 24;
+                const rowHeight = rect.height / 12;
+
+                // Calcolo dell'indice di colonna e riga (usiamo Math.round per agganciare all'INCROCIO)
+                const colIndex = Math.round(clickX / colWidth);
+                const rowIndex = Math.round(clickY / rowHeight);
+
+                // Assicuriamoci che l'indice rimanga nei limiti (0-24 linee verticali, 0-12 orizzontali)
+                const safeCol = Math.max(0, Math.min(24, colIndex));
+                const safeRow = Math.max(0, Math.min(12, rowIndex));
+
+                // Effetto Magnetico: Agganciamo all'INCROCIO ESATTO della griglia
+                const snappedX = safeCol * colWidth;
+                const snappedY = safeRow * rowHeight;
+
+                // La linea centrale 12 corrisponde al Meridiano Zero (UTC 0)
+                const zone = safeCol - 12;
+
+                const marker = document.createElement('div');
+                marker.className = mapState === 0 ? 'map-marker marker-start' : 'map-marker marker-end';
+                
+                // Usiamo le percentuali in modo che se la finestra si ridimensiona i marker restano perfetti
+                marker.style.left = `${(snappedX / rect.width) * 100}%`;
+                marker.style.top = `${(snappedY / rect.height) * 100}%`;
+                marker.innerHTML = `<div class="marker-label">UTC ${fmtUTC(zone)}</div>`;
+
+                mapWrapper.appendChild(marker);
+
+                if(mapState === 0) {
+                    startZone = zone; mStart = marker; mapState = 1;
+                } else {
+                    endZone = zone; mEnd = marker; mapState = 2;
+                }
+                renderMapPanel();
+            });
+
+            resetMapQuiz();
+        });
+    </script>
+</body>
+</html>
