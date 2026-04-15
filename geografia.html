@@ -53,37 +53,6 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Controlli di Navigazione Fluttuanti */
-        .nav-controls {
-            position: fixed;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 10px 25px;
-            border-radius: 50px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            z-index: 9999;
-        }
-        
-        .nav-btn {
-            background: #0f172a; color: white;
-            border: none; width: 45px; height: 45px;
-            border-radius: 50%; cursor: pointer;
-            font-size: 16px; display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
-        }
-        .nav-btn:hover:not(:disabled) { background: #0284c7; transform: scale(1.1); }
-        .nav-btn:disabled { background: #cbd5e1; cursor: not-allowed; opacity: 0.6; }
-        
-        .nav-dots { display: flex; gap: 8px; }
-        .nav-dot { width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; transition: 0.3s; }
-        .nav-dot.active { background: #0284c7; transform: scale(1.3); }
-
         /* Subtle background styling - Curved lines */
         .slide-container::before {
             content: '';
@@ -293,7 +262,7 @@
         /* Custom Panel Overlay layout for Fullscreen Map */
         .overlay-panel {
             position: absolute;
-            bottom: 90px; /* Alzato per non coprire i comandi della presentazione */
+            bottom: 40px; /* Abbassato poiché non c'è più la barra di navigazione */
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
@@ -580,31 +549,13 @@
         </div>
     </div>
 
-    <!-- Controlli di Navigazione della Presentazione -->
-    <div class="nav-controls">
-        <button id="prevSlideBtn" class="nav-btn" disabled><i class="fa-solid fa-chevron-left"></i></button>
-        <div class="nav-dots" id="slideDots"></div>
-        <button id="nextSlideBtn" class="nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-
     <!-- SCRIPT PER LA LOGICA INTERATTIVA -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             
-            // --- Logica Motore di Presentazione a Slide ---
+            // --- Logica Motore di Presentazione a Slide (Touch Swipe & Tastiera) ---
             const slides = document.querySelectorAll('.slide-container');
-            const prevBtn = document.getElementById('prevSlideBtn');
-            const nextBtn = document.getElementById('nextSlideBtn');
-            const dotsContainer = document.getElementById('slideDots');
             let currentSlide = 0;
-
-            // Creazione dei pallini indicatori in base al numero di slide
-            slides.forEach((_, i) => {
-                const dot = document.createElement('div');
-                dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
-                dotsContainer.appendChild(dot);
-            });
-            const dots = document.querySelectorAll('.nav-dot');
 
             // Funzione di aggiornamento vista
             function updatePresentation() {
@@ -615,21 +566,9 @@
                         slide.classList.remove('active');
                     }
                 });
-                dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
-                
-                prevBtn.disabled = currentSlide === 0;
-                nextBtn.disabled = currentSlide === slides.length - 1;
             }
 
-            prevBtn.addEventListener('click', () => {
-                if (currentSlide > 0) { currentSlide--; updatePresentation(); }
-            });
-
-            nextBtn.addEventListener('click', () => {
-                if (currentSlide < slides.length - 1) { currentSlide++; updatePresentation(); }
-            });
-
-            // Navigazione supportata anche tramite frecce direzionali della tastiera
+            // Navigazione supportata tramite frecce direzionali della tastiera
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'ArrowRight') {
                     if (currentSlide < slides.length - 1) { currentSlide++; updatePresentation(); }
@@ -637,6 +576,31 @@
                     if (currentSlide > 0) { currentSlide--; updatePresentation(); }
                 }
             });
+
+            // Navigazione tramite Scorrimento Dito (Touch Swipe)
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            document.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+
+            document.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipeGesture();
+            });
+
+            function handleSwipeGesture() {
+                const threshold = 50; // Distanza minima per riconoscere il gesto
+                if (touchEndX < touchStartX - threshold) {
+                    // Swipe verso sinistra -> Prossima slide
+                    if (currentSlide < slides.length - 1) { currentSlide++; updatePresentation(); }
+                }
+                if (touchEndX > touchStartX + threshold) {
+                    // Swipe verso destra -> Slide precedente
+                    if (currentSlide > 0) { currentSlide--; updatePresentation(); }
+                }
+            }
 
             // Inizializza la prima slide
             updatePresentation();
