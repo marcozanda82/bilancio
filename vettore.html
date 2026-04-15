@@ -1,0 +1,770 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { BookOpen, PenTool, CheckSquare, ChevronRight, ChevronLeft, Menu, X, MousePointer2, RefreshCw, Calculator, MoveRight, CornerUpLeft, Eye, Target } from 'lucide-react';
+
+// --- CONTENUTI TEORICI ---
+const pages = [
+  {
+    id: 'intro',
+    title: '1. Scalari vs Vettori',
+    content: (
+      <div className="space-y-4">
+        <p>In fisica, non tutte le grandezze sono uguali. Esistono due grandi famiglie:</p>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h3 className="font-bold text-blue-800 mb-2">Grandezze Scalari</h3>
+            <p>Sono definite solo da un <strong>numero</strong> (modulo) e dalla sua <strong>unità di misura</strong>.</p>
+            <ul className="list-disc ml-5 mt-2 text-sm">
+              <li>Massa: 5 kg</li>
+              <li>Tempo: 12 s</li>
+              <li>Temperatura: 20 °C</li>
+            </ul>
+            <p className="mt-2 text-xs italic">Non ha senso chiedersi "in che direzione va la massa?". È solo una quantità.</p>
+          </div>
+          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+            <h3 className="font-bold text-red-800 mb-2">Grandezze Vettoriali</h3>
+            <p>Non basta un numero. Hanno bisogno di <strong>3 informazioni</strong>: Modulo, Direzione e Verso.</p>
+            <ul className="list-disc ml-5 mt-2 text-sm">
+              <li>Spostamento: 5 km verso Nord</li>
+              <li>Velocità: 100 km/h verso Roma</li>
+              <li>Forza: 10 N verso il basso</li>
+            </ul>
+            <p className="mt-2 text-xs italic">"Mi sono spostato di 5 km" non basta: dove sei finito? Serve sapere la direzione!</p>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'def',
+    title: '2. Anatomia di un Vettore',
+    content: (
+      <div className="space-y-4">
+        <p>Un vettore si rappresenta graficamente con una <strong>freccia</strong>, indicata solitamente con una lettera e una freccina sopra: <span className="font-bold font-serif italic">v&#8407;</span>.</p>
+        <div className="bg-slate-50 p-6 rounded-lg flex flex-col items-center border border-slate-200">
+          <svg width="300" height="100" viewBox="0 0 300 100">
+            <line x1="20" y1="80" x2="250" y2="30" stroke="#ef4444" strokeWidth="4" />
+            <polygon points="250,30 235,25 240,40" fill="#ef4444" transform="rotate(12 250 30)" />
+            <text x="120" y="45" fill="#ef4444" fontSize="20" fontWeight="bold">v</text>
+            
+            <path d="M 20 85 L 20 95 L 250 95 L 250 35" fill="none" stroke="#94a3b8" strokeDasharray="4" />
+            <text x="110" y="110" fill="#64748b" fontSize="12">Modulo (Lunghezza)</text>
+            
+            <line x1="0" y1="84.3" x2="300" y2="19.1" stroke="#cbd5e1" strokeDasharray="4" strokeWidth="1" />
+            <text x="10" y="70" fill="#64748b" fontSize="12">Direzione (Retta infinita)</text>
+            
+            <circle cx="250" cy="30" r="15" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="2" />
+            <text x="260" y="20" fill="#3b82f6" fontSize="12">Verso (Punta)</text>
+          </svg>
+        </div>
+        <ul className="list-disc ml-5 space-y-2">
+          <li><strong>Modulo (o Intensità):</strong> È la lunghezza della freccia. Indica il valore numerico (es. quanti Newton o metri).</li>
+          <li><strong>Direzione:</strong> È la retta invisibile su cui giace il vettore. (es. Orizzontale, Verticale, Inclinata di 30°).</li>
+          <li><strong>Verso:</strong> È la punta della freccia. Sulla stessa direzione ci sono sempre due versi possibili (es. Destra/Sinistra, Su/Giù).</li>
+        </ul>
+      </div>
+    )
+  },
+  {
+    id: 'asse',
+    title: '3. Operazioni sullo Stesso Asse',
+    content: (
+      <div className="space-y-4">
+        <p>Quando i vettori sono paralleli (stessa direzione), le cose sono semplici: la geometria si riduce all'aritmetica lineare.</p>
+        <h3 className="font-bold text-lg text-slate-800">Somma (Stesso Verso)</h3>
+        <p>Se cammini 3m in avanti e poi 2m in avanti, hai fatto 5m. I moduli si <strong>sommano</strong>.</p>
+        <div className="bg-slate-100 p-4 rounded-lg">
+          <svg width="100%" height="40">
+            <line x1="10" y1="20" x2="100" y2="20" stroke="#ef4444" strokeWidth="4" />
+            <polygon points="100,20 90,15 90,25" fill="#ef4444" />
+            <text x="45" y="15" fill="#ef4444" fontSize="14">3m</text>
+            
+            <line x1="100" y1="20" x2="160" y2="20" stroke="#3b82f6" strokeWidth="4" />
+            <polygon points="160,20 150,15 150,25" fill="#3b82f6" />
+            <text x="120" y="15" fill="#3b82f6" fontSize="14">2m</text>
+            
+            <line x1="10" y1="35" x2="160" y2="35" stroke="#22c55e" strokeWidth="4" />
+            <polygon points="160,35 150,30 150,40" fill="#22c55e" />
+            <text x="75" y="48" fill="#22c55e" fontSize="12">Risultante: 5m</text>
+          </svg>
+        </div>
+        <h3 className="font-bold text-lg text-slate-800 mt-6">Differenza (Versi Opposti)</h3>
+        <p>Se cammini 5m in avanti e 2m indietro, sei a 3m dal punto di partenza. I moduli si <strong>sottraggono</strong> e il verso è quello del vettore più lungo.</p>
+        <div className="bg-slate-100 p-4 rounded-lg">
+          <svg width="100%" height="40">
+            <line x1="10" y1="15" x2="160" y2="15" stroke="#ef4444" strokeWidth="4" />
+            <polygon points="160,15 150,10 150,20" fill="#ef4444" />
+            <text x="75" y="12" fill="#ef4444" fontSize="14">5m</text>
+            
+            <line x1="160" y1="25" x2="100" y2="25" stroke="#3b82f6" strokeWidth="4" />
+            <polygon points="100,25 110,20 110,30" fill="#3b82f6" />
+            <text x="120" y="38" fill="#3b82f6" fontSize="14">2m</text>
+            
+            <line x1="10" y1="35" x2="100" y2="35" stroke="#22c55e" strokeWidth="4" />
+            <polygon points="100,35 90,30 90,40" fill="#22c55e" />
+          </svg>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'angolati',
+    title: '4. Vettori Angolati',
+    content: (
+      <div className="space-y-4">
+        <p>Se i vettori formano un angolo, l'aritmetica fallisce. Dobbiamo usare la geometria con due metodi equivalenti:</p>
+        <div className="grid md:grid-cols-2 gap-6 mt-4">
+          <div className="border border-slate-200 rounded-lg p-4">
+            <h4 className="font-bold text-blue-700 mb-2">Metodo Punta-Coda</h4>
+            <ol className="list-decimal ml-4 text-sm space-y-1 mb-4">
+              <li>Si disegna il primo vettore (Rosso).</li>
+              <li>Si posiziona la <strong>coda</strong> del secondo (Blu) sulla <strong>punta</strong> del primo.</li>
+              <li>Il vettore somma (Verde) unisce la <strong>coda del primo</strong> alla <strong>punta dell'ultimo</strong>.</li>
+            </ol>
+          </div>
+          <div className="border border-slate-200 rounded-lg p-4">
+            <h4 className="font-bold text-blue-700 mb-2">Metodo del Parallelogramma</h4>
+            <ol className="list-decimal ml-4 text-sm space-y-1 mb-4">
+              <li>Unire le due code nello stesso punto.</li>
+              <li>Tracciare le parallele dai punti di arrivo.</li>
+              <li>La <strong>diagonale</strong> che parte dalle code è il vettore Somma.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'trigonometria',
+    title: '5. Seno, Coseno e Componenti',
+    content: (
+      <div className="space-y-4">
+        <p>Un vettore obliquo può essere scomposto in due "ombre" (componenti) proiettandolo sugli assi X e Y. Per calcolare la loro lunghezza usiamo <strong>Seno (sin)</strong> e <strong>Coseno (cos)</strong>.</p>
+        <div className="bg-slate-800 text-white p-4 rounded-lg">
+          <p className="mb-2">Dato un vettore di modulo <strong>v</strong> e un angolo <strong>&alpha;</strong> (alfa) formato con l'asse X:</p>
+          <ul className="space-y-2 text-lg">
+            <li><span className="text-red-400 font-bold">v&#x2093;</span> = v &middot; cos(&alpha;)</li>
+            <li><span className="text-blue-400 font-bold">v&#x2098;</span> = v &middot; sin(&alpha;)</li>
+          </ul>
+        </div>
+        <h4 className="font-bold text-lg mt-6">La Somma Analitica in 3 Step:</h4>
+        <ol className="list-decimal ml-5 space-y-2">
+          <li><strong>Scomponi:</strong> Trova le componenti X e Y di tutti i vettori.</li>
+          <li><strong>Somma gli Assi:</strong> Somma tutte le X tra loro (S&#x2093;) e tutte le Y tra loro (S&#x2098;).</li>
+          <li><strong>Pitagora:</strong> Calcola il vettore finale usando il teorema: <strong>S = &radic;(S&#x2093;&sup2; + S&#x2098;&sup2;)</strong>.</li>
+        </ol>
+      </div>
+    )
+  }
+];
+
+const quizQuestions = [
+  { question: "Quale tra queste è una grandezza vettoriale?", options: ["Il tempo", "La temperatura", "Lo spostamento", "La massa"], correct: 2, explanation: "Lo spostamento richiede un modulo, una direzione e un verso." },
+  { question: "Nel metodo Punta-Coda, da dove parte e dove arriva il vettore Somma?", options: ["Punta del primo alla coda dell'ultimo", "Coda del primo alla punta dell'ultimo", "Dall'origine degli assi al centro", "Unisce le due punte"], correct: 1, explanation: "Il vettore Somma è la scorciatoia: parte dalla partenza (coda) e arriva alla destinazione (punta)." },
+  { question: "Vettori sullo stesso asse: v1=10m (destra) e v2=4m (sinistra). Vettore somma?", options: ["14m verso destra", "6m verso destra", "6m verso sinistra", "2.5m"], correct: 1, explanation: "Hanno versi opposti, si sottraggono (10 - 4 = 6). Verso del maggiore (destra)." },
+  { question: "Per calcolare la componente sull'asse X (adiacente all'angolo α), uso?", options: ["Tangente", "Seno", "Coseno", "Pitagora"], correct: 2, explanation: "Il Coseno trova la componente adiacente (vicina) all'angolo." }
+];
+
+// --- COMPONENTI UI BASE ---
+
+function TheoryView({ page }) {
+  return (
+    <div className="max-w-2xl mx-auto pb-12">
+      <h2 className="text-2xl font-extrabold text-slate-800 mb-6">{page.title}</h2>
+      <div className="text-slate-700 leading-relaxed text-base md:text-lg">{page.content}</div>
+    </div>
+  );
+}
+
+function QuizView() {
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selectedOpt, setSelectedOpt] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const q = quizQuestions[currentQ];
+
+  const handleSelect = (idx) => {
+    if (showResult) return;
+    setSelectedOpt(idx);
+    setShowResult(true);
+    if (idx === q.correct) setScore(score + 1);
+  };
+  const nextQuestion = () => { setSelectedOpt(null); setShowResult(false); setCurrentQ(prev => prev + 1); };
+  const resetQuiz = () => { setCurrentQ(0); setSelectedOpt(null); setShowResult(false); setScore(0); };
+
+  if (currentQ >= quizQuestions.length) {
+    return (
+      <div className="max-w-lg mx-auto text-center mt-12 bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+        <h2 className="text-3xl font-bold mb-4">Quiz Completato! 🚀</h2>
+        <p className="text-xl mb-6">Hai risposto correttamente a {score} su {quizQuestions.length} domande.</p>
+        <button onClick={resetQuiz} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">Ripeti il Quiz</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-xl mx-auto mt-8 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <div className="text-sm text-slate-500 mb-4 font-bold uppercase tracking-wider">Domanda {currentQ + 1} di {quizQuestions.length}</div>
+      <h2 className="text-xl font-bold text-slate-800 mb-6">{q.question}</h2>
+      <div className="space-y-3">
+        {q.options.map((opt, idx) => {
+          let btnClass = "w-full text-left p-4 rounded-lg border-2 transition-all ";
+          if (!showResult) btnClass += "border-slate-200 hover:border-blue-400 hover:bg-blue-50";
+          else if (idx === q.correct) btnClass += "border-green-500 bg-green-50 font-bold";
+          else if (idx === selectedOpt) btnClass += "border-red-500 bg-red-50";
+          else btnClass += "border-slate-200 opacity-50";
+          return <button key={idx} onClick={() => handleSelect(idx)} className={btnClass} disabled={showResult}>{opt}</button>;
+        })}
+      </div>
+      {showResult && (
+        <div className={`mt-6 p-4 rounded-lg ${selectedOpt === q.correct ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          <p className="font-bold mb-1">{selectedOpt === q.correct ? 'Esatto! 🎉' : 'Ops! Sbagliato.'}</p>
+          <p className="text-sm">{q.explanation}</p>
+          <button onClick={nextQuestion} className="mt-4 bg-slate-800 text-white px-4 py-2 rounded font-bold hover:bg-slate-700">
+            {currentQ < quizQuestions.length - 1 ? 'Prossima Domanda' : 'Vedi Risultati'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- ESERCIZIARIO INTERATTIVO ---
+
+// 1 & 2: Punta-Coda
+function GraphicalExercise({ mode }) {
+  const svgRef = useRef(null);
+  const SNAP_DISTANCE = 25;
+  const isDiff = mode === 'diff';
+
+  const generateRandomVectors = () => {
+    const r = () => (Math.floor(Math.random() * 5) + 3) * 20 * (Math.random() > 0.5 ? 1 : -1);
+    return [
+      { id: 'v1', x: 150, y: 150, dx: Math.abs(r()), dy: -Math.abs(r()), color: '#ef4444', label: 'a', isFlipped: false },
+      { id: 'v2', x: 50, y: 250, dx: r(), dy: r(), color: '#3b82f6', label: 'b', isFlipped: false }
+    ];
+  };
+
+  const [vectors, setVectors] = useState(generateRandomVectors());
+  const [resultant, setResultant] = useState(null);
+  const [dragging, setDragging] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const getMouseCoords = (e) => {
+    const CTM = svgRef.current.getScreenCTM();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (clientX - CTM.e) / CTM.a, y: (clientY - CTM.f) / CTM.d };
+  };
+
+  const handlePointerDown = (e, id) => {
+    e.preventDefault();
+    const coords = getMouseCoords(e);
+    const vec = vectors.find(v => v.id === id);
+    setDragging({ id, offsetX: coords.x - vec.x, offsetY: coords.y - vec.y });
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    const coords = getMouseCoords(e);
+    setVectors(prev => prev.map(v => v.id === dragging.id ? { ...v, x: coords.x - dragging.offsetX, y: coords.y - dragging.offsetY } : v));
+    setResultant(null);
+    setSuccess(false);
+  };
+
+  const handlePointerUp = () => {
+    if (!dragging) return;
+    const dragged = vectors.find(v => v.id === dragging.id);
+    let snappedToId = null;
+    let isSecond = false;
+    let newX = dragged.x;
+    let newY = dragged.y;
+
+    vectors.forEach(target => {
+      if (target.id === dragging.id) return;
+      if (Math.hypot(dragged.x - (target.x + target.dx), dragged.y - (target.y + target.dy)) < SNAP_DISTANCE) {
+        newX = target.x + target.dx; newY = target.y + target.dy; snappedToId = target.id; isSecond = true;
+      } else if (Math.hypot((dragged.x + dragged.dx) - target.x, (dragged.y + dragged.dy) - target.y) < SNAP_DISTANCE) {
+        newX = target.x - dragged.dx; newY = target.y - dragged.dy; snappedToId = target.id; isSecond = false;
+      }
+    });
+
+    if (snappedToId) {
+      setVectors(prev => prev.map(v => v.id === dragging.id ? { ...v, x: newX, y: newY } : v));
+      const first = isSecond ? vectors.find(v => v.id === snappedToId) : { ...dragged, x: newX, y: newY };
+      const second = isSecond ? { ...dragged, x: newX, y: newY } : vectors.find(v => v.id === snappedToId);
+      setResultant({ x: first.x, y: first.y, dx: (second.x + second.dx) - first.x, dy: (second.y + second.dy) - first.y });
+      const vB = vectors.find(v => v.id === 'v2');
+      if (isDiff) { if (vB.isFlipped) setSuccess(true); } 
+      else { if (!vB.isFlipped) setSuccess(true); }
+    } else {
+      setVectors(prev => prev.map(v => v.id === dragging.id ? { ...v, x: newX, y: newY } : v));
+    }
+    setDragging(null);
+  };
+
+  const flipVectorB = () => {
+    setVectors(prev => prev.map(v => v.id === 'v2' ? { ...v, dx: -v.dx, dy: -v.dy, isFlipped: !v.isFlipped, label: v.isFlipped ? 'b' : '-b' } : v));
+    setResultant(null);
+    setSuccess(false);
+  };
+
+  const nextExercise = () => {
+    setVectors(generateRandomVectors());
+    setResultant(null);
+    setSuccess(false);
+  };
+
+  const renderVector = (v, isRes = false) => {
+    const angle = Math.atan2(v.dy, v.dx) * (180 / Math.PI);
+    const length = Math.hypot(v.dx, v.dy);
+    return (
+      <g key={v.id || 'res'} transform={`translate(${v.x}, ${v.y})`} onPointerDown={!isRes ? e => handlePointerDown(e, v.id) : undefined} style={{ cursor: !isRes ? 'grab' : 'default', opacity: isRes ? 0.8 : 1 }}>
+        {!isRes && <line x1="0" y1="0" x2={v.dx} y2={v.dy} stroke="transparent" strokeWidth="25" />}
+        <line x1="0" y1="0" x2={v.dx} y2={v.dy} stroke={isRes ? '#22c55e' : v.color} strokeWidth={isRes ? "6" : "4"} strokeDasharray={isRes ? "8,4" : "none"} />
+        <polygon points={`${length},0 ${length-15},-6 ${length-15},6`} fill={isRes ? '#22c55e' : v.color} transform={`rotate(${angle})`} />
+        <text x={v.dx/2} y={v.dy/2 - 12} fill={isRes ? '#166534' : v.color} fontWeight="bold" fontSize="16" pointerEvents="none">{isRes ? (isDiff ? 'd = a - b' : 's = a + b') : `${v.label}⃗`}</text>
+        {!isRes && <circle cx="0" cy="0" r="6" fill="white" stroke={v.color} strokeWidth="2" pointerEvents="none" />}
+      </g>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-100 p-4 rounded-lg">
+        <div>
+          <h3 className="font-bold text-slate-800">{isDiff ? 'Calcola la Differenza (a - b)' : 'Calcola la Somma (a + b)'}</h3>
+          <p className="text-sm text-slate-600">Trascina i vettori per agganciarli punta-coda.</p>
+        </div>
+        <div className="mt-2 md:mt-0 flex gap-2">
+          {isDiff && <button onClick={flipVectorB} className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded font-bold text-sm flex items-center"><CornerUpLeft className="w-4 h-4 mr-1"/> Inverti b (-b)</button>}
+          <button onClick={nextExercise} className="bg-slate-300 hover:bg-slate-400 text-slate-800 px-3 py-1.5 rounded font-bold text-sm flex items-center"><RefreshCw className="w-4 h-4 mr-1"/> Nuovo</button>
+        </div>
+      </div>
+      
+      <div className={`border-4 rounded-xl overflow-hidden touch-none relative ${success ? 'border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'border-slate-200'}`} style={{ height: '400px' }}>
+        <svg ref={svgRef} width="100%" height="100%" onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp} className="bg-slate-50 touch-none">
+          <defs><pattern id="gridbg" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" strokeWidth="1"/></pattern></defs>
+          <rect width="100%" height="100%" fill="url(#gridbg)" />
+          {resultant && renderVector(resultant, true)}
+          {vectors.map(v => renderVector(v))}
+        </svg>
+        {success && <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow-lg animate-bounce">Perfetto! Esercizio Corretto! 🎉</div>}
+        {resultant && !success && <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-full font-bold shadow-lg">Risultante trovata, ma non è l'operazione richiesta. Riprova!</div>}
+      </div>
+    </div>
+  );
+}
+
+// 3. Proiezioni Interattive
+function ProjectionExercise() {
+  const svgRef = useRef(null);
+  const centerX = 200;
+  const centerY = 200;
+  
+  const [tip, setTip] = useState({ x: 300, y: 100 });
+  const [dragging, setDragging] = useState(false);
+
+  const getMouseCoords = (e) => {
+    const CTM = svgRef.current.getScreenCTM();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    let newX = (clientX - CTM.e) / CTM.a;
+    let newY = (clientY - CTM.f) / CTM.d;
+    newX = Math.max(20, Math.min(newX, 380));
+    newY = Math.max(20, Math.min(newY, 380));
+    return { x: newX, y: newY };
+  };
+
+  const handlePointerDown = (e) => {
+    e.preventDefault();
+    setDragging(true);
+    setTip(getMouseCoords(e));
+  };
+
+  const handlePointerMove = (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    setTip(getMouseCoords(e));
+  };
+
+  const handlePointerUp = () => setDragging(false);
+
+  const dx = tip.x - centerX;
+  const dy = centerY - tip.y; 
+  
+  const unitaX = (dx / 10).toFixed(1);
+  const unitaY = (dy / 10).toFixed(1);
+  
+  const moduloPx = Math.hypot(dx, dy);
+  const moduloVal = (moduloPx / 10).toFixed(1);
+  
+  let angoloRad = Math.atan2(dy, dx);
+  let angoloDeg = Math.round(angoloRad * (180 / Math.PI));
+  if (angoloDeg < 0) angoloDeg += 360;
+
+  const drawVector = (x1, y1, x2, y2, color, isDashed = false) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    const length = Math.hypot(dx, dy);
+    if(length < 1) return null;
+    return (
+      <g transform={`translate(${x1}, ${y1})`}>
+        <line x1="0" y1="0" x2={length} y2="0" stroke={color} strokeWidth="3" strokeDasharray={isDashed ? "5,5" : "none"} transform={`rotate(${angle})`}/>
+        {!isDashed && <polygon points={`${length},0 ${length-10},-5 ${length-10},5`} fill={color} transform={`rotate(${angle})`} />}
+      </g>
+    );
+  };
+
+  const r = 30;
+  const startAngle = 0;
+  const endAngle = -angoloRad; 
+  const startX = centerX + r;
+  const startY = centerY;
+  const endX = centerX + r * Math.cos(endAngle);
+  const endY = centerY + r * Math.sin(endAngle);
+  const largeArcFlag = angoloDeg > 180 ? 1 : 0;
+  const arcPath = `M ${startX} ${startY} A ${r} ${r} 0 ${largeArcFlag} 0 ${endX} ${endY}`;
+
+  return (
+    <div className="grid md:grid-cols-2 gap-6">
+      <div className="bg-white p-4 rounded-xl border border-slate-200">
+        <h3 className="font-bold text-slate-800 mb-2 flex items-center">
+          <Target className="w-5 h-5 mr-2 text-indigo-600"/>
+          Piano Cartesiano Interattivo
+        </h3>
+        <p className="text-sm text-slate-500 mb-4">Trascina la punta del vettore v (verde) per esplorare come cambiano le sue componenti (ombre).</p>
+        
+        <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 flex justify-center touch-none">
+          <svg 
+            ref={svgRef} width="400" height="400" viewBox="0 0 400 400"
+            onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp}
+          >
+            <defs><pattern id="gridbg-small" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="#f1f5f9" strokeWidth="1"/></pattern></defs>
+            <rect width="100%" height="100%" fill="url(#gridbg-small)" />
+            
+            <line x1="0" y1={centerY} x2="400" y2={centerY} stroke="#94a3b8" strokeWidth="2" />
+            <line x1={centerX} y1="0" x2={centerX} y2="400" stroke="#94a3b8" strokeWidth="2" />
+            <text x="380" y={centerY - 10} fill="#64748b" fontSize="14" fontWeight="bold">X</text>
+            <text x={centerX + 10} y="20" fill="#64748b" fontSize="14" fontWeight="bold">Y</text>
+
+            {moduloPx > 0 && (
+              <>
+                <path d={arcPath} fill="none" stroke="#a855f7" strokeWidth="2" />
+                <text x={centerX + r * Math.cos(endAngle/2) + (angoloDeg > 180 ? -15 : 10)} 
+                      y={centerY + r * Math.sin(endAngle/2) + (angoloDeg > 180 ? -10 : 5)} 
+                      fill="#a855f7" fontSize="12" fontWeight="bold">α</text>
+              </>
+            )}
+
+            <line x1={tip.x} y1={tip.y} x2={tip.x} y2={centerY} stroke="#ef4444" strokeWidth="1" strokeDasharray="4,4" />
+            <line x1={tip.x} y1={tip.y} x2={centerX} y2={tip.y} stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,4" />
+
+            {drawVector(centerX, centerY, tip.x, centerY, '#ef4444')} 
+            {drawVector(centerX, centerY, centerX, tip.y, '#3b82f6')} 
+
+            {drawVector(centerX, centerY, tip.x, tip.y, '#22c55e')}
+            <text x={tip.x + 10} y={tip.y - 10} fill="#166534" fontWeight="bold" fontSize="18">v⃗</text>
+
+            <circle cx={tip.x} cy={tip.y} r="25" fill="transparent" style={{ cursor: 'grab' }} onPointerDown={handlePointerDown} />
+            <circle cx={tip.x} cy={tip.y} r="6" fill="white" stroke="#22c55e" strokeWidth="3" pointerEvents="none" />
+          </svg>
+        </div>
+      </div>
+
+      <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col justify-center">
+        <h3 className="font-bold text-slate-800 mb-6 text-xl">Dati in Tempo Reale</h3>
+        
+        <div className="space-y-6">
+          <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+             <span className="font-bold text-green-800">Modulo (v):</span>
+             <span className="text-xl font-mono">{moduloVal} u</span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
+             <span className="font-bold text-purple-800">Angolo (α):</span>
+             <span className="text-xl font-mono">{angoloDeg}°</span>
+          </div>
+
+          <div className="space-y-3">
+             <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+               <div className="flex justify-between items-center mb-1">
+                 <span className="font-bold text-red-800">Comp. X (Coseno):</span>
+                 <span className="text-xl font-mono text-red-600">{unitaX}</span>
+               </div>
+               <div className="text-sm text-red-500 font-mono">
+                 v_x = {moduloVal} &middot; cos({angoloDeg}°) = {unitaX}
+               </div>
+             </div>
+
+             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+               <div className="flex justify-between items-center mb-1">
+                 <span className="font-bold text-blue-800">Comp. Y (Seno):</span>
+                 <span className="text-xl font-mono text-blue-600">{unitaY}</span>
+               </div>
+               <div className="text-sm text-blue-500 font-mono">
+                 v_y = {moduloVal} &middot; sin({angoloDeg}°) = {unitaY}
+               </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 4. Metodo Analitico (Versione Classica)
+function AnalyticalExercise() {
+  const angoli = [0, 30, 45, 60, 90, 120, 150, 180];
+  const moduli = [10, 20, 30, 40, 50];
+
+  const generateData = () => {
+    const a1 = angoli[Math.floor(Math.random() * angoli.length)];
+    const a2 = angoli[Math.floor(Math.random() * angoli.length)];
+    const m1 = moduli[Math.floor(Math.random() * moduli.length)];
+    const m2 = moduli[Math.floor(Math.random() * moduli.length)];
+    return {
+      v1: { mod: m1, ang: a1, x: m1 * Math.cos(a1 * Math.PI / 180), y: m1 * Math.sin(a1 * Math.PI / 180) },
+      v2: { mod: m2, ang: a2, x: m2 * Math.cos(a2 * Math.PI / 180), y: m2 * Math.sin(a2 * Math.PI / 180) }
+    };
+  };
+
+  const [data, setData] = useState(generateData());
+  const [answers, setAnswers] = useState({ v1x: '', v1y: '', v2x: '', v2y: '', sx: '', sy: '', stot: '' });
+  const [feedback, setFeedback] = useState(null);
+
+  const checkAnswers = () => {
+    const expectedSx = data.v1.x + data.v2.x;
+    const expectedSy = data.v1.y + data.v2.y;
+    const expectedStot = Math.hypot(expectedSx, expectedSy);
+    
+    // Tolleranza per arrotondamenti
+    const tolleranza = 1.0; 
+    
+    const isCorrect = (val, expected) => Math.abs(parseFloat(val) - expected) <= tolleranza;
+
+    if (
+      isCorrect(answers.v1x, data.v1.x) && isCorrect(answers.v1y, data.v1.y) &&
+      isCorrect(answers.v2x, data.v2.x) && isCorrect(answers.v2y, data.v2.y) &&
+      isCorrect(answers.sx, expectedSx) && isCorrect(answers.sy, expectedSy) &&
+      isCorrect(answers.stot, expectedStot)
+    ) {
+      setFeedback({ type: 'success', text: 'Tutti i calcoli sono perfetti! Bravissimo! 🏆' });
+    } else {
+      setFeedback({ type: 'error', text: 'Ci sono degli errori (ricorda i segni negativi e usa almeno 1 decimale). Riprova!' });
+    }
+  };
+
+  const newExercise = () => {
+    setData(generateData());
+    setAnswers({ v1x: '', v1y: '', v2x: '', v2y: '', sx: '', sy: '', stot: '' });
+    setFeedback(null);
+  };
+
+  // Disegno semplice del vettore sul canvas SVG cartesiano
+  const drawVector = (v, color, label) => {
+    const scale = 3; 
+    const svgX = 150 + (v.x * scale);
+    const svgY = 150 - (v.y * scale);
+    return (
+      <g key={label}>
+        <line x1="150" y1="150" x2={svgX} y2={svgY} stroke={color} strokeWidth="3" />
+        <circle cx={svgX} cy={svgY} r="4" fill={color} />
+        <text x={svgX + 5} y={svgY - 5} fill={color} fontWeight="bold" fontSize="14">{label}</text>
+      </g>
+    );
+  };
+
+  return (
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* Sinistra: Grafico Cartesiano */}
+      <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
+        <h3 className="font-bold mb-4 text-slate-800 text-lg">Il Problema</h3>
+        <svg width="300" height="300" className="bg-slate-50 border border-slate-300 rounded">
+          {/* Assi */}
+          <line x1="0" y1="150" x2="300" y2="150" stroke="#cbd5e1" strokeWidth="2" />
+          <line x1="150" y1="0" x2="150" y2="300" stroke="#cbd5e1" strokeWidth="2" />
+          <text x="280" y="140" fill="#64748b" fontSize="12">X</text>
+          <text x="160" y="20" fill="#64748b" fontSize="12">Y</text>
+          
+          {drawVector(data.v1, '#ef4444', 'a')}
+          {drawVector(data.v2, '#3b82f6', 'b')}
+        </svg>
+        
+        <div className="mt-6 w-full bg-slate-100 p-4 rounded-lg text-sm space-y-2">
+          <p className="text-red-600 font-bold text-base">Vettore a: modulo = {data.v1.mod}, angolo = {data.v1.ang}°</p>
+          <p className="text-blue-600 font-bold text-base">Vettore b: modulo = {data.v2.mod}, angolo = {data.v2.ang}°</p>
+        </div>
+      </div>
+
+      {/* Destra: Calcoli e Form */}
+      <div className="space-y-4">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-sm">
+          <strong>Usa la calcolatrice!</strong> Scomponi i vettori calcolando <em>modulo &middot; cos(angolo)</em> per la X, e <em>modulo &middot; sin(angolo)</em> per la Y. (Usa i decimali col punto, es: 17.3).
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2 p-3 bg-red-50 rounded border border-red-100">
+            <h4 className="font-bold text-red-800 text-sm">Componenti di a</h4>
+            <input type="number" placeholder="a_x (cos)" className="w-full p-2 border rounded bg-white" value={answers.v1x} onChange={e => setAnswers({...answers, v1x: e.target.value})} />
+            <input type="number" placeholder="a_y (sin)" className="w-full p-2 border rounded bg-white" value={answers.v1y} onChange={e => setAnswers({...answers, v1y: e.target.value})} />
+          </div>
+          <div className="space-y-2 p-3 bg-blue-50 rounded border border-blue-100">
+            <h4 className="font-bold text-blue-800 text-sm">Componenti di b</h4>
+            <input type="number" placeholder="b_x (cos)" className="w-full p-2 border rounded bg-white" value={answers.v2x} onChange={e => setAnswers({...answers, v2x: e.target.value})} />
+            <input type="number" placeholder="b_y (sin)" className="w-full p-2 border rounded bg-white" value={answers.v2y} onChange={e => setAnswers({...answers, v2y: e.target.value})} />
+          </div>
+        </div>
+
+        <div className="p-3 bg-green-50 rounded border border-green-200 space-y-2">
+          <h4 className="font-bold text-green-800 text-sm">Somma (S)</h4>
+          <div className="flex gap-2">
+             <input type="number" placeholder="S_x (a_x + b_x)" className="w-1/2 p-2 border rounded bg-white" value={answers.sx} onChange={e => setAnswers({...answers, sx: e.target.value})} />
+             <input type="number" placeholder="S_y (a_y + b_y)" className="w-1/2 p-2 border rounded bg-white" value={answers.sy} onChange={e => setAnswers({...answers, sy: e.target.value})} />
+          </div>
+          <input type="number" placeholder="Modulo S Totale (Usa Pitagora)" className="w-full p-2 border rounded font-bold bg-white" value={answers.stot} onChange={e => setAnswers({...answers, stot: e.target.value})} />
+        </div>
+
+        {feedback && (
+          <div className={`p-3 rounded font-bold text-sm ${feedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {feedback.text}
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-2">
+          <button onClick={checkAnswers} className="flex-1 bg-slate-800 text-white font-bold py-2 rounded hover:bg-slate-700 flex justify-center items-center"><Calculator className="w-5 h-5 mr-2"/> Verifica Calcoli</button>
+          <button onClick={newExercise} className="bg-slate-200 text-slate-800 p-2 rounded hover:bg-slate-300" title="Nuovo Esercizio"><RefreshCw className="w-5 h-5"/></button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SandboxHub() {
+  const [exerciseMode, setExerciseMode] = useState('somma'); 
+
+  return (
+    <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 min-h-[60vh]">
+      <h2 className="text-2xl font-extrabold text-slate-800 mb-6 flex items-center">
+        <PenTool className="w-6 h-6 mr-2 text-blue-600"/>
+        L'Eserciziario Interattivo
+      </h2>
+      
+      {/* Selettore Esercizi (Ora 4 opzioni) */}
+      <div className="flex flex-wrap gap-2 mb-6 bg-slate-100 p-2 rounded-lg">
+        <button onClick={() => setExerciseMode('somma')} className={`flex-1 py-2 px-3 rounded text-sm font-bold transition-colors ${exerciseMode === 'somma' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-800'}`}>
+          1. Somma Grafica
+        </button>
+        <button onClick={() => setExerciseMode('diff')} className={`flex-1 py-2 px-3 rounded text-sm font-bold transition-colors ${exerciseMode === 'diff' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-800'}`}>
+          2. Differenza Grafica
+        </button>
+        <button onClick={() => setExerciseMode('proiezioni')} className={`flex-1 py-2 px-3 rounded text-sm font-bold transition-colors ${exerciseMode === 'proiezioni' ? 'bg-white shadow text-indigo-600' : 'text-slate-500 hover:text-slate-800'}`}>
+          3. Proiezioni Interattive
+        </button>
+        <button onClick={() => setExerciseMode('analitico')} className={`flex-1 py-2 px-3 rounded text-sm font-bold transition-colors ${exerciseMode === 'analitico' ? 'bg-white shadow text-purple-600' : 'text-slate-500 hover:text-slate-800'}`}>
+          4. Metodo Analitico 
+        </button>
+      </div>
+
+      {/* Rendering della vista corretta */}
+      {exerciseMode === 'somma' && <GraphicalExercise mode="somma" />}
+      {exerciseMode === 'diff' && <GraphicalExercise mode="diff" />}
+      {exerciseMode === 'proiezioni' && <ProjectionExercise />}
+      {exerciseMode === 'analitico' && <AnalyticalExercise />}
+      
+    </div>
+  );
+}
+
+// --- MAIN APP COMPONENT ---
+export default function App() {
+  const [activeTab, setActiveTab] = useState('theory'); // 'theory', 'sandbox', 'quiz'
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const activePage = pages[currentPageIndex];
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
+      <header className="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <h1 className="text-xl md:text-2xl font-bold flex items-center">
+            <span className="text-blue-400 mr-2">↗</span> Laboratorio Vettori
+          </h1>
+          <nav className="hidden md:flex space-x-2">
+            <button onClick={() => setActiveTab('theory')} className={`px-4 py-2 rounded-md font-medium transition-colors ${activeTab === 'theory' ? 'bg-blue-600' : 'hover:bg-slate-800'}`}>
+              <BookOpen className="w-4 h-4 inline mr-2 mb-1"/>Teoria
+            </button>
+            <button onClick={() => setActiveTab('sandbox')} className={`px-4 py-2 rounded-md font-medium transition-colors ${activeTab === 'sandbox' ? 'bg-blue-600' : 'hover:bg-slate-800'}`}>
+              <PenTool className="w-4 h-4 inline mr-2 mb-1"/>Eserciziario
+            </button>
+            <button onClick={() => setActiveTab('quiz')} className={`px-4 py-2 rounded-md font-medium transition-colors ${activeTab === 'quiz' ? 'bg-blue-600' : 'hover:bg-slate-800'}`}>
+              <CheckSquare className="w-4 h-4 inline mr-2 mb-1"/>Quiz
+            </button>
+          </nav>
+          <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X/> : <Menu/>}
+          </button>
+        </div>
+      </header>
+
+      {menuOpen && (
+        <div className="md:hidden bg-slate-800 text-white p-4 space-y-2 absolute w-full z-10 shadow-lg">
+           <button onClick={() => { setActiveTab('theory'); setMenuOpen(false); }} className="block w-full text-left p-3 rounded bg-slate-700">Teoria</button>
+           <button onClick={() => { setActiveTab('sandbox'); setMenuOpen(false); }} className="block w-full text-left p-3 rounded bg-slate-700">Eserciziario Pratico</button>
+           <button onClick={() => { setActiveTab('quiz'); setMenuOpen(false); }} className="block w-full text-left p-3 rounded bg-slate-700">Quiz di Verifica</button>
+        </div>
+      )}
+
+      <div className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 flex flex-col md:flex-row gap-6">
+        
+        {activeTab === 'theory' && (
+          <aside className="w-full md:w-64 shrink-0">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sticky top-24">
+              <h3 className="font-bold text-slate-400 uppercase tracking-wider text-xs mb-4">Indice Argomenti</h3>
+              <ul className="space-y-1">
+                {pages.map((p, idx) => (
+                  <li key={p.id}>
+                    <button 
+                      onClick={() => setCurrentPageIndex(idx)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${currentPageIndex === idx ? 'bg-blue-50 text-blue-700 font-bold border-l-4 border-blue-500' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                    >
+                      {p.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+        )}
+
+        <main className="flex-1 relative">
+          {activeTab === 'theory' && (
+            <div className="bg-white p-6 md:p-10 rounded-xl shadow-sm border border-slate-200 min-h-[60vh]">
+              <TheoryView page={activePage} />
+              <div className="flex justify-between items-center mt-12 pt-6 border-t border-slate-100">
+                <button onClick={() => setCurrentPageIndex(prev => Math.max(0, prev - 1))} disabled={currentPageIndex === 0} className="flex items-center text-blue-600 font-medium hover:text-blue-800 disabled:opacity-30">
+                  <ChevronLeft className="w-5 h-5 mr-1"/> Indietro
+                </button>
+                <span className="text-sm text-slate-400">{currentPageIndex + 1} / {pages.length}</span>
+                <button onClick={() => setCurrentPageIndex(prev => Math.min(pages.length - 1, prev + 1))} disabled={currentPageIndex === pages.length - 1} className="flex items-center text-blue-600 font-medium hover:text-blue-800 disabled:opacity-30">
+                  Avanti <ChevronRight className="w-5 h-5 ml-1"/>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'sandbox' && <SandboxHub />}
+          {activeTab === 'quiz' && <QuizView />}
+
+        </main>
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .animation-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}} />
+    </div>
+  );
+}
