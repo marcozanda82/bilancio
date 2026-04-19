@@ -1,0 +1,394 @@
+import React, { useState, useEffect } from 'react';
+import { CheckCircle2, XCircle, RefreshCcw, Compass, Globe, Clock, Map, Target, Navigation } from 'lucide-react';
+
+const questions = [
+  {
+    id: 1,
+    category: "La Forma della Terra",
+    question: "Perché l'ellissoide di rotazione non è considerato un modello perfetto della Terra?",
+    options: [
+      "Perché non tiene conto dei rilievi montuosi",
+      "Perché non considera le variazioni locali della forza di gravità",
+      "Perché la Terra è perfettamente sferica",
+      "Perché l'asse terrestre è inclinato"
+    ],
+    correct: 1,
+    explanation: "L'ellissoide è un modello geometrico puro. Il Geoide, invece, tiene conto delle variazioni di densità dei materiali interni che influenzano la gravità, rendendo la superficie 'irregolare'."
+  },
+  {
+    id: 2,
+    category: "Prove di Sfericità",
+    question: "In che modo l'analogia della nave che scompare all'orizzonte prova la sfericità?",
+    options: [
+      "Scompare prima la base (scafo) e poi la cima (alberi)",
+      "Scompare tutto il corpo della nave contemporaneamente",
+      "La nave sembra rimpicciolirsi fino a diventare un punto",
+      "La nave appare più grande a causa della rifrazione"
+    ],
+    correct: 0,
+    explanation: "Se la Terra fosse piatta, la nave rimpicciolirebbe ma resterebbe visibile per intero. La curvatura terrestre nasconde prima lo scafo man mano che la nave si allontana."
+  },
+  {
+    id: 3,
+    category: "Prove di Sfericità",
+    question: "Quale prova fisica dimostra lo schiacciamento polare della Terra?",
+    options: [
+      "Il pendolo di Foucault",
+      "La variazione del peso di un oggetto (maggiore ai poli, minore all'equatore)",
+      "La rotazione delle correnti oceaniche",
+      "L'alternanza delle stagioni"
+    ],
+    correct: 1,
+    explanation: "Essendo i poli più vicini al centro della Terra rispetto all'equatore (a causa dello schiacciamento), la forza di gravità è leggermente superiore e gli oggetti pesano di più."
+  },
+  {
+    id: 4,
+    category: "Reticolo Geografico",
+    question: "Cosa si intende per 'Circolo Massimo'?",
+    options: [
+      "Qualsiasi parallelo terrestre",
+      "Il Tropico del Cancro",
+      "Un circolo il cui piano passa per il centro della Terra",
+      "La circonferenza di un fuso orario"
+    ],
+    correct: 2,
+    explanation: "L'Equatore e tutte le coppie di meridiani/antimeridiani sono circoli massimi. Sono importanti perché rappresentano la distanza più breve tra due punti sulla sfera."
+  },
+  {
+    id: 5,
+    category: "Coordinate Geografiche",
+    question: "Un grado di latitudine corrisponde a circa 111 km. Come si suddivide ulteriormente un grado per maggiore precisione?",
+    options: [
+      "In 10 decimi e 100 centesimi",
+      "In 60 primi (') e ogni primo in 60 secondi ('')",
+      "In 24 ore e 60 minuti",
+      "In 1000 metri nautici"
+    ],
+    correct: 1,
+    explanation: "Il sistema è sessagesimale: 1° = 60' (primi), 1' = 60'' (secondi). Un secondo di grado a terra corrisponde a circa 30 metri."
+  },
+  {
+    id: 6,
+    category: "Azimut e Orientamento",
+    question: "Cos'è l'Azimut di un punto all'orizzonte?",
+    options: [
+      "L'angolo misurato in senso orario tra il Nord e la direzione del punto",
+      "L'altezza del punto rispetto all'orizzonte",
+      "La distanza in metri dal punto di osservazione",
+      "L'angolo tra il punto e il Sud geografico"
+    ],
+    correct: 0,
+    explanation: "L'Azimut si misura in gradi (0°-360°) partendo dal Nord e muovendosi in senso orario (Est=90°, Sud=180°, Ovest=270°)."
+  },
+  {
+    id: 7,
+    category: "Azimut e Orientamento",
+    question: "Se un oggetto ha un Azimut di 225°, in quale direzione si trova rispetto a te?",
+    options: [
+      "Nord-Est",
+      "Sud-Est",
+      "Sud-Ovest",
+      "Nord-Ovest"
+    ],
+    correct: 2,
+    explanation: "Il Sud è 180°, l'Ovest è 270°. 225° si trova esattamente a metà tra i due, quindi Sud-Ovest."
+  },
+  {
+    id: 8,
+    category: "La Bussola",
+    question: "Cos'è la 'declinazione magnetica'?",
+    options: [
+      "L'errore della bussola dovuto a masse metalliche vicine",
+      "L'angolo tra il Nord Magnetico e il Nord Geografico",
+      "L'inclinazione dell'ago verso il basso",
+      "La perdita di carica magnetica dell'ago col tempo"
+    ],
+    correct: 1,
+    explanation: "Il polo nord magnetico non coincide con il polo nord geografico. Questo angolo varia nel tempo e nello spazio e va corretto per una navigazione precisa."
+  },
+  {
+    id: 9,
+    category: "Fusi Orari",
+    question: "Se a Londra (meridiano 0°) sono le 12:00, che ore sono in un punto situato a 45° di Longitudine Est?",
+    options: [
+      "Le 09:00 dello stesso giorno",
+      "Le 15:00 dello stesso giorno",
+      "Le 13:00 dello stesso giorno",
+      "Le 18:00 dello stesso giorno"
+    ],
+    correct: 1,
+    explanation: "Ogni 15° di longitudine corrispondono a 1 ora. 45° / 15° = 3 ore. Essendo a Est, il tempo è in avanti: 12 + 3 = 15:00."
+  },
+  {
+    id: 10,
+    category: "Fusi Orari",
+    question: "Qual è la funzione del Tempo Coordinato Universale (UTC)?",
+    options: [
+      "È l'ora legale valida solo in Europa",
+      "È il riferimento orario basato sugli orologi atomici da cui derivano i fusi orari",
+      "È il tempo misurato esclusivamente sulla Luna",
+      "È l'orario delle navi in mare aperto"
+    ],
+    correct: 1,
+    explanation: "L'UTC ha sostituito il GMT come standard internazionale di riferimento per la misurazione del tempo."
+  },
+  {
+    id: 11,
+    category: "Linea del cambiamento di data",
+    question: "La linea del cambiamento di data segue approssimativamente quale meridiano?",
+    options: [
+      "Il meridiano di Greenwich (0°)",
+      "Il meridiano di 90° Ovest",
+      "L'antimeridiano di Greenwich (180°)",
+      "Il meridiano che passa per New York"
+    ],
+    correct: 2,
+    explanation: "Si trova nel mezzo dell'Oceano Pacifico, al meridiano 180°, per minimizzare i disagi del cambio di data in aree popolate."
+  },
+  {
+    id: 12,
+    category: "Coordinate",
+    question: "Perché la lunghezza di un grado di Longitudine non è costante come quella di Latitudine?",
+    options: [
+      "Perché i meridiani convergono verso i poli",
+      "Perché la Terra ruota più velocemente all'equatore",
+      "A causa della rifrazione atmosferica",
+      "È costante, la domanda è errata"
+    ],
+    correct: 0,
+    explanation: "I meridiani si avvicinano man mano che si sale verso i poli. All'equatore 1° di longitudine è ~111km, ai poli è 0 km."
+  },
+  {
+    id: 13,
+    category: "Azimut e Orientamento",
+    question: "Per orientare una carta topografica sul terreno, cosa bisogna far coincidere?",
+    options: [
+      "Il bordo della carta con il Sole",
+      "Il Nord della carta con il Nord indicato dalla bussola",
+      "L'Azimut del punto con la scala graduata",
+      "L'altezza del terreno con la latitudine"
+    ],
+    correct: 1,
+    explanation: "Bisogna ruotare la carta finché il suo reticolo (Nord) punta nella stessa direzione del Nord magnetico (corretto della declinazione)."
+  },
+  {
+    id: 14,
+    category: "Orientamento Assoluto",
+    question: "Come si può trovare il Nord geografico di notte nell'emisfero boreale senza bussola?",
+    options: [
+      "Osservando la Luna",
+      "Individuando la Stella Polare (nell'Orsa Minore)",
+      "Osservando la Croce del Sud",
+      "Seguendo la direzione del vento"
+    ],
+    correct: 1,
+    explanation: "La Stella Polare si trova quasi esattamente sulla verticale del Polo Nord geografico ed è visibile tutto l'anno nell'emisfero nord."
+  },
+  {
+    id: 15,
+    category: "Sistemi di Posizionamento",
+    question: "Quanti satelliti sono necessari, come minimo, per determinare una posizione GPS (latitudine, longitudine e altitudine)?",
+    options: [
+      "1 satellite",
+      "2 satelliti",
+      "4 satelliti",
+      "24 satelliti"
+    ],
+    correct: 2,
+    explanation: "Servono 3 satelliti per la posizione orizzontale (trilaterazione) e un 4° per la sincronizzazione temporale e l'altitudine."
+  }
+];
+
+export default function App() {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+
+  const handleAnswer = (index) => {
+    if (isAnswered) return;
+    setSelectedOption(index);
+    setIsAnswered(true);
+    if (index === questions[currentQuestion].correct) {
+      setScore(score + 1);
+    }
+  };
+
+  const nextQuestion = () => {
+    const next = currentQuestion + 1;
+    if (next < questions.length) {
+      setCurrentQuestion(next);
+      setSelectedOption(null);
+      setIsAnswered(false);
+    } else {
+      setShowResult(true);
+    }
+  };
+
+  const restartQuiz = () => {
+    setCurrentQuestion(0);
+    setScore(0);
+    setShowResult(false);
+    setSelectedOption(null);
+    setIsAnswered(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 md:p-8 font-sans">
+      <div className="max-w-3xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+        
+        {/* Header con icone dinamiche */}
+        <div className="bg-gradient-to-r from-blue-700 to-indigo-800 p-8 text-white relative">
+          <div className="relative z-10">
+            <h1 className="text-3xl font-extrabold tracking-tight">Esame di Scienze della Terra</h1>
+            <p className="text-blue-100 mt-1 font-medium">Modello Avanzato: Forma, Reticolo e Orientamento</p>
+          </div>
+          <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-20 hidden md:block">
+            <Navigation size={120} />
+          </div>
+        </div>
+
+        {!showResult ? (
+          <div className="p-6 md:p-10">
+            {/* Progress Section */}
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-1">
+                <div className="flex justify-between text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">
+                  <span>Domanda {currentQuestion + 1} / {questions.length}</span>
+                  <span>{Math.round(((currentQuestion + 1) / questions.length) * 100)}%</span>
+                </div>
+                <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-blue-600 h-full transition-all duration-500 ease-out" 
+                    style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Question Card */}
+            <div className="mb-8">
+              <span className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-4 uppercase">
+                {questions[currentQuestion].category}
+              </span>
+              <h2 className="text-2xl font-bold text-slate-800 leading-tight">
+                {questions[currentQuestion].question}
+              </h2>
+            </div>
+
+            {/* Options Grid */}
+            <div className="grid grid-cols-1 gap-3">
+              {questions[currentQuestion].options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleAnswer(index)}
+                  disabled={isAnswered}
+                  className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between group
+                    ${!isAnswered ? 'hover:border-blue-400 hover:bg-blue-50 border-slate-200' : 
+                      index === questions[currentQuestion].correct ? 'border-emerald-500 bg-emerald-50 text-emerald-900' :
+                      selectedOption === index ? 'border-rose-500 bg-rose-50 text-rose-900' : 'border-slate-100 opacity-40'}
+                  `}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm
+                      ${!isAnswered ? 'bg-slate-100 text-slate-500 group-hover:bg-blue-600 group-hover:text-white' : 
+                        index === questions[currentQuestion].correct ? 'bg-emerald-500 text-white' :
+                        selectedOption === index ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-300'}
+                    `}>
+                      {String.fromCharCode(65 + index)}
+                    </span>
+                    <span className="font-semibold">{option}</span>
+                  </div>
+                  {isAnswered && index === questions[currentQuestion].correct && (
+                    <CheckCircle2 className="text-emerald-500" />
+                  )}
+                  {isAnswered && selectedOption === index && index !== questions[currentQuestion].correct && (
+                    <XCircle className="text-rose-500" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Explanation Section */}
+            {isAnswered && (
+              <div className={`mt-8 p-6 rounded-2xl border-l-4 animate-in fade-in slide-in-from-bottom-4 duration-500 ${
+                selectedOption === questions[currentQuestion].correct ? 'bg-emerald-50 border-emerald-500 text-emerald-800' : 'bg-rose-50 border-rose-500 text-rose-800'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <div className="mt-1">
+                    {selectedOption === questions[currentQuestion].correct ? <Target size={20}/> : <Navigation size={20}/>}
+                  </div>
+                  <div>
+                    <h4 className="font-bold mb-1 uppercase text-xs tracking-tighter">Focus Didattico:</h4>
+                    <p className="text-sm leading-relaxed">{questions[currentQuestion].explanation}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={nextQuestion}
+                  className="mt-6 w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95"
+                >
+                  {currentQuestion + 1 < questions.length ? 'Prossima Domanda' : 'Analizza Risultati'}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-10 text-center bg-white">
+            <div className="mb-8 flex justify-center">
+              <div className={`p-8 rounded-full shadow-inner ${score >= 10 ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                {score >= 10 ? <CheckCircle2 size={80} /> : <Compass size={80} className="animate-spin-slow" />}
+              </div>
+            </div>
+            
+            <h2 className="text-4xl font-black text-slate-800 mb-4">Verifica Conclusa</h2>
+            
+            <div className="grid grid-cols-3 gap-4 mb-10 max-w-sm mx-auto">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div className="text-3xl font-black text-blue-600">{score}</div>
+                <div className="text-[10px] uppercase text-slate-400 font-bold">Corrette</div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div className="text-3xl font-black text-rose-600">{questions.length - score}</div>
+                <div className="text-[10px] uppercase text-slate-400 font-bold">Errori</div>
+              </div>
+              <div className="bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-200">
+                <div className="text-3xl font-black text-white">{Math.round((score / questions.length) * 10)}</div>
+                <div className="text-[10px] uppercase text-indigo-100 font-bold">Voto / 10</div>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-6 rounded-3xl mb-8 text-left border border-slate-200">
+              <h3 className="font-bold text-slate-700 mb-2 flex items-center gap-2 italic">
+                Feedback del Docente:
+              </h3>
+              <p className="text-slate-600 leading-relaxed">
+                {score === questions.length ? "Eccezionale. Hai una comprensione perfetta dei sistemi di riferimento e delle prove fisiche della Terra. Pronto per l'esame di stato!" :
+                 score >= 12 ? "Ottima preparazione. Hai sbagliato solo qualche dettaglio tecnico su azimut o fusi orari. Ottimo livello." :
+                 score >= 8 ? "Sufficiente, ma attenzione: alcuni concetti chiave sulla forma fisica (Geoide) e sull'orientamento con azimut vanno ripassati." :
+                 "La preparazione è lacunosa. Ti consiglio di ripassare il capitolo sul reticolo geografico e le definizioni di azimut e declinazione."}
+              </p>
+            </div>
+
+            <button 
+              onClick={restartQuiz}
+              className="group flex items-center justify-center gap-3 mx-auto bg-slate-900 hover:bg-black text-white font-bold py-5 px-10 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl"
+            >
+              <RefreshCcw size={20} className="group-hover:rotate-180 transition-transform duration-500" />
+              Ricomincia da Capo
+            </button>
+          </div>
+        )}
+
+        {/* Footer info */}
+        <div className="bg-slate-50 p-6 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
+          <div className="flex items-center gap-2"><Globe size={14} className="text-blue-500"/> Reticolo Geografico & Azimut</div>
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1.5"><Clock size={14}/> {new Date().toLocaleTimeString('it-IT')}</span>
+            <span className="flex items-center gap-1.5"><Map size={14}/> GPS Enabled</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
